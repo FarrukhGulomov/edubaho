@@ -1,0 +1,458 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ─────────────────────────────────────────────────
+// ENUMS
+// ─────────────────────────────────────────────────
+
+enum Role {
+  USER
+  INSTITUTION_OWNER
+  ADMIN
+  SUPER_ADMIN
+}
+
+enum InstitutionType {
+  KINDERGARTEN
+  SCHOOL
+  LYCEUM
+  COLLEGE
+  UNIVERSITY
+  COURSE_CENTER
+  LANGUAGE_CENTER
+  IT_SCHOOL
+  TUTORING
+  SPORTS_SCHOOL
+  ARTS_SCHOOL
+}
+
+enum InstitutionStatus {
+  PENDING
+  ACTIVE
+  PREMIUM
+  SUSPENDED
+  INACTIVE
+}
+
+enum ReviewStatus {
+  PENDING
+  APPROVED
+  REJECTED
+  FLAGGED
+}
+
+enum SubscriptionPlan {
+  FREE
+  STARTER
+  PROFESSIONAL
+  ENTERPRISE
+}
+
+enum MediaType {
+  IMAGE
+  VIDEO
+  VIRTUAL_TOUR
+}
+
+// ─────────────────────────────────────────────────
+// GEOGRAPHY
+// ─────────────────────────────────────────────────
+
+model Region {
+  id       String  @id @default(cuid())
+  nameUz   String
+  nameRu   String
+  slug     String  @unique
+  type     String  // 'region' | 'district' | 'city'
+  parentId String?
+
+  parent       Region?        @relation("RegionTree", fields: [parentId], references: [id])
+  children     Region[]       @relation("RegionTree")
+  cities       City[]
+  institutions Institution[]
+
+  @@index([slug])
+}
+
+model City {
+  id       String @id @default(cuid())
+  nameUz   String
+  nameRu   String
+  slug     String @unique
+  regionId String
+  lat      Float?
+  lng      Float?
+
+  region       Region        @relation(fields: [regionId], references: [id])
+  users        User[]
+  institutions Institution[]
+
+  @@index([slug])
+  @@index([regionId])
+}
+
+// ─────────────────────────────────────────────────
+// USERS
+// ─────────────────────────────────────────────────
+
+model User {
+  id           String    @id @default(cuid())
+  phone        String    @unique
+  name         String?
+  email        String?   @unique
+  avatarUrl    String?
+  role         Role      @default(USER)
+  cityId       String?
+  isVerified   Boolean   @default(false)
+  isActive     Boolean   @default(true)
+  lastActiveAt DateTime?
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+
+  city              City?              @relation(fields: [cityId], references: [id])
+  reviews           Review[]
+  reviewVotes       ReviewVote[]
+  savedInstitutions SavedInstitution[]
+  institutionClaims InstitutionClaim[]
+  notifications     Notification[]
+  searchHistory     SearchHistory[]
+  adminPermission   AdminPermission?
+
+  @@index([phone])
+  @@index([cityId])
+}
+
+model AdminPermission {
+  id                    String   @id @default(cuid())
+  adminId               String   @unique
+  canManageAll          Boolean  @default(false)
+  institutionIds        String[]
+  canCreateInstitutions Boolean  @default(false)
+  canEditInstitutions   Boolean  @default(false)
+  canDeleteInstitutions Boolean  @default(false)
+  canModerateReviews    Boolean  @default(false)
+  canViewUsers          Boolean  @default(false)
+  createdAt             DateTime @default(now())
+  updatedAt             DateTime @updatedAt
+
+  admin User @relation(fields: [adminId], references: [id], onDelete: Cascade)
+
+  @@index([adminId])
+}
+
+// ─────────────────────────────────────────────────
+// INSTITUTIONS
+// ─────────────────────────────────────────────────
+
+model Institution {
+  id          String            @id @default(cuid())
+  nameUz      String
+  nameRu      String?
+  slug        String            @unique
+  type        InstitutionType
+  status      InstitutionStatus @default(PENDING)
+  phone       String?
+  phone2      String?
+  email       String?
+  website     String?
+  telegram    String?
+  instagram   String?
+  cityId      String?
+  regionId    String?
+  address     String?
+  lat         Float?
+  lng         Float?
+  isVerified  Boolean           @default(false)
+  viewCount   Int               @default(0)
+  saveCount   Int               @default(0)
+  avgRating   Float?
+  reviewCount Int               @default(0)
+  createdAt   DateTime          @default(now())
+  updatedAt   DateTime          @updatedAt
+
+  city            City?               @relation(fields: [cityId], references: [id])
+  region          Region?             @relation(fields: [regionId], references: [id])
+  details         InstitutionDetail?
+  pricing         InstitutionPricing?
+  media           InstitutionMedia[]
+  features        InstitutionFeature[]
+  accreditations  Accreditation[]
+  reviews         Review[]
+  savedBy         SavedInstitution[]
+  claims          InstitutionClaim[]
+  subscription    Subscription?
+  analyticsEvents AnalyticsEvent[]
+
+  @@index([type, status, cityId])
+  @@index([status, avgRating])
+  @@index([lat, lng])
+  @@index([slug])
+}
+
+model InstitutionDetail {
+  id              String   @id @default(cuid())
+  institutionId   String   @unique
+  descriptionUz   String?
+  descriptionRu   String?
+  foundedYear     Int?
+  studentCount    Int?
+  teacherCount    Int?
+  minAge          Int?
+  maxAge          Int?
+  languages       String[]
+  programs        String[]
+  shifts          String[]
+  specializations String[]
+  achievements    String?
+  updatedAt       DateTime @updatedAt
+
+  institution Institution @relation(fields: [institutionId], references: [id], onDelete: Cascade)
+}
+
+model InstitutionPricing {
+  id             String   @id @default(cuid())
+  institutionId  String   @unique
+  monthlyMin     Int?
+  monthlyMax     Int?
+  yearlyMin      Int?
+  yearlyMax      Int?
+  currency       String   @default("UZS")
+  paymentMethods String[]
+  hasDiscount    Boolean  @default(false)
+  discountNote   String?
+  updatedAt      DateTime @updatedAt
+
+  institution Institution @relation(fields: [institutionId], references: [id], onDelete: Cascade)
+}
+
+model InstitutionMedia {
+  id            String    @id @default(cuid())
+  institutionId String
+  url           String
+  thumbnailUrl  String?
+  type          MediaType @default(IMAGE)
+  caption       String?
+  sortOrder     Int       @default(0)
+  createdAt     DateTime  @default(now())
+
+  institution Institution @relation(fields: [institutionId], references: [id], onDelete: Cascade)
+
+  @@index([institutionId, sortOrder])
+}
+
+model InstitutionFeature {
+  id            String  @id @default(cuid())
+  institutionId String
+  key           String
+  value         String  @default("true")
+  note          String?
+
+  institution Institution @relation(fields: [institutionId], references: [id], onDelete: Cascade)
+
+  @@unique([institutionId, key])
+}
+
+model Accreditation {
+  id            String    @id @default(cuid())
+  institutionId String
+  name          String
+  issuedBy      String?
+  issuedAt      DateTime?
+  expiresAt     DateTime?
+  documentUrl   String?
+
+  institution Institution @relation(fields: [institutionId], references: [id], onDelete: Cascade)
+}
+
+// ─────────────────────────────────────────────────
+// REVIEWS
+// ─────────────────────────────────────────────────
+
+model Review {
+  id               String       @id @default(cuid())
+  institutionId    String
+  userId           String
+  status           ReviewStatus @default(PENDING)
+  overallRating    Int
+  teacherRating    Int?
+  facilityRating   Int?
+  valueRating      Int?
+  serviceRating    Int?
+  atmosphereRating Int?
+  title            String?
+  body             String
+  isAnonymous      Boolean      @default(false)
+  isVerified       Boolean      @default(false)
+  helpfulCount     Int          @default(0)
+  replyCount       Int          @default(0)
+  photos           String[]
+  createdAt        DateTime     @default(now())
+  updatedAt        DateTime     @updatedAt
+
+  institution Institution   @relation(fields: [institutionId], references: [id])
+  user        User          @relation(fields: [userId], references: [id])
+  votes       ReviewVote[]
+  replies     ReviewReply[]
+
+  @@unique([institutionId, userId])
+  @@index([institutionId, status])
+  @@index([userId])
+  @@index([createdAt])
+}
+
+model ReviewVote {
+  id        String  @id @default(cuid())
+  reviewId  String
+  userId    String
+  isHelpful Boolean
+
+  review Review @relation(fields: [reviewId], references: [id], onDelete: Cascade)
+  user   User   @relation(fields: [userId], references: [id])
+
+  @@unique([reviewId, userId])
+}
+
+model ReviewReply {
+  id              String   @id @default(cuid())
+  reviewId        String
+  fromInstitution Boolean  @default(false)
+  authorId        String?
+  body            String
+  createdAt       DateTime @default(now())
+
+  review Review @relation(fields: [reviewId], references: [id], onDelete: Cascade)
+}
+
+// ─────────────────────────────────────────────────
+// SAVED & SEARCH
+// ─────────────────────────────────────────────────
+
+model SavedInstitution {
+  id            String   @id @default(cuid())
+  userId        String
+  institutionId String
+  createdAt     DateTime @default(now())
+
+  user        User        @relation(fields: [userId], references: [id])
+  institution Institution @relation(fields: [institutionId], references: [id])
+
+  @@unique([userId, institutionId])
+  @@index([userId])
+}
+
+model SearchHistory {
+  id          String   @id @default(cuid())
+  userId      String
+  query       String
+  filters     Json?
+  resultCount Int?
+  createdAt   DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id])
+
+  @@index([userId])
+}
+
+// ─────────────────────────────────────────────────
+// INSTITUTION CLAIMS
+// ─────────────────────────────────────────────────
+
+model InstitutionClaim {
+  id            String    @id @default(cuid())
+  institutionId String
+  userId        String
+  status        String    @default("PENDING")
+  documents     String[]
+  note          String?
+  reviewedBy    String?
+  reviewedAt    DateTime?
+  createdAt     DateTime  @default(now())
+
+  institution Institution @relation(fields: [institutionId], references: [id])
+  user        User        @relation(fields: [userId], references: [id])
+
+  @@index([status])
+  @@index([userId])
+}
+
+// ─────────────────────────────────────────────────
+// SUBSCRIPTIONS
+// ─────────────────────────────────────────────────
+
+model Subscription {
+  id            String           @id @default(cuid())
+  institutionId String           @unique
+  plan          SubscriptionPlan @default(FREE)
+  priceUzs      Int?
+  startsAt      DateTime?
+  endsAt        DateTime?
+  isActive      Boolean          @default(false)
+  paymentMethod String?
+  features      String[]
+  createdAt     DateTime         @default(now())
+  updatedAt     DateTime         @updatedAt
+
+  institution Institution          @relation(fields: [institutionId], references: [id])
+  payments    SubscriptionPayment[]
+}
+
+model SubscriptionPayment {
+  id             String    @id @default(cuid())
+  subscriptionId String
+  amountUzs      Int
+  paymentMethod  String
+  transactionId  String?
+  status         String    @default("PENDING")
+  paidAt         DateTime?
+  createdAt      DateTime  @default(now())
+
+  subscription Subscription @relation(fields: [subscriptionId], references: [id])
+
+  @@index([subscriptionId, status])
+}
+
+// ─────────────────────────────────────────────────
+// ANALYTICS
+// ─────────────────────────────────────────────────
+
+model AnalyticsEvent {
+  id            String   @id @default(cuid())
+  institutionId String
+  eventType     String
+  userId        String?
+  ip            String?
+  userAgent     String?
+  referrer      String?
+  createdAt     DateTime @default(now())
+
+  institution Institution @relation(fields: [institutionId], references: [id])
+
+  @@index([institutionId, eventType, createdAt])
+  @@index([createdAt])
+}
+
+// ─────────────────────────────────────────────────
+// NOTIFICATIONS
+// ─────────────────────────────────────────────────
+
+model Notification {
+  id        String   @id @default(cuid())
+  userId    String
+  type      String
+  title     String
+  body      String
+  data      Json?
+  isRead    Boolean  @default(false)
+  createdAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id])
+
+  @@index([userId, isRead])
+  @@index([createdAt])
+}

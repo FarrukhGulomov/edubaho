@@ -1,0 +1,451 @@
+import type { FastifyInstance } from 'fastify'
+import { Prisma } from '@prisma/client'
+import { listInstitutionsQuerySchema, nearbyQuerySchema, compareQuerySchema } from '../../schemas/institutions'
+import type { InstitutionStatus } from '@prisma/client'
+
+/**
+ * Institutions routes
+ *
+ * GET  🔓 /institutions                — Ro'yxat (filter, sort, paginate)
+ * GET  🔓 /institutions/nearby         — Koordinat bo'yicha
+ * GET  🔓 /institutions/compare        — 2-3 ta solishtirish
+ * GET  🔓 /institutions/:slug          — To'liq profil
+ * POST 🔑 /institutions/:id/save       — Saqlash/olib tashlash (toggle)
+ * POST 🔓 /institutions/:id/view       — Ko'rishlar (analytics)
+ */
+export default async function institutionRoutes(fastify: FastifyInstance) {
+  const { prisma } = fastify
+
+  // Muassasa kartochkasi uchun umumiy select (N+1 yo'q)
+  const cardSelect = {
+    id: true,
+    nameUz: true,
+    nameRu: true,
+    slug: true,
+    type: true,
+    status: true,
+    avgRating: true,
+    reviewCount: true,
+    viewCount: true,
+    isVerified: true,
+    address: true,
+    lat: true,
+    lng: true,
+    telegram: true,
+    city:   { select: { id: true, nameUz: true, nameRu: true } },
+    region: { select: { id: true, nameUz: true, nameRu: true } },
+    pricing: { select: { monthlyMin: true, monthlyMax: true, currency: true } },
+    details: {
+      select: {
+        studentCount: true,
+        teacherCount: true,
+        foundedYear:  true,
+        programs:     true,
+      },
+    },
+    media: {
+      where: { type: 'IMAGE' as const },
+      select: { url: true, thumbnailUrl: true },
+      orderBy: { sortOrder: 'asc' as const },
+      take: 1,
+    },
+  } as const
+
+  // ─────────────────────────────────────────────
+  // GET /institutions
+  // ─────────────────────────────────────────────
+
+  fastify.get('/institutions', async (request, reply) => {
+    const query = listInstitutionsQuerySchema.parse(request.query)
+    const { page, limit, sortBy, minRating, monthlyMax, type, cityId, regionId, q, subject } = query
+    const skip = (page - 1) * limit
+    const qTrimmed = q?.trim()
+
+    // Fan (programs) bo'yicha qisman qidiruv uchun raw SQL — ILIKE '%...%'
+    let programMatchIds: string[] = []
+    if (qTrimmed) {
+      const rows = await prisma.$queryRaw<{ institutionId: string }[]>`
+        SELECT d."institutionId"
+        FROM "InstitutionDetail" d
+        WHERE EXISTS (
+          SELECT 1 FROM unnest(d.programs) AS prog
+          WHERE prog ILIKE ${'%' + qTrimmed + '%'}
+        )
+      `
+      programMatchIds = rows.map(r => r.institutionId)
+    }
+
+    const where = {
+      status: { in: ['ACTIVE', 'PREMIUM'] as InstitutionStatus[] },
+      ...(type       && { type }),
+      ...(cityId     && { cityId }),
+      ...(regionId   && { regionId }),
+      ...(minRating  && { avgRating: { gte: minRating } }),
+      ...(monthlyMax && { pricing: { monthlyMin: { lte: monthlyMax } } }),
+
+      // Nom, manzil, va program bo'yicha qisman qidiruv (katta-kichik harf farqsiz)
+      ...(qTrimmed && {
+        OR: [
+          { nameUz: { contains: qTrimmed, mode: 'insensitive' as const } },
+          { nameRu: { contains: qTrimmed, mode: 'insensitive' as const } },
+          { address: { contains: qTrimmed, mode: 'insensitive' as const } },
+          ...(programMatchIds.length > 0 ? [{ id: { in: programMatchIds } }] : []),
+        ],
+      }),
+
+      // Fan bo'yicha exact filter (chip orqali tanlanadi)
+      ...(subject?.trim() && {
+        details: { programs: { hasSome: [subject.trim()] } },
+      }),
+    }
+
+    const orderBy = buildOrderBy(sortBy)
+
+    const [institutions, total] = await Promise.all([
+      prisma.institution.findMany({ where, select: cardSelect, orderBy, skip, take: limit }),
+      prisma.institution.count({ where }),
+    ])
+
+    return reply.send({
+      data: institutions,
+      meta: { total, page, limit, totalPages: Math.ceil(total / limit) },
+    })
+  })
+
+  // ─────────────────────────────────────────────
+  // GET /institutions/subjects
+  // Barcha mavjud fanlar ro'yxati (programs)
+  // ─────────────────────────────────────────────
+  fastify.get('/institutions/subjects', async (_request, reply) => {
+    const rows = await prisma.institutionDetail.findMany({
+      where: { NOT: { programs: { isEmpty: true } } },
+      select: { programs: true },
+    })
+    const all = rows.flatMap(r => r.programs)
+    // Takrorlarsiz, tartiblab
+    const unique = [...new Set(all)].sort((a, b) => a.localeCompare(b, 'uz'))
+    return reply.send({ data: unique })
+  })
+
+  // ─────────────────────────────────────────────
+  // GET /institutions/nearby
+  // Haversine formula bilan masofani hisoblash
+  // ─────────────────────────────────────────────
+
+  fastify.get('/institutions/nearby', async (request, reply) => {
+    const { lat, lng, radius, type, limit } = nearbyQuerySchema.parse(request.query)
+
+    // PostgreSQL'da Haversine formula
+    // 6371000 — Yer radiusi (metr)
+    const radiusKm = radius / 1000
+
+    const typeFilter = type ? Prisma.sql`AND type = ${type}::text` : Prisma.empty
+
+    const institutions = await prisma.$queryRaw<
+      Array<{ id: string; distance: number }>
+    >`
+      SELECT id, distance FROM (
+        SELECT id,
+          (6371000 * acos(
+            LEAST(1.0,
+              cos(radians(${lat})) * cos(radians(lat)) *
+              cos(radians(lng) - radians(${lng})) +
+              sin(radians(${lat})) * sin(radians(lat))
+            )
+          )) AS distance
+        FROM "Institution"
+        WHERE status IN ('ACTIVE', 'PREMIUM')
+          AND lat IS NOT NULL AND lng IS NOT NULL
+          ${typeFilter}
+      ) subq
+      WHERE distance <= ${radius}
+      ORDER BY distance ASC
+      LIMIT ${limit}
+    `
+
+    const ids = institutions.map((i) => i.id)
+    const distanceMap = new Map(institutions.map((i) => [i.id, Math.round(i.distance)]))
+
+    const details = await prisma.institution.findMany({
+      where: { id: { in: ids } },
+      select: cardSelect,
+    })
+
+    // Masofani qo'shib tartiblaymiz
+    const sorted = ids
+      .map((id) => {
+        const inst = details.find((d) => d.id === id)
+        return inst ? { ...inst, distance: distanceMap.get(id) } : null
+      })
+      .filter(Boolean)
+
+    return reply.send({ data: sorted, meta: { radiusKm, total: sorted.length } })
+  })
+
+  // ─────────────────────────────────────────────
+  // GET /institutions/compare?ids=id1,id2,id3
+  // ─────────────────────────────────────────────
+
+  fastify.get('/institutions/compare', async (request, reply) => {
+    const { ids } = compareQuerySchema.parse(request.query)
+
+    const institutions = await prisma.institution.findMany({
+      where: {
+        id: { in: ids },
+        status: { in: ['ACTIVE', 'PREMIUM'] },
+      },
+      select: {
+        id: true,
+        nameUz: true,
+        nameRu: true,
+        slug: true,
+        type: true,
+        avgRating: true,
+        reviewCount: true,
+        viewCount: true,
+        isVerified: true,
+        address: true,
+        telegram: true,
+        city: { select: { nameUz: true, nameRu: true } },
+        details: {
+          select: {
+            descriptionUz: true,
+            descriptionRu: true,
+            foundedYear: true,
+            studentCount: true,
+            teacherCount: true,
+            minAge: true,
+            maxAge: true,
+            languages: true,
+            programs: true,
+            shifts: true,
+          },
+        },
+        pricing: {
+          select: { monthlyMin: true, monthlyMax: true, currency: true, paymentMethods: true },
+        },
+        features: { select: { key: true, value: true } },
+        media: {
+          where: { type: 'IMAGE' },
+          select: { url: true, thumbnailUrl: true },
+          take: 1,
+        },
+      },
+    })
+
+    return reply.send({ data: institutions })
+  })
+
+  // ─────────────────────────────────────────────
+  // GET /institutions/:slug
+  // To'liq profil + oxirgi 5 ta APPROVED sharh
+  // ─────────────────────────────────────────────
+
+  fastify.get<{ Params: { slug: string } }>(
+    '/institutions/:slug',
+    async (request, reply) => {
+      const { slug } = request.params
+
+      const institution = await prisma.institution.findUnique({
+        where: { slug },
+        select: {
+          id: true,
+          nameUz: true,
+          nameRu: true,
+          slug: true,
+          type: true,
+          status: true,
+          phone: true,
+          phone2: true,
+          email: true,
+          website: true,
+          telegram: true,
+          instagram: true,
+          address: true,
+          lat: true,
+          lng: true,
+          isVerified: true,
+          avgRating: true,
+          reviewCount: true,
+          viewCount: true,
+          city: { select: { id: true, nameUz: true, nameRu: true } },
+          details: {
+            select: {
+              descriptionUz: true,
+              descriptionRu: true,
+              foundedYear: true,
+              studentCount: true,
+              teacherCount: true,
+              minAge: true,
+              maxAge: true,
+              languages: true,
+              programs: true,
+              shifts: true,
+              specializations: true,
+              achievements: true,
+            },
+          },
+          pricing: {
+            select: {
+              monthlyMin: true,
+              monthlyMax: true,
+              yearlyMin: true,
+              yearlyMax: true,
+              currency: true,
+              paymentMethods: true,
+              hasDiscount: true,
+              discountNote: true,
+            },
+          },
+          media: {
+            select: { id: true, url: true, thumbnailUrl: true, type: true, caption: true, sortOrder: true },
+            orderBy: { sortOrder: 'asc' },
+          },
+          features: { select: { key: true, value: true, note: true } },
+          accreditations: {
+            select: { id: true, name: true, issuedBy: true, issuedAt: true, expiresAt: true },
+          },
+          subscription: { select: { plan: true, isActive: true } },
+          reviews: {
+            where: { status: 'APPROVED' },
+            select: {
+              id: true,
+              overallRating: true,
+              title: true,
+              body: true,
+              isAnonymous: true,
+              isVerified: true,
+              helpfulCount: true,
+              createdAt: true,
+              user: { select: { id: true, name: true, avatarUrl: true } },
+            },
+            orderBy: { createdAt: 'desc' },
+            take: 5,
+          },
+        },
+      })
+
+      if (!institution) {
+        return reply.status(404).send({ error: 'Muassasa topilmadi' })
+      }
+
+      if (!['ACTIVE', 'PREMIUM'].includes(institution.status)) {
+        return reply.status(404).send({ error: 'Muassasa topilmadi' })
+      }
+
+      // Anonymous sharhlar uchun user ma'lumotlarini yashirish
+      const data = {
+        ...institution,
+        reviews: institution.reviews.map((r) => ({
+          ...r,
+          user: r.isAnonymous ? null : r.user,
+        })),
+      }
+
+      return reply.send({ data })
+    },
+  )
+
+  // ─────────────────────────────────────────────
+  // POST /institutions/:id/save (toggle)
+  // Auth required
+  // ─────────────────────────────────────────────
+
+  fastify.post<{ Params: { id: string } }>(
+    '/institutions/:id/save',
+    { preHandler: [fastify.authenticate] },
+    async (request, reply) => {
+      const { id: institutionId } = request.params
+      const { id: userId } = request.user as { id: string }
+
+      const institution = await prisma.institution.findUnique({
+        where: { id: institutionId },
+        select: { id: true },
+      })
+
+      if (!institution) {
+        return reply.status(404).send({ error: 'Muassasa topilmadi' })
+      }
+
+      const existing = await prisma.savedInstitution.findUnique({
+        where: { userId_institutionId: { userId, institutionId } },
+      })
+
+      if (existing) {
+        // Toggle: olib tashlash
+        await prisma.$transaction([
+          prisma.savedInstitution.delete({
+            where: { userId_institutionId: { userId, institutionId } },
+          }),
+          prisma.institution.update({
+            where: { id: institutionId },
+            data: { saveCount: { decrement: 1 } },
+          }),
+        ])
+        return reply.send({ saved: false, message: "Saqlangan ro'yxatdan olib tashlandi" })
+      } else {
+        // Saqlash
+        await prisma.$transaction([
+          prisma.savedInstitution.create({ data: { userId, institutionId } }),
+          prisma.institution.update({
+            where: { id: institutionId },
+            data: { saveCount: { increment: 1 } },
+          }),
+        ])
+        return reply.send({ saved: true, message: "Saqlangan ro'yxatga qo'shildi" })
+      }
+    },
+  )
+
+  // ─────────────────────────────────────────────
+  // POST /institutions/:id/view
+  // Analytics event — fire and forget
+  // ─────────────────────────────────────────────
+
+  fastify.post<{ Params: { id: string } }>(
+    '/institutions/:id/view',
+    async (request, reply) => {
+      const { id: institutionId } = request.params
+
+      // JWT ixtiyoriy
+      let userId: string | undefined
+      try {
+        await request.jwtVerify()
+        userId = (request.user as { id: string }).id
+      } catch {
+        // Anonymous ko'rish
+      }
+
+      // Fire and forget — client kutmasin
+      void prisma.$transaction([
+        prisma.analyticsEvent.create({
+          data: {
+            institutionId,
+            eventType: 'view',
+            userId: userId ?? null,
+            ip: request.ip,
+            userAgent: request.headers['user-agent'] ?? null,
+            referrer: request.headers.referer ?? null,
+          },
+        }),
+        prisma.institution.update({
+          where: { id: institutionId },
+          data: { viewCount: { increment: 1 } },
+        }),
+      ])
+
+      return reply.send({ success: true })
+    },
+  )
+}
+
+// sortBy → Prisma orderBy
+function buildOrderBy(sortBy: string) {
+  switch (sortBy) {
+    case 'price_asc':  return { pricing: { monthlyMin: 'asc'  as const } }
+    case 'price_desc': return { pricing: { monthlyMin: 'desc' as const } }
+    case 'newest':     return { createdAt: 'desc' as const }
+    case 'popular':    return { viewCount:  'desc' as const }
+    default:           return { avgRating:  'desc' as const }
+  }
+}
