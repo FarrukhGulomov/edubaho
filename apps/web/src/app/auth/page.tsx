@@ -4,6 +4,7 @@ import { useState, useEffect, useRef } from 'react'
 import Link from 'next/link'
 import { authApi } from '@/lib/api'
 import { useLang, t } from '@/contexts/LangContext'
+import { authTrack } from '@/lib/analytics'
 
 type Step = 'phone' | 'otp' | 'done'
 
@@ -17,6 +18,9 @@ export default function AuthPage() {
   const [countdown, setCountdown] = useState(0)
   const otpRef = useRef<HTMLInputElement>(null)
 
+  // Auth sahifasi ochildi
+  useEffect(() => { authTrack.started() }, [])
+
   // Profilga o'tish
   useEffect(() => {
     if (step === 'done') {
@@ -24,6 +28,17 @@ export default function AuthPage() {
       return () => clearTimeout(t)
     }
   }, [step])
+
+  // Tark etish kuzatuvi (unmount)
+  useEffect(() => {
+    return () => {
+      // Komponent unmount bo'lganda — agar hali done bo'lmagan bo'lsa
+      if (step !== 'done') {
+        authTrack.abandoned(step)
+      }
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
 
   // OTP inputga focus
   useEffect(() => {
@@ -61,7 +76,9 @@ export default function AuthPage() {
     setError('')
     setLoading(true)
     try {
+      authTrack.phoneEntered()
       await authApi.sendOtp(phone.replace(/\s/g, ''))
+      authTrack.otpSent()
       setStep('otp')
       setCountdown(60)
       const timer = setInterval(() => {
@@ -84,8 +101,10 @@ export default function AuthPage() {
       }
       localStorage.setItem('accessToken', result.accessToken)
       localStorage.setItem('refreshToken', result.refreshToken)
+      authTrack.completed(result.isNewUser ?? false)
       setStep('done')
     } catch (err: unknown) {
+      authTrack.otpError(1)
       setError(err instanceof Error ? err.message : t(lang, { uz: "OTP noto'g'ri", ru: 'Неверный код' }))
     } finally {
       setLoading(false)

@@ -81,7 +81,7 @@ export default function SuperAdminPage() {
           </div>
         </div>
 
-        <div className="grid gap-4 sm:grid-cols-2">
+        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
           <Link
             href="/admin/super/admins"
             className="flex items-center gap-4 rounded-2xl border-2 border-purple-200 bg-purple-50 p-6 hover:border-purple-400 hover:shadow-md transition-all"
@@ -101,6 +101,17 @@ export default function SuperAdminPage() {
             <div>
               <h2 className="text-lg font-bold text-blue-900">Barcha foydalanuvchilar</h2>
               <p className="text-sm text-blue-700">Ko&apos;rish, aktiv/deaktiv qilish, o&apos;chirish</p>
+            </div>
+          </Link>
+
+          <Link
+            href="/admin/super/analytics"
+            className="flex items-center gap-4 rounded-2xl border-2 border-emerald-200 bg-emerald-50 p-6 hover:border-emerald-400 hover:shadow-md transition-all"
+          >
+            <span className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-emerald-600 text-3xl text-white">📊</span>
+            <div>
+              <h2 className="text-lg font-bold text-emerald-900">Lead Analytics</h2>
+              <p className="text-sm text-emerald-700">Funnel, lidlar, sessiya tarixi, konversiya</p>
             </div>
           </Link>
         </div>

@@ -20,6 +20,8 @@ import geoRoutes from './routes/geo'
 import adminReviewRoutes from './routes/admin/reviews'
 import adminInstitutionRoutes from './routes/admin/institutions'
 import superAdminRoutes from './routes/super-admin/index'
+import superAdminAnalytics from './routes/super-admin/analytics'
+import trackRoutes from './routes/track'
 import dashboardRoutes from './routes/dashboard'
 import dashboardReviewRoutes from './routes/dashboard/reviews'
 
@@ -92,6 +94,10 @@ async function buildApp() {
 
       // Super Admin routes
       await api.register(superAdminRoutes)
+      await api.register(superAdminAnalytics)
+
+      // Analytics / Lead tracking (auth shart emas)
+      await api.register(trackRoutes)
 
       // B2B Dashboard routes
       await api.register(dashboardRoutes)

@@ -123,6 +123,7 @@ model User {
   notifications     Notification[]
   searchHistory     SearchHistory[]
   adminPermission   AdminPermission?
+  leadEvents        LeadEvent[]
 
   @@index([phone])
   @@index([cityId])
@@ -188,6 +189,7 @@ model Institution {
   claims          InstitutionClaim[]
   subscription    Subscription?
   analyticsEvents AnalyticsEvent[]
+  leadEvents      LeadEvent[]
 
   @@index([type, status, cityId])
   @@index([status, avgRating])
@@ -435,6 +437,43 @@ model AnalyticsEvent {
 
   @@index([institutionId, eventType, createdAt])
   @@index([createdAt])
+}
+
+// ─────────────────────────────────────────────────
+// LEAD ANALYTICS
+// ─────────────────────────────────────────────────
+
+model LeadEvent {
+  id            String   @id @default(cuid())
+  // Sessiya identifikatori (localStorage UUID — anonim ham bo'lishi mumkin)
+  sessionId     String
+  // Auth bo'lgan user (null = mehmon)
+  userId        String?
+  // Voqea nomi: page_view, gate_shown, auth_completed, contact_click, ...
+  event         String
+  // Kategoria: page | search | institution | gate | auth | engagement
+  category      String
+  // Qo'shimcha ma'lumotlar (JSON)
+  properties    Json?
+  // Muassasa bilan bog'liq bo'lsa
+  institutionId String?
+  // Joriy sahifa URL
+  page          String?
+  // Qayerdan keldi
+  referrer      String?
+  // Foydalanuvchi qurilmasi
+  userAgent     String?
+  ip            String?
+  createdAt     DateTime @default(now())
+
+  user        User?        @relation(fields: [userId], references: [id], onDelete: SetNull)
+  institution Institution? @relation(fields: [institutionId], references: [id], onDelete: SetNull)
+
+  @@index([sessionId, createdAt])
+  @@index([event, createdAt])
+  @@index([userId, createdAt])
+  @@index([institutionId, event])
+  @@index([category, createdAt])
 }
 
 // ─────────────────────────────────────────────────
