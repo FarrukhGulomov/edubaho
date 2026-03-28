@@ -1353,18 +1353,22 @@ async function main() {
 
     // Namunaviy sharhlar
     for (let i = 0; i < Math.min(2, reviewUsers.length); i++) {
+      const reviewUser = reviewUsers[i]
+      const overallRating = ratings[i % ratings.length]
+      const body = reviewBodies[i % reviewBodies.length]
+      if (!reviewUser || overallRating === undefined || body === undefined) continue
       await prisma.review
         .upsert({
-          where: { institutionId_userId: { institutionId: result.id, userId: reviewUsers[i].id } },
+          where: { institutionId_userId: { institutionId: result.id, userId: reviewUser.id } },
           update: {},
           create: {
             institutionId: result.id,
-            userId: reviewUsers[i].id,
+            userId: reviewUser.id,
             status: 'APPROVED',
-            overallRating: ratings[i % ratings.length],
+            overallRating,
             teacherRating: 5,
             facilityRating: 4,
-            body: reviewBodies[i % reviewBodies.length],
+            body,
             title: i === 0 ? 'Yaxshi muassasa' : 'Tavsiya etaman',
             helpfulCount: Math.floor(Math.random() * 10),
           },
