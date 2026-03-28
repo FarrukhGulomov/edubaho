@@ -45,11 +45,18 @@ export default function AuthPage() {
     if (step === 'otp') otpRef.current?.focus()
   }, [step])
 
-  // Telegram widget yuklash
+  // Telegram widget yuklash — step 'phone' ga har safar o'tganda qayta yuklanadi
   useEffect(() => {
-    if (!BOT_USERNAME || !tgRef.current) return
+    if (step !== 'phone' || !BOT_USERNAME) return
 
-    // Global callback — Telegram widget shu funksiyani chaqiradi
+    // tgRef.current tayyor bo'lishini kuting
+    const container = tgRef.current
+    if (!container) return
+
+    // Eski scriptni tozalash
+    container.innerHTML = ''
+
+    // Global callback
     const win = window as unknown as Record<string, unknown>
     win['onTelegramAuth'] = async (user: object) => {
       setLoading(true)
@@ -69,7 +76,6 @@ export default function AuthPage() {
       }
     }
 
-    // Script dinamik yuklanadi (Telegram widget Next.js da shunday ishlaydi)
     const script = document.createElement('script')
     script.src = 'https://telegram.org/js/telegram-widget.js?22'
     script.setAttribute('data-telegram-login', BOT_USERNAME)
@@ -78,14 +84,14 @@ export default function AuthPage() {
     script.setAttribute('data-onauth', 'onTelegramAuth(user)')
     script.setAttribute('data-request-access', 'write')
     script.async = true
-    tgRef.current.appendChild(script)
+    container.appendChild(script)
 
     return () => {
       delete win['onTelegramAuth']
-      if (tgRef.current) tgRef.current.innerHTML = ''
+      container.innerHTML = ''
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [])
+  }, [step])
 
   const ui = {
     title:      { uz: "Ta'lim muassasangizni toping", ru: 'Найдите своё учебное заведение' },
