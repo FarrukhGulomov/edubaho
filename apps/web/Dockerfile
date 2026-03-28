@@ -28,6 +28,10 @@ COPY package.json ./
 # Next.js standalone build uchun
 ENV NEXT_TELEMETRY_DISABLED=1
 
+# Build vaqtida Railway env o'zgaruvchilarini qabul qilish
+ARG NEXT_PUBLIC_API_URL
+ENV NEXT_PUBLIC_API_URL=$NEXT_PUBLIC_API_URL
+
 RUN cd apps/web && npm run build
 
 # ─────────────────────────────────────────────────
