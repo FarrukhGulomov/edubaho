@@ -299,6 +299,40 @@ export default async function authRoutes(fastify: FastifyInstance) {
     },
   )
 
+  // ─────────────────────────────────────────────
+  // POST /auth/setup-super-admin
+  // Birinchi super adminni ADMIN_PIN orqali belgilash
+  // Auth shart emas — faqat PIN bilan himoyalangan
+  // ─────────────────────────────────────────────
+
+  fastify.post('/auth/setup-super-admin', async (request, reply) => {
+    const { phone: rawPhone, pin } = z.object({
+      phone: z.string().min(9),
+      pin:   z.string().min(4),
+    }).parse(request.body)
+
+    if (pin !== env.ADMIN_PIN) {
+      return reply.status(401).send({ error: "PIN noto'g'ri" })
+    }
+
+    const phone = normalizePhone(rawPhone)
+    if (!phone) return reply.status(400).send({ error: "Noto'g'ri telefon raqami" })
+
+    const user = await prisma.user.upsert({
+      where:  { phone },
+      update: { role: 'SUPER_ADMIN', isVerified: true },
+      create: { phone, role: 'SUPER_ADMIN', isVerified: true },
+    })
+
+    await prisma.adminPermission.upsert({
+      where:  { adminId: user.id },
+      update: { canManageAll: true, canCreateInstitutions: true, canEditInstitutions: true, canDeleteInstitutions: true, canModerateReviews: true, canViewUsers: true },
+      create: { adminId: user.id, canManageAll: true, institutionIds: [], canCreateInstitutions: true, canEditInstitutions: true, canDeleteInstitutions: true, canModerateReviews: true, canViewUsers: true },
+    })
+
+    return reply.send({ success: true, phone: user.phone, role: user.role })
+  })
+
   // GET /auth/dev-otp/:phone — development yoki ALLOW_DEV_OTP=true bo'lganda OTP ni ko'rish
   if (process.env.NODE_ENV === 'development' || process.env.ALLOW_DEV_OTP === 'true') {
     fastify.get('/auth/dev-otp/:phone', async (request, reply) => {
