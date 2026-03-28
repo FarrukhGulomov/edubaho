@@ -184,15 +184,44 @@ export default async function analyticsRoutes(fastify: FastifyInstance) {
 
     const leads = await Promise.all(
       gateShownSessions.map(async (s) => {
-        // Sessiyaning barcha voqealari
+        // Sessiyaning barcha voqealari (userId va user ma'lumotlari bilan)
         const events = await prisma.leadEvent.findMany({
           where: { sessionId: s.sessionId, createdAt: { gte: since } },
-          select: { event: true, properties: true, createdAt: true, institutionId: true },
+          select: {
+            event: true, properties: true, createdAt: true, institutionId: true,
+            userId: true,
+            user: { select: { phone: true, name: true } },
+          },
           orderBy: { createdAt: 'asc' },
         })
 
         const converted = authSessions.has(s.sessionId)
         const clickedCta = ctaSessions.has(s.sessionId)
+
+        // Autentifikatsiya qilingan user ma'lumotlari
+        const userEvent = events.find(e => e.userId && e.user)
+        const user = userEvent?.user ?? null
+
+        // Mehmon tomonidan qoldirilgan kontakt (GuestLeadWidget orqali)
+        type Props = Record<string, unknown>
+        const captureEvent = events.find(e =>
+          e.event === 'contact_click' &&
+          ['lead_capture', 'lead_capture_email'].includes(String((e.properties as Props)?.contactType ?? ''))
+        )
+        const capturedPhone = captureEvent
+          ? String((captureEvent.properties as Props).phone ?? '') || null
+          : null
+        const capturedEmail = captureEvent
+          ? String((captureEvent.properties as Props).email ?? '') || null
+          : null
+
+        // Qidiruv so'rovlari (takrorlanmasdan, max 5 ta)
+        const searchQueries = [...new Set(
+          events
+            .filter(e => e.event === 'search_query')
+            .map(e => String((e.properties as Props).query ?? ''))
+            .filter(Boolean)
+        )].slice(0, 5)
 
         // Qiziqish ko'rsatkichi (score)
         let score = 0
@@ -205,6 +234,7 @@ export default async function analyticsRoutes(fastify: FastifyInstance) {
         if (eventTypes.has('auth_phone_entered')) score += 4
         if (eventTypes.has('auth_otp_sent'))      score += 4
         if (eventTypes.has('auth_completed'))     score += 10
+        if (capturedPhone || capturedEmail)       score += 5
 
         // Qancha muassasa ko'rgan
         const viewedInstitutions = new Set(
@@ -222,6 +252,11 @@ export default async function analyticsRoutes(fastify: FastifyInstance) {
           viewedInstitutions,
           gateReached:       events.filter(e => e.event === 'gate_shown').length,
           status: converted ? 'converted' : clickedCta ? 'warm' : 'cold',
+          // Kontakt ma'lumotlari
+          user,
+          capturedPhone,
+          capturedEmail,
+          searchQueries,
         }
       })
     )

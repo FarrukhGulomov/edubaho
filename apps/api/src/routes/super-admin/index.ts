@@ -1,5 +1,6 @@
 import type { FastifyInstance } from 'fastify'
 import { z } from 'zod'
+import { indexInstitution, setupSearchIndex } from '../../services/searchService'
 
 /**
  * Super Admin routes — faqat SUPER_ADMIN roli uchun
@@ -256,5 +257,40 @@ export default async function superAdminRoutes(fastify: FastifyInstance) {
     ])
 
     return reply.send({ message: 'Admin huquqlari olib tashlandi' })
+  })
+
+  // ─────────────────────────────────────────────
+  // POST /super-admin/search/reindex
+  // Barcha ACTIVE/PREMIUM muassasalarni Meilisearch'ga qayta indexlash.
+  // Transliteratsiya yoki yangi maydonlar qo'shilganda ishlatiladi.
+  // ─────────────────────────────────────────────
+
+  fastify.post('/super-admin/search/reindex', async (request, reply) => {
+    // Index sozlamalarini yangilaymiz (yangi searchableAttributes)
+    await setupSearchIndex()
+
+    const institutions = await prisma.institution.findMany({
+      where: { status: { in: ['ACTIVE', 'PREMIUM'] } },
+      include: {
+        city:    { select: { nameUz: true } },
+        details: { select: { descriptionUz: true, descriptionRu: true, programs: true, specializations: true } },
+        pricing: { select: { monthlyMin: true } },
+      },
+    })
+
+    // Batches bo'lib indexlaymiz (50 tadan)
+    const BATCH = 50
+    let indexed = 0
+    for (let i = 0; i < institutions.length; i += BATCH) {
+      const batch = institutions.slice(i, i + BATCH)
+      await Promise.all(batch.map((inst) => indexInstitution(inst)))
+      indexed += batch.length
+    }
+
+    fastify.log.info(`✅ Meilisearch qayta indexlandi: ${indexed} ta muassasa`)
+    return reply.send({
+      message: `✅ ${indexed} ta muassasa Meilisearch'ga qayta indexlandi`,
+      indexed,
+    })
   })
 }

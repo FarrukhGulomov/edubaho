@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import StarRating from '@/components/shared/StarRating'
+import Header from '@/components/shared/Header'
 import { useAuth } from '@/hooks/useAuth'
 import { useSaved, useCompare } from '@/hooks/useCompare'
 import { useLang, t } from '@/contexts/LangContext'
@@ -24,43 +25,29 @@ const TYPE_ICONS: Record<string, string> = {
 }
 
 const TYPE_LABELS: Record<string, { uz: string; ru: string }> = {
-  KINDERGARTEN:    { uz: "Bog'cha",        ru: 'Детский сад' },
-  SCHOOL:          { uz: 'Maktab',         ru: 'Школа' },
-  LYCEUM:          { uz: 'Litsey',         ru: 'Лицей' },
-  COLLEGE:         { uz: 'Kollej',         ru: 'Колледж' },
-  UNIVERSITY:      { uz: 'Universitet',   ru: 'Университет' },
-  COURSE_CENTER:   { uz: 'Kurs',          ru: 'Учебный центр' },
-  LANGUAGE_CENTER: { uz: 'Til markazi',   ru: 'Языковой центр' },
-  IT_SCHOOL:       { uz: 'IT maktab',     ru: 'IT школа' },
-  TUTORING:        { uz: 'Repetitor',     ru: 'Репетитор' },
-  SPORTS_SCHOOL:   { uz: 'Sport',         ru: 'Спортшкола' },
-  ARTS_SCHOOL:     { uz: "San'at",        ru: 'Школа искусств' },
+  KINDERGARTEN:    { uz: "Bog'cha",      ru: 'Детский сад' },
+  SCHOOL:          { uz: 'Maktab',       ru: 'Школа' },
+  LYCEUM:          { uz: 'Litsey',       ru: 'Лицей' },
+  COLLEGE:         { uz: 'Kollej',       ru: 'Колледж' },
+  UNIVERSITY:      { uz: 'Universitet', ru: 'Университет' },
+  COURSE_CENTER:   { uz: 'Kurs',        ru: 'Учебный центр' },
+  LANGUAGE_CENTER: { uz: 'Til markazi', ru: 'Языковой' },
+  IT_SCHOOL:       { uz: 'IT maktab',   ru: 'IT школа' },
+  TUTORING:        { uz: 'Repetitor',   ru: 'Репетитор' },
+  SPORTS_SCHOOL:   { uz: 'Sport',       ru: 'Спорт' },
+  ARTS_SCHOOL:     { uz: "San'at",      ru: 'Искусство' },
 }
 
-const REVIEW_STATUS_COLORS: Record<string, string> = {
-  PENDING:  'bg-yellow-100 text-yellow-800',
-  APPROVED: 'bg-green-100 text-green-800',
-  REJECTED: 'bg-gray-100 text-gray-500',
-  FLAGGED:  'bg-red-100 text-red-700',
+const STATUS_STYLE: Record<string, { bg: string; label: { uz: string; ru: string } }> = {
+  PENDING:  { bg: 'bg-amber-100 text-amber-800',   label: { uz: '⏳ Ko\'rib chiqilmoqda', ru: '⏳ На проверке' } },
+  APPROVED: { bg: 'bg-green-100  text-green-800',  label: { uz: '✅ Tasdiqlangan',        ru: '✅ Одобрено' } },
+  REJECTED: { bg: 'bg-gray-100   text-gray-600',   label: { uz: '❌ Rad etilgan',         ru: '❌ Отклонено' } },
+  FLAGGED:  { bg: 'bg-red-100    text-red-700',    label: { uz: '🚩 Shikoyat',            ru: '🚩 Жалоба' } },
 }
 
-const REVIEW_STATUS_LABELS: Record<string, { uz: string; ru: string }> = {
-  PENDING:  { uz: '⏳ Kutilmoqda',   ru: '⏳ На модерации' },
-  APPROVED: { uz: '✅ Tasdiqlangan', ru: '✅ Одобрено' },
-  REJECTED: { uz: '❌ Rad etilgan',  ru: '❌ Отклонено' },
-  FLAGGED:  { uz: '🚩 Shikoyat',    ru: '🚩 Жалоба' },
-}
-
-const ROLE_LABELS: Record<string, { uz: string; ru: string }> = {
-  USER:               { uz: 'Foydalanuvchi',  ru: 'Пользователь' },
-  INSTITUTION_OWNER:  { uz: 'Muassasa egasi', ru: 'Владелец' },
-  ADMIN:              { uz: 'Administrator',  ru: 'Администратор' },
-  MODERATOR:          { uz: 'Moderator',      ru: 'Модератор' },
-}
-
-function formatUzs(amount?: number) {
-  if (!amount) return null
-  return `${amount.toLocaleString('uz-UZ').replace(/,/g, ' ')} so'm`
+function fmtUzs(n?: number) {
+  if (!n) return null
+  return `${n.toLocaleString('uz-UZ').replace(/,/g, ' ')} so'm`
 }
 
 export default function ProfilePage() {
@@ -70,51 +57,16 @@ export default function ProfilePage() {
   const { saved, toggleSave } = useSaved()
   const { items: compareItems } = useCompare()
 
-  const ui = {
-    editName:        { uz: 'Tahrirlash',                            ru: 'Редактировать' },
-    namePlaceholder: { uz: 'Ism familiya',                          ru: 'Имя и фамилия' },
-    save:            { uz: 'Saqlash',                               ru: 'Сохранить' },
-    cancel:          { uz: 'Bekor',                                 ru: 'Отмена' },
-    noName:          { uz: 'Ism kiritilmagan',                      ru: 'Имя не указано' },
-    saved_:          { uz: 'Saqlangan',                             ru: 'Сохранено' },
-    compare_:        { uz: 'Solishtirish',                          ru: 'Сравнение' },
-    adminCard:       { uz: 'Admin panel',                           ru: 'Панель админа' },
-    adminSub:        { uz: 'Sharhlarni moderatsiya qilish',         ru: 'Модерация отзывов' },
-    reviews_:        { uz: 'Sharhlar',                              ru: 'Отзывы' },
-    institutions_:   { uz: 'Muassasalar',                           ru: 'Учреждения' },
-    addNew:          { uz: "Yangi qo'shish",                        ru: 'Добавить новое' },
-    adminHome:       { uz: 'Admin bosh',                            ru: 'Главная' },
-    openAdmin:       { uz: 'Admin panelni ochish →',                ru: 'Открыть панель админа →' },
-    compareList:     { uz: "⇄ Solishtirish ro'yxati",              ru: '⇄ Список для сравнения' },
-    compareBtn:      { uz: "Solishtirishni ko'rish →",              ru: 'Смотреть сравнение →' },
-    savedTitle:      { uz: '⭐ Saqlangan muassasalar',              ru: '⭐ Сохранённые учреждения' },
-    noSaved:         { uz: "Hali saqlangan muassasa yo'q",          ru: 'Нет сохранённых учреждений' },
-    noSavedSub:      { uz: 'Qidiruv sahifasida ☆ tugmasini bosib saqlang', ru: 'Нажмите ☆ на странице поиска' },
-    browsBtn:        { uz: "Muassasalarni ko'rish",                 ru: 'Смотреть учреждения' },
-    removeSaved:     { uz: 'Saqlangandan olib tashlash',            ru: 'Убрать из сохранённых' },
-    myReviews:       { uz: '✍️ Mening sharhlarim',                  ru: '✍️ Мои отзывы' },
-    noReviews:       { uz: 'Hali sharh yozmadingiz',                ru: 'Вы ещё не писали отзывов' },
-    noReviewsSub:    { uz: 'Muassasa sahifasiga kirib sharh qoldiring', ru: 'Зайдите на страницу учреждения и оставьте отзыв' },
-    quickActions:    { uz: 'Tezkor harakatlar',                     ru: 'Быстрые действия' },
-    logout:          { uz: 'Tizimdan chiqish',                      ru: 'Выйти из системы' },
-    logoutShort:     { uz: 'Chiqish',                               ru: 'Выйти' },
-    saveSuccess:     { uz: '✅ Ism muvaffaqiyatli saqlandi!',       ru: '✅ Имя успешно сохранено!' },
-    saveErr:         { uz: "Saqlashda xatolik. Qayta urinib ko'ring.", ru: 'Ошибка при сохранении. Попробуйте ещё раз.' },
-    loading_:        { uz: 'Yuklanmoqda...',                        ru: 'Загрузка...' },
-    support:         { uz: 'Muammo bormi?',                         ru: 'Есть проблемы?' },
-    qSearch:         { uz: 'Muassasa qidirish',                     ru: 'Поиск учреждений' },
-    qIT:             { uz: 'IT maktablar',                          ru: 'IT школы' },
-    qUni:            { uz: 'Universitetlar',                        ru: 'Университеты' },
-    qTelegram:       { uz: 'Telegram kanal',                        ru: 'Telegram канал' },
-  }
+  const [name, setName]           = useState('')
+  const [editing, setEditing]     = useState(false)
+  const [saving, setSaving]       = useState(false)
+  const [saveOk, setSaveOk]       = useState(false)
+  const [saveErr, setSaveErr]     = useState('')
+  const [reviews, setReviews]     = useState<MyReview[]>([])
+  const [revLoading, setRevLoading] = useState(false)
 
-  const [name, setName] = useState('')
-  const [editing, setEditing] = useState(false)
-  const [saving, setSaving] = useState(false)
-  const [saveSuccess, setSaveSuccess] = useState(false)
-  const [error, setError] = useState('')
-  const [myReviews, setMyReviews] = useState<MyReview[]>([])
-  const [reviewsLoading, setReviewsLoading] = useState(false)
+  const uz = lang === 'uz'
+  const API = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:3001/api/v1'
 
   useEffect(() => {
     if (!loading && !user) router.replace('/auth')
@@ -124,306 +76,303 @@ export default function ProfilePage() {
     if (user?.name) setName(user.name)
   }, [user])
 
-  // Foydalanuvchining o'z sharhlarini yuklash
   useEffect(() => {
     if (!user) return
     const token = localStorage.getItem('accessToken')
     if (!token) return
-    setReviewsLoading(true)
-    fetch(`${process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:3001/api/v1'}/reviews/me`, {
+    setRevLoading(true)
+    fetch(`${API}/reviews/me`, {
       headers: { Authorization: `Bearer ${token}`, 'ngrok-skip-browser-warning': '1' },
     })
-      .then((r) => r.json())
-      .then((d) => setMyReviews(d.data ?? []))
+      .then(r => r.json())
+      .then(d => setReviews(d.data ?? []))
       .catch(() => {})
-      .finally(() => setReviewsLoading(false))
-  }, [user])
+      .finally(() => setRevLoading(false))
+  }, [user, API])
 
   async function handleSaveName(e: React.FormEvent) {
     e.preventDefault()
     setSaving(true)
-    setError('')
+    setSaveErr('')
     try {
       const token = localStorage.getItem('accessToken')!
-      const res = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:3001/api/v1'}/auth/profile`,
-        {
-          method: 'PATCH',
-          headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}`, 'ngrok-skip-browser-warning': '1' },
-          body: JSON.stringify({ name }),
-        },
-      )
+      const res = await fetch(`${API}/auth/profile`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}`, 'ngrok-skip-browser-warning': '1' },
+        body: JSON.stringify({ name }),
+      })
       if (!res.ok) throw new Error()
       const data = await res.json()
       setUser(data.data)
       setEditing(false)
-      setSaveSuccess(true)
-      setTimeout(() => setSaveSuccess(false), 3000)
+      setSaveOk(true)
+      setTimeout(() => setSaveOk(false), 3000)
     } catch {
-      setError(t(lang, ui.saveErr))
+      setSaveErr(uz ? "Saqlashda xatolik. Qayta urinib ko'ring." : 'Ошибка при сохранении. Попробуйте ещё раз.')
     } finally {
       setSaving(false)
     }
   }
 
-  if (loading) {
-    return (
-      <div className="flex min-h-screen items-center justify-center bg-gray-50">
+  if (loading) return (
+    <div className="flex min-h-screen flex-col bg-slate-50">
+      <Header />
+      <div className="flex flex-1 items-center justify-center">
         <div className="text-center">
-          <div className="mx-auto mb-4 h-12 w-12 animate-spin rounded-full border-4 border-primary-200 border-t-primary-600" />
-          <p className="text-gray-500">{t(lang, ui.loading_)}</p>
+          <div className="mx-auto mb-5 h-14 w-14 animate-spin rounded-full border-4 border-primary-200 border-t-primary-600" />
+          <p className="text-lg text-gray-500">{uz ? 'Yuklanmoqda...' : 'Загрузка...'}</p>
         </div>
       </div>
-    )
-  }
+    </div>
+  )
+
   if (!user) return null
 
   const initials = user.name
-    ? user.name.split(' ').map((n) => n[0]).join('').toUpperCase().slice(0, 2)
+    ? user.name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2)
     : user.phone.slice(-2)
 
-  const roleLabel = ROLE_LABELS[user.role]
+  const isAdmin = ['ADMIN', 'SUPER_ADMIN', 'MODERATOR'].includes(user.role)
 
   return (
-    <div className="min-h-screen bg-gray-50 pb-24">
+    <div className="min-h-screen bg-slate-50">
+      <Header />
 
-      {/* Header */}
-      <header className="sticky top-0 z-10 border-b border-gray-200 bg-white/95 backdrop-blur">
-        <div className="mx-auto flex max-w-2xl items-center justify-between px-4 py-3">
-          <Link href="/" className="flex items-center gap-2 font-bold text-primary-600">
-            <span className="text-xl">🎓</span> EduReyting.uz
-          </Link>
-          <button
-            onClick={logout}
-            className="rounded-lg border border-gray-200 px-3 py-1.5 text-sm text-gray-500 hover:bg-gray-50"
-          >
-            {t(lang, ui.logoutShort)}
-          </button>
-        </div>
-      </header>
+      <main className="mx-auto max-w-2xl px-4 py-8 space-y-5">
 
-      <main className="mx-auto max-w-2xl px-4 py-6 space-y-4">
+        {/* ══ Avatar + ism bloki ══════════════════════════════════ */}
+        <div className="overflow-hidden rounded-3xl bg-white shadow-sm border-2 border-gray-100">
+          {/* Rangli banner */}
+          <div className="h-24 bg-gradient-to-r from-primary-600 to-sky-500" />
 
-        {/* Profile card */}
-        <div className="rounded-2xl border border-gray-200 bg-white p-6 shadow-sm">
-          <div className="flex items-center gap-4">
-            <div className="flex h-16 w-16 shrink-0 items-center justify-center rounded-full bg-primary-600 text-2xl font-black text-white">
-              {initials}
+          <div className="px-6 pb-6">
+            {/* Avatar */}
+            <div className="-mt-12 mb-4 flex items-end justify-between">
+              <div className="flex h-24 w-24 items-center justify-center rounded-3xl bg-gradient-to-br from-primary-500 to-primary-700 text-3xl font-black text-white shadow-lg ring-4 ring-white">
+                {initials}
+              </div>
+              {!editing && (
+                <button
+                  onClick={() => setEditing(true)}
+                  className="flex items-center gap-2 rounded-2xl border-2 border-gray-200 px-4 py-2.5 text-base font-bold text-gray-600 hover:border-primary-300 hover:text-primary-600 transition-all"
+                >
+                  ✏️ {uz ? 'Tahrirlash' : 'Изменить'}
+                </button>
+              )}
             </div>
-            <div className="flex-1 min-w-0">
-              {editing ? (
-                <form onSubmit={handleSaveName} className="flex gap-2">
+
+            {/* Ism tahrirlash */}
+            {editing ? (
+              <form onSubmit={handleSaveName} className="mb-4 space-y-3">
+                <div>
+                  <label className="mb-2 block text-base font-bold text-gray-700">
+                    {uz ? 'Ism va familiya' : 'Имя и фамилия'}
+                  </label>
                   <input
                     type="text"
                     value={name}
-                    onChange={(e) => setName(e.target.value)}
-                    placeholder={t(lang, ui.namePlaceholder)}
+                    onChange={e => setName(e.target.value)}
+                    placeholder={uz ? 'Masalan: Alisher Ergashev' : 'Например: Алишер Эргашев'}
                     autoFocus
-                    className="flex-1 rounded-xl border border-gray-300 px-3 py-2 text-sm outline-none focus:border-primary-500 focus:ring-2 focus:ring-primary-100"
+                    className="input"
                   />
+                </div>
+                {saveErr && (
+                  <div className="rounded-2xl bg-red-50 px-4 py-3 text-base text-red-700">
+                    ⚠️ {saveErr}
+                  </div>
+                )}
+                <div className="flex gap-3">
                   <button
                     type="submit"
                     disabled={saving || !name.trim()}
-                    className="rounded-xl bg-primary-600 px-4 py-2 text-sm font-semibold text-white disabled:opacity-50"
+                    className="btn-primary flex-1"
                   >
-                    {saving ? '...' : t(lang, ui.save)}
+                    {saving ? (uz ? 'Saqlanmoqda...' : 'Сохранение...') : (uz ? '✅ Saqlash' : '✅ Сохранить')}
                   </button>
                   <button
                     type="button"
                     onClick={() => { setEditing(false); setName(user.name ?? '') }}
-                    className="rounded-xl border border-gray-300 px-3 py-2 text-sm text-gray-600"
+                    className="btn-secondary"
                   >
-                    {t(lang, ui.cancel)}
-                  </button>
-                </form>
-              ) : (
-                <div className="flex items-center gap-2">
-                  <div>
-                    <p className="font-bold text-gray-900 text-lg leading-tight">
-                      {user.name ?? t(lang, ui.noName)}
-                    </p>
-                    <p className="text-sm text-gray-500">{user.phone}</p>
-                  </div>
-                  <button
-                    onClick={() => setEditing(true)}
-                    className="ml-auto rounded-lg border border-gray-200 px-3 py-1.5 text-xs font-medium text-gray-600 hover:bg-gray-50"
-                  >
-                    {t(lang, ui.editName)}
+                    {uz ? 'Bekor' : 'Отмена'}
                   </button>
                 </div>
-              )}
-              {error && <p className="mt-1 text-xs text-red-500">{error}</p>}
-            </div>
-          </div>
+              </form>
+            ) : (
+              <div>
+                <h1 className="text-2xl font-black text-gray-900">
+                  {user.name ?? <span className="text-gray-400 italic">{uz ? 'Ism kiritilmagan' : 'Имя не указано'}</span>}
+                </h1>
+                <p className="mt-1 text-base text-gray-500">📱 {user.phone}</p>
+              </div>
+            )}
 
-          {saveSuccess && (
-            <div className="mt-3 flex items-center gap-2 rounded-xl bg-green-50 px-4 py-2 text-sm text-green-700">
-              {t(lang, ui.saveSuccess)}
-            </div>
-          )}
+            {/* Saqlash muvaffaqiyatli xabari */}
+            {saveOk && (
+              <div className="mt-4 flex items-center gap-3 rounded-2xl bg-green-50 border-2 border-green-200 px-4 py-3 text-base font-semibold text-green-700">
+                ✅ {uz ? 'Ism muvaffaqiyatli saqlandi!' : 'Имя успешно сохранено!'}
+              </div>
+            )}
 
-          {/* Stats */}
-          <div className="mt-4 grid grid-cols-3 divide-x divide-gray-100 rounded-xl bg-gray-50 text-center">
-            <div className="py-3">
-              <p className="text-xl font-black text-primary-600">{saved.length}</p>
-              <p className="text-xs text-gray-500">{t(lang, ui.saved_)}</p>
-            </div>
-            <div className="py-3">
-              <p className="text-xl font-black text-primary-600">{compareItems.length}</p>
-              <p className="text-xs text-gray-500">{t(lang, ui.compare_)}</p>
-            </div>
-            <div className="py-3">
-              <p className="text-xl font-black text-primary-600">
-                {user.role === 'USER' ? '👤' : '⭐'}
-              </p>
-              <p className="text-xs text-gray-500">
-                {roleLabel ? t(lang, roleLabel) : user.role}
-              </p>
+            {/* Statistika */}
+            <div className="mt-5 grid grid-cols-3 gap-3">
+              {[
+                { value: saved.length,        icon: '⭐', label: { uz: 'Saqlangan',   ru: 'Сохранено' } },
+                { value: compareItems.length,  icon: '⇄',  label: { uz: 'Solishtirish', ru: 'Сравнение' } },
+                { value: reviews.length,       icon: '✍️', label: { uz: 'Sharhlar',    ru: 'Отзывов' } },
+              ].map(s => (
+                <div key={s.icon} className="flex flex-col items-center gap-1.5 rounded-2xl bg-slate-50 py-4 text-center">
+                  <span className="text-2xl">{s.icon}</span>
+                  <span className="text-2xl font-black text-primary-600">{s.value}</span>
+                  <span className="text-sm font-semibold text-gray-500">{uz ? s.label.uz : s.label.ru}</span>
+                </div>
+              ))}
             </div>
           </div>
         </div>
 
-        {/* Admin panel card — faqat admin/moderator uchun */}
-        {(user.role === 'ADMIN' || user.role === 'MODERATOR') && (
-          <div className="rounded-2xl border-2 border-red-200 bg-red-50 p-5">
-            <div className="flex items-center gap-3 mb-4">
-              <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-red-600 text-2xl">
+        {/* ══ Admin panel — faqat adminlar uchun ═════════════════ */}
+        {isAdmin && (
+          <div className="rounded-3xl border-2 border-red-200 bg-gradient-to-br from-red-50 to-orange-50 p-6">
+            <div className="mb-5 flex items-center gap-4">
+              <span className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-red-600 text-3xl shadow-sm">
                 🛡️
               </span>
               <div>
-                <h2 className="font-black text-red-900 text-lg leading-tight">{t(lang, ui.adminCard)}</h2>
-                <p className="text-sm text-red-700">{t(lang, ui.adminSub)}</p>
+                <h2 className="text-xl font-black text-red-900">
+                  {uz ? 'Admin paneli' : 'Панель администратора'}
+                </h2>
+                <p className="text-base text-red-700">
+                  {uz ? 'Sharhlar va muassasalarni boshqaring' : 'Управление отзывами и учреждениями'}
+                </p>
               </div>
-              <span className="ml-auto rounded-full bg-red-600 px-3 py-1 text-sm font-bold text-white">
+              <span className="ml-auto rounded-2xl bg-red-600 px-3 py-1.5 text-sm font-black text-white">
                 {user.role}
               </span>
             </div>
-            <div className="grid grid-cols-2 gap-2 mb-4">
-              <Link
-                href="/admin/reviews"
-                className="flex items-center gap-2 rounded-xl bg-white/60 px-4 py-3 text-sm font-semibold text-red-800 hover:bg-white/80 transition-colors"
-              >
-                <span>📋</span>
-                <span>{t(lang, ui.reviews_)}</span>
-              </Link>
-              <Link
-                href="/admin/institutions"
-                className="flex items-center gap-2 rounded-xl bg-white/60 px-4 py-3 text-sm font-semibold text-red-800 hover:bg-white/80 transition-colors"
-              >
-                <span>🏫</span>
-                <span>{t(lang, ui.institutions_)}</span>
-              </Link>
-              <Link
-                href="/admin/institutions/new"
-                className="flex items-center gap-2 rounded-xl bg-white/60 px-4 py-3 text-sm font-semibold text-red-800 hover:bg-white/80 transition-colors"
-              >
-                <span>➕</span>
-                <span>{t(lang, ui.addNew)}</span>
-              </Link>
-              <Link
-                href="/admin"
-                className="flex items-center gap-2 rounded-xl bg-white/60 px-4 py-3 text-sm font-semibold text-red-800 hover:bg-white/80 transition-colors"
-              >
-                <span>🛡️</span>
-                <span>{t(lang, ui.adminHome)}</span>
-              </Link>
+            <div className="mb-4 grid grid-cols-2 gap-3">
+              {[
+                { href: '/admin/reviews',       icon: '📋', uz: 'Sharhlar',        ru: 'Отзывы' },
+                { href: '/admin/institutions',   icon: '🏫', uz: 'Muassasalar',     ru: 'Учреждения' },
+                { href: '/admin/institutions/new', icon: '➕', uz: "Yangi qo'shish", ru: 'Добавить' },
+                { href: '/admin',               icon: '🛡️', uz: 'Bosh panel',      ru: 'Главная' },
+              ].map(link => (
+                <Link
+                  key={link.href}
+                  href={link.href}
+                  className="flex items-center gap-3 rounded-2xl bg-white/70 px-4 py-3.5 text-base font-bold text-red-800 hover:bg-white/90 transition-colors"
+                >
+                  <span className="text-xl">{link.icon}</span>
+                  {uz ? link.uz : link.ru}
+                </Link>
+              ))}
             </div>
             <Link
               href="/admin"
-              className="block w-full rounded-xl bg-red-600 py-3 text-center font-bold text-white hover:bg-red-700 transition-colors"
+              className="block w-full rounded-2xl bg-red-600 py-4 text-center text-base font-black text-white hover:bg-red-700 transition-colors"
             >
-              🛡️ {t(lang, ui.openAdmin)}
+              🛡️ {uz ? 'Admin panelni ochish →' : 'Открыть панель администратора →'}
             </Link>
           </div>
         )}
 
-        {/* Compare list */}
+        {/* ══ Solishtirish ro'yxati ════════════════════════════════ */}
         {compareItems.length >= 2 && (
-          <div className="rounded-2xl border-2 border-primary-200 bg-primary-50 p-5">
-            <div className="flex items-center justify-between mb-3">
-              <h2 className="font-bold text-primary-800">{t(lang, ui.compareList)}</h2>
-              <span className="text-sm text-primary-600">
-                {compareItems.length} {lang === 'uz' ? 'ta' : 'шт.'}
+          <div className="rounded-3xl border-2 border-primary-200 bg-gradient-to-br from-primary-50 to-sky-50 p-6">
+            <div className="mb-4 flex items-center justify-between">
+              <h2 className="text-xl font-black text-primary-900">
+                ⇄ {uz ? "Solishtirish ro'yxati" : 'Список сравнения'}
+              </h2>
+              <span className="rounded-full bg-primary-600 px-3 py-1.5 text-sm font-black text-white">
+                {compareItems.length} ta
               </span>
             </div>
-            <div className="space-y-2 mb-3">
-              {compareItems.map((item) => (
-                <div key={item.id} className="flex items-center gap-2 text-sm text-primary-700">
-                  <span>{TYPE_ICONS[item.type] ?? '🏫'}</span>
-                  <span className="line-clamp-1">{item.nameUz}</span>
+            <div className="mb-4 space-y-2.5">
+              {compareItems.map(item => (
+                <div key={item.id} className="flex items-center gap-3 rounded-2xl bg-white/70 px-4 py-3">
+                  <span className="text-xl">{TYPE_ICONS[item.type] ?? '🏫'}</span>
+                  <span className="text-base font-semibold text-primary-800 line-clamp-1">{item.nameUz}</span>
                 </div>
               ))}
             </div>
             <Link
-              href={`/compare?ids=${compareItems.map((i) => i.id).join(',')}`}
-              className="block w-full rounded-xl bg-primary-600 py-3 text-center font-bold text-white hover:bg-primary-700 transition-colors"
+              href={`/compare?ids=${compareItems.map(i => i.id).join(',')}`}
+              className="block w-full rounded-2xl bg-primary-600 py-4 text-center text-base font-black text-white hover:bg-primary-700 transition-colors"
             >
-              {t(lang, ui.compareBtn)}
+              {uz ? "⇄ Solishtirishni ko'rish →" : '⇄ Смотреть сравнение →'}
             </Link>
           </div>
         )}
 
-        {/* Saved institutions */}
-        <div className="rounded-2xl border border-gray-200 bg-white shadow-sm">
-          <div className="flex items-center justify-between border-b border-gray-100 px-5 py-4">
-            <h2 className="font-bold text-gray-900">{t(lang, ui.savedTitle)}</h2>
+        {/* ══ Saqlangan muassasalar ═══════════════════════════════ */}
+        <div className="rounded-3xl border-2 border-gray-100 bg-white shadow-sm overflow-hidden">
+          <div className="flex items-center justify-between border-b-2 border-gray-100 px-6 py-4">
+            <h2 className="text-xl font-black text-gray-900">
+              ⭐ {uz ? 'Saqlangan muassasalar' : 'Сохранённые учреждения'}
+            </h2>
             {saved.length > 0 && (
-              <span className="rounded-full bg-primary-100 px-2.5 py-0.5 text-sm font-semibold text-primary-700">
-                {saved.length}
+              <span className="rounded-full bg-amber-100 px-3 py-1.5 text-sm font-black text-amber-700">
+                {saved.length} ta
               </span>
             )}
           </div>
 
           {saved.length === 0 ? (
-            <div className="px-5 py-10 text-center">
-              <div className="mb-3 text-4xl">☆</div>
-              <p className="font-medium text-gray-700 mb-1">{t(lang, ui.noSaved)}</p>
-              <p className="text-sm text-gray-400 mb-4">{t(lang, ui.noSavedSub)}</p>
-              <Link
-                href="/search"
-                className="inline-block rounded-xl bg-primary-600 px-6 py-2.5 text-sm font-semibold text-white hover:bg-primary-700"
-              >
-                {t(lang, ui.browsBtn)}
+            <div className="px-6 py-12 text-center">
+              <div className="mx-auto mb-5 flex h-20 w-20 items-center justify-center rounded-3xl bg-amber-50 text-5xl">
+                ☆
+              </div>
+              <h3 className="mb-2 text-xl font-black text-gray-800">
+                {uz ? "Hali saqlangan muassasa yo'q" : 'Нет сохранённых учреждений'}
+              </h3>
+              <p className="mb-6 text-base text-gray-500 leading-relaxed">
+                {uz
+                  ? "Qidiruv sahifasida muassasa kartochkasidagi ☆ tugmasini bosing"
+                  : 'Нажмите ☆ на карточке учреждения на странице поиска'}
+              </p>
+              <Link href="/search" className="btn-primary">
+                🔍 {uz ? "Muassasalarni ko'rish" : 'Смотреть учреждения'}
               </Link>
             </div>
           ) : (
-            <div className="divide-y divide-gray-100">
-              {saved.map((item) => {
+            <div className="divide-y-2 divide-gray-100">
+              {saved.map(item => {
                 const typeLabel = TYPE_LABELS[item.type]
                 return (
-                  <div key={item.id} className="flex items-center gap-3 px-5 py-4">
-                    <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-gray-100 text-xl">
+                  <div key={item.id} className="flex items-center gap-4 px-6 py-4 hover:bg-slate-50 transition-colors">
+                    <span className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-gray-100 text-3xl">
                       {TYPE_ICONS[item.type] ?? '🏫'}
                     </span>
                     <div className="flex-1 min-w-0">
                       <Link
                         href={`/institutions/${item.slug}`}
-                        className="block font-semibold text-gray-900 hover:text-primary-600 line-clamp-1"
+                        className="block text-lg font-bold text-gray-900 hover:text-primary-600 line-clamp-1 transition-colors"
                       >
                         {item.nameUz}
                       </Link>
-                      <div className="flex items-center gap-2 mt-0.5">
-                        <span className="text-xs text-gray-400">
+                      <div className="mt-1 flex flex-wrap items-center gap-2">
+                        <span className="text-sm text-gray-500">
                           {typeLabel ? t(lang, typeLabel) : item.type}
                         </span>
                         {item.avgRating && (
-                          <>
-                            <span className="text-gray-200">•</span>
+                          <div className="flex items-center gap-1">
+                            <span className="text-gray-300">•</span>
                             <StarRating rating={item.avgRating} size="sm" />
-                          </>
+                            <span className="text-sm font-bold text-gray-700">{item.avgRating.toFixed(1)}</span>
+                          </div>
                         )}
                         {item.pricing?.monthlyMin && (
-                          <>
-                            <span className="text-gray-200">•</span>
-                            <span className="text-xs text-gray-500">{formatUzs(item.pricing.monthlyMin)}</span>
-                          </>
+                          <span className="rounded-xl bg-emerald-50 px-2.5 py-1 text-sm font-bold text-emerald-700">
+                            {fmtUzs(item.pricing.monthlyMin)}
+                          </span>
                         )}
                       </div>
                     </div>
                     <button
                       onClick={() => toggleSave(item)}
-                      className="shrink-0 rounded-lg p-2 text-yellow-500 hover:bg-yellow-50"
-                      title={t(lang, ui.removeSaved)}
+                      title={uz ? "Saqlangandan olib tashlash" : 'Убрать из сохранённых'}
+                      className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl text-2xl text-amber-500 hover:bg-amber-50 transition-colors"
                     >
                       ⭐
                     </button>
@@ -434,62 +383,74 @@ export default function ProfilePage() {
           )}
         </div>
 
-        {/* Mening sharhlarim */}
-        <div className="rounded-2xl border border-gray-200 bg-white shadow-sm">
-          <div className="flex items-center justify-between border-b border-gray-100 px-5 py-4">
-            <h2 className="font-bold text-gray-900">{t(lang, ui.myReviews)}</h2>
-            {myReviews.length > 0 && (
-              <span className="rounded-full bg-primary-100 px-2.5 py-0.5 text-sm font-semibold text-primary-700">
-                {myReviews.length}
+        {/* ══ Mening sharhlarim ═══════════════════════════════════ */}
+        <div className="rounded-3xl border-2 border-gray-100 bg-white shadow-sm overflow-hidden">
+          <div className="flex items-center justify-between border-b-2 border-gray-100 px-6 py-4">
+            <h2 className="text-xl font-black text-gray-900">
+              ✍️ {uz ? 'Mening sharhlarim' : 'Мои отзывы'}
+            </h2>
+            {reviews.length > 0 && (
+              <span className="rounded-full bg-primary-100 px-3 py-1.5 text-sm font-black text-primary-700">
+                {reviews.length} ta
               </span>
             )}
           </div>
 
-          {reviewsLoading ? (
-            <div className="px-5 py-8 text-center text-gray-400">{t(lang, ui.loading_)}</div>
-          ) : myReviews.length === 0 ? (
-            <div className="px-5 py-10 text-center">
-              <div className="mb-3 text-4xl">✍️</div>
-              <p className="font-medium text-gray-700 mb-1">{t(lang, ui.noReviews)}</p>
-              <p className="text-sm text-gray-400 mb-4">{t(lang, ui.noReviewsSub)}</p>
-              <Link
-                href="/search"
-                className="inline-block rounded-xl bg-primary-600 px-6 py-2.5 text-sm font-semibold text-white hover:bg-primary-700"
-              >
-                {t(lang, ui.browsBtn)}
+          {revLoading ? (
+            <div className="py-12 text-center">
+              <div className="mx-auto h-10 w-10 animate-spin rounded-full border-4 border-primary-200 border-t-primary-600" />
+            </div>
+          ) : reviews.length === 0 ? (
+            <div className="px-6 py-12 text-center">
+              <div className="mx-auto mb-5 flex h-20 w-20 items-center justify-center rounded-3xl bg-blue-50 text-5xl">
+                ✍️
+              </div>
+              <h3 className="mb-2 text-xl font-black text-gray-800">
+                {uz ? 'Hali sharh yozmadingiz' : 'Вы ещё не писали отзывов'}
+              </h3>
+              <p className="mb-6 text-base text-gray-500 leading-relaxed">
+                {uz
+                  ? "Muassasa sahifasiga kirib boshqalarga yordam bering"
+                  : 'Зайдите на страницу учреждения и помогите другим'}
+              </p>
+              <Link href="/search" className="btn-primary">
+                🔍 {uz ? "Muassasa topish" : 'Найти учреждение'}
               </Link>
             </div>
           ) : (
-            <div className="divide-y divide-gray-100">
-              {myReviews.map((review) => {
-                const statusLabel = REVIEW_STATUS_LABELS[review.status]
+            <div className="divide-y-2 divide-gray-100">
+              {reviews.map(review => {
+                const st = STATUS_STYLE[review.status]
                 const instName = lang === 'ru' && review.institution?.nameRu
                   ? review.institution.nameRu
                   : review.institution?.nameUz
                 return (
-                  <div key={review.id} className="px-5 py-4">
-                    <div className="flex items-start justify-between gap-2 mb-2">
+                  <div key={review.id} className="px-6 py-5">
+                    <div className="mb-3 flex items-start justify-between gap-3">
                       {review.institution && (
                         <Link
                           href={`/institutions/${review.institution.slug}`}
-                          className="font-semibold text-gray-900 hover:text-primary-600 text-sm leading-tight line-clamp-1"
+                          className="text-lg font-bold text-gray-900 hover:text-primary-600 line-clamp-1 transition-colors"
                         >
                           {TYPE_ICONS[review.institution.type] ?? '🏫'} {instName}
                         </Link>
                       )}
-                      <span className={`shrink-0 rounded-full px-2.5 py-0.5 text-xs font-bold ${REVIEW_STATUS_COLORS[review.status] ?? 'bg-gray-100 text-gray-600'}`}>
-                        {statusLabel ? t(lang, statusLabel) : review.status}
+                      <span className={`shrink-0 rounded-full px-3 py-1.5 text-sm font-bold ${st?.bg ?? 'bg-gray-100 text-gray-600'}`}>
+                        {st ? t(lang, st.label) : review.status}
                       </span>
                     </div>
-                    <div className="flex items-center gap-1 mb-1">
+                    <div className="mb-2 flex items-center gap-1">
                       {Array.from({ length: 5 }).map((_, i) => (
-                        <span key={i} className={i < review.overallRating ? 'text-yellow-400' : 'text-gray-200'}>★</span>
+                        <span key={i} className={`text-xl ${i < review.overallRating ? 'text-yellow-400' : 'text-gray-200'}`}>★</span>
                       ))}
+                      <span className="ml-2 text-base font-bold text-gray-700">{review.overallRating}/5</span>
                     </div>
-                    {review.title && <p className="text-sm font-semibold text-gray-800 mb-0.5">{review.title}</p>}
-                    <p className="text-sm text-gray-600 line-clamp-2">{review.body}</p>
-                    <p className="mt-1 text-xs text-gray-400">
-                      {new Date(review.createdAt).toLocaleDateString(lang === 'ru' ? 'ru-RU' : 'uz-UZ')}
+                    {review.title && (
+                      <p className="mb-1 text-base font-bold text-gray-800">{review.title}</p>
+                    )}
+                    <p className="text-base text-gray-600 line-clamp-2 leading-relaxed">{review.body}</p>
+                    <p className="mt-2 text-sm text-gray-400">
+                      📅 {new Date(review.createdAt).toLocaleDateString(uz ? 'uz-UZ' : 'ru-RU')}
                     </p>
                   </div>
                 )
@@ -498,44 +459,58 @@ export default function ProfilePage() {
           )}
         </div>
 
-        {/* Quick actions */}
-        <div className="rounded-2xl border border-gray-200 bg-white p-5 shadow-sm">
-          <h2 className="mb-4 font-bold text-gray-900">{t(lang, ui.quickActions)}</h2>
+        {/* ══ Tezkor harakatlar ═══════════════════════════════════ */}
+        <div className="rounded-3xl border-2 border-gray-100 bg-white p-6 shadow-sm">
+          <h2 className="mb-5 text-xl font-black text-gray-900">
+            {uz ? '⚡ Tezkor harakatlar' : '⚡ Быстрые действия'}
+          </h2>
           <div className="grid grid-cols-2 gap-3">
-            {([
-              { href: '/search',              icon: '🔍', labelKey: 'qSearch' },
-              { href: '/search?type=IT_SCHOOL', icon: '💻', labelKey: 'qIT' },
-              { href: '/search?type=UNIVERSITY', icon: '🎓', labelKey: 'qUni' },
-              { href: 'https://t.me/edureyting', icon: '✈️', labelKey: 'qTelegram' },
-            ] as const).map((action) => (
+            {[
+              { href: '/search',                icon: '🔍', uz: 'Qidiruv',         ru: 'Поиск' },
+              { href: '/search?type=IT_SCHOOL', icon: '💻', uz: 'IT maktablar',    ru: 'IT школы' },
+              { href: '/search?type=UNIVERSITY',icon: '🎓', uz: 'Universitetlar',  ru: 'Университеты' },
+              { href: 'https://t.me/edureyting',icon: '✈️', uz: 'Telegram kanal', ru: 'Telegram канал' },
+            ].map(a => (
               <Link
-                key={action.href}
-                href={action.href}
-                className="flex flex-col items-center gap-2 rounded-xl border-2 border-gray-100 p-4 text-center hover:border-primary-300 hover:bg-primary-50 transition-all"
+                key={a.href}
+                href={a.href}
+                target={a.href.startsWith('http') ? '_blank' : undefined}
+                rel={a.href.startsWith('http') ? 'noopener noreferrer' : undefined}
+                className="flex flex-col items-center gap-3 rounded-2xl border-2 border-gray-100 py-5 px-3 text-center transition-all hover:border-primary-200 hover:bg-primary-50 hover:-translate-y-0.5"
               >
-                <span className="text-3xl">{action.icon}</span>
-                <span className="text-sm font-semibold text-gray-700 leading-tight">
-                  {t(lang, ui[action.labelKey])}
+                <span className="text-4xl">{a.icon}</span>
+                <span className="text-base font-bold text-gray-700 leading-tight">
+                  {uz ? a.uz : a.ru}
                 </span>
               </Link>
             ))}
           </div>
         </div>
 
-        {/* Logout */}
+        {/* ══ Tizimdan chiqish ════════════════════════════════════ */}
         <button
           onClick={logout}
-          className="w-full rounded-2xl border border-red-200 bg-white py-4 font-semibold text-red-600 hover:bg-red-50 transition-colors shadow-sm"
+          className="w-full rounded-3xl border-2 border-red-200 bg-white py-5 text-lg font-black text-red-600 hover:bg-red-50 hover:border-red-400 transition-all shadow-sm"
         >
-          {t(lang, ui.logout)}
+          🚪 {uz ? 'Tizimdan chiqish' : 'Выйти из системы'}
         </button>
 
-        <p className="text-center text-xs text-gray-400 pb-2">
-          {t(lang, ui.support)}{' '}
-          <a href="https://t.me/edureyting" className="text-primary-600 hover:underline" target="_blank" rel="noopener noreferrer">
-            @edureyting Telegram
+        {/* ══ Yordam ══════════════════════════════════════════════ */}
+        <div className="rounded-3xl bg-blue-50 border-2 border-blue-100 p-5 text-center">
+          <p className="text-base font-semibold text-blue-800">
+            {uz ? '💬 Muammo bormi?' : '💬 Есть проблемы?'}
+          </p>
+          <a
+            href="https://t.me/edureyting"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="mt-2 inline-flex items-center gap-2 text-base font-black text-blue-600 hover:text-blue-800"
+          >
+            ✈️ @edureyting {uz ? "Telegram kanaliga yozing" : '— пишите нам'}
           </a>
-        </p>
+        </div>
+
+        <div className="h-4" />
       </main>
     </div>
   )

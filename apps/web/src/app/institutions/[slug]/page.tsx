@@ -81,6 +81,11 @@ export interface Institution {
   reviews?: Array<{
     id: string
     overallRating: number
+    teacherRating?: number | null
+    facilityRating?: number | null
+    valueRating?: number | null
+    serviceRating?: number | null
+    atmosphereRating?: number | null
     title?: string
     body: string
     isAnonymous: boolean

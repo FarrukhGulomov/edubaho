@@ -1,6 +1,7 @@
 import type { FastifyInstance } from 'fastify'
 import { z } from 'zod'
 import { InstitutionType, InstitutionStatus } from '@prisma/client'
+import { indexInstitution, removeFromIndex } from '../../services/searchService'
 
 /**
  * Admin muassasalar CRUD routes
@@ -151,10 +152,19 @@ export default async function adminInstitutionRoutes(fastify: FastifyInstance) {
           },
         } : undefined,
       },
-      select: { id: true, slug: true, nameUz: true },
+      include: {
+        city:    { select: { nameUz: true } },
+        details: { select: { descriptionUz: true, descriptionRu: true, programs: true, specializations: true } },
+        pricing: { select: { monthlyMin: true } },
+      },
     })
 
-    return reply.status(201).send({ data: institution, message: 'Muassasa yaratildi' })
+    // Meilisearch'ga indexlaymiz (ACTIVE yoki PREMIUM bo'lsa)
+    if (['ACTIVE', 'PREMIUM'].includes(institution.status)) {
+      indexInstitution(institution).catch((err) => fastify.log.warn(err, 'Meilisearch indexlashda xato'))
+    }
+
+    return reply.status(201).send({ data: { id: institution.id, slug: institution.slug, nameUz: institution.nameUz }, message: 'Muassasa yaratildi' })
   })
 
   // ─────────────────────────────────────────────
@@ -275,6 +285,23 @@ export default async function adminInstitutionRoutes(fastify: FastifyInstance) {
       })
     }
 
+    // Meilisearch indexini yangilaymiz
+    const refreshed = await prisma.institution.findUnique({
+      where: { id },
+      include: {
+        city:    { select: { nameUz: true } },
+        details: { select: { descriptionUz: true, descriptionRu: true, programs: true, specializations: true } },
+        pricing: { select: { monthlyMin: true } },
+      },
+    })
+    if (refreshed) {
+      if (['ACTIVE', 'PREMIUM'].includes(refreshed.status)) {
+        indexInstitution(refreshed).catch((err) => fastify.log.warn(err, 'Meilisearch indexlashda xato'))
+      } else {
+        removeFromIndex(id).catch((err) => fastify.log.warn(err, 'Meilisearch o\'chirishda xato'))
+      }
+    }
+
     return reply.send({ message: 'Muassasa yangilandi' })
   })
 
@@ -299,6 +326,10 @@ export default async function adminInstitutionRoutes(fastify: FastifyInstance) {
       prisma.review.deleteMany({ where: { institutionId: id } }),
       prisma.institution.delete({ where: { id } }),
     ])
+
+    // Meilisearch'dan o'chiramiz
+    removeFromIndex(id).catch((err) => fastify.log.warn(err, 'Meilisearch o\'chirishda xato'))
+
     return reply.send({ message: "Muassasa o'chirildi" })
   })
 
@@ -319,7 +350,23 @@ export default async function adminInstitutionRoutes(fastify: FastifyInstance) {
       return reply.status(404).send({ error: 'Muassasa topilmadi' })
     }
 
-    await prisma.institution.update({ where: { id }, data: { status } })
+    const updated = await prisma.institution.update({
+      where: { id },
+      data: { status },
+      include: {
+        city:    { select: { nameUz: true } },
+        details: { select: { descriptionUz: true, descriptionRu: true, programs: true, specializations: true } },
+        pricing: { select: { monthlyMin: true } },
+      },
+    })
+
+    // Meilisearch indexini yangilaymiz
+    if (['ACTIVE', 'PREMIUM'].includes(status)) {
+      indexInstitution(updated).catch((err) => fastify.log.warn(err, 'Meilisearch indexlashda xato'))
+    } else {
+      removeFromIndex(id).catch((err) => fastify.log.warn(err, 'Meilisearch o\'chirishda xato'))
+    }
+
     return reply.send({ message: `Status ${status} ga o'zgartirildi` })
   })
 

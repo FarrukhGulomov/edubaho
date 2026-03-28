@@ -11,6 +11,28 @@ export default function SuperAdminPage() {
   const { user, loading } = useAuth()
   const router = useRouter()
   const [stats, setStats] = useState({ totalUsers: 0, totalAdmins: 0 })
+  const [reindexing, setReindexing] = useState(false)
+  const [reindexMsg, setReindexMsg] = useState('')
+
+  async function handleReindex() {
+    const token = localStorage.getItem('accessToken')
+    if (!token) return
+    setReindexing(true)
+    setReindexMsg('')
+    try {
+      const res = await fetch(`${API}/super-admin/search/reindex`, {
+        method: 'POST',
+        headers: { Authorization: `Bearer ${token}`, 'ngrok-skip-browser-warning': '1' },
+      })
+      const data = await res.json()
+      setReindexMsg(data.message ?? 'Bajarildi')
+    } catch {
+      setReindexMsg('❌ Xatolik yuz berdi')
+    } finally {
+      setReindexing(false)
+      setTimeout(() => setReindexMsg(''), 5000)
+    }
+  }
 
   useEffect(() => {
     if (!loading && !user) router.replace('/auth')
@@ -114,6 +136,33 @@ export default function SuperAdminPage() {
               <p className="text-sm text-emerald-700">Funnel, lidlar, sessiya tarixi, konversiya</p>
             </div>
           </Link>
+        </div>
+
+        {/* Qidiruv re-index */}
+        <div className="mt-8 rounded-2xl border-2 border-orange-100 bg-orange-50 p-5">
+          <div className="flex flex-wrap items-center justify-between gap-4">
+            <div>
+              <h3 className="font-black text-orange-900 flex items-center gap-2">
+                🔍 Qidiruv indeksini yangilash
+              </h3>
+              <p className="mt-0.5 text-sm text-orange-700">
+                Kirill/lotin transliteratsiya yoki yangi maydonlar qo&apos;shilganda ishlatiladi.
+                Barcha ACTIVE va PREMIUM muassasalar qayta indexlanadi.
+              </p>
+              {reindexMsg && (
+                <p className="mt-2 text-sm font-bold text-orange-900 bg-white rounded-xl px-3 py-1.5 inline-block border border-orange-200">
+                  {reindexMsg}
+                </p>
+              )}
+            </div>
+            <button
+              onClick={handleReindex}
+              disabled={reindexing}
+              className="flex items-center gap-2 rounded-2xl bg-gradient-to-r from-orange-500 to-amber-500 px-6 py-3 text-base font-bold text-white shadow-md hover:shadow-lg hover:opacity-90 disabled:opacity-50 transition-all active:scale-95 whitespace-nowrap"
+            >
+              {reindexing ? '⏳ Indexlanmoqda...' : '↻ Qayta indexlash'}
+            </button>
+          </div>
         </div>
       </main>
     </div>

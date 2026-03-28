@@ -74,7 +74,7 @@ export default function EditInstitutionPage() {
     </div>
   )
 
-  if (user.role !== 'ADMIN' && user.role !== 'MODERATOR') {
+  if (user.role !== 'ADMIN' && user.role !== 'MODERATOR' && user.role !== 'SUPER_ADMIN') {
     return (
       <div className="flex min-h-screen items-center justify-center bg-gray-50 text-center px-4">
         <div>
@@ -99,7 +99,7 @@ export default function EditInstitutionPage() {
           </div>
           <Link
             href="/admin/institutions"
-            className="rounded-xl border border-gray-200 px-3 py-1.5 text-sm text-gray-600 hover:bg-gray-50"
+            className="flex items-center gap-1.5 rounded-xl border-2 border-gray-200 bg-white px-4 py-2 text-sm font-bold text-gray-600 hover:bg-gray-50 hover:border-gray-300 transition-all active:scale-95"
           >
             ← Orqaga
           </Link>
@@ -120,7 +120,7 @@ export default function EditInstitutionPage() {
             <p className="font-semibold text-red-700">{fetchError}</p>
             <Link
               href="/admin/institutions"
-              className="mt-4 inline-block rounded-xl border border-red-200 px-6 py-2 text-sm text-red-600 hover:bg-red-100"
+              className="mt-4 inline-flex items-center gap-1.5 rounded-xl border-2 border-red-200 bg-white px-6 py-2.5 text-sm font-bold text-red-600 hover:bg-red-50 hover:border-red-300 transition-all active:scale-95"
             >
               ← Orqaga qaytish
             </Link>
@@ -130,7 +130,7 @@ export default function EditInstitutionPage() {
             <div className="h-10 w-10 animate-spin rounded-full border-4 border-primary-200 border-t-primary-600" />
           </div>
         ) : (
-          <div className="rounded-2xl border border-gray-200 bg-white p-6 shadow-sm">
+          <div className="rounded-2xl border-2 border-gray-100 bg-white p-6 shadow-sm">
             <InstitutionForm
               mode="edit"
               institutionId={id}

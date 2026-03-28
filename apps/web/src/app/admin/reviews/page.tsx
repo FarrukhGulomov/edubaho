@@ -97,7 +97,7 @@ export default function AdminReviewsPage() {
     )
   }
 
-  if (user.role !== 'ADMIN' && user.role !== 'MODERATOR') {
+  if (user.role !== 'ADMIN' && user.role !== 'MODERATOR' && user.role !== 'SUPER_ADMIN') {
     return (
       <div className="flex min-h-screen items-center justify-center bg-gray-50 text-center px-4">
         <div>
@@ -121,7 +121,13 @@ export default function AdminReviewsPage() {
             <span className="font-semibold text-gray-700">Admin panel</span>
           </div>
           <div className="flex items-center gap-2">
-            <span className="rounded-full bg-red-100 px-3 py-1 text-sm font-bold text-red-700">
+            <Link
+              href="/admin"
+              className="flex items-center gap-1.5 rounded-xl border-2 border-gray-200 bg-white px-3 py-2 text-sm font-medium text-gray-600 hover:bg-gray-50 transition-all active:scale-95"
+            >
+              ← Orqaga
+            </Link>
+            <span className="rounded-full bg-red-100 px-3 py-1.5 text-sm font-bold text-red-700">
               {user.role}
             </span>
           </div>
@@ -145,22 +151,22 @@ export default function AdminReviewsPage() {
           <button
             onClick={fetchReviews}
             disabled={fetching}
-            className="rounded-xl border border-gray-300 px-4 py-2 text-sm font-medium text-gray-600 hover:bg-gray-50 disabled:opacity-50"
+            className="flex items-center gap-1.5 rounded-xl border-2 border-gray-200 bg-white px-4 py-2.5 text-sm font-bold text-gray-600 hover:bg-gray-50 hover:border-gray-300 disabled:opacity-50 transition-all active:scale-95"
           >
-            {fetching ? 'Yuklanmoqda...' : '↻ Yangilash'}
+            {fetching ? '⏳ Yuklanmoqda...' : '↻ Yangilash'}
           </button>
         </div>
 
         {/* Status tabs */}
-        <div className="mb-6 flex gap-2">
+        <div className="mb-6 flex gap-2 flex-wrap">
           {(['PENDING', 'FLAGGED', 'REJECTED'] as const).map((s) => (
             <button
               key={s}
               onClick={() => setStatus(s)}
-              className={`rounded-xl px-5 py-2.5 text-sm font-bold transition-colors ${
+              className={`rounded-2xl px-5 py-2.5 text-sm font-bold transition-all active:scale-95 ${
                 status === s
-                  ? 'bg-primary-600 text-white shadow-sm'
-                  : 'border border-gray-200 bg-white text-gray-600 hover:bg-gray-50'
+                  ? 'bg-gradient-to-r from-primary-600 to-primary-500 text-white shadow-md'
+                  : 'border-2 border-gray-200 bg-white text-gray-600 hover:bg-gray-50 hover:border-gray-300'
               }`}
             >
               {s === 'PENDING' ? '⏳ Kutayotgan' : s === 'FLAGGED' ? '🚩 Shikoyat' : '❌ Rad etilgan'}
@@ -179,7 +185,7 @@ export default function AdminReviewsPage() {
         ) : (
           <div className="space-y-4">
             {reviews.map((review) => (
-              <div key={review.id} className="rounded-2xl border border-gray-200 bg-white p-6 shadow-sm">
+              <div key={review.id} className="rounded-2xl border-2 border-gray-100 bg-white p-6 shadow-sm hover:border-gray-200 hover:shadow-md transition-all">
                 {/* Top row */}
                 <div className="mb-3 flex flex-wrap items-start justify-between gap-3">
                   <div>
@@ -200,7 +206,7 @@ export default function AdminReviewsPage() {
                     <Link
                       href={`/institutions/${review.institution.slug}`}
                       target="_blank"
-                      className="rounded-xl bg-primary-50 px-3 py-1.5 text-sm font-semibold text-primary-700 hover:bg-primary-100 transition-colors"
+                      className="rounded-xl border-2 border-primary-100 bg-primary-50 px-3 py-2 text-sm font-bold text-primary-700 hover:bg-primary-100 hover:border-primary-200 transition-all active:scale-95"
                     >
                       🏫 {review.institution.nameUz} →
                     </Link>
@@ -215,20 +221,20 @@ export default function AdminReviewsPage() {
 
                 {/* Actions */}
                 {review.status === 'PENDING' || review.status === 'FLAGGED' ? (
-                  <div className="mt-4 flex gap-3">
+                  <div className="mt-5 flex gap-3">
                     <button
                       onClick={() => handleAction(review.id, 'approve')}
                       disabled={actionId === review.id}
-                      className="flex-1 rounded-xl bg-green-500 py-2.5 font-bold text-white hover:bg-green-600 disabled:opacity-50 transition-colors"
+                      className="flex-1 rounded-2xl bg-gradient-to-r from-green-500 to-emerald-500 py-3 text-base font-bold text-white shadow-sm hover:shadow-md hover:opacity-90 disabled:opacity-50 transition-all active:scale-95"
                     >
-                      {actionId === review.id ? '...' : '✅ Tasdiqlash'}
+                      {actionId === review.id ? '⏳ ...' : '✅ Tasdiqlash'}
                     </button>
                     <button
                       onClick={() => handleAction(review.id, 'reject')}
                       disabled={actionId === review.id}
-                      className="flex-1 rounded-xl border-2 border-red-200 py-2.5 font-bold text-red-600 hover:bg-red-50 disabled:opacity-50 transition-colors"
+                      className="flex-1 rounded-2xl border-2 border-red-200 bg-white py-3 text-base font-bold text-red-600 hover:bg-red-50 hover:border-red-300 disabled:opacity-50 transition-all active:scale-95"
                     >
-                      {actionId === review.id ? '...' : '❌ Rad etish'}
+                      {actionId === review.id ? '⏳ ...' : '❌ Rad etish'}
                     </button>
                   </div>
                 ) : (

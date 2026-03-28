@@ -46,6 +46,10 @@ interface Lead {
   viewedInstitutions: number
   gateReached: number
   status: 'converted' | 'warm' | 'cold'
+  user?: { phone: string; name?: string } | null
+  capturedPhone?: string | null
+  capturedEmail?: string | null
+  searchQueries?: string[]
 }
 
 interface LeadsData {
@@ -87,6 +91,7 @@ const EVENT_LABELS: Record<string, string> = {
   review_started:      '✍ Sharh boshladi',
   review_submitted:    '💬 Sharh yubordi',
   search_query:        '🔍 Qidiruv',
+  search_filter:       '🗂 Filter qo\'llandi',
   search_result_click: '🖱 Natijaga bosdi',
   page_view:           '📄 Sahifa',
   filter_applied:      '🔧 Filter',
@@ -471,21 +476,58 @@ export default function AnalyticsPage() {
                 <table className="w-full text-sm">
                   <thead>
                     <tr className="border-b border-gray-100 bg-gray-50">
-                      <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-gray-500">Sessiya</th>
+                      <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-gray-500">Kontakt</th>
                       <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-gray-500">Status</th>
                       <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-gray-500">Score</th>
-                      <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-gray-500">Voqealar</th>
-                      <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-gray-500">Muassasalar</th>
+                      <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-gray-500">Qidiruvlar</th>
                       <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-gray-500">Gate</th>
-                      <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-gray-500">Oxirgi faollik</th>
+                      <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-gray-500">Faollik</th>
                       <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-gray-500"></th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-gray-100">
                     {leads.data.map(lead => (
                       <tr key={lead.sessionId} className="hover:bg-gray-50 transition-colors">
-                        <td className="px-4 py-3">
-                          <span className="font-mono text-xs text-gray-500">{lead.sessionId.slice(0, 12)}…</span>
+                        {/* Kontakt ustuni */}
+                        <td className="px-4 py-3 min-w-[180px]">
+                          {lead.user ? (
+                            <div>
+                              <p className="text-sm font-bold text-gray-900">
+                                📱 {lead.user.phone}
+                              </p>
+                              {lead.user.name && (
+                                <p className="text-xs text-gray-500">{lead.user.name}</p>
+                              )}
+                              <span className="mt-0.5 inline-block rounded-full bg-green-100 px-1.5 py-0.5 text-[10px] font-semibold text-green-700">
+                                ✅ Ro&apos;yxatdan o&apos;tgan
+                              </span>
+                            </div>
+                          ) : lead.capturedPhone ? (
+                            <div>
+                              <p className="text-sm font-bold text-gray-900">
+                                📱 {lead.capturedPhone}
+                              </p>
+                              <span className="mt-0.5 inline-block rounded-full bg-amber-100 px-1.5 py-0.5 text-[10px] font-semibold text-amber-700">
+                                🎯 Qoldirilgan
+                              </span>
+                            </div>
+                          ) : lead.capturedEmail ? (
+                            <div>
+                              <p className="text-sm font-bold text-gray-900">
+                                ✉️ {lead.capturedEmail}
+                              </p>
+                              <span className="mt-0.5 inline-block rounded-full bg-blue-100 px-1.5 py-0.5 text-[10px] font-semibold text-blue-700">
+                                📧 Email
+                              </span>
+                            </div>
+                          ) : (
+                            <div>
+                              <p className="font-mono text-xs text-gray-400">{lead.sessionId.slice(0, 10)}…</p>
+                              <span className="mt-0.5 inline-block rounded-full bg-gray-100 px-1.5 py-0.5 text-[10px] font-semibold text-gray-400">
+                                Anonim
+                              </span>
+                            </div>
+                          )}
                         </td>
                         <td className="px-4 py-3">
                           <span className={`rounded-full px-2.5 py-1 text-xs font-bold ${
@@ -511,8 +553,20 @@ export default function AnalyticsPage() {
                             <span className="text-xs font-black text-gray-700">{lead.score}</span>
                           </div>
                         </td>
-                        <td className="px-4 py-3 text-xs text-gray-600">{lead.eventsCount}</td>
-                        <td className="px-4 py-3 text-xs text-gray-600">{lead.viewedInstitutions}</td>
+                        {/* Qidiruv so'rovlari */}
+                        <td className="px-4 py-3 max-w-[180px]">
+                          {(lead.searchQueries?.length ?? 0) > 0 ? (
+                            <div className="flex flex-wrap gap-1">
+                              {lead.searchQueries!.map((q, i) => (
+                                <span key={i} className="rounded bg-amber-50 px-1.5 py-0.5 text-[10px] font-semibold text-amber-700 border border-amber-100">
+                                  &ldquo;{q}&rdquo;
+                                </span>
+                              ))}
+                            </div>
+                          ) : (
+                            <span className="text-xs text-gray-300">—</span>
+                          )}
+                        </td>
                         <td className="px-4 py-3 text-xs text-gray-600">{lead.gateReached}x</td>
                         <td className="px-4 py-3 text-xs text-gray-400">{timeSince(lead.lastSeen)}</td>
                         <td className="px-4 py-3">
@@ -564,24 +618,38 @@ export default function AnalyticsPage() {
                       <span className="text-sm font-bold text-gray-800">
                         {EVENT_LABELS[e.event] ?? e.event}
                       </span>
+                      {/* Qidiruv so'rovini ajratib ko'rsatamiz */}
+                      {(e.event === 'search_query' || e.event === 'search_result_click') && e.properties?.query != null && (
+                        <span className="text-xs bg-amber-50 text-amber-800 border border-amber-200 rounded-full px-2 py-0.5 font-semibold">
+                          &ldquo;{String(e.properties.query)}&rdquo;
+                        </span>
+                      )}
+                      {e.event === 'search_query' && e.properties?.resultsCount != null && (
+                        <span className="text-xs text-gray-400">{String(e.properties.resultsCount)} natija</span>
+                      )}
                       {e.institution && (
                         <span className="text-xs bg-blue-50 text-blue-700 rounded-full px-2 py-0.5">
                           {e.institution.nameUz}
                         </span>
                       )}
-                      {e.user && (
-                        <span className="text-xs bg-green-50 text-green-700 rounded-full px-2 py-0.5">
-                          {e.user.phone}
+                      {/* Autentifikatsiya qilingan user */}
+                      {e.user ? (
+                        <span className="text-xs bg-green-50 text-green-700 border border-green-200 rounded-full px-2 py-0.5 font-medium">
+                          👤 {e.user.name ? `${e.user.name} (${e.user.phone})` : e.user.phone}
                         </span>
+                      ) : (
+                        <span className="text-xs bg-gray-50 text-gray-400 rounded-full px-2 py-0.5">mehmon</span>
                       )}
                     </div>
                     <div className="flex items-center gap-3 mt-0.5">
                       <span className="text-xs text-gray-400 font-mono">{e.sessionId.slice(0, 8)}…</span>
                       {e.page && <span className="text-xs text-gray-400 truncate max-w-xs">{e.page}</span>}
                     </div>
-                    {Object.keys(e.properties ?? {}).length > 0 && (
+                    {/* search_query va search_filter dagi qo'shimcha properties */}
+                    {Object.keys(e.properties ?? {}).length > 0 &&
+                      !['search_query', 'search_result_click'].includes(e.event) && (
                       <div className="mt-1 flex flex-wrap gap-1">
-                        {Object.entries(e.properties).map(([k, v]) => (
+                        {Object.entries(e.properties).filter(([, v]) => v !== null).map(([k, v]) => (
                           <span key={k} className="text-[10px] bg-gray-100 text-gray-600 rounded px-1.5 py-0.5">
                             {k}: {String(v)}
                           </span>
@@ -605,16 +673,40 @@ export default function AnalyticsPage() {
 
       {/* Session detail modal */}
       {selectedSession && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 px-4">
-          <div className="w-full max-w-2xl max-h-[80vh] overflow-hidden rounded-2xl bg-white shadow-2xl flex flex-col">
-            <div className="flex items-center justify-between border-b border-gray-100 px-5 py-4">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm px-4">
+          <div className="w-full max-w-2xl max-h-[85vh] overflow-hidden rounded-3xl bg-white shadow-2xl flex flex-col">
+            <div className="flex items-center justify-between border-b border-gray-100 px-6 py-4">
               <div>
-                <h2 className="font-black text-gray-900">Sessiya tarixi</h2>
-                <p className="text-xs text-gray-400 font-mono mt-0.5">{selectedSession}</p>
+                <h2 className="text-lg font-black text-gray-900">Sessiya tarixi</h2>
+                {/* Sessiyadan user yoki mehmon kontaktini ko'rsatamiz */}
+                {(() => {
+                  type SE = { user?: { phone: string; name?: string }; properties?: Record<string, unknown>; event?: string }
+                  const evts = sessionEvents as SE[]
+                  const authUser = evts.find(e => e.user)?.user
+                  const captureEvt = evts.find(e =>
+                    ['lead_capture', 'lead_capture_email'].includes(String(e.properties?.contactType ?? ''))
+                  )
+                  if (authUser) return (
+                    <p className="mt-1 text-sm font-semibold text-green-700">
+                      📱 {authUser.phone}{authUser.name ? ` — ${authUser.name}` : ''}
+                    </p>
+                  )
+                  if (captureEvt?.properties?.phone) return (
+                    <p className="mt-1 text-sm font-semibold text-amber-700">
+                      📱 {String(captureEvt.properties.phone)} <span className="text-xs text-amber-500">(qoldirilgan)</span>
+                    </p>
+                  )
+                  if (captureEvt?.properties?.email) return (
+                    <p className="mt-1 text-sm font-semibold text-blue-700">
+                      ✉️ {String(captureEvt.properties.email)}
+                    </p>
+                  )
+                  return <p className="text-xs text-gray-400 font-mono mt-0.5">{selectedSession}</p>
+                })()}
               </div>
               <button
                 onClick={() => { setSelectedSession(null); setSessionEvents([]) }}
-                className="rounded-xl border border-gray-200 px-3 py-1.5 text-sm font-semibold text-gray-600 hover:bg-gray-50"
+                className="flex items-center gap-1.5 rounded-xl border-2 border-gray-200 bg-white px-4 py-2 text-sm font-bold text-gray-600 hover:bg-gray-50 hover:border-gray-300 transition-all active:scale-95"
               >
                 ✕ Yopish
               </button>

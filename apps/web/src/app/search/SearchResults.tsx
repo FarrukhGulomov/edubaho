@@ -2,10 +2,11 @@
 
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import StarRating from '@/components/shared/StarRating'
 import { useCompare, useSaved } from '@/hooks/useCompare'
 import { useLang, t } from '@/contexts/LangContext'
+import { track, trackSearch, trackSearchClick } from '@/lib/analytics'
 import type { InstitutionCard } from './page'
 
 const API = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:3001/api/v1'
@@ -60,6 +61,8 @@ export default function SearchResults({ institutions, meta, params }: Props) {
   const [regions, setRegions] = useState<Region[]>([])
   const { toggle, isSelected } = useCompare()
   const { toggleSave, isSaved } = useSaved()
+  // Oxirgi track qilingan so'rov — ikki marta yubormaslik uchun
+  const lastTrackedQuery = useRef<string | undefined>(undefined)
 
   useEffect(() => {
     const h = { 'ngrok-skip-browser-warning': '1' }
@@ -68,6 +71,17 @@ export default function SearchResults({ institutions, meta, params }: Props) {
     fetch(`${API}/geo/regions`, { headers: h })
       .then(r => r.json()).then(d => setRegions(d.data ?? [])).catch(() => {})
   }, [])
+
+  // Qidiruv so'rovi o'zgarganda yoki natijalar yuklanganda bir marta track qilamiz
+  useEffect(() => {
+    const currentQuery = params.q ?? ''
+    if (lastTrackedQuery.current !== currentQuery) {
+      lastTrackedQuery.current = currentQuery
+      if (currentQuery) {
+        trackSearch(currentQuery, meta.total)
+      }
+    }
+  }, [params.q, meta.total])
 
   function handleSearch(e: React.FormEvent) {
     e.preventDefault()
@@ -82,6 +96,13 @@ export default function SearchResults({ institutions, meta, params }: Props) {
     if (val) p.set(key, val); else p.delete(key)
     p.delete('page')
     router.push(`/search?${p.toString()}`)
+    // Filter o'zgarishlarini kuzatamiz
+    if (['type', 'regionId', 'cityId', 'sortBy'].includes(key)) {
+      track('search_filter', {
+        category: 'search',
+        properties: { filter: key, value: val || null, query: params.q ?? '' },
+      })
+    }
   }
 
   const ui = {
@@ -112,12 +133,12 @@ export default function SearchResults({ institutions, meta, params }: Props) {
 
   return (
     <main className="min-h-screen bg-gray-50">
-      {/* ── Search bar header ─── */}
-      <div className="sticky top-[57px] z-30 border-b border-gray-100 bg-white/95 backdrop-blur px-4 py-3 shadow-sm">
+      {/* ── Qidiruv satri ─── */}
+      <div className="sticky top-[65px] z-30 border-b-2 border-gray-100 bg-white/97 backdrop-blur px-4 py-3 shadow-sm">
         <div className="mx-auto max-w-6xl">
-          <form onSubmit={handleSearch} className="flex gap-2">
-            <div className="flex flex-1 items-center gap-2 rounded-xl border border-gray-200 bg-white px-3 focus-within:border-primary-400 focus-within:ring-2 focus-within:ring-primary-100 transition-all">
-              <svg className="h-4 w-4 shrink-0 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <form onSubmit={handleSearch} className="flex gap-2.5">
+            <div className="flex flex-1 items-center gap-3 rounded-2xl border-2 border-gray-200 bg-white px-4 focus-within:border-primary-400 focus-within:ring-4 focus-within:ring-primary-100 transition-all">
+              <svg className="h-5 w-5 shrink-0 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-4.35-4.35M17 11A6 6 0 1 1 5 11a6 6 0 0 1 12 0z"/>
               </svg>
               <input
@@ -125,17 +146,17 @@ export default function SearchResults({ institutions, meta, params }: Props) {
                 value={q}
                 onChange={e => setQ(e.target.value)}
                 placeholder={t(lang, ui.placeholder)}
-                className="flex-1 bg-transparent py-2.5 text-sm text-gray-900 outline-none placeholder:text-gray-400"
+                className="flex-1 bg-transparent py-3 text-base text-gray-900 outline-none placeholder:text-gray-400"
               />
               {q && (
-                <button type="button" onClick={() => setQ('')} className="text-gray-400 hover:text-gray-600">
-                  <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <button type="button" onClick={() => setQ('')} className="text-gray-400 hover:text-gray-600 p-1">
+                  <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12"/>
                   </svg>
                 </button>
               )}
             </div>
-            <button type="submit" className="btn-primary shrink-0 text-sm px-4">
+            <button type="submit" className="btn-primary shrink-0 px-5">
               {t(lang, ui.searchBtn)}
             </button>
           </form>
@@ -271,11 +292,13 @@ export default function SearchResults({ institutions, meta, params }: Props) {
           </div>
         ) : (
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-            {institutions.map(inst => (
+            {institutions.map((inst, idx) => (
               <InstitutionCardComp
                 key={inst.id}
                 institution={inst}
                 lang={lang}
+                position={idx + 1}
+                query={params.q ?? ''}
                 onCompare={() => toggle({ id: inst.id, slug: inst.slug, nameUz: inst.nameUz, type: inst.type, avgRating: inst.avgRating, pricing: inst.pricing })}
                 onSave={() => toggleSave({ id: inst.id, slug: inst.slug, nameUz: inst.nameUz, type: inst.type, avgRating: inst.avgRating, pricing: inst.pricing })}
                 isCompared={isSelected(inst.id)}
@@ -312,6 +335,8 @@ export default function SearchResults({ institutions, meta, params }: Props) {
 function InstitutionCardComp({
   institution: i,
   lang,
+  position,
+  query,
   onCompare,
   onSave,
   isCompared,
@@ -320,6 +345,8 @@ function InstitutionCardComp({
 }: {
   institution: InstitutionCard
   lang: 'uz' | 'ru'
+  position: number
+  query: string
   onCompare: () => void
   onSave: () => void
   isCompared: boolean
@@ -330,111 +357,113 @@ function InstitutionCardComp({
   const name = lang === 'ru' && i.nameRu ? i.nameRu : i.nameUz
 
   return (
-    <div className="group flex flex-col rounded-2xl border border-gray-100 bg-white shadow-card transition-all duration-200 hover:-translate-y-0.5 hover:border-primary-100 hover:shadow-card-hover">
-      <Link href={`/institutions/${i.slug}`} className="flex flex-1 flex-col p-5">
-        {/* Type + verified */}
-        <div className="mb-3 flex items-center justify-between gap-2">
-          <span className={`badge text-xs ${typeInfo?.color ?? 'bg-gray-50 text-gray-700'}`}>
+    <div className="group flex flex-col rounded-3xl border-2 border-gray-100 bg-white shadow-sm transition-all duration-200 hover:-translate-y-1 hover:border-primary-200 hover:shadow-lg">
+      <Link
+        href={`/institutions/${i.slug}`}
+        className="flex flex-1 flex-col p-6"
+        onClick={() => trackSearchClick(i.id, position, query)}
+      >
+        {/* Tur + tasdiqlangan */}
+        <div className="mb-4 flex items-center justify-between gap-2">
+          <span className={`inline-flex items-center gap-1.5 rounded-2xl px-3 py-1.5 text-sm font-bold ${typeInfo?.color ?? 'bg-gray-50 text-gray-700'}`}>
             {typeInfo ? t(lang, typeInfo) : i.type}
           </span>
           {i.isVerified && (
-            <span className="flex items-center gap-1 rounded-full bg-emerald-50 px-2 py-0.5 text-xs font-semibold text-emerald-700">
-              <svg className="h-3 w-3" fill="currentColor" viewBox="0 0 20 20">
-                <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd"/>
-              </svg>
-              {t(lang, ui.verified)}
+            <span className="flex items-center gap-1.5 rounded-full bg-emerald-50 px-3 py-1.5 text-sm font-bold text-emerald-700">
+              ✓ {t(lang, ui.verified)}
             </span>
           )}
         </div>
 
-        {/* Name */}
-        <h2 className="mb-1 font-bold text-gray-900 group-hover:text-primary-700 transition-colors line-clamp-2 leading-snug">
+        {/* Nom */}
+        <h2 className="mb-2 text-xl font-black text-gray-900 group-hover:text-primary-700 transition-colors line-clamp-2 leading-snug">
           {name}
         </h2>
-        {lang === 'uz' && i.nameRu && (
-          <p className="mb-1 text-xs text-gray-400 line-clamp-1">{i.nameRu}</p>
-        )}
 
-        {/* City */}
+        {/* Shahar */}
         {(i.city?.nameUz ?? i.address) && (
-          <p className="mb-2 flex items-center gap-1 text-xs text-gray-500">
-            <svg className="h-3.5 w-3.5 shrink-0 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <div className="mb-3 flex items-center gap-2 text-base text-gray-500">
+            <svg className="h-4 w-4 shrink-0 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/>
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/>
             </svg>
             {lang === 'ru' && i.city?.nameRu ? i.city.nameRu : (i.city?.nameUz ?? i.address)}
-          </p>
+          </div>
         )}
 
-        {/* Stats row */}
+        {/* O'quvchilar + o'qituvchilar */}
         {(i.details?.studentCount || i.details?.teacherCount) && (
-          <div className="mb-2 flex flex-wrap gap-1.5">
+          <div className="mb-3 flex flex-wrap gap-2">
             {i.details.studentCount && (
-              <span className="flex items-center gap-1 rounded-lg bg-blue-50 px-2 py-0.5 text-xs font-semibold text-blue-700">
-                👥 {formatNum(i.details.studentCount)}+
+              <span className="flex items-center gap-1.5 rounded-2xl bg-blue-50 px-3 py-1.5 text-sm font-bold text-blue-700">
+                👥 {formatNum(i.details.studentCount)}+ {lang === 'uz' ? "o'quvchi" : 'уч.'}
               </span>
             )}
             {i.details.teacherCount && (
-              <span className="flex items-center gap-1 rounded-lg bg-violet-50 px-2 py-0.5 text-xs font-semibold text-violet-700">
-                👨‍🏫 {i.details.teacherCount}
+              <span className="flex items-center gap-1.5 rounded-2xl bg-violet-50 px-3 py-1.5 text-sm font-bold text-violet-700">
+                👨‍🏫 {i.details.teacherCount} {lang === 'uz' ? "o'qit." : 'пед.'}
               </span>
             )}
           </div>
         )}
 
-        {/* Top programs */}
+        {/* Yo'nalishlar */}
         {(i.details?.programs?.length ?? 0) > 0 && (
-          <div className="mb-2 flex flex-wrap gap-1">
+          <div className="mb-3 flex flex-wrap gap-1.5">
             {i.details!.programs!.slice(0, 3).map(prog => (
-              <span key={prog} className="rounded-md bg-gray-50 px-2 py-0.5 text-[11px] font-medium text-gray-600 border border-gray-100">
+              <span key={prog} className="rounded-xl bg-gray-100 px-2.5 py-1 text-sm font-semibold text-gray-600">
                 {prog}
               </span>
             ))}
             {i.details!.programs!.length > 3 && (
-              <span className="rounded-md bg-gray-50 px-2 py-0.5 text-[11px] font-medium text-gray-400 border border-gray-100">
-                +{i.details!.programs!.length - 3}
+              <span className="rounded-xl bg-gray-100 px-2.5 py-1 text-sm font-semibold text-gray-400">
+                +{i.details!.programs!.length - 3} ta
               </span>
             )}
           </div>
         )}
 
-        {/* Rating + price */}
-        <div className="mt-auto flex items-center justify-between gap-2 pt-2 border-t border-gray-50">
+        {/* Reyting + narx */}
+        <div className="mt-auto flex items-center justify-between gap-2 border-t border-gray-100 pt-4">
           {i.avgRating ? (
-            <div className="flex items-center gap-1">
+            <div className="flex items-center gap-1.5">
               <StarRating rating={i.avgRating} size="sm" />
-              <span className="text-xs font-bold text-gray-900">{i.avgRating.toFixed(1)}</span>
-              <span className="text-xs text-gray-400">({i.reviewCount})</span>
+              <span className="text-base font-black text-gray-900">{i.avgRating.toFixed(1)}</span>
+              <span className="text-sm text-gray-400">({i.reviewCount})</span>
             </div>
           ) : (
-            <span className="text-xs text-gray-400">{t(lang, ui.noReview)}</span>
+            <span className="text-sm text-gray-400">{t(lang, ui.noReview)}</span>
           )}
           {i.pricing?.monthlyMin && (
-            <span className="shrink-0 rounded-lg bg-primary-50 px-2 py-1 text-xs font-bold text-primary-700">
+            <span className="shrink-0 rounded-2xl bg-emerald-50 border border-emerald-200 px-3 py-1.5 text-sm font-black text-emerald-700">
               {formatUzs(i.pricing.monthlyMin)}
             </span>
           )}
         </div>
       </Link>
 
-      {/* Action buttons */}
-      <div className="flex border-t border-gray-100 divide-x divide-gray-100">
+      {/* Amallar */}
+      <div className="flex divide-x-2 divide-gray-100 border-t-2 border-gray-100">
         <button
           onClick={onSave}
-          className={`flex flex-1 items-center justify-center gap-1.5 py-2.5 text-xs font-semibold transition-colors rounded-bl-2xl ${
-            isSaved ? 'bg-amber-50 text-amber-600 hover:bg-amber-100' : 'text-gray-400 hover:bg-gray-50 hover:text-gray-700'
+          className={`flex flex-1 items-center justify-center gap-2 py-3.5 text-sm font-bold transition-colors rounded-bl-3xl ${
+            isSaved
+              ? 'bg-amber-50 text-amber-600 hover:bg-amber-100'
+              : 'text-gray-500 hover:bg-gray-50 hover:text-gray-800'
           }`}
         >
-          <span>{isSaved ? '⭐' : '☆'}</span>
+          <span className="text-lg">{isSaved ? '⭐' : '☆'}</span>
           {isSaved ? t(lang, ui.saved) : t(lang, ui.save)}
         </button>
         <button
           onClick={onCompare}
-          className={`flex flex-1 items-center justify-center gap-1.5 py-2.5 text-xs font-semibold transition-colors rounded-br-2xl ${
-            isCompared ? 'bg-primary-50 text-primary-700 hover:bg-primary-100' : 'text-gray-400 hover:bg-gray-50 hover:text-gray-700'
+          className={`flex flex-1 items-center justify-center gap-2 py-3.5 text-sm font-bold transition-colors rounded-br-3xl ${
+            isCompared
+              ? 'bg-primary-50 text-primary-700 hover:bg-primary-100'
+              : 'text-gray-500 hover:bg-gray-50 hover:text-gray-800'
           }`}
         >
-          <span>{isCompared ? '✓' : '⇄'}</span>
+          <span className="text-lg">{isCompared ? '✓' : '⇄'}</span>
           {isCompared ? t(lang, ui.compared) : t(lang, ui.compare)}
         </button>
       </div>

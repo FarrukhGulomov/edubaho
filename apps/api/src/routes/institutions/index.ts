@@ -2,6 +2,8 @@ import type { FastifyInstance } from 'fastify'
 import { Prisma } from '@prisma/client'
 import { listInstitutionsQuerySchema, nearbyQuerySchema, compareQuerySchema } from '../../schemas/institutions'
 import type { InstitutionStatus } from '@prisma/client'
+import { normalizeQuery } from '../../utils/transliterate'
+import { expandSearchTerms } from '../../utils/subjectSynonyms'
 
 /**
  * Institutions routes
@@ -61,19 +63,50 @@ export default async function institutionRoutes(fastify: FastifyInstance) {
     const skip = (page - 1) * limit
     const qTrimmed = q?.trim()
 
-    // Fan (programs) bo'yicha qisman qidiruv uchun raw SQL — ILIKE '%...%'
+    // 1) Kirill → lotin transliteratsiya
+    const { latin: latinQ, hasCyrillic: isCyrillic } = qTrimmed
+      ? normalizeQuery(qTrimmed)
+      : { latin: '', hasCyrillic: false }
+
+    // 2) Sinonimlari kengaytirish: "химия" → ["химия","кимё","kimyo","chemistry",...]
+    //    Transliteratsiyalangan variantni ham qo'shamiz
+    const baseTerms = qTrimmed ? expandSearchTerms(qTrimmed) : []
+    const allTerms = isCyrillic && latinQ && latinQ !== qTrimmed
+      ? [...new Set([...baseTerms, ...expandSearchTerms(latinQ)])]
+      : baseTerms
+
+    // 3) Fan (programs) bo'yicha qisman qidiruv — barcha sinonim variantlar uchun
     let programMatchIds: string[] = []
-    if (qTrimmed) {
+    if (allTerms.length > 0) {
+      // Prisma.join bilan xavfsiz dinamik OR shartlar
+      const conditions = Prisma.join(
+        allTerms.map(t => Prisma.sql`prog ILIKE ${'%' + t + '%'}`),
+        ' OR ',
+      )
       const rows = await prisma.$queryRaw<{ institutionId: string }[]>`
         SELECT d."institutionId"
         FROM "InstitutionDetail" d
         WHERE EXISTS (
           SELECT 1 FROM unnest(d.programs) AS prog
-          WHERE prog ILIKE ${'%' + qTrimmed + '%'}
+          WHERE ${conditions}
         )
       `
       programMatchIds = rows.map(r => r.institutionId)
     }
+
+    // 4) Nom va manzil bo'yicha OR shartlar — barcha sinonim variantlar
+    const nameOrConditions = allTerms.length > 0
+      ? [
+          // Asl so'rov bilan manzil qidiruvi (sinonim kengaytirish kerak emas)
+          { address: { contains: qTrimmed!, mode: 'insensitive' as const } },
+          // Barcha sinonim variantlar bilan nom qidiruvi
+          ...allTerms.flatMap(t => [
+            { nameUz: { contains: t, mode: 'insensitive' as const } },
+            { nameRu: { contains: t, mode: 'insensitive' as const } },
+          ]),
+          ...(programMatchIds.length > 0 ? [{ id: { in: programMatchIds } }] : []),
+        ]
+      : []
 
     const where = {
       status: { in: ['ACTIVE', 'PREMIUM'] as InstitutionStatus[] },
@@ -84,14 +117,8 @@ export default async function institutionRoutes(fastify: FastifyInstance) {
       ...(monthlyMax && { pricing: { monthlyMin: { lte: monthlyMax } } }),
 
       // Nom, manzil, va program bo'yicha qisman qidiruv (katta-kichik harf farqsiz)
-      ...(qTrimmed && {
-        OR: [
-          { nameUz: { contains: qTrimmed, mode: 'insensitive' as const } },
-          { nameRu: { contains: qTrimmed, mode: 'insensitive' as const } },
-          { address: { contains: qTrimmed, mode: 'insensitive' as const } },
-          ...(programMatchIds.length > 0 ? [{ id: { in: programMatchIds } }] : []),
-        ],
-      }),
+      // Kirill yozuvida yozilgan so'rovlar ham lotin yozuvidagi ma'lumotlarda topiladi
+      ...(qTrimmed && { OR: nameOrConditions }),
 
       // Fan bo'yicha exact filter (chip orqali tanlanadi)
       ...(subject?.trim() && {
@@ -311,6 +338,11 @@ export default async function institutionRoutes(fastify: FastifyInstance) {
             select: {
               id: true,
               overallRating: true,
+              teacherRating: true,
+              facilityRating: true,
+              valueRating: true,
+              serviceRating: true,
+              atmosphereRating: true,
               title: true,
               body: true,
               isAnonymous: true,

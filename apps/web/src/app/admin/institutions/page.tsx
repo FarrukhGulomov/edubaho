@@ -159,7 +159,7 @@ export default function AdminInstitutionsPage() {
     </div>
   )
 
-  if (user.role !== 'ADMIN' && user.role !== 'MODERATOR') {
+  if (user.role !== 'ADMIN' && user.role !== 'MODERATOR' && user.role !== 'SUPER_ADMIN') {
     return (
       <div className="flex min-h-screen items-center justify-center bg-gray-50 text-center px-4">
         <div>
@@ -185,14 +185,20 @@ export default function AdminInstitutionsPage() {
           </div>
           <div className="flex items-center gap-2">
             <Link
+              href="/admin"
+              className="flex items-center gap-1.5 rounded-xl border border-gray-200 bg-white px-3 py-2 text-sm font-medium text-gray-600 hover:bg-gray-50 hover:border-gray-300 transition-all active:scale-95"
+            >
+              ← Orqaga
+            </Link>
+            <Link
               href="/admin/reviews"
-              className="rounded-xl border border-gray-200 px-3 py-1.5 text-sm text-gray-600 hover:bg-gray-50"
+              className="flex items-center gap-1.5 rounded-xl border border-gray-200 bg-white px-3 py-2 text-sm font-medium text-gray-600 hover:bg-gray-50 hover:border-gray-300 transition-all active:scale-95"
             >
               📋 Sharhlar
             </Link>
             <Link
               href="/admin/institutions/new"
-              className="rounded-xl bg-primary-600 px-4 py-1.5 text-sm font-bold text-white hover:bg-primary-700 transition-colors"
+              className="flex items-center gap-1.5 rounded-xl bg-gradient-to-r from-primary-600 to-primary-500 px-4 py-2 text-sm font-bold text-white shadow-sm hover:shadow-md hover:opacity-90 transition-all active:scale-95"
             >
               + Yangi muassasa
             </Link>
@@ -221,15 +227,15 @@ export default function AdminInstitutionsPage() {
             />
             <button
               type="submit"
-              className="rounded-xl bg-primary-600 px-4 py-2.5 text-sm font-semibold text-white hover:bg-primary-700"
+              className="rounded-xl bg-gradient-to-r from-primary-600 to-primary-500 px-5 py-2.5 text-sm font-bold text-white shadow-sm hover:shadow-md hover:opacity-90 transition-all active:scale-95"
             >
-              Qidirish
+              🔍 Qidirish
             </button>
           </form>
           <select
             value={statusFilter}
             onChange={(e) => { setStatusFilter(e.target.value); fetchList(q, e.target.value) }}
-            className="rounded-xl border border-gray-300 bg-white px-4 py-2.5 text-sm font-medium text-gray-700 outline-none"
+            className="rounded-xl border-2 border-gray-200 bg-white px-4 py-2.5 text-sm font-medium text-gray-700 outline-none focus:border-primary-400 transition-colors cursor-pointer"
           >
             <option value="">Barcha statuslar</option>
             {ALL_STATUSES.map((s) => <option key={s} value={s}>{s}</option>)}
@@ -237,7 +243,7 @@ export default function AdminInstitutionsPage() {
           <button
             onClick={() => fetchList(q, statusFilter)}
             disabled={fetching}
-            className="rounded-xl border border-gray-300 px-4 py-2.5 text-sm text-gray-600 hover:bg-gray-50 disabled:opacity-50"
+            className="flex items-center gap-1.5 rounded-xl border-2 border-gray-200 bg-white px-4 py-2.5 text-sm font-medium text-gray-600 hover:bg-gray-50 hover:border-gray-300 disabled:opacity-50 transition-all active:scale-95"
           >
             {fetching ? '⏳' : '↻ Yangilash'}
           </button>
@@ -258,18 +264,18 @@ export default function AdminInstitutionsPage() {
           <div className="py-16 text-center">
             <div className="text-5xl mb-3">🏫</div>
             <p className="font-semibold text-gray-600">Muassasa topilmadi</p>
-            <Link href="/admin/institutions/new" className="mt-4 inline-block rounded-xl bg-primary-600 px-6 py-2.5 text-sm font-bold text-white hover:bg-primary-700">
+            <Link href="/admin/institutions/new" className="mt-5 inline-flex items-center gap-2 rounded-2xl bg-gradient-to-r from-primary-600 to-primary-500 px-6 py-3 text-sm font-bold text-white shadow-md hover:shadow-lg hover:opacity-90 transition-all active:scale-95">
               + Birinchi muassasani qo'shish
             </Link>
           </div>
         ) : (
           <div className="space-y-3">
             {institutions.map((inst) => (
-              <div key={inst.id} className="rounded-2xl border border-gray-200 bg-white p-4 shadow-sm">
+              <div key={inst.id} className="rounded-2xl border-2 border-gray-100 bg-white p-4 shadow-sm hover:border-gray-200 hover:shadow-md transition-all">
                 <div className="flex flex-wrap items-start gap-3">
                   {/* Icon + name */}
                   <div className="flex items-start gap-3 flex-1 min-w-0">
-                    <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-gray-100 text-xl">
+                    <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-gray-100 text-2xl">
                       {TYPE_ICONS[inst.type] ?? '🏫'}
                     </span>
                     <div className="flex-1 min-w-0">
@@ -299,23 +305,23 @@ export default function AdminInstitutionsPage() {
                     <Link
                       href={`/institutions/${inst.slug}`}
                       target="_blank"
-                      className="rounded-lg border border-gray-200 px-3 py-1.5 text-xs font-medium text-gray-600 hover:bg-gray-50"
+                      className="flex items-center gap-1 rounded-xl border-2 border-gray-200 bg-white px-3 py-2 text-xs font-semibold text-gray-600 hover:bg-gray-50 hover:border-gray-300 transition-all active:scale-95"
                     >
                       👁️ Ko'rish
                     </Link>
                     <Link
                       href={`/admin/institutions/${inst.id}/edit`}
-                      className="rounded-lg border border-primary-200 bg-primary-50 px-3 py-1.5 text-xs font-semibold text-primary-700 hover:bg-primary-100"
+                      className="flex items-center gap-1 rounded-xl border-2 border-primary-200 bg-primary-50 px-3 py-2 text-xs font-bold text-primary-700 hover:bg-primary-100 hover:border-primary-300 transition-all active:scale-95"
                     >
                       ✏️ Tahrirlash
                     </Link>
                     <button
                       onClick={() => handleVerify(inst.id)}
                       disabled={actionId === inst.id}
-                      className={`rounded-lg px-3 py-1.5 text-xs font-semibold disabled:opacity-50 transition-colors ${
+                      className={`flex items-center gap-1 rounded-xl px-3 py-2 text-xs font-bold disabled:opacity-50 transition-all active:scale-95 border-2 ${
                         inst.isVerified
-                          ? 'border border-green-200 bg-green-50 text-green-700 hover:bg-green-100'
-                          : 'border border-gray-200 text-gray-600 hover:bg-gray-50'
+                          ? 'border-green-200 bg-green-50 text-green-700 hover:bg-green-100'
+                          : 'border-gray-200 bg-white text-gray-600 hover:bg-gray-50'
                       }`}
                     >
                       {inst.isVerified ? '✓ Tasdiqlangan' : '○ Tasdiqlash'}
@@ -326,7 +332,7 @@ export default function AdminInstitutionsPage() {
                       value={inst.status}
                       onChange={(e) => handleStatusChange(inst.id, e.target.value)}
                       disabled={actionId === inst.id}
-                      className="rounded-lg border border-gray-200 bg-white px-2 py-1.5 text-xs font-medium text-gray-700 outline-none disabled:opacity-50 cursor-pointer"
+                      className="rounded-xl border-2 border-gray-200 bg-white px-2 py-2 text-xs font-semibold text-gray-700 outline-none disabled:opacity-50 cursor-pointer focus:border-primary-400 transition-colors"
                     >
                       {ALL_STATUSES.map((s) => <option key={s} value={s}>{s}</option>)}
                     </select>
@@ -334,7 +340,7 @@ export default function AdminInstitutionsPage() {
                     <button
                       onClick={() => setConfirmDelete(inst)}
                       disabled={actionId === inst.id}
-                      className="rounded-lg border border-red-200 px-3 py-1.5 text-xs font-semibold text-red-600 hover:bg-red-50 disabled:opacity-50 transition-colors"
+                      className="flex items-center gap-1 rounded-xl border-2 border-red-200 bg-white px-3 py-2 text-xs font-bold text-red-600 hover:bg-red-50 hover:border-red-300 disabled:opacity-50 transition-all active:scale-95"
                     >
                       🗑️ O'chirish
                     </button>
@@ -347,15 +353,15 @@ export default function AdminInstitutionsPage() {
 
         {/* Pagination */}
         {meta.totalPages > 1 && (
-          <div className="mt-6 flex justify-center gap-2">
+          <div className="mt-8 flex justify-center gap-2">
             {Array.from({ length: meta.totalPages }, (_, i) => i + 1).map((p) => (
               <button
                 key={p}
                 onClick={() => fetchList(q, statusFilter, p)}
-                className={`rounded-lg border px-4 py-2 text-sm font-medium ${
+                className={`rounded-xl border-2 px-4 py-2 text-sm font-bold transition-all active:scale-95 ${
                   meta.page === p
-                    ? 'border-primary-600 bg-primary-600 text-white'
-                    : 'border-gray-200 bg-white text-gray-700 hover:border-primary-300'
+                    ? 'border-primary-600 bg-gradient-to-r from-primary-600 to-primary-500 text-white shadow-md'
+                    : 'border-gray-200 bg-white text-gray-700 hover:border-primary-300 hover:text-primary-600'
                 }`}
               >
                 {p}
@@ -367,28 +373,41 @@ export default function AdminInstitutionsPage() {
 
       {/* Confirm delete modal */}
       {confirmDelete && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 px-4">
-          <div className="w-full max-w-md rounded-2xl bg-white p-6 shadow-xl">
-            <div className="mb-4 text-center">
-              <div className="mb-2 text-5xl">⚠️</div>
-              <h2 className="text-lg font-bold text-gray-900">Muassasani o'chirish</h2>
-              <p className="mt-2 text-gray-600">
-                <strong>"{confirmDelete.nameUz}"</strong> ni o'chirishni tasdiqlaysizmi?
-                Bu amalni qaytarib bo'lmaydi.
-              </p>
-            </div>
-            <div className="flex gap-3">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm px-4">
+          <div className="w-full max-w-md rounded-3xl bg-white shadow-2xl overflow-hidden">
+            {/* Modal header */}
+            <div className="flex items-center justify-between border-b border-gray-100 px-6 py-4">
+              <h2 className="text-lg font-black text-gray-900">Muassasani o'chirish</h2>
               <button
                 onClick={() => setConfirmDelete(null)}
-                className="flex-1 rounded-xl border border-gray-300 py-3 font-semibold text-gray-700 hover:bg-gray-50"
+                className="flex h-9 w-9 items-center justify-center rounded-xl border-2 border-gray-200 text-gray-400 hover:bg-gray-50 hover:text-gray-600 transition-all active:scale-95"
               >
-                Bekor qilish
+                ✕
+              </button>
+            </div>
+            {/* Modal body */}
+            <div className="px-6 py-6 text-center">
+              <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-2xl bg-red-50 text-4xl">
+                🗑️
+              </div>
+              <p className="text-base text-gray-600 leading-relaxed">
+                <strong className="text-gray-900">"{confirmDelete.nameUz}"</strong> ni o'chirishni tasdiqlaysizmi?
+              </p>
+              <p className="mt-2 text-sm text-red-500 font-medium">Bu amalni qaytarib bo'lmaydi!</p>
+            </div>
+            {/* Modal footer */}
+            <div className="flex gap-3 border-t border-gray-100 px-6 py-4">
+              <button
+                onClick={() => setConfirmDelete(null)}
+                className="flex-1 rounded-2xl border-2 border-gray-200 py-3 text-base font-bold text-gray-700 hover:bg-gray-50 hover:border-gray-300 transition-all active:scale-95"
+              >
+                ← Bekor qilish
               </button>
               <button
                 onClick={() => handleDelete(confirmDelete)}
-                className="flex-1 rounded-xl bg-red-600 py-3 font-bold text-white hover:bg-red-700"
+                className="flex-1 rounded-2xl bg-gradient-to-r from-red-600 to-red-500 py-3 text-base font-bold text-white shadow-md hover:shadow-lg hover:opacity-90 transition-all active:scale-95"
               >
-                Ha, o'chirish
+                🗑️ Ha, o'chirish
               </button>
             </div>
           </div>

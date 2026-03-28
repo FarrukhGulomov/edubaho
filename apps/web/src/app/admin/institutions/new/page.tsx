@@ -20,7 +20,7 @@ export default function NewInstitutionPage() {
     </div>
   )
 
-  if (user.role !== 'ADMIN' && user.role !== 'MODERATOR') {
+  if (user.role !== 'ADMIN' && user.role !== 'MODERATOR' && user.role !== 'SUPER_ADMIN') {
     return (
       <div className="flex min-h-screen items-center justify-center bg-gray-50 text-center px-4">
         <div>
@@ -45,7 +45,7 @@ export default function NewInstitutionPage() {
           </div>
           <Link
             href="/admin/institutions"
-            className="rounded-xl border border-gray-200 px-3 py-1.5 text-sm text-gray-600 hover:bg-gray-50"
+            className="flex items-center gap-1.5 rounded-xl border-2 border-gray-200 bg-white px-4 py-2 text-sm font-bold text-gray-600 hover:bg-gray-50 hover:border-gray-300 transition-all active:scale-95"
           >
             ← Orqaga
           </Link>
@@ -58,7 +58,7 @@ export default function NewInstitutionPage() {
           <p className="mt-1 text-gray-500">Barcha asosiy ma'lumotlarni to'ldiring</p>
         </div>
 
-        <div className="rounded-2xl border border-gray-200 bg-white p-6 shadow-sm">
+        <div className="rounded-2xl border-2 border-gray-100 bg-white p-6 shadow-sm">
           <InstitutionForm mode="create" />
         </div>
       </main>
