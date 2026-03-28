@@ -3,6 +3,7 @@ dockerfilePath = "apps/api/Dockerfile"
 watchPatterns = ["apps/api/**", "packages/shared/**"]
 
 [deploy]
+startCommand = "node /app/node_modules/prisma/build/index.js migrate deploy && node /app/apps/api/dist/server.js"
 healthcheckPath = "/health"
 healthcheckTimeout = 120
 restartPolicyType = "on_failure"
