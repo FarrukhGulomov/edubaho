@@ -299,8 +299,8 @@ export default async function authRoutes(fastify: FastifyInstance) {
     },
   )
 
-  // GET /auth/dev-otp/:phone — faqat development muhitida OTP ni ko'rish
-  if (process.env.NODE_ENV === 'development') {
+  // GET /auth/dev-otp/:phone — development yoki ALLOW_DEV_OTP=true bo'lganda OTP ni ko'rish
+  if (process.env.NODE_ENV === 'development' || process.env.ALLOW_DEV_OTP === 'true') {
     fastify.get('/auth/dev-otp/:phone', async (request, reply) => {
       const { phone } = request.params as { phone: string }
       const otp = await redis.get(`otp:${phone}`)
