@@ -73,6 +73,7 @@ export default function AdminLoginPage() {
 
         window.history.replaceState({}, '', '/admin/login')
         setRole(userRole)
+        setLoading(false)
         setStep('pin')
       })
       .catch((err: unknown) => {
