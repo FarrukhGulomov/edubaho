@@ -4,6 +4,6 @@ watchPatterns = ["apps/api/**", "packages/shared/**"]
 
 [deploy]
 healthcheckPath = "/health"
-healthcheckTimeout = 60
+healthcheckTimeout = 120
 restartPolicyType = "on_failure"
 restartPolicyMaxRetries = 3

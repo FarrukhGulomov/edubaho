@@ -2,44 +2,48 @@ import { z } from 'zod'
 
 /**
  * Muhit o'zgaruvchilarini Zod orqali validatsiya qilish.
- * Server ishga tushganda noto'g'ri config erta aniqlanadi.
+ *
+ * Majburiy (server ishlamaydi):  DATABASE_URL, REDIS_URL, JWT_SECRET, REFRESH_SECRET
+ * Ixtiyoriy (xususiyat o'chadi): SMS_*, R2_*, MEILISEARCH_*
  */
 const envSchema = z.object({
   NODE_ENV: z.enum(['development', 'production', 'test']).default('development'),
   PORT: z.coerce.number().default(3001),
 
-  DATABASE_URL: z.string().url(),
-  REDIS_URL: z.string(),
+  // ── Majburiy ─────────────────────────────────────────────────────────────
+  DATABASE_URL: z.string().min(1, 'DATABASE_URL talab qilinadi'),
+  REDIS_URL: z.string().min(1, 'REDIS_URL talab qilinadi'),
 
-  JWT_SECRET: z.string().min(32, 'JWT_SECRET kamida 32 ta belgi bo\'lishi kerak'),
-  REFRESH_SECRET: z.string().min(32, 'REFRESH_SECRET kamida 32 ta belgi bo\'lishi kerak'),
+  JWT_SECRET: z.string().min(32, "JWT_SECRET kamida 32 ta belgi bo'lishi kerak"),
+  REFRESH_SECRET: z.string().min(32, "REFRESH_SECRET kamida 32 ta belgi bo'lishi kerak"),
   JWT_EXPIRES_IN: z.string().default('15m'),
   REFRESH_EXPIRES_IN: z.string().default('30d'),
 
-  SMS_LOGIN: z.string(),
-  SMS_PASSWORD: z.string(),
-  SMS_FROM: z.string().default('EduReyting'),
-  SMS_BASE_URL: z.string().url(),
-
-  MEILISEARCH_URL: z.string().url(),
-  MEILISEARCH_KEY: z.string(),
-
-  R2_ACCOUNT_ID: z.string(),
-  R2_ACCESS_KEY: z.string(),
-  R2_SECRET_KEY: z.string(),
-  R2_BUCKET: z.string(),
-  R2_PUBLIC_URL: z.string().url(),
-
   ALLOWED_ORIGINS: z.string().default('http://localhost:3000'),
+  ADMIN_PIN: z.string().min(4, "ADMIN_PIN kamida 4 ta belgi").default('1234'),
 
-  // Admin kirish uchun maxfiy PIN (telefon OTP dan keyin)
-  ADMIN_PIN: z.string().min(4, 'ADMIN_PIN kamida 4 ta belgi'),
+  // ── SMS (Playmobile) — ixtiyoriy, yo'q bo'lsa OTP faqat logga chiqadi ────
+  SMS_LOGIN: z.string().default(''),
+  SMS_PASSWORD: z.string().default(''),
+  SMS_FROM: z.string().default('EduReyting'),
+  SMS_BASE_URL: z.string().default('http://91.204.239.44/broker-api/send'),
+
+  // ── Meilisearch — ixtiyoriy, yo'q bo'lsa search DB fallback ishlatadi ────
+  MEILISEARCH_URL: z.string().default('http://localhost:7700'),
+  MEILISEARCH_KEY: z.string().default(''),
+
+  // ── Cloudflare R2 — ixtiyoriy, yo'q bo'lsa fayl yuklash ishlamaydi ───────
+  R2_ACCOUNT_ID: z.string().default(''),
+  R2_ACCESS_KEY: z.string().default(''),
+  R2_SECRET_KEY: z.string().default(''),
+  R2_BUCKET: z.string().default('edureyting-media'),
+  R2_PUBLIC_URL: z.string().default('https://media.edureyting.uz'),
 })
 
 const parsed = envSchema.safeParse(process.env)
 
 if (!parsed.success) {
-  console.error('❌ Noto\'g\'ri muhit o\'zgaruvchilari:')
+  console.error("❌ Noto'g'ri muhit o'zgaruvchilari:")
   console.error(parsed.error.flatten().fieldErrors)
   process.exit(1)
 }

@@ -18,8 +18,8 @@ FROM node:20-alpine AS builder
 
 WORKDIR /app
 
+# npm workspaces: barcha node_modules root da hoisted
 COPY --from=deps /app/node_modules ./node_modules
-COPY --from=deps /app/apps/web/node_modules ./apps/web/node_modules 2>/dev/null || true
 
 COPY packages/shared ./packages/shared
 COPY apps/web ./apps/web
