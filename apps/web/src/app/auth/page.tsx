@@ -245,66 +245,49 @@ export default function AuthPage() {
               <div className="space-y-4">
 
                 {/* Telegram Login Widget */}
-                {BOT_USERNAME && (
-                  <div className="space-y-3">
-                    <div
-                      ref={tgRef}
-                      className="flex justify-center min-h-[48px] items-center"
-                    />
-                    {loading && (
-                      <div className="flex justify-center">
-                        <div className="h-5 w-5 animate-spin rounded-full border-2 border-primary-200 border-t-primary-600" />
-                      </div>
-                    )}
-                    {error && <ErrorBox msg={error} />}
-
-                    {/* Divider */}
-                    <div className="relative">
-                      <div className="absolute inset-0 flex items-center">
-                        <div className="w-full border-t border-gray-200" />
-                      </div>
-                      <div className="relative flex justify-center text-xs">
-                        <span className="bg-white px-3 text-gray-400 font-medium">
-                          {t(lang, ui.orDivider)}
-                        </span>
-                      </div>
+                <div className="space-y-3">
+                  {loading ? (
+                    <div className="flex justify-center py-3">
+                      <div className="h-6 w-6 animate-spin rounded-full border-2 border-primary-200 border-t-primary-600" />
                     </div>
-                  </div>
+                  ) : (
+                    <div ref={tgRef} className="flex justify-center min-h-[48px] items-center" />
+                  )}
+                  {error && <ErrorBox msg={error} />}
+                </div>
+
+                {/* SMS form — hozircha yashirilgan */}
+                {false && (
+                  <form onSubmit={handleSendOtp} className="space-y-4">
+                    <div>
+                      <label className="mb-1.5 block text-sm font-semibold text-gray-700">
+                        {t(lang, ui.phoneLabel)}
+                      </label>
+                      <input
+                        type="tel"
+                        value={phone}
+                        onChange={(e) => {
+                          const val = e.target.value
+                          if (!val.startsWith('+998')) { setPhone('+998 '); return }
+                          setPhone(val)
+                        }}
+                        placeholder="+998 90 123 45 67"
+                        required
+                        className="w-full rounded-xl border border-gray-300 px-4 py-3.5 text-lg text-gray-900 outline-none placeholder:text-gray-300 focus:border-primary-500 focus:ring-2 focus:ring-primary-100"
+                      />
+                      <p className="mt-1 text-xs text-gray-400">
+                        {t(lang, { uz: "Faqat O'zbekiston raqamlari (+998)", ru: 'Только номера Узбекистана (+998)' })}
+                      </p>
+                    </div>
+                    <button
+                      type="submit"
+                      disabled={loading || phone.replace(/\D/g, '').length < 12}
+                      className="w-full rounded-xl bg-primary-600 py-3.5 font-bold text-white hover:bg-primary-700 disabled:opacity-50 transition-colors text-base"
+                    >
+                      {loading ? t(lang, ui.sending) : t(lang, ui.sendBtn)}
+                    </button>
+                  </form>
                 )}
-
-                {/* SMS form */}
-                <form onSubmit={handleSendOtp} className="space-y-4">
-                  <div>
-                    <label className="mb-1.5 block text-sm font-semibold text-gray-700">
-                      {t(lang, ui.phoneLabel)}
-                    </label>
-                    <input
-                      type="tel"
-                      value={phone}
-                      onChange={(e) => {
-                        const val = e.target.value
-                        if (!val.startsWith('+998')) { setPhone('+998 '); return }
-                        setPhone(val)
-                      }}
-                      placeholder="+998 90 123 45 67"
-                      required
-                      className="w-full rounded-xl border border-gray-300 px-4 py-3.5 text-lg text-gray-900 outline-none placeholder:text-gray-300 focus:border-primary-500 focus:ring-2 focus:ring-primary-100"
-                    />
-                    <p className="mt-1 text-xs text-gray-400">
-                      {t(lang, { uz: "Faqat O'zbekiston raqamlari (+998)", ru: 'Только номера Узбекистана (+998)' })}
-                    </p>
-                  </div>
-
-                  {!BOT_USERNAME && error && <ErrorBox msg={error} />}
-
-                  <button
-                    type="submit"
-                    disabled={loading || phone.replace(/\D/g, '').length < 12}
-                    className="w-full rounded-xl bg-primary-600 py-3.5 font-bold text-white hover:bg-primary-700 disabled:opacity-50 transition-colors text-base"
-                  >
-                    {loading ? t(lang, ui.sending) : t(lang, ui.sendBtn)}
-                  </button>
-                </form>
               </div>
             )}
 

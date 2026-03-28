@@ -5,22 +5,20 @@ import { useState, useEffect, useRef } from 'react'
 import { useRouter } from 'next/navigation'
 import { authApi } from '@/lib/api'
 
-const API = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:3001/api/v1'
+const API          = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:3001/api/v1'
+const BOT_USERNAME = process.env.NEXT_PUBLIC_TELEGRAM_BOT_USERNAME ?? 'edubahobot'
 
-type Step = 'phone' | 'otp' | 'pin' | 'done'
+type Step = 'auth' | 'pin' | 'done'
 
 export default function AdminLoginPage() {
   const router = useRouter()
-  const [step, setStep]       = useState<Step>('phone')
-  const [phone, setPhone]     = useState('+998 ')
-  const [otp, setOtp]         = useState('')
-  const [pin, setPin]         = useState('')
+  const [step, setStep]       = useState<Step>('auth')
   const [role, setRole]       = useState('')
+  const [pin, setPin]         = useState('')
   const [loading, setLoading] = useState(false)
   const [error, setError]     = useState('')
-  const [countdown, setCount] = useState(0)
-  const otpRef = useRef<HTMLInputElement>(null)
   const pinRef = useRef<HTMLInputElement>(null)
+  const tgRef  = useRef<HTMLDivElement>(null)
 
   // Allaqachon kirgan adminni /admin ga yo'naltirish
   useEffect(() => {
@@ -30,67 +28,84 @@ export default function AdminLoginPage() {
       headers: { Authorization: `Bearer ${token}`, 'ngrok-skip-browser-warning': '1' },
     })
       .then(r => r.json())
-      .then(d => {
-        if (d.verified) router.replace('/admin')
-      })
+      .then(d => { if (d.verified) router.replace('/admin') })
       .catch(() => {})
   }, [router])
 
+  // Telegram redirect mode — URL da hash parametri bo'lsa avtomatik login
   useEffect(() => {
-    if (step === 'otp') otpRef.current?.focus()
+    const params = new URLSearchParams(window.location.search)
+    const hash   = params.get('hash')
+    const id     = params.get('id')
+    if (!hash || !id) return
+
+    setLoading(true)
+    setError('')
+
+    const tgUser = {
+      id:         Number(id),
+      first_name: params.get('first_name') ?? '',
+      last_name:  params.get('last_name')  ?? undefined,
+      username:   params.get('username')   ?? undefined,
+      photo_url:  params.get('photo_url')  ?? undefined,
+      auth_date:  Number(params.get('auth_date')),
+      hash,
+    }
+
+    authApi.telegramLogin(tgUser)
+      .then((result) => {
+        const r = result as {
+          accessToken: string
+          refreshToken: string
+          user: { role: string }
+        }
+        localStorage.setItem('accessToken', r.accessToken)
+        localStorage.setItem('refreshToken', r.refreshToken)
+
+        const userRole = r.user?.role
+        if (userRole !== 'ADMIN' && userRole !== 'SUPER_ADMIN') {
+          localStorage.removeItem('accessToken')
+          localStorage.removeItem('refreshToken')
+          setError("Sizda admin huquqi yo'q. Faqat adminlar kira oladi.")
+          setLoading(false)
+          return
+        }
+
+        window.history.replaceState({}, '', '/admin/login')
+        setRole(userRole)
+        setStep('pin')
+      })
+      .catch((err: unknown) => {
+        setError(err instanceof Error ? err.message : 'Telegram orqali kirish muvaffaqiyatsiz')
+        setLoading(false)
+      })
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
+
+  // PIN inputga focus
+  useEffect(() => {
     if (step === 'pin') pinRef.current?.focus()
   }, [step])
 
-  // ── 1-qadam: OTP yuborish ──
-  async function handleSendOtp(e: React.FormEvent) {
-    e.preventDefault()
-    setError('')
-    setLoading(true)
-    try {
-      await authApi.sendOtp(phone.replace(/\s/g, ''))
-      setStep('otp')
-      setCount(60)
-      const t = setInterval(() => setCount(c => { if (c <= 1) { clearInterval(t); return 0 } return c - 1 }), 1000)
-    } catch (err: unknown) {
-      setError(err instanceof Error ? err.message : 'Xatolik yuz berdi')
-    } finally {
-      setLoading(false)
-    }
-  }
+  // Telegram widget yuklash
+  useEffect(() => {
+    if (step !== 'auth' || !BOT_USERNAME) return
+    const container = tgRef.current
+    if (!container) return
+    container.innerHTML = ''
+    const script = document.createElement('script')
+    script.src = 'https://telegram.org/js/telegram-widget.js?22'
+    script.setAttribute('data-telegram-login', BOT_USERNAME)
+    script.setAttribute('data-size', 'large')
+    script.setAttribute('data-radius', '12')
+    script.setAttribute('data-auth-url', window.location.origin + '/admin/login')
+    script.setAttribute('data-request-access', 'write')
+    script.async = true
+    container.appendChild(script)
+    return () => { container.innerHTML = '' }
+  }, [step])
 
-  // ── 2-qadam: OTP tasdiqlash ──
-  async function handleVerifyOtp(e: React.FormEvent) {
-    e.preventDefault()
-    setError('')
-    setLoading(true)
-    try {
-      const result = await authApi.verifyOtp(phone.replace(/\s/g, ''), otp) as {
-        accessToken: string; refreshToken: string; user: { role: string }
-      }
-
-      // Token saqlash
-      localStorage.setItem('accessToken', result.accessToken)
-      localStorage.setItem('refreshToken', result.refreshToken)
-
-      const userRole = result.user?.role
-      if (userRole !== 'ADMIN' && userRole !== 'SUPER_ADMIN') {
-        localStorage.removeItem('accessToken')
-        localStorage.removeItem('refreshToken')
-        setError("Sizda admin huquqi yo'q. Ushbu sahifa faqat adminlar uchun.")
-        setStep('phone')
-        return
-      }
-
-      setRole(userRole)
-      setStep('pin')
-    } catch (err: unknown) {
-      setError(err instanceof Error ? err.message : "OTP noto'g'ri")
-    } finally {
-      setLoading(false)
-    }
-  }
-
-  // ── 3-qadam: Admin PIN tasdiqlash ──
+  // ── Admin PIN tasdiqlash ──
   async function handleVerifyPin(e: React.FormEvent) {
     e.preventDefault()
     setError('')
@@ -115,7 +130,7 @@ export default function AdminLoginPage() {
       setStep('done')
       setTimeout(() => router.replace('/admin'), 1200)
     } catch {
-      setError('Server bilan aloqa yo\'q')
+      setError("Server bilan aloqa yo'q")
     } finally {
       setLoading(false)
     }
@@ -142,107 +157,52 @@ export default function AdminLoginPage() {
 
             {/* Progress steps */}
             <div className="mb-6 flex items-center justify-center gap-2">
-              {(['phone', 'otp', 'pin'] as const).map((s, i) => (
+              {(['auth', 'pin'] as const).map((s, i) => (
                 <div key={s} className="flex items-center gap-2">
                   <div className={`flex h-7 w-7 items-center justify-center rounded-full text-xs font-bold transition-all ${
                     step === s ? 'bg-purple-500 text-white shadow-lg shadow-purple-500/40'
-                    : (step === 'otp' && i === 0) || (step === 'pin' && i <= 1) || step === 'done'
+                    : (step === 'pin' && i === 0) || step === 'done'
                       ? 'bg-green-500 text-white'
                       : 'bg-white/10 text-white/40'
                   }`}>
-                    {((step === 'otp' && i === 0) || (step === 'pin' && i <= 1) || step === 'done')
-                      ? '✓' : i + 1}
+                    {((step === 'pin' && i === 0) || step === 'done') ? '✓' : i + 1}
                   </div>
-                  {i < 2 && <div className={`h-px w-8 transition-all ${
-                    (step === 'pin' && i === 0) || (step === 'done' && i <= 1) ? 'bg-green-500' : 'bg-white/10'
-                  }`} />}
+                  {i < 1 && (
+                    <div className={`h-px w-8 transition-all ${
+                      step === 'pin' || step === 'done' ? 'bg-green-500' : 'bg-white/10'
+                    }`} />
+                  )}
                 </div>
               ))}
             </div>
 
-            {/* ── Step 1: Phone ── */}
-            {step === 'phone' && (
-              <form onSubmit={handleSendOtp} className="space-y-4">
+            {/* ── Step 1: Telegram auth ── */}
+            {step === 'auth' && (
+              <div className="space-y-4">
                 <div className="text-center mb-4">
-                  <h1 className="text-lg font-bold text-white">Telefon raqamingiz</h1>
-                  <p className="text-xs text-white/50 mt-1">Admin panelga kirish uchun</p>
+                  <h1 className="text-lg font-bold text-white">Admin kirish</h1>
+                  <p className="text-xs text-white/50 mt-1">Telegram orqali identifikatsiya</p>
                 </div>
-                <input
-                  type="tel"
-                  value={phone}
-                  onChange={e => {
-                    const v = e.target.value
-                    if (!v.startsWith('+998')) { setPhone('+998 '); return }
-                    setPhone(v)
-                  }}
-                  placeholder="+998 90 123 45 67"
-                  required
-                  className="w-full rounded-xl border border-white/20 bg-white/10 px-4 py-3.5 text-lg text-white outline-none placeholder:text-white/30 focus:border-purple-400 focus:ring-2 focus:ring-purple-400/20 transition-all"
-                />
+
+                {loading ? (
+                  <div className="flex justify-center py-4">
+                    <div className="h-8 w-8 animate-spin rounded-full border-2 border-purple-400/30 border-t-purple-400" />
+                  </div>
+                ) : (
+                  <div className="flex justify-center min-h-[48px] items-center">
+                    <div ref={tgRef} />
+                  </div>
+                )}
+
                 {error && <ErrorBox msg={error} />}
-                <button
-                  type="submit"
-                  disabled={loading || phone.replace(/\D/g, '').length < 12}
-                  className="w-full rounded-xl bg-purple-600 py-3.5 font-bold text-white hover:bg-purple-500 disabled:opacity-50 transition-colors"
-                >
-                  {loading ? 'Yuborilmoqda...' : 'SMS kod olish'}
-                </button>
-              </form>
+
+                <div className="rounded-xl border border-blue-500/20 bg-blue-500/10 px-4 py-3 text-xs text-blue-300 text-center">
+                  ℹ️ Faqat admin huquqidagi Telegram akkauntlar kira oladi
+                </div>
+              </div>
             )}
 
-            {/* ── Step 2: OTP ── */}
-            {step === 'otp' && (
-              <form onSubmit={handleVerifyOtp} className="space-y-4">
-                <div className="text-center mb-4">
-                  <h1 className="text-lg font-bold text-white">SMS kodni kiriting</h1>
-                  <p className="text-xs text-white/50 mt-1">{phone} raqamiga yuborildi</p>
-                </div>
-                <input
-                  ref={otpRef}
-                  type="text"
-                  inputMode="numeric"
-                  maxLength={6}
-                  value={otp}
-                  onChange={e => {
-                    const v = e.target.value.replace(/\D/g, '')
-                    setOtp(v)
-                    if (v.length === 6) {
-                      setTimeout(() => (e.target.closest('form') as HTMLFormElement)?.requestSubmit(), 100)
-                    }
-                  }}
-                  placeholder="• • • • • •"
-                  className="w-full rounded-xl border-2 border-white/20 bg-white/10 px-4 py-4 text-center text-3xl font-mono font-bold tracking-[0.5em] text-white outline-none focus:border-purple-400 focus:ring-2 focus:ring-purple-400/20 transition-all"
-                />
-                <div className="flex justify-center gap-2">
-                  {Array.from({ length: 6 }).map((_, i) => (
-                    <div key={i} className={`h-2 w-2 rounded-full transition-all ${i < otp.length ? 'bg-purple-400 scale-125' : 'bg-white/20'}`} />
-                  ))}
-                </div>
-                {error && <ErrorBox msg={error} />}
-                <button
-                  type="submit"
-                  disabled={loading || otp.length !== 6}
-                  className="w-full rounded-xl bg-purple-600 py-3.5 font-bold text-white hover:bg-purple-500 disabled:opacity-50 transition-colors"
-                >
-                  {loading ? 'Tekshirilmoqda...' : 'Tasdiqlash'}
-                </button>
-                <div className="flex items-center justify-between text-sm">
-                  <button type="button" onClick={() => { setStep('phone'); setOtp(''); setError('') }}
-                    className="text-white/40 hover:text-white/70 transition-colors">
-                    ← Orqaga
-                  </button>
-                  {countdown > 0
-                    ? <span className="text-white/40">Qayta: <strong className="text-white/60">{countdown}s</strong></span>
-                    : <button type="button" onClick={() => { setStep('phone'); setOtp('') }}
-                        className="font-semibold text-purple-400 hover:text-purple-300 transition-colors">
-                        Qayta yuborish
-                      </button>
-                  }
-                </div>
-              </form>
-            )}
-
-            {/* ── Step 3: Admin PIN ── */}
+            {/* ── Step 2: Admin PIN ── */}
             {step === 'pin' && (
               <form onSubmit={handleVerifyPin} className="space-y-4">
                 <div className="text-center mb-4">
