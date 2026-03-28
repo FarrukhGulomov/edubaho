@@ -90,7 +90,7 @@ export default function AuthPage() {
   const ui = {
     title:      { uz: "Ta'lim muassasangizni toping", ru: 'Найдите своё учебное заведение' },
     subtitle:   { uz: "Kirish yoki ro'yxatdan o'tish", ru: 'Войти или зарегистрироваться' },
-    otpSub:     { uz: 'Telegram kodini kiriting', ru: 'Введите код из Telegram' },
+    otpSub:     { uz: 'SMS kodni kiriting', ru: 'Введите SMS-код' },
     phoneLabel: { uz: 'Telefon raqamingiz', ru: 'Ваш номер телефона' },
     sendBtn:    { uz: 'SMS kod olish', ru: 'Получить SMS-код' },
     sending:    { uz: 'Yuborilmoqda...', ru: 'Отправляется...' },
