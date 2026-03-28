@@ -124,6 +124,9 @@ export const authApi = {
   verifyOtp: (phone: string, otp: string) =>
     apiFetch('/auth/verify-otp', { method: 'POST', body: JSON.stringify({ phone, otp }) }),
 
+  telegramLogin: (data: object) =>
+    apiFetch('/auth/telegram', { method: 'POST', body: JSON.stringify(data) }),
+
   refresh: (refreshToken: string) =>
     apiFetch('/auth/refresh', { method: 'POST', body: JSON.stringify({ refreshToken }) }),
 

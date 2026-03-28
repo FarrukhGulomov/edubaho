@@ -104,7 +104,8 @@ model City {
 
 model User {
   id           String    @id @default(cuid())
-  phone        String    @unique
+  phone        String?   @unique
+  telegramId   String?   @unique
   name         String?
   email        String?   @unique
   avatarUrl    String?
@@ -127,6 +128,7 @@ model User {
   leadEvents        LeadEvent[]
 
   @@index([phone])
+  @@index([telegramId])
   @@index([cityId])
 }
 

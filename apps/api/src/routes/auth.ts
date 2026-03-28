@@ -5,6 +5,7 @@ import { sendOtpSchema, verifyOtpSchema, refreshSchema, updateProfileSchema } fr
 import { normalizePhone, generateOtp } from '../utils/phone'
 import { redis, setOtp, verifyOtp, canSendOtp, markOtpSent } from '../utils/redis'
 import { sendSmsOtp } from '../services/sms'
+import { verifyTelegramAuth } from '../services/telegram'
 import { generateTokens, verifyRefreshToken, revokeRefreshToken } from '../services/tokens'
 
 /**
@@ -331,6 +332,64 @@ export default async function authRoutes(fastify: FastifyInstance) {
     })
 
     return reply.send({ success: true, phone: user.phone, role: user.role })
+  })
+
+  // ─────────────────────────────────────────────
+  // POST /auth/telegram
+  // Telegram Login Widget orqali kirish
+  // ─────────────────────────────────────────────
+
+  fastify.post('/auth/telegram', async (request, reply) => {
+    if (!env.TELEGRAM_BOT_TOKEN) {
+      return reply.status(503).send({ error: 'Telegram kirish hali sozlanmagan' })
+    }
+
+    const tgData = z.object({
+      id:         z.number(),
+      first_name: z.string(),
+      last_name:  z.string().optional(),
+      username:   z.string().optional(),
+      photo_url:  z.string().optional(),
+      auth_date:  z.number(),
+      hash:       z.string(),
+    }).parse(request.body)
+
+    if (!verifyTelegramAuth(tgData, env.TELEGRAM_BOT_TOKEN)) {
+      return reply.status(401).send({ error: 'Telegram tasdiqlanmadi yoki muddati o\'tgan' })
+    }
+
+    const telegramId = String(tgData.id)
+    const name = [tgData.first_name, tgData.last_name].filter(Boolean).join(' ')
+
+    const user = await prisma.user.upsert({
+      where:  { telegramId },
+      update: { lastActiveAt: new Date() },
+      create: { telegramId, name, isVerified: true },
+      select: {
+        id: true, phone: true, name: true, role: true,
+        institutionClaims: {
+          where:  { status: 'APPROVED' },
+          select: { institutionId: true },
+          take:   1,
+        },
+      },
+    })
+
+    const isNewUser = !user.phone && !user.name
+    const institutionId = user.institutionClaims[0]?.institutionId
+    const { accessToken, refreshToken } = await generateTokens(
+      user.id,
+      user.role as Parameters<typeof generateTokens>[1],
+      institutionId,
+    )
+
+    return reply.send({
+      success: true,
+      isNewUser,
+      user: { id: user.id, phone: user.phone, name: user.name, role: user.role },
+      accessToken,
+      refreshToken,
+    })
   })
 
   // GET /auth/dev-otp/:phone — development yoki ALLOW_DEV_OTP=true bo'lganda OTP ni ko'rish

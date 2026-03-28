@@ -8,15 +8,18 @@ import { authTrack } from '@/lib/analytics'
 
 type Step = 'phone' | 'otp' | 'done'
 
+const BOT_USERNAME = process.env.NEXT_PUBLIC_TELEGRAM_BOT_USERNAME
+
 export default function AuthPage() {
   const { lang, setLang } = useLang()
-  const [step, setStep] = useState<Step>('phone')
-  const [phone, setPhone] = useState('+998 ')
-  const [otp, setOtp] = useState('')
+  const [step, setStep]       = useState<Step>('phone')
+  const [phone, setPhone]     = useState('+998 ')
+  const [otp, setOtp]         = useState('')
   const [loading, setLoading] = useState(false)
-  const [error, setError] = useState('')
+  const [error, setError]     = useState('')
   const [countdown, setCountdown] = useState(0)
-  const otpRef = useRef<HTMLInputElement>(null)
+  const otpRef  = useRef<HTMLInputElement>(null)
+  const tgRef   = useRef<HTMLDivElement>(null)
 
   // Auth sahifasi ochildi
   useEffect(() => { authTrack.started() }, [])
@@ -24,18 +27,15 @@ export default function AuthPage() {
   // Profilga o'tish
   useEffect(() => {
     if (step === 'done') {
-      const t = setTimeout(() => { window.location.href = '/profile' }, 1600)
-      return () => clearTimeout(t)
+      const timer = setTimeout(() => { window.location.href = '/profile' }, 1600)
+      return () => clearTimeout(timer)
     }
   }, [step])
 
   // Tark etish kuzatuvi (unmount)
   useEffect(() => {
     return () => {
-      // Komponent unmount bo'lganda — agar hali done bo'lmagan bo'lsa
-      if (step !== 'done') {
-        authTrack.abandoned(step)
-      }
+      if (step !== 'done') authTrack.abandoned(step)
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
@@ -45,10 +45,52 @@ export default function AuthPage() {
     if (step === 'otp') otpRef.current?.focus()
   }, [step])
 
+  // Telegram widget yuklash
+  useEffect(() => {
+    if (!BOT_USERNAME || !tgRef.current) return
+
+    // Global callback — Telegram widget shu funksiyani chaqiradi
+    const win = window as unknown as Record<string, unknown>
+    win['onTelegramAuth'] = async (user: object) => {
+      setLoading(true)
+      setError('')
+      try {
+        const result = await authApi.telegramLogin(user) as {
+          accessToken: string; refreshToken: string; isNewUser: boolean
+        }
+        localStorage.setItem('accessToken', result.accessToken)
+        localStorage.setItem('refreshToken', result.refreshToken)
+        authTrack.completed(result.isNewUser ?? false)
+        setStep('done')
+      } catch (err: unknown) {
+        setError(err instanceof Error ? err.message : t(lang, { uz: 'Telegram orqali kirish muvaffaqiyatsiz', ru: 'Ошибка входа через Telegram' }))
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    // Script dinamik yuklanadi (Telegram widget Next.js da shunday ishlaydi)
+    const script = document.createElement('script')
+    script.src = 'https://telegram.org/js/telegram-widget.js?22'
+    script.setAttribute('data-telegram-login', BOT_USERNAME)
+    script.setAttribute('data-size', 'large')
+    script.setAttribute('data-radius', '12')
+    script.setAttribute('data-onauth', 'onTelegramAuth(user)')
+    script.setAttribute('data-request-access', 'write')
+    script.async = true
+    tgRef.current.appendChild(script)
+
+    return () => {
+      delete win['onTelegramAuth']
+      if (tgRef.current) tgRef.current.innerHTML = ''
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
+
   const ui = {
     title:      { uz: "Ta'lim muassasangizni toping", ru: 'Найдите своё учебное заведение' },
     subtitle:   { uz: "Kirish yoki ro'yxatdan o'tish", ru: 'Войти или зарегистрироваться' },
-    otpSub:     { uz: 'SMS kodni kiriting', ru: 'Введите SMS-код' },
+    otpSub:     { uz: 'Telegram kodini kiriting', ru: 'Введите код из Telegram' },
     phoneLabel: { uz: 'Telefon raqamingiz', ru: 'Ваш номер телефона' },
     sendBtn:    { uz: 'SMS kod olish', ru: 'Получить SMS-код' },
     sending:    { uz: 'Yuborilmoqda...', ru: 'Отправляется...' },
@@ -64,6 +106,7 @@ export default function AuthPage() {
     terms:      { uz: 'Kirish orqali siz ', ru: 'Входя, вы соглашаетесь с ' },
     termsLink:  { uz: 'foydalanish shartlari', ru: 'условиями использования' },
     termsEnd:   { uz: 'ga rozilik bildirasiz', ru: '' },
+    orDivider:  { uz: 'yoki', ru: 'или' },
     benefits: [
       { icon: '⭐', uz: 'Muassasalarni saqlang', ru: 'Сохраняйте учреждения' },
       { icon: '✍️', uz: 'Sharh yozing', ru: 'Оставляйте отзывы' },
@@ -134,7 +177,7 @@ export default function AuthPage() {
           ))}
         </div>
         <p className="mt-10 text-xs text-primary-300">
-          {t(lang, { uz: 'SMS orqali — parol kerak emas', ru: 'Через SMS — без пароля' })}
+          {t(lang, { uz: 'Telegram yoki SMS — parol kerak emas', ru: 'Telegram или SMS — без пароля' })}
         </p>
       </div>
 
@@ -181,39 +224,70 @@ export default function AuthPage() {
 
             {/* ── Phone step ── */}
             {step === 'phone' && (
-              <form onSubmit={handleSendOtp} className="space-y-4">
-                <div>
-                  <label className="mb-1.5 block text-sm font-semibold text-gray-700">
-                    {t(lang, ui.phoneLabel)}
-                  </label>
-                  <input
-                    type="tel"
-                    value={phone}
-                    onChange={(e) => {
-                      const val = e.target.value
-                      // +998 prefixi har doim qolsin
-                      if (!val.startsWith('+998')) { setPhone('+998 '); return }
-                      setPhone(val)
-                    }}
-                    placeholder="+998 90 123 45 67"
-                    required
-                    className="w-full rounded-xl border border-gray-300 px-4 py-3.5 text-lg text-gray-900 outline-none placeholder:text-gray-300 focus:border-primary-500 focus:ring-2 focus:ring-primary-100"
-                  />
-                  <p className="mt-1 text-xs text-gray-400">
-                    {t(lang, { uz: "Faqat O'zbekiston raqamlari (+998)", ru: 'Только номера Узбекистана (+998)' })}
-                  </p>
-                </div>
+              <div className="space-y-4">
 
-                {error && <ErrorBox msg={error} />}
+                {/* Telegram Login Widget */}
+                {BOT_USERNAME && (
+                  <div className="space-y-3">
+                    <div
+                      ref={tgRef}
+                      className="flex justify-center min-h-[48px] items-center"
+                    />
+                    {loading && (
+                      <div className="flex justify-center">
+                        <div className="h-5 w-5 animate-spin rounded-full border-2 border-primary-200 border-t-primary-600" />
+                      </div>
+                    )}
+                    {error && <ErrorBox msg={error} />}
 
-                <button
-                  type="submit"
-                  disabled={loading || phone.replace(/\D/g, '').length < 12}
-                  className="w-full rounded-xl bg-primary-600 py-3.5 font-bold text-white hover:bg-primary-700 disabled:opacity-50 transition-colors text-base"
-                >
-                  {loading ? t(lang, ui.sending) : t(lang, ui.sendBtn)}
-                </button>
-              </form>
+                    {/* Divider */}
+                    <div className="relative">
+                      <div className="absolute inset-0 flex items-center">
+                        <div className="w-full border-t border-gray-200" />
+                      </div>
+                      <div className="relative flex justify-center text-xs">
+                        <span className="bg-white px-3 text-gray-400 font-medium">
+                          {t(lang, ui.orDivider)}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {/* SMS form */}
+                <form onSubmit={handleSendOtp} className="space-y-4">
+                  <div>
+                    <label className="mb-1.5 block text-sm font-semibold text-gray-700">
+                      {t(lang, ui.phoneLabel)}
+                    </label>
+                    <input
+                      type="tel"
+                      value={phone}
+                      onChange={(e) => {
+                        const val = e.target.value
+                        if (!val.startsWith('+998')) { setPhone('+998 '); return }
+                        setPhone(val)
+                      }}
+                      placeholder="+998 90 123 45 67"
+                      required
+                      className="w-full rounded-xl border border-gray-300 px-4 py-3.5 text-lg text-gray-900 outline-none placeholder:text-gray-300 focus:border-primary-500 focus:ring-2 focus:ring-primary-100"
+                    />
+                    <p className="mt-1 text-xs text-gray-400">
+                      {t(lang, { uz: "Faqat O'zbekiston raqamlari (+998)", ru: 'Только номера Узбекистана (+998)' })}
+                    </p>
+                  </div>
+
+                  {!BOT_USERNAME && error && <ErrorBox msg={error} />}
+
+                  <button
+                    type="submit"
+                    disabled={loading || phone.replace(/\D/g, '').length < 12}
+                    className="w-full rounded-xl bg-primary-600 py-3.5 font-bold text-white hover:bg-primary-700 disabled:opacity-50 transition-colors text-base"
+                  >
+                    {loading ? t(lang, ui.sending) : t(lang, ui.sendBtn)}
+                  </button>
+                </form>
+              </div>
             )}
 
             {/* ── OTP step ── */}
@@ -240,7 +314,6 @@ export default function AuthPage() {
                       const val = e.target.value.replace(/\D/g, '')
                       setOtp(val)
                       if (val.length === 6) {
-                        // Avtomatik submit
                         setTimeout(() => {
                           (e.target.closest('form') as HTMLFormElement)?.requestSubmit()
                         }, 100)
@@ -249,7 +322,6 @@ export default function AuthPage() {
                     placeholder="• • • • • •"
                     className="w-full rounded-xl border-2 border-gray-300 px-4 py-4 text-center text-3xl font-mono font-bold tracking-[0.5em] text-gray-900 outline-none focus:border-primary-500 focus:ring-2 focus:ring-primary-100"
                   />
-                  {/* Progress dots */}
                   <div className="mt-2 flex justify-center gap-2">
                     {Array.from({ length: 6 }).map((_, i) => (
                       <div

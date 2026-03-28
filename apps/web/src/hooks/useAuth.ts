@@ -5,7 +5,7 @@ import { authApi } from '@/lib/api'
 
 export interface AuthUser {
   id: string
-  phone: string
+  phone?: string | null
   name?: string
   role: string
   avatar?: string

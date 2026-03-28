@@ -137,9 +137,9 @@ export default function Header() {
                   className="flex items-center gap-2.5 rounded-2xl border-2 border-gray-200 bg-white px-4 py-2.5 text-sm font-bold text-gray-700 transition-all hover:border-primary-300 hover:text-primary-700"
                 >
                   <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-primary-500 to-primary-700 text-sm font-black text-white shadow-sm">
-                    {(user.name ?? user.phone).slice(0, 1).toUpperCase()}
+                    {(user.name ?? user.phone ?? '?').slice(0, 1).toUpperCase()}
                   </span>
-                  <span className="max-w-[100px] truncate">{user.name ?? user.phone}</span>
+                  <span className="max-w-[100px] truncate">{user.name ?? user.phone ?? 'Profil'}</span>
                 </Link>
                 <button
                   onClick={logout}
@@ -183,10 +183,10 @@ export default function Header() {
                 className="mb-4 flex items-center gap-3 rounded-2xl bg-gradient-to-r from-primary-50 to-sky-50 border-2 border-primary-100 px-4 py-3.5"
               >
                 <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-primary-500 to-primary-700 text-lg font-black text-white shadow">
-                  {(user.name ?? user.phone).slice(0, 1).toUpperCase()}
+                  {(user.name ?? user.phone ?? '?').slice(0, 1).toUpperCase()}
                 </span>
                 <div>
-                  <div className="text-base font-bold text-primary-900">{user.name ?? user.phone}</div>
+                  <div className="text-base font-bold text-primary-900">{user.name ?? user.phone ?? 'Foydalanuvchi'}</div>
                   <div className="text-sm text-primary-600">
                     {t(lang, { uz: "Profilni ko'rish →", ru: 'Открыть профиль →' })}
                   </div>
@@ -311,7 +311,7 @@ export default function Header() {
                   ? 'bg-primary-600'
                   : 'bg-gray-400'
               }`}>
-                {(user.name ?? user.phone).slice(0, 1).toUpperCase()}
+                {(user.name ?? user.phone ?? '?').slice(0, 1).toUpperCase()}
               </span>
               <span className={`text-[11px] font-bold ${pathname === '/profile' ? 'text-primary-600' : 'text-gray-400'}`}>
                 {t(lang, { uz: 'Profil', ru: 'Профиль' })}

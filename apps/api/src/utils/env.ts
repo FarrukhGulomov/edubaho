@@ -28,6 +28,9 @@ const envSchema = z.object({
   SMS_FROM: z.string().default('EduReyting'),
   SMS_BASE_URL: z.string().default('http://91.204.239.44/broker-api/send'),
 
+  // ── Telegram Login Widget — ixtiyoriy, yo'q bo'lsa Telegram kirish o'chiq ─
+  TELEGRAM_BOT_TOKEN: z.string().default(''),
+
   // ── Meilisearch — ixtiyoriy, yo'q bo'lsa search DB fallback ishlatadi ────
   MEILISEARCH_URL: z.string().default('http://localhost:7700'),
   MEILISEARCH_KEY: z.string().default(''),
