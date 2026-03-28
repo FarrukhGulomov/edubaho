@@ -34,6 +34,9 @@ WORKDIR /app
 
 ENV NODE_ENV=production
 
+# Prisma uchun OpenSSL kerak (Alpine da yo'q, qo'lda o'rnatamiz)
+RUN apk add --no-cache openssl
+
 # Production dependencylar uchun package.json
 COPY package.json package-lock.json ./
 COPY packages/shared/package.json ./packages/shared/
