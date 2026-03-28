@@ -59,5 +59,6 @@ WORKDIR /app/apps/api
 
 EXPOSE 3001
 
-# Migrationlarni bajar (xato bo'lsa ham davom etamiz), keyin serverni ishga tushur
-CMD ["sh", "-c", "npx prisma migrate deploy 2>&1 || echo 'Migration failed, starting anyway...' && node dist/server.js"]
+# Migrationlarni bajar (to'liq yo'l — npx subdirectoryfdan binary topa olmaydi)
+# ; ishlatilgan — xato bo'lsa ham server ishga tushsin
+CMD ["sh", "-c", "/app/node_modules/.bin/prisma migrate deploy; node dist/server.js"]
