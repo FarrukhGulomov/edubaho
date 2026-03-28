@@ -8,7 +8,7 @@ import { authTrack } from '@/lib/analytics'
 
 type Step = 'phone' | 'otp' | 'done'
 
-const BOT_USERNAME = process.env.NEXT_PUBLIC_TELEGRAM_BOT_USERNAME
+const BOT_USERNAME = process.env.NEXT_PUBLIC_TELEGRAM_BOT_USERNAME ?? 'edubahobot'
 
 export default function AuthPage() {
   const { lang, setLang } = useLang()
