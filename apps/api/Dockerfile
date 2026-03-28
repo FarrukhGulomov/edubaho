@@ -59,5 +59,5 @@ WORKDIR /app/apps/api
 
 EXPOSE 3001
 
-# Migrationlarni node orqali to'g'ridan-to'g'ri chaqiramiz (shell wrapper muammosini chetlab o'tamiz)
-CMD ["sh", "-c", "node /app/node_modules/prisma/build/index.js migrate deploy; node dist/seed.js; node dist/server.js"]
+# Migration muvaffaqiyatli bo'lsa serverga o'tamiz; seed xatosi serverni to'xtatmasin
+CMD ["sh", "-c", "node /app/node_modules/prisma/build/index.js migrate deploy && (node dist/seed.js; node dist/server.js)"]
