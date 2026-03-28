@@ -360,11 +360,12 @@ export default async function authRoutes(fastify: FastifyInstance) {
 
     const telegramId = String(tgData.id)
     const name = [tgData.first_name, tgData.last_name].filter(Boolean).join(' ')
+    const telegramUsername = tgData.username ?? null
 
     const user = await prisma.user.upsert({
       where:  { telegramId },
-      update: { lastActiveAt: new Date() },
-      create: { telegramId, name, isVerified: true },
+      update: { lastActiveAt: new Date(), telegramUsername },
+      create: { telegramId, telegramUsername, name, isVerified: true },
       select: {
         id: true, phone: true, name: true, role: true,
         institutionClaims: {
