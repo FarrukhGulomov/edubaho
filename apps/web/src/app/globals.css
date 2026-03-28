@@ -10,7 +10,12 @@
   html {
     scroll-behavior: smooth;
     -webkit-tap-highlight-color: transparent;
-    font-size: 17px;
+    font-size: 16px;
+  }
+
+  /* iOS Safari: input font-size < 16px bo'lsa sahifa zoom qiladi — oldini olish */
+  input, select, textarea {
+    font-size: max(16px, 1em);
   }
 
   body {
@@ -43,9 +48,9 @@
     min-width: 44px;
   }
 
-  h1 { @apply text-3xl font-black tracking-tight sm:text-4xl; }
-  h2 { @apply text-2xl font-black tracking-tight sm:text-3xl; }
-  h3 { @apply text-xl font-bold; }
+  h1 { @apply text-2xl font-black tracking-tight sm:text-3xl md:text-4xl; }
+  h2 { @apply text-xl font-black tracking-tight sm:text-2xl md:text-3xl; }
+  h3 { @apply text-lg font-bold sm:text-xl; }
 }
 
 @layer components {

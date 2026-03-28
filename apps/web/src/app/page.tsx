@@ -99,7 +99,7 @@ export default function HomePage() {
           </div>
 
           {/* Sarlavha */}
-          <h1 className="mb-5 text-4xl font-black leading-tight sm:text-6xl">
+          <h1 className="mb-5 text-[1.75rem] font-black leading-tight sm:text-4xl md:text-6xl">
             {uz ? (
               <>Eng yaxshi <span className="text-yellow-300">ta&apos;lim muassasasi</span>ni toping</>
             ) : (
@@ -253,14 +253,14 @@ export default function HomePage() {
                 <Link
                   key={type}
                   href={`/search?type=${type}`}
-                  className={`group flex flex-col items-center gap-4 rounded-3xl border-2 bg-white p-6 text-center shadow-sm transition-all duration-200 hover:-translate-y-1 hover:shadow-lg ${colors[type]}`}
+                  className={`group flex flex-col items-center gap-3 rounded-3xl border-2 bg-white p-4 sm:p-6 text-center shadow-sm transition-all duration-200 hover:-translate-y-1 hover:shadow-lg ${colors[type]}`}
                 >
-                  <span className={`flex h-16 w-16 items-center justify-center rounded-2xl text-4xl shadow-sm ${iconBg[type]}`}>
+                  <span className={`flex h-12 w-12 sm:h-16 sm:w-16 items-center justify-center rounded-2xl text-3xl sm:text-4xl shadow-sm ${iconBg[type]}`}>
                     {info.icon}
                   </span>
                   <div>
-                    <div className="text-lg font-black leading-tight">{uz ? info.uz : info.ru}</div>
-                    <div className="mt-1.5 text-sm font-medium opacity-75 leading-snug">
+                    <div className="text-sm sm:text-lg font-black leading-tight">{uz ? info.uz : info.ru}</div>
+                    <div className="mt-1 text-xs sm:text-sm font-medium opacity-75 leading-snug">
                       {uz ? info.desc.uz : info.desc.ru}
                     </div>
                   </div>
@@ -270,13 +270,13 @@ export default function HomePage() {
           </div>
 
           {/* Tez kunda keladiganlar */}
-          <div className="mt-4 grid grid-cols-2 gap-4 opacity-50">
+          <div className="mt-4 grid grid-cols-1 gap-3 opacity-50 sm:grid-cols-2">
             {COMING_TYPES.map(type => {
               const info = TYPE_LABELS[type]!
               return (
                 <div
                   key={type}
-                  className="flex items-center gap-4 rounded-3xl border-2 border-dashed border-gray-200 bg-white p-6"
+                  className="flex items-center gap-3 rounded-3xl border-2 border-dashed border-gray-200 bg-white p-4 sm:p-6"
                 >
                   <span className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-gray-100 text-3xl grayscale">
                     {info.icon}

@@ -222,10 +222,10 @@ export default function ProfilePage() {
                 { value: compareItems.length,  icon: '⇄',  label: { uz: 'Solishtirish', ru: 'Сравнение' } },
                 { value: reviews.length,       icon: '✍️', label: { uz: 'Sharhlar',    ru: 'Отзывов' } },
               ].map(s => (
-                <div key={s.icon} className="flex flex-col items-center gap-1.5 rounded-2xl bg-slate-50 py-4 text-center">
-                  <span className="text-2xl">{s.icon}</span>
-                  <span className="text-2xl font-black text-primary-600">{s.value}</span>
-                  <span className="text-sm font-semibold text-gray-500">{uz ? s.label.uz : s.label.ru}</span>
+                <div key={s.icon} className="flex flex-col items-center gap-1 rounded-2xl bg-slate-50 py-3 text-center">
+                  <span className="text-xl sm:text-2xl">{s.icon}</span>
+                  <span className="text-xl sm:text-2xl font-black text-primary-600">{s.value}</span>
+                  <span className="text-xs sm:text-sm font-semibold text-gray-500">{uz ? s.label.uz : s.label.ru}</span>
                 </div>
               ))}
             </div>

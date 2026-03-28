@@ -321,7 +321,7 @@ export default function AuthPage() {
                       }
                     }}
                     placeholder="• • • • • •"
-                    className="w-full rounded-xl border-2 border-gray-300 px-4 py-4 text-center text-3xl font-mono font-bold tracking-[0.5em] text-gray-900 outline-none focus:border-primary-500 focus:ring-2 focus:ring-primary-100"
+                    className="w-full rounded-xl border-2 border-gray-300 px-4 py-3.5 text-center text-2xl font-mono font-bold tracking-[0.4em] text-gray-900 outline-none focus:border-primary-500 focus:ring-2 focus:ring-primary-100 sm:text-3xl sm:tracking-[0.5em]"
                   />
                   <div className="mt-2 flex justify-center gap-2">
                     {Array.from({ length: 6 }).map((_, i) => (

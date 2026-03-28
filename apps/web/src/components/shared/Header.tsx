@@ -251,19 +251,19 @@ export default function Header() {
 
       {/* ── Mobil pastki tab navigatsiyasi ────────────────────── */}
       {/* Har doim ko'rinadi — buvi ham topadi */}
-      <nav className="fixed bottom-0 left-0 right-0 z-50 border-t-2 border-gray-100 bg-white pb-safe sm:hidden">
+      <nav className="fixed bottom-0 left-0 right-0 z-50 border-t border-gray-200 bg-white/95 pb-safe backdrop-blur-sm sm:hidden">
         <div className="flex">
           {/* Bosh sahifa */}
           <Link
             href="/"
-            className={`flex flex-1 flex-col items-center gap-1 px-2 py-3 transition-colors ${
+            className={`flex flex-1 flex-col items-center gap-0.5 px-1 py-2.5 transition-colors active:opacity-70 ${
               pathname === '/' ? 'text-primary-600' : 'text-gray-400'
             }`}
           >
-            <svg className="h-6 w-6" fill={pathname === '/' ? 'currentColor' : 'none'} stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
+            <svg className="h-[26px] w-[26px]" fill={pathname === '/' ? 'currentColor' : 'none'} stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/>
             </svg>
-            <span className={`text-[11px] font-bold ${pathname === '/' ? 'text-primary-600' : 'text-gray-400'}`}>
+            <span className={`text-[12px] font-semibold leading-tight ${pathname === '/' ? 'text-primary-600' : 'text-gray-400'}`}>
               {t(lang, { uz: 'Asosiy', ru: 'Главная' })}
             </span>
           </Link>
@@ -271,14 +271,14 @@ export default function Header() {
           {/* Qidirish */}
           <Link
             href="/search"
-            className={`flex flex-1 flex-col items-center gap-1 px-2 py-3 transition-colors ${
+            className={`flex flex-1 flex-col items-center gap-0.5 px-1 py-2.5 transition-colors active:opacity-70 ${
               pathname === '/search' ? 'text-primary-600' : 'text-gray-400'
             }`}
           >
-            <svg className="h-6 w-6" fill={pathname === '/search' ? 'currentColor' : 'none'} stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
+            <svg className="h-[26px] w-[26px]" fill={pathname === '/search' ? 'currentColor' : 'none'} stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
               <circle cx="11" cy="11" r="8"/><path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-4.35-4.35"/>
             </svg>
-            <span className={`text-[11px] font-bold ${pathname === '/search' ? 'text-primary-600' : 'text-gray-400'}`}>
+            <span className={`text-[12px] font-semibold leading-tight ${pathname === '/search' ? 'text-primary-600' : 'text-gray-400'}`}>
               {t(lang, { uz: 'Qidirish', ru: 'Поиск' })}
             </span>
           </Link>
@@ -286,14 +286,14 @@ export default function Header() {
           {/* Compare */}
           <Link
             href="/compare"
-            className={`flex flex-1 flex-col items-center gap-1 px-2 py-3 transition-colors ${
+            className={`flex flex-1 flex-col items-center gap-0.5 px-1 py-2.5 transition-colors active:opacity-70 ${
               pathname === '/compare' ? 'text-primary-600' : 'text-gray-400'
             }`}
           >
-            <svg className="h-6 w-6" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
+            <svg className="h-[26px] w-[26px]" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" d="M9 17V7m0 10a2 2 0 01-2 2H5a2 2 0 01-2-2V7a2 2 0 012-2h2a2 2 0 012 2m0 10a2 2 0 002 2h2a2 2 0 002-2M9 7a2 2 0 012-2h2a2 2 0 012 2m0 10V7m0 10a2 2 0 002 2h2a2 2 0 002-2V7a2 2 0 00-2-2h-2a2 2 0 00-2 2"/>
             </svg>
-            <span className={`text-[11px] font-bold ${pathname === '/compare' ? 'text-primary-600' : 'text-gray-400'}`}>
+            <span className={`text-[12px] font-semibold leading-tight ${pathname === '/compare' ? 'text-primary-600' : 'text-gray-400'}`}>
               {t(lang, { uz: 'Solishtir', ru: 'Сравнить' })}
             </span>
           </Link>
@@ -302,30 +302,28 @@ export default function Header() {
           {user ? (
             <Link
               href="/profile"
-              className={`flex flex-1 flex-col items-center gap-1 px-2 py-3 transition-colors ${
+              className={`flex flex-1 flex-col items-center gap-0.5 px-1 py-2.5 transition-colors active:opacity-70 ${
                 pathname === '/profile' ? 'text-primary-600' : 'text-gray-400'
               }`}
             >
-              <span className={`flex h-6 w-6 items-center justify-center rounded-full text-xs font-black text-white shadow-sm ${
-                pathname === '/profile'
-                  ? 'bg-primary-600'
-                  : 'bg-gray-400'
+              <span className={`flex h-[26px] w-[26px] items-center justify-center rounded-full text-xs font-black text-white shadow-sm ${
+                pathname === '/profile' ? 'bg-primary-600' : 'bg-gray-400'
               }`}>
                 {(user.name ?? user.phone ?? '?').slice(0, 1).toUpperCase()}
               </span>
-              <span className={`text-[11px] font-bold ${pathname === '/profile' ? 'text-primary-600' : 'text-gray-400'}`}>
+              <span className={`text-[12px] font-semibold leading-tight ${pathname === '/profile' ? 'text-primary-600' : 'text-gray-400'}`}>
                 {t(lang, { uz: 'Profil', ru: 'Профиль' })}
               </span>
             </Link>
           ) : (
             <Link
               href="/auth"
-              className="flex flex-1 flex-col items-center gap-1 px-2 py-3 text-primary-600"
+              className="flex flex-1 flex-col items-center gap-0.5 px-1 py-2.5 text-primary-600 active:opacity-70"
             >
-              <span className="flex h-6 w-6 items-center justify-center rounded-full bg-primary-600 text-xs font-black text-white">
+              <span className="flex h-[26px] w-[26px] items-center justify-center rounded-full bg-primary-600 text-sm font-black text-white">
                 +
               </span>
-              <span className="text-[11px] font-bold text-primary-600">
+              <span className="text-[12px] font-semibold leading-tight text-primary-600">
                 {t(lang, { uz: 'Kirish', ru: 'Войти' })}
               </span>
             </Link>
@@ -334,7 +332,7 @@ export default function Header() {
       </nav>
 
       {/* Mobil pastki nav uchun joy — content pastda yashirib qolmasin */}
-      <div className="h-[68px] sm:hidden" aria-hidden />
+      <div className="h-[72px] sm:hidden" aria-hidden />
     </>
   )
 }
