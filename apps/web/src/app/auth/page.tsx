@@ -24,6 +24,42 @@ export default function AuthPage() {
   // Auth sahifasi ochildi
   useEffect(() => { authTrack.started() }, [])
 
+  // Telegram redirect mode: URL da hash bo'lsa avtomatik login
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search)
+    const hash = params.get('hash')
+    const id = params.get('id')
+    if (!hash || !id) return
+
+    setLoading(true)
+    setError('')
+
+    const tgUser = {
+      id:         Number(id),
+      first_name: params.get('first_name') ?? '',
+      last_name:  params.get('last_name')  ?? undefined,
+      username:   params.get('username')   ?? undefined,
+      photo_url:  params.get('photo_url')  ?? undefined,
+      auth_date:  Number(params.get('auth_date')),
+      hash,
+    }
+
+    authApi.telegramLogin(tgUser)
+      .then((result) => {
+        const r = result as { accessToken: string; refreshToken: string; isNewUser: boolean }
+        localStorage.setItem('accessToken', r.accessToken)
+        localStorage.setItem('refreshToken', r.refreshToken)
+        authTrack.completed(r.isNewUser ?? false)
+        window.history.replaceState({}, '', '/auth')
+        setStep('done')
+      })
+      .catch((err: unknown) => {
+        setError(err instanceof Error ? err.message : 'Telegram orqali kirish muvaffaqiyatsiz')
+        setLoading(false)
+      })
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
+
   // Profilga o'tish
   useEffect(() => {
     if (step === 'done') {
@@ -45,51 +81,27 @@ export default function AuthPage() {
     if (step === 'otp') otpRef.current?.focus()
   }, [step])
 
-  // Telegram widget yuklash — step 'phone' ga har safar o'tganda qayta yuklanadi
+  // Telegram widget yuklash (redirect mode) — step 'phone' ga har safar o'tganda qayta yuklanadi
   useEffect(() => {
     if (step !== 'phone' || !BOT_USERNAME) return
 
-    // tgRef.current tayyor bo'lishini kuting
     const container = tgRef.current
     if (!container) return
 
-    // Eski scriptni tozalash
     container.innerHTML = ''
-
-    // Global callback
-    const win = window as unknown as Record<string, unknown>
-    win['onTelegramAuth'] = async (user: object) => {
-      setLoading(true)
-      setError('')
-      try {
-        const result = await authApi.telegramLogin(user) as {
-          accessToken: string; refreshToken: string; isNewUser: boolean
-        }
-        localStorage.setItem('accessToken', result.accessToken)
-        localStorage.setItem('refreshToken', result.refreshToken)
-        authTrack.completed(result.isNewUser ?? false)
-        setStep('done')
-      } catch (err: unknown) {
-        setError(err instanceof Error ? err.message : t(lang, { uz: 'Telegram orqali kirish muvaffaqiyatsiz', ru: 'Ошибка входа через Telegram' }))
-      } finally {
-        setLoading(false)
-      }
-    }
 
     const script = document.createElement('script')
     script.src = 'https://telegram.org/js/telegram-widget.js?22'
     script.setAttribute('data-telegram-login', BOT_USERNAME)
     script.setAttribute('data-size', 'large')
     script.setAttribute('data-radius', '12')
-    script.setAttribute('data-onauth', 'onTelegramAuth(user)')
+    // Redirect mode: Telegram /auth?id=...&hash=... ga qaytadi
+    script.setAttribute('data-auth-url', window.location.origin + '/auth')
     script.setAttribute('data-request-access', 'write')
     script.async = true
     container.appendChild(script)
 
-    return () => {
-      delete win['onTelegramAuth']
-      container.innerHTML = ''
-    }
+    return () => { container.innerHTML = '' }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [step])
 
