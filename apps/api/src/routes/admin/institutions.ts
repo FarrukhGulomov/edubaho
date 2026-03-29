@@ -90,7 +90,7 @@ export default async function adminInstitutionRoutes(fastify: FastifyInstance) {
     telegram:    z.string().optional(),
     instagram:   z.string().optional(),
     address:     z.string().optional(),
-    cityId:      z.string().cuid().optional().or(z.literal('')),
+    cityId:      z.string().min(1).optional().or(z.literal('')),
     // Details
     descriptionUz: z.string().optional(),
     descriptionRu: z.string().optional(),

@@ -4,8 +4,9 @@ generator client {
 }
 
 datasource db {
-  provider = "postgresql"
-  url      = env("DATABASE_URL")
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
 }
 
 // ─────────────────────────────────────────────────
@@ -73,10 +74,11 @@ model Region {
   type     String  // 'region' | 'district' | 'city'
   parentId String?
 
-  parent       Region?        @relation("RegionTree", fields: [parentId], references: [id])
-  children     Region[]       @relation("RegionTree")
-  cities       City[]
-  institutions Institution[]
+  parent             Region?             @relation("RegionTree", fields: [parentId], references: [id])
+  children           Region[]            @relation("RegionTree")
+  cities             City[]
+  institutions       Institution[]
+  institutionBranches InstitutionBranch[]
 
   @@index([slug])
 }
@@ -90,9 +92,10 @@ model City {
   lat      Float?
   lng      Float?
 
-  region       Region        @relation(fields: [regionId], references: [id])
-  users        User[]
-  institutions Institution[]
+  region              Region              @relation(fields: [regionId], references: [id])
+  users               User[]
+  institutions        Institution[]
+  institutionBranches InstitutionBranch[]
 
   @@index([slug])
   @@index([regionId])
@@ -195,11 +198,39 @@ model Institution {
   subscription    Subscription?
   analyticsEvents AnalyticsEvent[]
   leadEvents      LeadEvent[]
+  branches        InstitutionBranch[]
 
   @@index([type, status, cityId])
   @@index([status, avgRating])
   @@index([lat, lng])
   @@index([slug])
+}
+
+// Muassasaning filiallari — bir muassasaning bir nechta shahardagi manzili
+model InstitutionBranch {
+  id            String   @id @default(cuid())
+  institutionId String
+  // Filial nomi (ixtiyoriy, asosiy muassasa nomi ishlatiladi)
+  nameUz        String?
+  nameRu        String?
+  cityId        String
+  regionId      String
+  address       String?
+  lat           Float?
+  lng           Float?
+  phone         String?
+  // Asosiy filial (bosh ofis)
+  isMain        Boolean  @default(false)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  institution Institution @relation(fields: [institutionId], references: [id], onDelete: Cascade)
+  city        City        @relation(fields: [cityId], references: [id])
+  region      Region      @relation(fields: [regionId], references: [id])
+
+  @@index([institutionId])
+  @@index([cityId])
+  @@index([regionId])
 }
 
 model InstitutionDetail {

@@ -10,8 +10,8 @@ export const listInstitutionsQuerySchema = z.object({
     'COURSE_CENTER','LANGUAGE_CENTER','IT_SCHOOL','TUTORING',
     'SPORTS_SCHOOL','ARTS_SCHOOL',
   ]).optional(),
-  cityId:     z.string().cuid().optional(),
-  regionId:   z.string().cuid().optional(),
+  cityId:     z.string().min(1).optional(),
+  regionId:   z.string().min(1).optional(),
   lat:        z.coerce.number().optional(),
   lng:        z.coerce.number().optional(),
   radius:     z.coerce.number().min(100).max(50000).optional().default(5000),
@@ -37,7 +37,7 @@ export const nearbyQuerySchema = z.object({
 
 export const compareQuerySchema = z.object({
   ids: z.string().transform((v) => v.split(',')).pipe(
-    z.array(z.string().cuid()).min(2, 'Kamida 2 ta muassasa kerak').max(3, 'Ko\'pi bilan 3 ta muassasa'),
+    z.array(z.string().min(1)).min(2, 'Kamida 2 ta muassasa kerak').max(3, 'Ko\'pi bilan 3 ta muassasa'),
   ),
 })
 

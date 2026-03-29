@@ -17,7 +17,7 @@ const ratingField = z.union([
 // ─────────────────────────────────────────────
 
 export const createReviewSchema = z.object({
-  institutionId: z.string().cuid("Muassasa ID noto'g'ri formatda"),
+  institutionId: z.string().min(1, "Muassasa ID kiritilishi shart"),
   overallRating: ratingField,
   teacherRating: ratingField.optional(),
   facilityRating: ratingField.optional(),
