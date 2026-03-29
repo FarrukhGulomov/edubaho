@@ -560,11 +560,12 @@ export default function HomePage() {
 
             {/* Brend */}
             <div className="lg:col-span-2">
-              <Link href="/" className="inline-flex items-center gap-1 mb-4 group">
-                <span className="text-2xl font-black tracking-tight">
-                  <span className="text-green-400">EDU</span><span className="text-white">BAHO</span>
-                </span>
-                <span className="text-xs font-bold text-primary-400 self-end mb-0.5">.uz</span>
+              <Link href="/" className="inline-flex items-center mb-4 group transition-opacity hover:opacity-80">
+                <img
+                  src="/logo.png"
+                  alt="EDUBAHO"
+                  className="h-12 w-auto object-contain"
+                />
               </Link>
               <p className="text-sm text-gray-400 max-w-sm leading-relaxed mb-6">
                 {uz
