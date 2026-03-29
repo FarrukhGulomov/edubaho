@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation'
 import { useState, useEffect } from 'react'
 import Header from '@/components/shared/Header'
 import StarRating from '@/components/shared/StarRating'
+import Logo from '@/components/shared/Logo'
 import { useLang, t } from '@/contexts/LangContext'
 
 interface TopInstitution {
@@ -508,7 +509,7 @@ export default function HomePage() {
         <div className="mx-auto max-w-xl">
           <div className="rounded-3xl bg-gradient-to-br from-primary-50 to-sky-50 border-2 border-primary-100 p-10 text-center shadow-sm">
             <div className="mx-auto mb-6 flex items-center justify-center">
-              <img src="/logo.png" alt="EDUBAHO" className="h-20 w-auto object-contain" />
+              <Logo size={64} />
             </div>
             <h2 className="mb-3 text-3xl font-black text-gray-900">
               {uz ? "Bepul ro'yxatdan o'ting" : 'Зарегистрируйтесь бесплатно'}
@@ -561,11 +562,7 @@ export default function HomePage() {
             {/* Brend */}
             <div className="lg:col-span-2">
               <Link href="/" className="inline-flex items-center mb-4 group transition-opacity hover:opacity-80">
-                <img
-                  src="/logo.png"
-                  alt="EDUBAHO"
-                  className="h-12 w-auto object-contain"
-                />
+                <Logo size={40} inverted />
               </Link>
               <p className="text-sm text-gray-400 max-w-sm leading-relaxed mb-6">
                 {uz

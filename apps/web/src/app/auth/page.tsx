@@ -5,6 +5,7 @@ import Link from 'next/link'
 import { authApi } from '@/lib/api'
 import { useLang, t } from '@/contexts/LangContext'
 import { authTrack } from '@/lib/analytics'
+import Logo from '@/components/shared/Logo'
 
 type Step = 'phone' | 'otp' | 'done'
 
@@ -178,7 +179,7 @@ export default function AuthPage() {
       {/* Left panel — desktop only */}
       <div className="hidden lg:flex lg:w-1/2 flex-col items-center justify-center bg-gradient-to-br from-primary-600 to-primary-800 px-12 text-white">
         <Link href="/" className="mb-8 flex items-center justify-center">
-          <img src="/logo.png" alt="EDUBAHO" className="h-12 w-auto object-contain brightness-0 invert" />
+          <Logo size={52} inverted />
         </Link>
         <h2 className="mb-3 text-2xl font-bold text-center leading-snug">
           {t(lang, ui.title)}
@@ -206,7 +207,7 @@ export default function AuthPage() {
           {/* Mobile logo */}
           <div className="mb-6 text-center lg:hidden">
             <Link href="/" className="inline-flex items-center justify-center">
-              <img src="/logo.png" alt="EDUBAHO" className="h-10 w-auto object-contain" />
+              <Logo size={44} />
             </Link>
           </div>
 

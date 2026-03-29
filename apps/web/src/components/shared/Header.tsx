@@ -5,6 +5,7 @@ import { usePathname } from 'next/navigation'
 import { useState } from 'react'
 import { useAuth } from '@/hooks/useAuth'
 import { useLang, t } from '@/contexts/LangContext'
+import Logo from './Logo'
 
 /**
  * Asosiy navigatsiya sarlavhasi.
@@ -14,55 +15,11 @@ import { useLang, t } from '@/contexts/LangContext'
  *          (buvilar ham bemalol ishlatsin deb)
  */
 
-const NAV_LINKS = [
-  {
-    href:  '/search',
-    icon:  (active: boolean) => (
-      <svg className={`h-6 w-6 ${active ? 'text-primary-600' : 'text-gray-400'}`}
-        fill={active ? 'currentColor' : 'none'} stroke="currentColor" strokeWidth={active ? 0 : 2} viewBox="0 0 24 24">
-        <circle cx="11" cy="11" r="8"/>
-        <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-4.35-4.35"/>
-      </svg>
-    ),
-    uz: 'Qidirish',
-    ru: 'Поиск',
-  },
-  {
-    href:  '/search?type=COURSE_CENTER',
-    icon:  (active: boolean) => (
-      <svg className={`h-6 w-6 ${active ? 'text-primary-600' : 'text-gray-400'}`}
-        fill={active ? 'currentColor' : 'none'} stroke="currentColor" strokeWidth={active ? 0 : 2} viewBox="0 0 24 24">
-        <path strokeLinecap="round" strokeLinejoin="round"
-          d="M12 14l9-5-9-5-9 5 9 5zm0 7V9m6 3v5a9 9 0 01-12 0v-5"/>
-      </svg>
-    ),
-    uz: 'Kurslar',
-    ru: 'Курсы',
-  },
-  {
-    href:  '/profile',
-    icon:  (active: boolean) => (
-      <svg className={`h-6 w-6 ${active ? 'text-primary-600' : 'text-gray-400'}`}
-        fill={active ? 'currentColor' : 'none'} stroke="currentColor" strokeWidth={active ? 0 : 2} viewBox="0 0 24 24">
-        <path strokeLinecap="round" strokeLinejoin="round"
-          d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/>
-      </svg>
-    ),
-    uz: 'Profil',
-    ru: 'Профиль',
-  },
-]
-
 export default function Header() {
   const pathname = usePathname()
   const [menuOpen, setMenuOpen] = useState(false)
   const { user, loading, logout } = useAuth()
   const { lang, setLang } = useLang()
-
-  const isActive = (href: string) => {
-    const [path] = href.split('?')
-    return pathname === path
-  }
 
   return (
     <>
@@ -71,12 +28,8 @@ export default function Header() {
         <div className="mx-auto flex max-w-6xl items-center justify-between px-4 py-2">
 
           {/* Logo */}
-          <Link href="/" className="flex items-center group transition-opacity hover:opacity-90">
-            <img
-              src="/logo.png"
-              alt="EDUBAHO"
-              className="h-12 w-auto object-contain transition-transform group-hover:scale-105"
-            />
+          <Link href="/" className="flex items-center group transition-opacity hover:opacity-80">
+            <Logo size={44} />
           </Link>
 
           {/* Desktop nav */}
