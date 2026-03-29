@@ -546,60 +546,112 @@ export default function HomePage() {
       {/* ══════════════════════════════════════════════════════
           Footer
           ══════════════════════════════════════════════════════ */}
-      <footer className="border-t border-gray-200 bg-gray-50 px-4 py-12">
+      <footer className="border-t border-gray-200 bg-gray-900 px-4 pt-14 pb-8 text-gray-300">
         <div className="mx-auto max-w-6xl">
-          <div className="mb-10 flex flex-col items-center gap-8 sm:flex-row sm:items-start sm:justify-between">
-            {/* Logo + tavsif */}
-            <div className="text-center sm:text-left">
-              <Link href="/" className="inline-flex items-center gap-3 mb-3">
-                <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-primary-600 text-xl">🎓</div>
-                <span className="text-xl font-black text-gray-900">EduReyting<span className="text-primary-600">.uz</span></span>
+
+          {/* Asosiy qator */}
+          <div className="mb-12 grid gap-10 sm:grid-cols-2 lg:grid-cols-4">
+
+            {/* Brend */}
+            <div className="lg:col-span-2">
+              <Link href="/" className="inline-flex items-center gap-3 mb-4">
+                <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-primary-600 text-xl shadow-lg">🎓</div>
+                <span className="text-xl font-black text-white">EduReyting<span className="text-primary-400">.uz</span></span>
               </Link>
-              <p className="text-base text-gray-500 max-w-xs leading-relaxed">
+              <p className="text-sm text-gray-400 max-w-sm leading-relaxed mb-6">
                 {uz
-                  ? "O'zbekistondagi ta'lim muassasalari haqida haqiqiy sharhlar"
-                  : 'Реальные отзывы об учебных заведениях Узбекистана'}
+                  ? "O'zbekistondagi maktab, o'quv markaz va kurslarni haqiqiy sharhlar asosida qidiring va solishtiring."
+                  : 'Ищите и сравнивайте школы, курсы и учебные центры Узбекистана на основе реальных отзывов.'}
               </p>
+
+              {/* Telegram support kartasi */}
+              <a
+                href="https://t.me/TrustboxInc"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-3 rounded-2xl bg-[#229ED9]/15 border border-[#229ED9]/30 px-5 py-3.5 text-sm font-semibold text-[#7DD3F8] hover:bg-[#229ED9]/25 hover:border-[#229ED9]/50 transition-all group"
+              >
+                {/* Telegram ikonasi */}
+                <svg className="h-5 w-5 shrink-0 text-[#229ED9]" viewBox="0 0 24 24" fill="currentColor">
+                  <path d="M12 0C5.373 0 0 5.373 0 12s5.373 12 12 12 12-5.373 12-12S18.627 0 12 0zm5.562 8.248-1.97 9.289c-.145.658-.537.818-1.084.508l-3-2.21-1.447 1.394c-.16.16-.295.295-.605.295l.213-3.053 5.56-5.023c.242-.213-.054-.333-.373-.12l-6.871 4.326-2.962-.924c-.643-.204-.657-.643.136-.953l11.57-4.461c.537-.194 1.006.131.833.932z"/>
+                </svg>
+                <div>
+                  <div className="text-white font-bold text-sm leading-tight">@TrustboxInc</div>
+                  <div className="text-xs text-gray-400 mt-0.5">
+                    {uz ? 'Murojaat va qo'llab-quvvatlash' : 'Поддержка и обратная связь'}
+                  </div>
+                </div>
+                <svg className="ml-auto h-4 w-4 text-gray-500 group-hover:text-[#7DD3F8] transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7"/>
+                </svg>
+              </a>
             </div>
 
-            {/* Havolalar */}
-            <div className="flex flex-wrap justify-center gap-x-10 gap-y-6 text-base text-gray-500 sm:justify-end">
-              <div className="flex flex-col gap-3">
-                <span className="text-sm font-black uppercase tracking-wider text-gray-400">
-                  {uz ? "Qidirish" : 'Поиск'}
-                </span>
-                <Link href="/search?type=COURSE_CENTER" className="hover:text-primary-600 transition-colors font-medium">
-                  {uz ? "O'quv markazlar" : 'Учебные центры'}
-                </Link>
-                <Link href="/search?type=SCHOOL" className="hover:text-primary-600 transition-colors font-medium">
-                  {uz ? "Maktablar" : 'Школы'}
-                </Link>
-                <Link href="/search?type=IT_SCHOOL" className="hover:text-primary-600 transition-colors font-medium">
-                  IT maktablar
-                </Link>
-              </div>
-              <div className="flex flex-col gap-3">
-                <span className="text-sm font-black uppercase tracking-wider text-gray-400">
-                  {uz ? "Aloqa" : 'Контакты'}
-                </span>
-                <a
-                  href="https://t.me/edureyting"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="flex items-center gap-2 hover:text-primary-600 transition-colors font-medium"
-                >
-                  <span>✈️</span> Telegram
-                </a>
-                <Link href="/auth" className="hover:text-primary-600 transition-colors font-medium">
-                  {uz ? "Kirish / Ro'yxat" : 'Войти / Регистрация'}
-                </Link>
-              </div>
+            {/* Qidirish */}
+            <div>
+              <span className="text-xs font-black uppercase tracking-widest text-gray-500 mb-4 block">
+                {uz ? "Kategoriyalar" : 'Категории'}
+              </span>
+              <ul className="flex flex-col gap-2.5">
+                {[
+                  { href: '/search?type=IT_SCHOOL',       icon: '💻', uz: "IT maktablar",    ru: 'IT школы' },
+                  { href: '/search?type=LANGUAGE_CENTER', icon: '🌐', uz: "Til markazlari",  ru: 'Языковые центры' },
+                  { href: '/search?type=SCHOOL',          icon: '📚', uz: "Maktablar",       ru: 'Школы' },
+                  { href: '/search?type=COURSE_CENTER',   icon: '✏️', uz: "O'quv markazlar", ru: 'Учебные центры' },
+                  { href: '/search?type=LYCEUM',          icon: '🏆', uz: "Litseylar",       ru: 'Лицеи' },
+                ].map(l => (
+                  <li key={l.href}>
+                    <Link
+                      href={l.href}
+                      className="flex items-center gap-2.5 text-sm text-gray-400 hover:text-white transition-colors font-medium"
+                    >
+                      <span className="text-base">{l.icon}</span>
+                      {uz ? l.uz : l.ru}
+                    </Link>
+                  </li>
+                ))}
+              </ul>
+            </div>
+
+            {/* Platforma */}
+            <div>
+              <span className="text-xs font-black uppercase tracking-widest text-gray-500 mb-4 block">
+                {uz ? "Platforma" : 'Платформа'}
+              </span>
+              <ul className="flex flex-col gap-2.5">
+                {[
+                  { href: '/search',  uz: "Qidirish",          ru: 'Поиск' },
+                  { href: '/compare', uz: "Solishtirish",       ru: 'Сравнение' },
+                  { href: '/auth',    uz: "Kirish / Ro'yxat",  ru: 'Войти / Регистрация' },
+                  { href: '/terms',   uz: "Foydalanish shartlari", ru: 'Условия использования' },
+                ].map(l => (
+                  <li key={l.href}>
+                    <Link
+                      href={l.href}
+                      className="text-sm text-gray-400 hover:text-white transition-colors font-medium"
+                    >
+                      {uz ? l.uz : l.ru}
+                    </Link>
+                  </li>
+                ))}
+              </ul>
             </div>
           </div>
 
-          <div className="border-t border-gray-200 pt-6 text-center text-sm text-gray-400">
-            © 2025 EduReyting.uz —{' '}
-            {uz ? 'Barcha huquqlar himoyalangan' : 'Все права защищены'}
+          {/* Pastki qator */}
+          <div className="border-t border-gray-800 pt-6 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs text-gray-500">
+            <span>© 2025 EduReyting.uz — {uz ? 'Barcha huquqlar himoyalangan' : 'Все права защищены'}</span>
+            <span className="flex items-center gap-1.5">
+              {uz ? 'Yaratuvchi:' : 'Разработчик:'}
+              <a
+                href="https://t.me/TrustboxInc"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="font-bold text-[#7DD3F8] hover:text-white transition-colors"
+              >
+                @TrustboxInc
+              </a>
+            </span>
           </div>
         </div>
       </footer>
