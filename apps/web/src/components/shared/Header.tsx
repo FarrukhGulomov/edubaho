@@ -123,8 +123,7 @@ export default function Header() {
               className="flex items-center gap-1.5 rounded-2xl border-2 border-gray-200 bg-white px-3.5 py-2.5 text-sm font-bold text-gray-600 transition-all hover:border-primary-300 hover:text-primary-600"
               title={lang === 'uz' ? 'Переключить на русский' : "O'zbekchaga o'tish"}
             >
-              <span className="text-base">{lang === 'uz' ? '🇷🇺' : '🇺🇿'}</span>
-              <span className="hidden sm:inline">{lang === 'uz' ? 'RU' : 'UZ'}</span>
+              <span className="text-xl leading-none">{lang === 'uz' ? '🇷🇺' : '🇺🇿'}</span>
             </button>
 
             {/* Auth — desktop */}

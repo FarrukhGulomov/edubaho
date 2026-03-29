@@ -533,11 +533,17 @@ export default function HomePage() {
               ))}
             </div>
 
-            <Link href="/auth" className="btn-primary w-full text-lg py-4">
-              {uz ? "📱 SMS orqali bepul kirish" : '📱 Войти бесплатно через SMS'}
-            </Link>
+            <a
+              href="/auth"
+              className="flex w-full items-center justify-center gap-3 rounded-2xl bg-[#229ED9] py-4 text-lg font-black text-white shadow-lg transition-all hover:bg-[#1a8ec4] hover:shadow-xl active:scale-95"
+            >
+              <svg className="h-6 w-6 shrink-0" viewBox="0 0 24 24" fill="currentColor">
+                <path d="M12 0C5.373 0 0 5.373 0 12s5.373 12 12 12 12-5.373 12-12S18.627 0 12 0zm5.562 8.248-1.97 9.289c-.145.658-.537.818-1.084.508l-3-2.21-1.447 1.394c-.16.16-.295.295-.605.295l.213-3.053 5.56-5.023c.242-.213-.054-.333-.373-.12l-6.871 4.326-2.962-.924c-.643-.204-.657-.643.136-.953l11.57-4.461c.537-.194 1.006.131.833.932z"/>
+              </svg>
+              {uz ? 'Telegram orqali kirish' : 'Войти через Telegram'}
+            </a>
             <p className="mt-4 text-sm text-gray-400">
-              {uz ? "Faqat O'zbekiston raqamlari (+998)" : 'Только номера Узбекистана (+998)'}
+              {uz ? 'SMS kod ham qo\u2018llab-quvvatlanadi' : 'SMS-код также поддерживается'}
             </p>
           </div>
         </div>
@@ -639,19 +645,17 @@ export default function HomePage() {
           </div>
 
           {/* Pastki qator */}
-          <div className="border-t border-gray-800 pt-6 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs text-gray-500">
+          <div className="border-t border-gray-800 pt-6 flex flex-wrap items-center justify-between gap-2 text-xs text-gray-500">
             <span>© 2025 EduReyting.uz — {uz ? 'Barcha huquqlar himoyalangan' : 'Все права защищены'}</span>
-            <span className="flex items-center gap-1.5">
-              {uz ? 'Yaratuvchi:' : 'Разработчик:'}
-              <a
-                href="https://t.me/TrustboxInc"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="font-bold text-[#7DD3F8] hover:text-white transition-colors"
-              >
-                @TrustboxInc
-              </a>
-            </span>
+            <a
+              href="https://t.me/TrustboxInc"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex items-center gap-1.5 font-bold text-[#7DD3F8] hover:text-white transition-colors"
+            >
+              <span className="text-gray-500">{uz ? 'Yaratuvchi:' : 'Разработчик:'}</span>
+              @TrustboxInc
+            </a>
           </div>
         </div>
       </footer>
