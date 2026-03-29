@@ -1,5 +1,5 @@
 /**
- * EduReyting Lead Analytics
+ * EDUBAHO Lead Analytics
  *
  * Barcha voqealar shu modul orqali yuboriladi.
  * React'siz ham ishlaydi (plain TypeScript).

@@ -19,8 +19,8 @@ export const viewport: Viewport = {
 
 export const metadata: Metadata = {
   title: {
-    default: "EduReyting.uz — O'zbekistondagi eng yaxshi ta'lim muassasalari",
-    template: "%s | EduReyting.uz",
+    default: "EDUBAHO.uz — O'zbekistondagi eng yaxshi ta'lim muassasalari",
+    template: "%s | EDUBAHO.uz",
   },
   description:
     "O'zbekistondagi maktablar, universitetlar, kurslar va bog'chalarni qidiring, solishtiring va baholang.",
@@ -38,7 +38,7 @@ export const metadata: Metadata = {
     type: 'website',
     locale: 'uz_UZ',
     alternateLocale: 'ru_RU',
-    siteName: 'EduReyting.uz',
+    siteName: 'EDUBAHO.uz',
     url: process.env.NEXT_PUBLIC_SITE_URL ?? 'https://edureyting.uz',
   },
   robots: {

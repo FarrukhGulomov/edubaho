@@ -71,14 +71,12 @@ export default function Header() {
         <div className="mx-auto flex max-w-6xl items-center justify-between px-4 py-3">
 
           {/* Logo */}
-          <Link href="/" className="flex items-center gap-2.5 group">
-            <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-primary-600 text-xl shadow-sm transition-transform group-hover:scale-105">
-              🎓
-            </div>
-            <div className="leading-none">
-              <div className="text-lg font-black text-gray-900 tracking-tight">EduReyting</div>
-              <div className="text-[11px] font-bold text-primary-500 tracking-widest">.uz</div>
-            </div>
+          <Link href="/" className="flex items-center group transition-opacity hover:opacity-90">
+            <img
+              src="/logo.png"
+              alt="EDUBAHO"
+              className="h-10 w-auto object-contain transition-transform group-hover:scale-105"
+            />
           </Link>
 
           {/* Desktop nav */}

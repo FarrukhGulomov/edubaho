@@ -145,7 +145,7 @@ export default function AdminLoginPage() {
           {/* Logo */}
           <div className="mb-8 text-center">
             <Link href="/" className="inline-flex items-center gap-2 text-2xl font-black text-white">
-              🎓 EduReyting.uz
+              🎓 EDUBAHO.uz
             </Link>
             <div className="mt-2 flex justify-center">
               <span className="rounded-full bg-purple-900/60 px-4 py-1 text-xs font-bold text-purple-300 border border-purple-800">

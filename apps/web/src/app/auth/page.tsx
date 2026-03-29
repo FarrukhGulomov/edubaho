@@ -177,8 +177,8 @@ export default function AuthPage() {
 
       {/* Left panel — desktop only */}
       <div className="hidden lg:flex lg:w-1/2 flex-col items-center justify-center bg-gradient-to-br from-primary-600 to-primary-800 px-12 text-white">
-        <Link href="/" className="mb-8 flex items-center gap-3 text-3xl font-black">
-          <span>🎓</span> EduReyting.uz
+        <Link href="/" className="mb-8 flex items-center justify-center">
+          <img src="/logo.png" alt="EDUBAHO" className="h-12 w-auto object-contain brightness-0 invert" />
         </Link>
         <h2 className="mb-3 text-2xl font-bold text-center leading-snug">
           {t(lang, ui.title)}
@@ -205,8 +205,8 @@ export default function AuthPage() {
 
           {/* Mobile logo */}
           <div className="mb-6 text-center lg:hidden">
-            <Link href="/" className="inline-flex items-center gap-2 text-2xl font-black text-primary-600">
-              <span>🎓</span> EduReyting.uz
+            <Link href="/" className="inline-flex items-center justify-center">
+              <img src="/logo.png" alt="EDUBAHO" className="h-10 w-auto object-contain" />
             </Link>
           </div>
 

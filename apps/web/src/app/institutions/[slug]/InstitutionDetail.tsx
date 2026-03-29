@@ -137,7 +137,7 @@ function RegisterBanner({ lang }: { lang: 'uz' | 'ru' }) {
           🎓
         </div>
         <div>
-          <p className="text-sm font-bold uppercase tracking-wider text-primary-600">EduReyting.uz</p>
+          <p className="text-sm font-bold uppercase tracking-wider text-primary-600">EDUBAHO.uz</p>
           <p className="text-sm text-gray-500">
             {lang === 'ru' ? "Ta'lim platformasi" : "Ta'lim platformasi"}
           </p>

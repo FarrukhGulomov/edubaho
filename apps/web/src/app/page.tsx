@@ -478,7 +478,7 @@ export default function HomePage() {
       <section className="bg-gradient-to-br from-primary-700 via-primary-600 to-sky-600 px-4 py-16 text-white">
         <div className="mx-auto max-w-4xl">
           <h2 className="mb-12 text-center text-3xl font-black sm:text-4xl">
-            {uz ? '💡 Nima uchun EduReyting?' : '💡 Почему EduReyting?'}
+            {uz ? '💡 Nima uchun EDUBAHO?' : '💡 Почему EDUBAHO?'}
           </h2>
           <div className="grid grid-cols-2 gap-6 sm:grid-cols-4">
             {[
@@ -507,8 +507,8 @@ export default function HomePage() {
       <section className="bg-white px-4 py-16">
         <div className="mx-auto max-w-xl">
           <div className="rounded-3xl bg-gradient-to-br from-primary-50 to-sky-50 border-2 border-primary-100 p-10 text-center shadow-sm">
-            <div className="mx-auto mb-6 flex h-24 w-24 items-center justify-center rounded-3xl bg-white shadow-md text-6xl">
-              🎓
+            <div className="mx-auto mb-6 flex items-center justify-center">
+              <img src="/logo.png" alt="EDUBAHO" className="h-20 w-auto object-contain" />
             </div>
             <h2 className="mb-3 text-3xl font-black text-gray-900">
               {uz ? "Bepul ro'yxatdan o'ting" : 'Зарегистрируйтесь бесплатно'}
@@ -560,9 +560,8 @@ export default function HomePage() {
 
             {/* Brend */}
             <div className="lg:col-span-2">
-              <Link href="/" className="inline-flex items-center gap-3 mb-4">
-                <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-primary-600 text-xl shadow-lg">🎓</div>
-                <span className="text-xl font-black text-white">EduReyting<span className="text-primary-400">.uz</span></span>
+              <Link href="/" className="inline-flex items-center mb-4">
+                <img src="/logo.png" alt="EDUBAHO" className="h-10 w-auto object-contain brightness-0 invert" />
               </Link>
               <p className="text-sm text-gray-400 max-w-sm leading-relaxed mb-6">
                 {uz
@@ -646,7 +645,7 @@ export default function HomePage() {
 
           {/* Pastki qator */}
           <div className="border-t border-gray-800 pt-6 flex flex-wrap items-center justify-between gap-2 text-xs text-gray-500">
-            <span>© 2025 EduReyting.uz — {uz ? 'Barcha huquqlar himoyalangan' : 'Все права защищены'}</span>
+            <span>© 2025 EDUBAHO.uz — {uz ? 'Barcha huquqlar himoyalangan' : 'Все права защищены'}</span>
             <a
               href="https://t.me/TrustboxInc"
               target="_blank"

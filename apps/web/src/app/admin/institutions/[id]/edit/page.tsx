@@ -91,7 +91,7 @@ export default function EditInstitutionPage() {
       <header className="sticky top-0 z-10 border-b border-gray-200 bg-white shadow-sm">
         <div className="mx-auto flex max-w-3xl items-center justify-between px-4 py-3">
           <div className="flex items-center gap-3 text-sm">
-            <Link href="/" className="font-bold text-primary-600">🎓 EduReyting</Link>
+            <Link href="/" className="font-bold text-primary-600">🎓 EDUBAHO</Link>
             <span className="text-gray-300">›</span>
             <Link href="/admin/institutions" className="text-gray-500 hover:text-gray-700">Muassasalar</Link>
             <span className="text-gray-300">›</span>
