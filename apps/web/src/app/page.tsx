@@ -578,7 +578,7 @@ export default function HomePage() {
                 <div>
                   <div className="text-white font-bold text-sm leading-tight">@TrustboxInc</div>
                   <div className="text-xs text-gray-400 mt-0.5">
-                    {uz ? 'Murojaat va qo'llab-quvvatlash' : 'Поддержка и обратная связь'}
+                    {uz ? "Murojaat va qo\u2018llab-quvvatlash" : 'Поддержка и обратная связь'}
                   </div>
                 </div>
                 <svg className="ml-auto h-4 w-4 text-gray-500 group-hover:text-[#7DD3F8] transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
