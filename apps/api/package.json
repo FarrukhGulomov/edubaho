@@ -10,7 +10,8 @@
     "test": "vitest run",
     "db:migrate": "prisma migrate dev",
     "db:generate": "prisma generate",
-    "db:seed": "tsx --env-file=.env prisma/seed.ts"
+    "db:seed": "tsx --env-file=.env prisma/seed.ts",
+    "db:seed-extra": "tsx --env-file=.env prisma/seed-extra.ts"
   },
   "dependencies": {
     "@aws-sdk/client-s3": "^3.600.0",
