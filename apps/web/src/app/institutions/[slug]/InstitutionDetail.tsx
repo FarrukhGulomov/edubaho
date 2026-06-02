@@ -31,6 +31,35 @@ const TYPE_LABELS: Record<string, { uz: string; ru: string }> = {
   ARTS_SCHOOL:     { uz: "San'at maktabi", ru: 'Школа искусств' },
 }
 
+// Muassasa turi bo'yicha gradient va ikonlar
+const CARD_GRADIENTS: Record<string, string> = {
+  KINDERGARTEN:    'from-pink-500 to-rose-400',
+  SCHOOL:          'from-green-500 to-emerald-400',
+  LYCEUM:          'from-teal-600 to-emerald-500',
+  COLLEGE:         'from-indigo-500 to-blue-400',
+  UNIVERSITY:      'from-amber-500 to-orange-400',
+  COURSE_CENTER:   'from-blue-500 to-sky-400',
+  LANGUAGE_CENTER: 'from-cyan-500 to-teal-400',
+  IT_SCHOOL:       'from-violet-600 to-purple-500',
+  TUTORING:        'from-orange-500 to-amber-400',
+  SPORTS_SCHOOL:   'from-green-600 to-lime-500',
+  ARTS_SCHOOL:     'from-fuchsia-500 to-pink-400',
+}
+
+const TYPE_ICONS: Record<string, string> = {
+  KINDERGARTEN:    '🎨',
+  SCHOOL:          '📚',
+  LYCEUM:          '🏆',
+  COLLEGE:         '📖',
+  UNIVERSITY:      '🎓',
+  COURSE_CENTER:   '✏️',
+  LANGUAGE_CENTER: '🌐',
+  IT_SCHOOL:       '💻',
+  TUTORING:        '👨‍🏫',
+  SPORTS_SCHOOL:   '⚽',
+  ARTS_SCHOOL:     '🎭',
+}
+
 function calcRatingBreakdown(reviews: Institution['reviews']) {
   const counts: Record<number, number> = { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0 }
   if (!reviews) return counts
@@ -130,62 +159,62 @@ function GuestGate({
 // ─────────────────────────────────────────────────────────────
 function RegisterBanner({ lang }: { lang: 'uz' | 'ru' }) {
   return (
-    <div className="rounded-3xl border-2 border-primary-100 bg-gradient-to-br from-primary-50 via-white to-blue-50 p-6 shadow-md">
-      {/* Top badge */}
-      <div className="mb-5 flex items-center gap-3">
-        <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-primary-600 text-2xl shadow-sm">
-          🎓
-        </div>
-        <div>
-          <p className="text-sm font-bold uppercase tracking-wider text-primary-600">EDUBAHO.uz</p>
-          <p className="text-sm text-gray-500">
-            {lang === 'ru' ? "Ta'lim platformasi" : "Ta'lim platformasi"}
-          </p>
+    <div className="overflow-hidden rounded-3xl shadow-lg">
+      {/* Gradient header */}
+      <div className="relative bg-gradient-to-br from-primary-700 to-sky-500 px-6 py-5">
+        <div
+          className="pointer-events-none absolute inset-0 opacity-[0.08]"
+          style={{ backgroundImage: 'radial-gradient(circle, white 1px, transparent 1px)', backgroundSize: '20px 20px' }}
+        />
+        <div className="relative flex items-center gap-3">
+          <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-white/20 text-2xl backdrop-blur-sm border border-white/25">
+            🔐
+          </div>
+          <div>
+            <p className="text-sm font-black uppercase tracking-wider text-white/80">EDUBAHO.uz</p>
+            <h3 className="text-lg font-black text-white leading-tight">
+              {lang === 'ru' ? 'Войдите для полного доступа' : "To'liq kirish uchun tizimga kiring"}
+            </h3>
+          </div>
         </div>
       </div>
 
-      <h3 className="mb-2 text-2xl font-black text-gray-900 leading-snug">
-        {lang === 'ru'
-          ? 'Хотите знать больше?'
-          : "Ko'proq bilmoqchimisiz?"}
-      </h3>
-      <p className="mb-5 text-base text-gray-600 leading-relaxed">
-        {lang === 'ru'
-          ? 'Зарегистрируйтесь бесплатно — контакты, цены, отзывы'
-          : "Bepul ro'yxatdan o'ting — kontaktlar, narxlar, sharhlar"}
-      </p>
+      {/* Body */}
+      <div className="border-2 border-t-0 border-primary-100 bg-white px-6 pb-6 pt-5 rounded-b-3xl">
+        <p className="mb-4 text-sm text-gray-500 leading-relaxed">
+          {lang === 'ru'
+            ? 'Зарегистрируйтесь бесплатно — контакты, цены и все отзывы'
+            : "Bepul ro'yxatdan o'ting — kontaktlar, narxlar va barcha sharhlar"}
+        </p>
 
-      {/* Benefits list */}
-      <ul className="mb-6 space-y-3">
-        {(lang === 'ru' ? [
-          ['📞', 'Контакты: телефон, Telegram, Instagram'],
-          ['💰', 'Актуальные цены и способы оплаты'],
-          ['💬', 'Все отзывы родителей и учеников'],
-          ['✍️', 'Оставить свой отзыв'],
-          ['🔖', 'Сохранять и сравнивать учреждения'],
-        ] : [
-          ['📞', 'Kontaktlar: telefon, Telegram, Instagram'],
-          ['💰', "Narxlar va to'lov usullari"],
-          ['💬', 'Ota-onalar va o\'quvchilarning barcha sharhlari'],
-          ['✍️', 'O\'z sharhingizni yozish'],
-          ['🔖', 'Muassasalarni saqlash va solishtirish'],
-        ]).map(([icon, text]) => (
-          <li key={text} className="flex items-center gap-3 text-base text-gray-700">
-            <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-primary-50 text-base">{icon}</span>
-            {text}
-          </li>
-        ))}
-      </ul>
+        <ul className="mb-5 space-y-2.5">
+          {(lang === 'ru' ? [
+            ['📞', 'Контакты: телефон, Telegram, Instagram'],
+            ['💰', 'Актуальные цены и способы оплаты'],
+            ['💬', 'Все отзывы родителей и учеников'],
+            ['✍️', 'Оставить свой отзыв'],
+            ['🔖', 'Сохранять и сравнивать учреждения'],
+          ] : [
+            ['📞', 'Kontaktlar: telefon, Telegram, Instagram'],
+            ['💰', "Narxlar va to'lov usullari"],
+            ['💬', "Ota-onalar va o'quvchilarning barcha sharhlari"],
+            ['✍️', "O'z sharhingizni yozish"],
+            ['🔖', 'Muassasalarni saqlash va solishtirish'],
+          ]).map(([icon, text]) => (
+            <li key={text} className="flex items-center gap-2.5 text-sm text-gray-700">
+              <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-xl bg-primary-50 text-sm">{icon}</span>
+              {text}
+            </li>
+          ))}
+        </ul>
 
-      <Link
-        href="/auth"
-        className="btn-primary w-full text-base py-4"
-      >
-        {lang === 'ru' ? 'Зарегистрироваться бесплатно →' : "Bepul ro'yxatdan o'tish →"}
-      </Link>
-      <p className="mt-3 text-center text-sm text-gray-400">
-        {lang === 'ru' ? 'Только номер телефона · SMS-код' : 'Faqat telefon raqam · SMS-kod'}
-      </p>
+        <Link href="/auth" className="btn-primary w-full py-3.5 text-base">
+          {lang === 'ru' ? 'Зарегистрироваться бесплатно →' : "Bepul ro'yxatdan o'tish →"}
+        </Link>
+        <p className="mt-3 text-center text-xs text-gray-400">
+          {lang === 'ru' ? 'Только номер телефона · SMS-код · Бесплатно' : 'Faqat telefon raqam · SMS-kod · Bepul'}
+        </p>
+      </div>
     </div>
   )
 }
@@ -241,8 +270,13 @@ export default function InstitutionDetail({ inst }: { inst: Institution }) {
     return () => gateObserver.current?.disconnect()
   }, [authChecked, isGuest, inst.id])
 
-  const typeLabel = TYPE_LABELS[inst.type]
-  const displayName = lang === 'ru' && inst.nameRu ? inst.nameRu : inst.nameUz
+  const typeLabel      = TYPE_LABELS[inst.type]
+  const typeIcon       = TYPE_ICONS[inst.type] ?? '🏫'
+  const bannerGradient = CARD_GRADIENTS[inst.type] ?? 'from-primary-700 to-sky-500'
+  const displayName    = lang === 'ru' && inst.nameRu ? inst.nameRu : inst.nameUz
+  const cityDisplayName = inst.city
+    ? (lang === 'ru' && inst.city.nameRu ? inst.city.nameRu : inst.city.nameUz)
+    : null
   const description = lang === 'ru' && inst.details?.descriptionRu
     ? inst.details.descriptionRu
     : inst.details?.descriptionUz
@@ -250,8 +284,6 @@ export default function InstitutionDetail({ inst }: { inst: Institution }) {
   const ratingBreakdown = calcRatingBreakdown(inst.reviews)
   const dimAverages = calcDimAverages(inst.reviews)
   const totalReviews = inst.reviews?.length ?? 0
-  const isCourseOrSchool = ['COURSE_CENTER', 'SCHOOL', 'IT_SCHOOL', 'LANGUAGE_CENTER'].includes(inst.type)
-
   const ui = {
     breadHome:       { uz: 'Bosh sahifa',              ru: 'Главная' },
     breadSearch:     { uz: 'Qidiruv',                  ru: 'Поиск' },
@@ -293,15 +325,96 @@ export default function InstitutionDetail({ inst }: { inst: Institution }) {
 
   return (
     <main className="min-h-screen bg-gray-50">
-      {/* ── Breadcrumb ─── */}
-      <div className="bg-white border-b border-gray-100 px-4 py-4">
-        <nav className="mx-auto flex max-w-5xl items-center gap-2 text-sm text-gray-500">
-          <Link href="/" className="hover:text-primary-600 transition-colors font-medium">{t(lang, ui.breadHome)}</Link>
-          <span className="text-gray-300 text-base">›</span>
-          <Link href="/search" className="hover:text-primary-600 transition-colors font-medium">{t(lang, ui.breadSearch)}</Link>
-          <span className="text-gray-300 text-base">›</span>
-          <span className="font-bold text-gray-800 max-w-48 truncate">{displayName}</span>
-        </nav>
+      {/* ── To'liq rang gradient hero banner ─── */}
+      <div className={`relative overflow-hidden bg-gradient-to-br ${bannerGradient} text-white`}>
+        {/* Dot grid */}
+        <div
+          className="pointer-events-none absolute inset-0 opacity-[0.07]"
+          style={{ backgroundImage: 'radial-gradient(circle, white 1px, transparent 1px)', backgroundSize: '28px 28px' }}
+        />
+        {/* Glow orblari */}
+        <div className="pointer-events-none absolute -top-24 -right-24 h-64 w-64 rounded-full bg-white/10 blur-3xl" />
+        <div className="pointer-events-none absolute -bottom-16 -left-16 h-48 w-48 rounded-full bg-white/10 blur-2xl" />
+
+        <div className="relative mx-auto max-w-5xl px-4">
+          {/* Breadcrumb — banner ichida */}
+          <nav className="flex items-center gap-1.5 py-4 text-sm text-white/70">
+            <Link href="/" className="hover:text-white transition-colors font-medium">{t(lang, ui.breadHome)}</Link>
+            <span className="text-white/40">›</span>
+            <Link href="/search" className="hover:text-white transition-colors font-medium">{t(lang, ui.breadSearch)}</Link>
+            <span className="text-white/40">›</span>
+            <span className="text-white/90 font-semibold max-w-48 truncate">{displayName}</span>
+          </nav>
+
+          {/* Muassasa ma'lumotlari */}
+          <div className="flex flex-col gap-5 pb-8 sm:flex-row sm:items-end">
+            {/* Tur ikonasi */}
+            <div className="flex h-20 w-20 shrink-0 items-center justify-center rounded-3xl border border-white/25 bg-white/20 text-5xl shadow-lg backdrop-blur-sm">
+              {typeIcon}
+            </div>
+
+            {/* Nom va teglar */}
+            <div className="min-w-0 flex-1">
+              <div className="mb-3 flex flex-wrap items-center gap-2">
+                <span className="inline-flex items-center rounded-full border border-white/25 bg-white/20 px-3 py-1.5 text-sm font-semibold text-white backdrop-blur-sm">
+                  {typeLabel ? t(lang, typeLabel) : inst.type}
+                </span>
+                {inst.isVerified && (
+                  <span className="inline-flex items-center gap-1.5 rounded-full border border-emerald-300/30 bg-emerald-500/30 px-3 py-1.5 text-sm font-bold text-emerald-100">
+                    <svg className="h-3.5 w-3.5" fill="currentColor" viewBox="0 0 20 20">
+                      <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd"/>
+                    </svg>
+                    {t(lang, ui.verified)}
+                  </span>
+                )}
+                {inst.subscription?.plan === 'PREMIUM' && (
+                  <span className="inline-flex items-center gap-1.5 rounded-full border border-amber-300/30 bg-amber-400/30 px-3 py-1.5 text-sm font-bold text-amber-100">
+                    ⭐ {t(lang, ui.premium)}
+                  </span>
+                )}
+                {isGuest && (
+                  <Link href="/auth" className="inline-flex items-center gap-1.5 rounded-full border border-orange-400/30 bg-orange-500/30 px-3 py-1.5 text-sm font-bold text-orange-100 transition-colors hover:bg-orange-500/40">
+                    🔐 {lang === 'ru' ? 'Войдите для полного доступа' : "To'liq ma'lumot uchun kiring"}
+                  </Link>
+                )}
+              </div>
+
+              <h1 className="text-2xl font-black leading-tight text-white sm:text-4xl">{displayName}</h1>
+              {lang === 'uz' && inst.nameRu && (
+                <p className="mt-1 text-base text-white/60">{inst.nameRu}</p>
+              )}
+              {cityDisplayName && (
+                <div className="mt-2 flex items-center gap-1.5 text-sm text-white/70">
+                  <svg className="h-4 w-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
+                      d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0zM15 11a3 3 0 11-6 0 3 3 0 016 0z"/>
+                  </svg>
+                  {cityDisplayName}
+                </div>
+              )}
+            </div>
+
+            {/* Reyting bloki */}
+            {inst.avgRating && inst.reviewCount > 0 ? (
+              <button
+                onClick={() => {
+                  if (isGuest) document.getElementById('auth-gate-reviews')?.scrollIntoView({ behavior: 'smooth' })
+                  else document.getElementById('reviews')?.scrollIntoView({ behavior: 'smooth' })
+                }}
+                className="flex shrink-0 flex-col items-center rounded-3xl border border-white/20 bg-white/15 px-6 py-4 text-center backdrop-blur-sm transition-all hover:bg-white/25"
+              >
+                <span className="text-5xl font-black text-yellow-300">{inst.avgRating.toFixed(1)}</span>
+                <StarRating rating={inst.avgRating} size="lg" />
+                <span className="mt-1 text-sm text-white/70">{inst.reviewCount} {t(lang, ui.reviews)}</span>
+              </button>
+            ) : (
+              <div className="flex shrink-0 flex-col items-center rounded-3xl border border-white/15 bg-white/10 px-6 py-4 text-center">
+                <span className="mb-1 text-3xl">💬</span>
+                <span className="text-sm text-white/70">{t(lang, ui.noReviews)}</span>
+              </div>
+            )}
+          </div>
+        </div>
       </div>
 
       <div className="mx-auto max-w-5xl px-4 py-6">
@@ -310,127 +423,288 @@ export default function InstitutionDetail({ inst }: { inst: Institution }) {
           {/* ── Left column ─── */}
           <div className="lg:col-span-2 space-y-4">
 
-            {/* Header card — HAMMAGA KO'RINADI */}
-            <div className="rounded-3xl bg-white p-6 shadow-md border border-gray-100">
-              <div className="mb-4 flex flex-wrap items-center gap-2">
-                <span className="badge bg-primary-50 text-primary-700 text-sm px-3 py-1.5">
-                  {typeLabel ? t(lang, typeLabel) : inst.type}
-                </span>
-                {inst.isVerified && (
-                  <span className="flex items-center gap-1.5 rounded-full bg-emerald-50 px-3 py-1.5 text-sm font-bold text-emerald-700">
-                    <svg className="h-3.5 w-3.5" fill="currentColor" viewBox="0 0 20 20">
-                      <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd"/>
-                    </svg>
-                    {t(lang, ui.verified)}
-                  </span>
+            {/* ════════════════════════════════════════
+                1. YO'NALISHLAR — Programs & Specializations
+                ════════════════════════════════════════ */}
+            {((inst.details?.programs?.length ?? 0) > 0 ||
+              (inst.details?.specializations?.length ?? 0) > 0) && (
+              <div className="rounded-3xl bg-white p-6 shadow-md border border-gray-100">
+                <h2 className="mb-4 flex items-center gap-2.5 text-xl font-black text-gray-900">
+                  <span className="flex h-10 w-10 items-center justify-center rounded-2xl bg-blue-50 text-xl">📚</span>
+                  {lang === 'ru' ? 'Направления и курсы' : "Yo'nalishlar va kurslar"}
+                </h2>
+
+                {(inst.details?.programs?.length ?? 0) > 0 && (
+                  <>
+                    {(inst.details?.specializations?.length ?? 0) > 0 && (
+                      <p className="mb-2 text-xs font-bold uppercase tracking-wider text-gray-400">
+                        {t(lang, ui.programs)}
+                      </p>
+                    )}
+                    <div className="flex flex-wrap gap-2">
+                      {(inst.details!.programs ?? []).map(prog => (
+                        <span key={prog} className="rounded-2xl border border-primary-100 bg-primary-50 px-4 py-2.5 text-sm font-semibold text-primary-700">
+                          {prog}
+                        </span>
+                      ))}
+                    </div>
+                  </>
                 )}
-                {inst.subscription?.plan === 'PREMIUM' && (
-                  <span className="badge bg-amber-50 text-amber-700 text-sm px-3 py-1.5">⭐ {t(lang, ui.premium)}</span>
+
+                {(inst.details?.specializations?.length ?? 0) > 0 && (
+                  <>
+                    <p className="mb-2 mt-4 text-xs font-bold uppercase tracking-wider text-gray-400">
+                      {t(lang, ui.specializations)}
+                    </p>
+                    <div className="flex flex-wrap gap-2">
+                      {(inst.details!.specializations ?? []).map(spec => (
+                        <span key={spec} className="rounded-2xl border border-orange-100 bg-orange-50 px-4 py-2.5 text-sm font-semibold text-orange-700">
+                          {spec}
+                        </span>
+                      ))}
+                    </div>
+                  </>
                 )}
-                {/* Guest badge */}
+
+                {/* O'qitish tillari */}
+                {(inst.details?.languages?.length ?? 0) > 0 && (
+                  <div className="mt-4 flex flex-wrap items-center gap-2 border-t border-gray-50 pt-4">
+                    <span className="text-xs font-semibold text-gray-500">
+                      {t(lang, ui.languages)}:
+                    </span>
+                    {(inst.details!.languages ?? []).map(l => (
+                      <span key={l} className="rounded-lg bg-teal-50 px-3 py-1 text-xs font-black text-teal-700">
+                        {l.toUpperCase()}
+                      </span>
+                    ))}
+                  </div>
+                )}
+
+                {/* Mehmon foydalanuvchi uchun qo'shimcha ma'lumot chaqiruvi */}
                 {isGuest && (
-                  <Link href="/auth" className="flex items-center gap-1.5 rounded-full bg-orange-50 border border-orange-200 px-3 py-1.5 text-sm font-bold text-orange-600 hover:bg-orange-100 transition-colors">
-                    🔐 {lang === 'ru' ? 'Войдите для полного доступа' : "To'liq ma'lumot uchun kiring"}
-                  </Link>
+                  <div className="mt-4 flex items-center gap-3 rounded-2xl border border-primary-100 bg-primary-50 px-4 py-3">
+                    <span className="shrink-0 text-xl">🔓</span>
+                    <p className="flex-1 text-sm font-medium text-primary-700">
+                      {lang === 'ru'
+                        ? 'Войдите чтобы увидеть все курсы и детали'
+                        : "Barcha kurslarni ko'rish uchun tizimga kiring"}
+                    </p>
+                    <Link href="/auth" className="shrink-0 rounded-xl bg-primary-600 px-3 py-2 text-sm font-bold text-white hover:bg-primary-700 transition-colors">
+                      {lang === 'ru' ? 'Войти' : 'Kirish'}
+                    </Link>
+                  </div>
                 )}
               </div>
+            )}
 
-              <h1 className="mb-1.5 text-3xl font-black text-gray-900 leading-tight sm:text-4xl">{displayName}</h1>
-              {lang === 'uz' && inst.nameRu && (
-                <p className="mb-4 text-base text-gray-400">{inst.nameRu}</p>
-              )}
-
-              {/* Rating — HAMMAGA KO'RINADI */}
-              {inst.avgRating && inst.reviewCount > 0 && (
-                <div className="flex items-center gap-4 mt-4">
-                  <span className="text-5xl font-black text-gray-900">{inst.avgRating.toFixed(1)}</span>
-                  <div>
-                    <StarRating rating={inst.avgRating} size="lg" />
-                    <button
-                      onClick={() => {
-                        if (isGuest) {
-                          document.getElementById('auth-gate-reviews')?.scrollIntoView({ behavior: 'smooth' })
-                        } else {
-                          document.getElementById('reviews')?.scrollIntoView({ behavior: 'smooth' })
-                        }
-                      }}
-                      className="mt-1 block text-base text-gray-500 hover:text-primary-600 transition-colors font-medium"
-                    >
-                      {inst.reviewCount} {t(lang, ui.reviews)}
-                    </button>
-                  </div>
+            {/* ════════════════════════════════════════
+                2. NATIJA KO'RSATKICHLARI — Achievements
+                ════════════════════════════════════════ */}
+            {inst.details?.achievements && (
+              <div className="overflow-hidden rounded-3xl shadow-md">
+                {/* Sarlavha */}
+                <div className="relative bg-gradient-to-br from-emerald-600 to-green-500 px-6 py-4">
+                  <div className="pointer-events-none absolute inset-0 opacity-[0.08]"
+                    style={{ backgroundImage: 'radial-gradient(circle, white 1px, transparent 1px)', backgroundSize: '18px 18px' }} />
+                  <h2 className="relative flex items-center gap-2.5 text-xl font-black text-white">
+                    <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-white/20 text-xl">🏆</span>
+                    {t(lang, ui.achievements)}
+                  </h2>
+                  <p className="relative mt-1 text-sm text-emerald-100">
+                    {lang === 'ru' ? 'Результаты и достижения учеников' : "O'quvchilar natijalari va yutuqlari"}
+                  </p>
                 </div>
-              )}
-            </div>
+                {/* Matn */}
+                <div className="border border-t-0 border-emerald-100 bg-white px-6 py-5 rounded-b-3xl">
+                  <p className="whitespace-pre-line text-base leading-relaxed text-gray-700">
+                    {inst.details.achievements}
+                  </p>
+                </div>
+              </div>
+            )}
 
-            {/* Quick stats — HAMMAGA KO'RINADI (asosiy raqamlar) */}
-            {(() => {
-              const stats = [
-                inst.details?.foundedYear && {
-                  icon: '📅', label: t(lang, ui.founded),
-                  value: String(inst.details.foundedYear),
-                  color: 'bg-blue-50 text-blue-700',
-                },
-                inst.details?.studentCount && {
-                  icon: '👥', label: t(lang, ui.students),
-                  value: `${formatNum(inst.details.studentCount)}+`,
-                  color: 'bg-cyan-50 text-cyan-700',
-                },
-                inst.details?.teacherCount && {
-                  icon: '👨‍🏫', label: t(lang, ui.teachers),
-                  value: String(inst.details.teacherCount),
-                  color: 'bg-violet-50 text-violet-700',
-                },
-                (inst.details?.languages?.length ?? 0) > 0 && {
-                  icon: '🌐', label: t(lang, ui.languages),
-                  value: (inst.details!.languages ?? []).join(', ').toUpperCase(),
-                  color: 'bg-teal-50 text-teal-700',
-                },
-                // Narx: faqat "dan X so'm" ko'rsatiladi, to'liq ma'lumot uchun auth kerak
-                inst.pricing?.monthlyMin && {
-                  icon: '💰', label: t(lang, ui.perMonth),
-                  value: isGuest
-                    ? `${formatUzs(inst.pricing.monthlyMin)} ${lang === 'ru' ? 'от' : 'dan'}`
-                    : formatUzs(inst.pricing.monthlyMin),
-                  color: 'bg-emerald-50 text-emerald-700',
-                },
-              ].filter(Boolean) as { icon: string; label: string; value: string; color: string }[]
-
-              if (stats.length === 0) return null
-              return (
-                <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
-                  {stats.map(stat => (
-                    <div key={stat.label} className={`flex items-center gap-3 rounded-2xl p-4 ${stat.color}`}>
-                      <span className="text-3xl shrink-0">{stat.icon}</span>
-                      <div className="min-w-0">
-                        <p className="text-xs opacity-70 leading-tight font-medium">{stat.label}</p>
-                        <p className="font-black text-base leading-snug truncate">{stat.value}</p>
+            {/* ════════════════════════════════════════
+                3. O'QITUVCHILAR SIFATI
+                ════════════════════════════════════════ */}
+            {(inst.details?.teacherCount || (inst.details?.shifts?.length ?? 0) > 0) && (
+              <div className="rounded-3xl bg-white p-6 shadow-md border border-gray-100">
+                <h2 className="mb-4 flex items-center gap-2.5 text-xl font-black text-gray-900">
+                  <span className="flex h-10 w-10 items-center justify-center rounded-2xl bg-violet-50 text-xl">👨‍🏫</span>
+                  {lang === 'ru' ? "Качество преподавания" : "O'qituvchilar sifati"}
+                </h2>
+                <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                  {inst.details?.teacherCount && (
+                    <div className="flex items-center gap-3 rounded-2xl bg-violet-50 p-4">
+                      <span className="text-3xl">👨‍🏫</span>
+                      <div>
+                        <p className="text-xs text-violet-500 font-medium">{t(lang, ui.teachers)}</p>
+                        <p className="text-xl font-black text-violet-700">{inst.details.teacherCount}</p>
                       </div>
                     </div>
-                  ))}
+                  )}
+                  {inst.details?.foundedYear && (
+                    <div className="flex items-center gap-3 rounded-2xl bg-blue-50 p-4">
+                      <span className="text-3xl">📅</span>
+                      <div>
+                        <p className="text-xs text-blue-500 font-medium">{t(lang, ui.founded)}</p>
+                        <p className="text-xl font-black text-blue-700">{inst.details.foundedYear}</p>
+                      </div>
+                    </div>
+                  )}
                 </div>
-              )
-            })()}
+                {/* Dars vaqtlari */}
+                {(inst.details?.shifts?.length ?? 0) > 0 && (
+                  <div className="mt-4">
+                    <p className="mb-2 text-xs font-bold uppercase tracking-wider text-gray-400">
+                      {t(lang, ui.shifts)}
+                    </p>
+                    <div className="flex flex-wrap gap-2">
+                      {(inst.details!.shifts ?? []).map(shift => (
+                        <span key={shift} className="flex items-center gap-2 rounded-2xl border border-sky-100 bg-sky-50 px-4 py-2.5 text-sm font-semibold text-sky-700">
+                          🕐 {shift}
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
 
-            {/* About — PREVIEW + GATE */}
+            {/* ════════════════════════════════════════
+                4. O'QUVCHILAR SONI
+                ════════════════════════════════════════ */}
+            {inst.details?.studentCount && (
+              <div className="rounded-3xl bg-gradient-to-br from-cyan-50 to-sky-50 border border-cyan-100 p-6 shadow-md">
+                <h2 className="mb-4 flex items-center gap-2.5 text-xl font-black text-gray-900">
+                  <span className="flex h-10 w-10 items-center justify-center rounded-2xl bg-cyan-100 text-xl">👥</span>
+                  {t(lang, ui.students)}
+                </h2>
+                <div className="flex items-end gap-3">
+                  <span className="text-5xl font-black text-cyan-600">
+                    {formatNum(inst.details.studentCount)}+
+                  </span>
+                  <span className="mb-1 text-base text-cyan-500">
+                    {lang === 'ru' ? 'учеников обучается' : "o'quvchi tahsil olmoqda"}
+                  </span>
+                </div>
+              </div>
+            )}
+
+            {/* ════════════════════════════════════════
+                5. NARXI — Pricing (inline, auth bo'lganda)
+                ════════════════════════════════════════ */}
+            {!isGuest && inst.pricing?.monthlyMin && (
+              <div className="overflow-hidden rounded-3xl shadow-md">
+                <div className="relative bg-gradient-to-br from-emerald-500 to-teal-500 px-6 py-4">
+                  <div className="pointer-events-none absolute inset-0 opacity-[0.08]"
+                    style={{ backgroundImage: 'radial-gradient(circle, white 1px, transparent 1px)', backgroundSize: '18px 18px' }} />
+                  <h2 className="relative flex items-center gap-2.5 text-xl font-black text-white">
+                    <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-white/20 text-xl">💰</span>
+                    {t(lang, ui.priceTitle)}
+                  </h2>
+                </div>
+                <div className="border border-t-0 border-emerald-100 bg-white px-6 py-5 rounded-b-3xl">
+                  <div className="flex flex-wrap items-end gap-4">
+                    <div>
+                      <p className="text-sm text-gray-500">{t(lang, ui.priceFrom)}</p>
+                      <p className="text-4xl font-black text-emerald-700">
+                        {formatUzs(inst.pricing.monthlyMin)}
+                      </p>
+                      {inst.pricing.monthlyMax && inst.pricing.monthlyMax !== inst.pricing.monthlyMin && (
+                        <p className="mt-0.5 text-base text-emerald-500">
+                          — {formatUzs(inst.pricing.monthlyMax)} / {t(lang, ui.perMonth)}
+                        </p>
+                      )}
+                    </div>
+                  </div>
+                  {(inst.pricing.paymentMethods?.length ?? 0) > 0 && (
+                    <div className="mt-4 flex flex-wrap gap-1.5 border-t border-gray-50 pt-4">
+                      <span className="text-xs text-gray-400 font-semibold">{t(lang, ui.payment)}:</span>
+                      {(inst.pricing.paymentMethods ?? []).map(m => (
+                        <span key={m} className="rounded-lg bg-gray-100 px-3 py-1 text-xs font-semibold text-gray-600">{m}</span>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
+
+            {/* Narx hint mehmon uchun */}
+            {isGuest && inst.pricing?.monthlyMin && (
+              <div className="flex items-center gap-4 rounded-3xl border border-emerald-100 bg-emerald-50 px-5 py-4">
+                <span className="text-3xl">💰</span>
+                <div className="flex-1">
+                  <p className="text-sm text-emerald-600 font-semibold">{t(lang, ui.priceFrom)}</p>
+                  <p className="text-2xl font-black text-emerald-700">{formatUzs(inst.pricing.monthlyMin)}</p>
+                </div>
+                <Link href="/auth" className="shrink-0 rounded-2xl bg-emerald-600 px-4 py-2.5 text-sm font-bold text-white hover:bg-emerald-700 transition-colors">
+                  {lang === 'ru' ? 'Полная цена →' : "To'liq narx →"}
+                </Link>
+              </div>
+            )}
+
+            {/* ════════════════════════════════════════
+                6. JOYLASHUV VA FORMAT
+                ════════════════════════════════════════ */}
+            {(inst.address || inst.phone || inst.phone2 || inst.website) && (
+              <div className="rounded-3xl bg-white p-6 shadow-md border border-gray-100">
+                <h2 className="mb-4 flex items-center gap-2.5 text-xl font-black text-gray-900">
+                  <span className="flex h-10 w-10 items-center justify-center rounded-2xl bg-rose-50 text-xl">📍</span>
+                  {lang === 'ru' ? 'Расположение и формат' : "Joylashuv va format"}
+                </h2>
+
+                <div className="space-y-3">
+                  {inst.address && (
+                    <div className="flex items-start gap-3 rounded-2xl bg-gray-50 px-4 py-3.5 border border-gray-100">
+                      <span className="mt-0.5 text-xl shrink-0">📍</span>
+                      <div>
+                        <p className="text-xs text-gray-400 font-semibold mb-1">{t(lang, ui.address)}</p>
+                        <p className="text-base font-medium text-gray-800 leading-snug">{inst.address}</p>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Format ko'rsatkichlari */}
+                  <div className="flex flex-wrap gap-2">
+                    {inst.type === 'IT_SCHOOL' || inst.type === 'LANGUAGE_CENTER' || inst.type === 'COURSE_CENTER' ? (
+                      <>
+                        <span className="flex items-center gap-1.5 rounded-2xl border border-blue-100 bg-blue-50 px-4 py-2.5 text-sm font-semibold text-blue-700">
+                          🏫 {lang === 'ru' ? 'Офлайн' : 'Offline'}
+                        </span>
+                        <span className="flex items-center gap-1.5 rounded-2xl border border-primary-100 bg-primary-50 px-4 py-2.5 text-sm font-semibold text-primary-700">
+                          💻 {lang === 'ru' ? 'Онлайн' : 'Online'}
+                        </span>
+                      </>
+                    ) : (
+                      <span className="flex items-center gap-1.5 rounded-2xl border border-blue-100 bg-blue-50 px-4 py-2.5 text-sm font-semibold text-blue-700">
+                        🏫 {lang === 'ru' ? 'Очное обучение' : "Offline ta'lim"}
+                      </span>
+                    )}
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* ════════════════════════════════════════
+                7. MUASSASA HAQIDA — About
+                ════════════════════════════════════════ */}
             <div className="rounded-3xl bg-white p-6 shadow-md border border-gray-100">
-              <h2 className="mb-4 text-xl font-black text-gray-900 flex items-center gap-2.5">
+              <h2 className="mb-4 flex items-center gap-2.5 text-xl font-black text-gray-900">
                 <span className="flex h-10 w-10 items-center justify-center rounded-2xl bg-blue-50 text-xl">📖</span>
                 {t(lang, ui.about)}
               </h2>
 
               {isGuest ? (
                 <>
-                  {/* Preview — dastlabki 120 ta belgi */}
                   {description && (
-                    <p className="text-base text-gray-700 leading-relaxed">
-                      {description.slice(0, 120)}
+                    <p className="text-base leading-relaxed text-gray-700">
+                      {description.slice(0, 160)}
                       <span className="text-gray-400">…</span>
                     </p>
                   )}
-                  <div className="mt-4 flex items-center gap-3 rounded-2xl bg-orange-50 border border-orange-100 px-5 py-4">
-                    <span className="text-2xl shrink-0">🔐</span>
-                    <p className="text-base text-orange-700 font-medium flex-1">
+                  <div className="mt-4 flex items-center gap-3 rounded-2xl border border-orange-100 bg-orange-50 px-5 py-4">
+                    <span className="shrink-0 text-2xl">🔐</span>
+                    <p className="flex-1 text-base font-medium text-orange-700">
                       {lang === 'ru'
                         ? 'Полное описание доступно после входа'
                         : "To'liq ta'rif tizimga kirgandan so'ng ko'rinadi"}
@@ -441,113 +715,17 @@ export default function InstitutionDetail({ inst }: { inst: Institution }) {
                   </div>
                 </>
               ) : (
-                <>
-                  {description ? (
-                    <p className="text-base text-gray-700 leading-relaxed whitespace-pre-line">{description}</p>
-                  ) : (
-                    <p className="text-gray-400 text-base italic">{t(lang, ui.noDescription)}</p>
-                  )}
-
-                  {inst.details && (
-                    inst.details.foundedYear || inst.details.studentCount ||
-                    inst.details.teacherCount || (inst.details.languages?.length ?? 0) > 0
-                  ) && (
-                    <dl className="mt-5 grid grid-cols-2 gap-3 border-t border-gray-50 pt-5">
-                      {inst.details.foundedYear && (
-                        <div className="rounded-xl bg-gray-50 px-4 py-3">
-                          <dt className="text-xs text-gray-400 mb-1">{t(lang, ui.founded)}</dt>
-                          <dd className="font-black text-gray-900">{inst.details.foundedYear}</dd>
-                        </div>
-                      )}
-                      {inst.details.studentCount && (
-                        <div className="rounded-xl bg-gray-50 px-4 py-3">
-                          <dt className="text-xs text-gray-400 mb-1">{t(lang, ui.students)}</dt>
-                          <dd className="font-black text-gray-900">{formatNum(inst.details.studentCount)}+</dd>
-                        </div>
-                      )}
-                      {inst.details.teacherCount && (
-                        <div className="rounded-xl bg-gray-50 px-4 py-3">
-                          <dt className="text-xs text-gray-400 mb-1">{t(lang, ui.teachers)}</dt>
-                          <dd className="font-black text-gray-900">{inst.details.teacherCount}</dd>
-                        </div>
-                      )}
-                      {(inst.details.languages?.length ?? 0) > 0 && (
-                        <div className="rounded-xl bg-gray-50 px-4 py-3 col-span-2 sm:col-span-1">
-                          <dt className="text-xs text-gray-400 mb-2">{t(lang, ui.languages)}</dt>
-                          <dd className="flex flex-wrap gap-1.5">
-                            {(inst.details.languages ?? []).map(l => (
-                              <span key={l} className="rounded-lg bg-primary-100 px-2.5 py-0.5 text-xs font-black text-primary-700">
-                                {l.toUpperCase()}
-                              </span>
-                            ))}
-                          </dd>
-                        </div>
-                      )}
-                    </dl>
-                  )}
-                </>
+                description ? (
+                  <p className="whitespace-pre-line text-base leading-relaxed text-gray-700">{description}</p>
+                ) : (
+                  <p className="italic text-base text-gray-400">{t(lang, ui.noDescription)}</p>
+                )
               )}
             </div>
 
-            {/* Course-specific sections — faqat auth bo'lganda */}
-            {!isGuest && isCourseOrSchool && (
-              <>
-                {(inst.details?.programs?.length ?? 0) > 0 && (
-                  <div className="rounded-3xl bg-white p-6 shadow-md border border-gray-100">
-                    <h2 className="mb-4 text-xl font-black text-gray-900 flex items-center gap-2.5">
-                      <span className="flex h-10 w-10 items-center justify-center rounded-2xl bg-blue-50 text-xl">📚</span>
-                      {t(lang, ui.programs)}
-                    </h2>
-                    <div className="flex flex-wrap gap-2">
-                      {(inst.details!.programs ?? []).map(prog => (
-                        <span key={prog} className="rounded-2xl border border-primary-100 bg-primary-50 px-4 py-2.5 text-base font-semibold text-primary-700">
-                          {prog}
-                        </span>
-                      ))}
-                    </div>
-                  </div>
-                )}
-                {(inst.details?.specializations?.length ?? 0) > 0 && (
-                  <div className="rounded-3xl bg-white p-6 shadow-md border border-gray-100">
-                    <h2 className="mb-4 text-xl font-black text-gray-900 flex items-center gap-2.5">
-                      <span className="flex h-10 w-10 items-center justify-center rounded-2xl bg-orange-50 text-xl">🎯</span>
-                      {t(lang, ui.specializations)}
-                    </h2>
-                    <div className="flex flex-wrap gap-2">
-                      {(inst.details!.specializations ?? []).map(spec => (
-                        <span key={spec} className="rounded-2xl border border-orange-100 bg-orange-50 px-4 py-2.5 text-base font-semibold text-orange-700">
-                          {spec}
-                        </span>
-                      ))}
-                    </div>
-                  </div>
-                )}
-                {(inst.details?.shifts?.length ?? 0) > 0 && (
-                  <div className="rounded-3xl bg-white p-6 shadow-md border border-gray-100">
-                    <h2 className="mb-4 text-xl font-black text-gray-900 flex items-center gap-2.5">
-                      <span className="flex h-10 w-10 items-center justify-center rounded-2xl bg-sky-50 text-xl">🕐</span>
-                      {t(lang, ui.shifts)}
-                    </h2>
-                    <div className="flex flex-wrap gap-2">
-                      {(inst.details!.shifts ?? []).map(shift => (
-                        <span key={shift} className="flex items-center gap-2 rounded-2xl border border-sky-100 bg-sky-50 px-4 py-2.5 text-base font-semibold text-sky-700">
-                          🕐 {shift}
-                        </span>
-                      ))}
-                    </div>
-                  </div>
-                )}
-                {inst.details?.achievements && (
-                  <div className="rounded-3xl border border-emerald-100 bg-gradient-to-br from-emerald-50 to-green-50 p-6 shadow-md">
-                    <h2 className="mb-3 text-xl font-black text-emerald-900 flex items-center gap-2.5">
-                      <span className="flex h-10 w-10 items-center justify-center rounded-2xl bg-emerald-100 text-xl">🏆</span>
-                      {t(lang, ui.achievements)}
-                    </h2>
-                    <p className="text-emerald-800 leading-relaxed whitespace-pre-line text-base">{inst.details.achievements}</p>
-                  </div>
-                )}
-              </>
-            )}
+            {/* ════════════════════════════════════════
+                8. REYTING — Rating breakdown
+                ════════════════════════════════════════ */}
 
             {/* Rating breakdown — faqat auth bo'lganda */}
             {!isGuest && totalReviews > 0 && (
@@ -656,54 +834,66 @@ export default function InstitutionDetail({ inst }: { inst: Institution }) {
                   </h2>
                   {inst.reviews && inst.reviews.length > 0 ? (
                     <div className="space-y-4">
-                      {inst.reviews.map(review => (
-                        <div key={review.id} className="rounded-2xl border border-gray-100 bg-gray-50 p-5">
-                          <div className="mb-3 flex items-start justify-between gap-2">
-                            <div className="flex items-center gap-3">
-                              <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-primary-400 to-primary-600 text-base font-black text-white">
-                                {review.isAnonymous ? '?' : (review.user?.name?.[0]?.toUpperCase() ?? '?')}
-                              </div>
-                              <div>
-                                <span className="block font-bold text-gray-800 text-base">
-                                  {review.isAnonymous ? t(lang, ui.anon) : (review.user?.name ?? t(lang, ui.user))}
-                                </span>
-                                <StarRating rating={review.overallRating} size="sm" />
-                              </div>
-                            </div>
-                            {review.createdAt && (
-                              <span className="shrink-0 text-sm text-gray-400">
-                                {new Date(review.createdAt).toLocaleDateString(lang === 'ru' ? 'ru-RU' : 'uz-UZ')}
-                              </span>
-                            )}
-                          </div>
-                          {review.title && <p className="mb-1.5 font-bold text-gray-800 text-base">{review.title}</p>}
-                          <p className="text-base text-gray-600 leading-relaxed">{review.body}</p>
-                          {/* Mezonlar bo'yicha mini baholar */}
-                          {DIM_DEFS.some(({ key }) => (review[key] ?? 0) > 0) && (
-                            <div className="mt-3 flex flex-wrap gap-2">
-                              {DIM_DEFS.map(({ key, icon, label }) => {
-                                const v = review[key]
-                                if (!v) return null
-                                return (
-                                  <span key={key} className="inline-flex items-center gap-1 rounded-full bg-white border border-gray-200 px-2.5 py-1 text-xs font-semibold text-gray-600">
-                                    <span>{icon}</span>
-                                    <span>{label}</span>
-                                    <span className="text-yellow-500 font-black">{'★'.repeat(v)}</span>
+                      {inst.reviews.map(review => {
+                        const initials = review.isAnonymous
+                          ? '?'
+                          : (review.user?.name?.[0]?.toUpperCase() ?? '?')
+                        return (
+                          <div key={review.id} className="overflow-hidden rounded-2xl border border-gray-100 bg-white shadow-sm">
+                            {/* Review header */}
+                            <div className="flex items-center justify-between gap-3 border-b border-gray-50 bg-gray-50/80 px-5 py-3">
+                              <div className="flex items-center gap-3">
+                                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-primary-500 to-primary-700 text-sm font-black text-white shadow-sm">
+                                  {initials}
+                                </div>
+                                <div>
+                                  <span className="block text-sm font-bold text-gray-800">
+                                    {review.isAnonymous ? t(lang, ui.anon) : (review.user?.name ?? t(lang, ui.user))}
                                   </span>
-                                )
-                              })}
+                                  <StarRating rating={review.overallRating} size="sm" />
+                                </div>
+                              </div>
+                              {review.createdAt && (
+                                <span className="shrink-0 rounded-lg bg-white px-2.5 py-1 text-xs text-gray-400 border border-gray-100">
+                                  {new Date(review.createdAt).toLocaleDateString(lang === 'ru' ? 'ru-RU' : 'uz-UZ')}
+                                </span>
+                              )}
                             </div>
-                          )}
-                          {review.helpfulCount > 0 && (
-                            <p className="mt-3 text-sm text-gray-400">👍 {review.helpfulCount} {t(lang, ui.helpful)}</p>
-                          )}
-                        </div>
-                      ))}
+                            {/* Review body */}
+                            <div className="px-5 py-4">
+                              {review.title && (
+                                <p className="mb-1.5 text-base font-bold text-gray-800">{review.title}</p>
+                              )}
+                              <p className="text-base leading-relaxed text-gray-600">{review.body}</p>
+                              {DIM_DEFS.some(({ key }) => (review[key] ?? 0) > 0) && (
+                                <div className="mt-3 flex flex-wrap gap-1.5">
+                                  {DIM_DEFS.map(({ key, icon, label }) => {
+                                    const v = review[key]
+                                    if (!v) return null
+                                    return (
+                                      <span key={key} className="inline-flex items-center gap-1 rounded-full border border-primary-100 bg-primary-50 px-2.5 py-1 text-xs font-semibold text-primary-700">
+                                        <span>{icon}</span>
+                                        <span>{label}</span>
+                                        <span className="font-black text-yellow-500">{'★'.repeat(v)}</span>
+                                      </span>
+                                    )
+                                  })}
+                                </div>
+                              )}
+                              {review.helpfulCount > 0 && (
+                                <p className="mt-3 text-xs text-gray-400">
+                                  👍 {review.helpfulCount} {t(lang, ui.helpful)}
+                                </p>
+                              )}
+                            </div>
+                          </div>
+                        )
+                      })}
                     </div>
                   ) : (
                     <div className="py-12 text-center">
                       <div className="mx-auto mb-4 flex h-20 w-20 items-center justify-center rounded-3xl bg-gray-100 text-4xl">💬</div>
-                      <p className="font-bold text-gray-600 text-lg">{t(lang, ui.noReviews)}</p>
+                      <p className="text-lg font-bold text-gray-600">{t(lang, ui.noReviews)}</p>
                       <p className="mt-1 text-base text-gray-400">{t(lang, ui.beFirst)}</p>
                     </div>
                   )}

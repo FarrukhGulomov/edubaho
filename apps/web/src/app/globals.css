@@ -183,6 +183,30 @@
   }
   .animate-fade-in { animation: fadeIn 0.3s ease forwards; }
 
+  @keyframes float {
+    0%, 100% { transform: translateY(0) rotate(0deg); }
+    50% { transform: translateY(-18px) rotate(4deg); }
+  }
+  .animate-float       { animation: float  7s ease-in-out infinite; }
+  .animate-float-slow  { animation: float 10s ease-in-out infinite; }
+  .animate-float-delay { animation: float  7s ease-in-out 2.5s infinite; }
+  .animate-float-delay2{ animation: float  9s ease-in-out 4.5s infinite; }
+
+  @keyframes gradientShift {
+    0%, 100% { background-position: 0% 50%; }
+    50%       { background-position: 100% 50%; }
+  }
+  .animate-gradient {
+    background-size: 200% 200%;
+    animation: gradientShift 6s ease infinite;
+  }
+
+  @keyframes countUp {
+    from { opacity: 0; transform: translateY(16px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+  .animate-count-up { animation: countUp 0.5s ease forwards; }
+
   /* Mobil pastki satr uchun joy (bottom nav) */
   .pb-safe { padding-bottom: env(safe-area-inset-bottom, 16px); }
 }
