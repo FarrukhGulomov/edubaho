@@ -32,6 +32,8 @@ const ALLOWED_EVENTS = new Set([
   // Engagement (auth bo'lgan userlar)
   'contact_click', 'review_started', 'review_submitted',
   'filter_applied', 'price_viewed', 'compare_opened',
+  // EduFit moslik wizard'i
+  'match_started', 'match_completed', 'match_result_click',
 ])
 
 const CATEGORIES = new Set([

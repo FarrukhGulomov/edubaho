@@ -91,6 +91,60 @@ export const geoApi = {
     apiFetch<{ data: unknown[] }>(`/geo/cities?${new URLSearchParams({ ...(q && { q }), ...(regionId && { regionId }) })}`),
 }
 
+// ─── EduFit (moslik bo'yicha tavsiya) ─────────────────────────
+
+export interface MatchInstitution {
+  id: string
+  nameUz: string
+  nameRu?: string | null
+  slug: string
+  type: string
+  isVerified: boolean
+  avgRating?: number | null
+  reviewCount: number
+  address?: string | null
+  city?: { nameUz: string; nameRu?: string | null } | null
+  pricing?: { monthlyMin?: number | null; monthlyMax?: number | null } | null
+}
+
+export interface MatchComponent {
+  key: string
+  labelUz: string
+  labelRu: string
+  score: number
+  weight: number
+  hasData: boolean
+  reasonUz: string
+  reasonRu: string
+}
+
+export interface MatchItem {
+  institution: MatchInstitution
+  match: {
+    score: number
+    confidence: number
+    components: MatchComponent[]
+    topReasonsUz: string[]
+    topReasonsRu: string[]
+  }
+}
+
+export const matchApi = {
+  find: (prefs: {
+    type: string
+    goal?: string
+    cityId?: string
+    regionId?: string
+    budget?: number
+    shift?: string
+    age?: number
+  }) =>
+    apiFetch<{ data: MatchItem[]; meta: { total: number } }>('/match', {
+      method: 'POST',
+      body: JSON.stringify(prefs),
+    }),
+}
+
 // ─── Search ───────────────────────────────────────────────────
 
 export const searchApi = {

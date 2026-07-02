@@ -16,6 +16,7 @@ import authRoutes from './routes/auth'
 import institutionRoutes from './routes/institutions'
 import reviewRoutes from './routes/reviews'
 import searchRoutes from './routes/search'
+import matchRoutes from './routes/match'
 import geoRoutes from './routes/geo'
 import adminReviewRoutes from './routes/admin/reviews'
 import adminInstitutionRoutes from './routes/admin/institutions'
@@ -98,6 +99,7 @@ async function buildApp() {
       await api.register(institutionRoutes)
       await api.register(reviewRoutes)
       await api.register(searchRoutes)
+      await api.register(matchRoutes)
       await api.register(geoRoutes)
 
       // Admin routes

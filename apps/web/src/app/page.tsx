@@ -179,6 +179,18 @@ export default function HomePage() {
               )}
             </div>
           </div>
+
+          {/* EduFit wizard CTA */}
+          <div className="mt-3 flex justify-center">
+            <Link
+              href="/match"
+              className="group inline-flex items-center gap-2 rounded-full bg-white/15 px-5 py-2 text-sm font-bold text-white ring-1 ring-white/30 backdrop-blur-sm transition-all hover:bg-white hover:text-primary-700"
+            >
+              <span className="text-base">🎯</span>
+              {uz ? 'Qaysi biri menga mos? — 1 daqiqada aniqlang' : 'Что мне подходит? — узнайте за 1 минуту'}
+              <span className="transition-transform group-hover:translate-x-0.5">→</span>
+            </Link>
+          </div>
         </div>
       </div>
 
