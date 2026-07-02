@@ -1,7 +1,9 @@
 import type { Metadata, Viewport } from 'next'
+import Script from 'next/script'
 import { Inter } from 'next/font/google'
 import './globals.css'
 import CompareBar from '@/components/compare/CompareBar'
+import TelegramProvider from '@/components/shared/TelegramProvider'
 import { LangProvider } from '@/contexts/LangContext'
 
 const inter = Inter({
@@ -55,9 +57,13 @@ export default function RootLayout({
   return (
     <html lang="uz" className={inter.variable}>
       <body className="min-h-screen bg-gray-50">
+        {/* Telegram Mini App SDK — TWA ichida window.Telegram.WebApp beradi */}
+        <Script src="https://telegram.org/js/telegram-web-app.js" strategy="beforeInteractive" />
         <LangProvider>
-          {children}
-          <CompareBar />
+          <TelegramProvider>
+            {children}
+            <CompareBar />
+          </TelegramProvider>
         </LangProvider>
       </body>
     </html>

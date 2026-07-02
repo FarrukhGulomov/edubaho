@@ -16,26 +16,34 @@ export function useAuth() {
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    const token = localStorage.getItem('accessToken')
-    if (!token) {
-      setLoading(false)
-      return
+    function loadUser() {
+      const token = localStorage.getItem('accessToken')
+      if (!token) {
+        setLoading(false)
+        return
+      }
+      authApi
+        .me(token)
+        .then((data: unknown) => {
+          const d = data as { data?: AuthUser } & AuthUser
+          setUser(d.data ?? d)
+        })
+        .catch((err: unknown) => {
+          // Faqat 401 (token noto'g'ri) bo'lsa o'chirish — network/ngrok xatolikda o'chirmaymiz
+          const status = (err as { status?: number })?.status
+          if (status === 401 || status === 403) {
+            localStorage.removeItem('accessToken')
+            localStorage.removeItem('refreshToken')
+          }
+        })
+        .finally(() => setLoading(false))
     }
-    authApi
-      .me(token)
-      .then((data: unknown) => {
-        const d = data as { data?: AuthUser } & AuthUser
-        setUser(d.data ?? d)
-      })
-      .catch((err: unknown) => {
-        // Faqat 401 (token noto'g'ri) bo'lsa o'chirish — network/ngrok xatolikda o'chirmaymiz
-        const status = (err as { status?: number })?.status
-        if (status === 401 || status === 403) {
-          localStorage.removeItem('accessToken')
-          localStorage.removeItem('refreshToken')
-        }
-      })
-      .finally(() => setLoading(false))
+
+    loadUser()
+
+    // Telegram Mini App avtomatik kirishi tugaganda holatni yangilash
+    window.addEventListener('twa-auth', loadUser)
+    return () => window.removeEventListener('twa-auth', loadUser)
   }, [])
 
   function logout() {

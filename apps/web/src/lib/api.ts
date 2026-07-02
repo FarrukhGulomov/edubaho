@@ -192,6 +192,10 @@ export const authApi = {
   telegramLogin: (data: object) =>
     apiFetch('/auth/telegram', { method: 'POST', body: JSON.stringify(data) }),
 
+  // Telegram Mini App ichidan avtomatik kirish
+  telegramWebAppLogin: (initData: string) =>
+    apiFetch('/auth/telegram-webapp', { method: 'POST', body: JSON.stringify({ initData }) }),
+
   googleLogin: (idToken: string) =>
     apiFetch('/auth/google', { method: 'POST', body: JSON.stringify({ idToken }) }),
 

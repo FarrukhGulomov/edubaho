@@ -125,6 +125,28 @@ Keyin `/setdomain` bilan web domeningizni bog'lang (masalan `edubaho.vercel.app`
 qo'shing → Client ID'ni API (`GOOGLE_CLIENT_ID`) va Vercel
 (`NEXT_PUBLIC_GOOGLE_CLIENT_ID`) ga kiriting.
 
+## 9-qadam. Telegram Mini App (Web App)
+
+Sayt Telegram ichida to'liq ishlaydi: foydalanuvchi **avtomatik tizimga kiradi**
+(initData orqali, hech qanday tugma bosmaydi), native Back tugmasi va haptic
+feedback ishlaydi.
+
+Sozlash (bot allaqachon bor deb hisoblaymiz — `TELEGRAM_BOT_TOKEN` o'rnatilgan):
+
+1. @BotFather → `/newapp` → botingizni tanlang
+   - **Web App URL**: `https://<web-domeningiz>` (Vercel yoki custom domen, HTTPS shart)
+   - Nom, tavsif va rasm kiriting
+2. @BotFather → `/mybots` → botingiz → **Bot Settings → Menu Button** →
+   Web App URL'ni kiriting — endi botning pastki chap tugmasi ilovani ochadi
+3. Kanal/guruh postlarida to'g'ridan-to'g'ri havola:
+   `https://t.me/<bot_username>/<app_qisqa_nomi>`
+
+Tekshirish: botni oching → Menu tugmasi → ilova ochiladi → yuqori o'ng
+burchakda profil avtomatik ko'rinadi (auto-login ishladi).
+
+Eslatma: Mini App auth uchun ham API'dagi `TELEGRAM_BOT_TOKEN` ishlatiladi —
+alohida sozlama kerak emas.
+
 ---
 
 ## Go-live tekshiruv ro'yxati

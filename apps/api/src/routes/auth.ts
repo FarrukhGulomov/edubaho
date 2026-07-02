@@ -8,7 +8,7 @@ import {
   withinHourlyOtpLimit, incrementAttempts, safeCompare,
 } from '../utils/redis'
 import { sendSmsOtp } from '../services/sms'
-import { verifyTelegramAuth } from '../services/telegram'
+import { verifyTelegramAuth, verifyTelegramWebAppInitData } from '../services/telegram'
 import { verifyGoogleIdToken } from '../services/google'
 import { generateTokens, verifyRefreshToken, revokeRefreshToken } from '../services/tokens'
 
@@ -410,6 +410,68 @@ export default async function authRoutes(fastify: FastifyInstance) {
       where:  { telegramId },
       update: { lastActiveAt: new Date(), telegramUsername },
       create: { telegramId, telegramUsername, name, isVerified: true },
+      select: {
+        id: true, phone: true, name: true, role: true,
+        institutionClaims: {
+          where:  { status: 'APPROVED' },
+          select: { institutionId: true },
+          take:   1,
+        },
+      },
+    })
+
+    const isNewUser = !user.phone && !user.name
+    const institutionId = user.institutionClaims[0]?.institutionId
+    const { accessToken, refreshToken } = await generateTokens(
+      user.id,
+      user.role as Parameters<typeof generateTokens>[1],
+      institutionId,
+    )
+
+    return reply.send({
+      success: true,
+      isNewUser,
+      user: { id: user.id, phone: user.phone, name: user.name, role: user.role },
+      accessToken,
+      refreshToken,
+    })
+  })
+
+  // ─────────────────────────────────────────────
+  // POST /auth/telegram-webapp
+  // Telegram Mini App ichidan avtomatik kirish (initData bilan).
+  // Foydalanuvchi hech narsa bosmaydi — Telegram o'zi imzolangan
+  // ma'lumotni beradi, biz tekshirib token qaytaramiz.
+  // ─────────────────────────────────────────────
+
+  fastify.post('/auth/telegram-webapp', {
+    config: { rateLimit: { max: 20, timeWindow: '1 minute' } },
+  }, async (request, reply) => {
+    if (!env.TELEGRAM_BOT_TOKEN) {
+      return reply.status(503).send({ error: 'Telegram kirish hali sozlanmagan' })
+    }
+
+    const { initData } = z.object({ initData: z.string().min(20).max(8192) }).parse(request.body)
+
+    const tgUser = verifyTelegramWebAppInitData(initData, env.TELEGRAM_BOT_TOKEN)
+    if (!tgUser) {
+      return reply.status(401).send({ error: 'Telegram tasdiqlanmadi yoki muddati o\'tgan' })
+    }
+
+    const telegramId = String(tgUser.id)
+    const name = [tgUser.first_name, tgUser.last_name].filter(Boolean).join(' ')
+    const telegramUsername = tgUser.username ?? null
+
+    const user = await prisma.user.upsert({
+      where:  { telegramId },
+      update: { lastActiveAt: new Date(), telegramUsername },
+      create: {
+        telegramId,
+        telegramUsername,
+        name,
+        avatarUrl: tgUser.photo_url,
+        isVerified: true,
+      },
       select: {
         id: true, phone: true, name: true, role: true,
         institutionClaims: {

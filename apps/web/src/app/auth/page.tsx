@@ -5,6 +5,7 @@ import Link from 'next/link'
 import { authApi } from '@/lib/api'
 import { useLang, t } from '@/contexts/LangContext'
 import { authTrack } from '@/lib/analytics'
+import { isTelegramWebApp } from '@/lib/telegram'
 import Logo from '@/components/shared/Logo'
 
 type Step = 'phone' | 'otp' | 'done'
@@ -43,6 +44,16 @@ export default function AuthPage() {
 
   // Auth sahifasi ochildi
   useEffect(() => { authTrack.started() }, [])
+
+  // Telegram Mini App ichida foydalanuvchi avtomatik kirgan bo'ladi —
+  // login sahifasi kerak emas, to'g'ridan-to'g'ri profilga
+  useEffect(() => {
+    if (!isTelegramWebApp()) return
+    const goProfile = () => window.location.replace('/profile')
+    if (localStorage.getItem('accessToken')) goProfile()
+    else window.addEventListener('twa-auth', goProfile)
+    return () => window.removeEventListener('twa-auth', goProfile)
+  }, [])
 
   // Telegram redirect mode: URL da hash bo'lsa avtomatik login
   useEffect(() => {

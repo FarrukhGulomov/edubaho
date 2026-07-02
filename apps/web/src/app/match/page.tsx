@@ -7,6 +7,7 @@ import StarRating from '@/components/shared/StarRating'
 import { useLang, t } from '@/contexts/LangContext'
 import { matchApi, geoApi, type MatchItem } from '@/lib/api'
 import { track } from '@/lib/analytics'
+import { haptic } from '@/lib/telegram'
 
 /**
  * EduFit — "Menga mosini top" wizard'i
@@ -99,6 +100,7 @@ export default function MatchPage() {
         age:    age ? Number(age) : undefined,
       })
       setResults(res.data)
+      haptic('success')
       track('match_completed', {
         category: 'engagement',
         properties: { type, goal, budget, shift: finalShift, resultCount: res.data.length },
@@ -174,7 +176,7 @@ export default function MatchPage() {
             {TYPE_OPTIONS.map((o) => (
               <button
                 key={o.value}
-                onClick={() => { setType(o.value); setStep('goal') }}
+                onClick={() => { haptic('light'); setType(o.value); setStep('goal') }}
                 className={`flex flex-col items-center gap-2 rounded-2xl border-2 bg-white p-5 transition-all hover:border-primary-400 hover:shadow-md ${
                   type === o.value ? 'border-primary-500 bg-primary-50' : 'border-gray-200'
                 }`}
