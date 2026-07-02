@@ -1,3 +1,5 @@
+import { randomInt } from 'crypto'
+
 /**
  * O'zbekiston telefon raqamlarini normalizatsiya qilish.
  * Kiritish: +998901234567, 998901234567, 0901234567, 901234567
@@ -34,8 +36,9 @@ export function formatPhone(phone: string): string {
 }
 
 /**
- * Tasodifiy 6 xonali OTP yaratish
+ * Tasodifiy 6 xonali OTP yaratish.
+ * Kriptografik xavfsiz generator (Math.random emas) — OTP taxmin qilib bo'lmasligi kerak.
  */
 export function generateOtp(): string {
-  return Math.floor(100000 + Math.random() * 900000).toString()
+  return randomInt(100000, 1000000).toString()
 }

@@ -133,6 +133,14 @@ export default function AuthPage() {
     ],
   }
 
+  // 60 soniyalik qayta yuborish taymerini boshlash
+  function startCountdown() {
+    setCountdown(60)
+    const timer = setInterval(() => {
+      setCountdown((c) => { if (c <= 1) { clearInterval(timer); return 0 } return c - 1 })
+    }, 1000)
+  }
+
   async function handleSendOtp(e: React.FormEvent) {
     e.preventDefault()
     setError('')
@@ -142,10 +150,25 @@ export default function AuthPage() {
       await authApi.sendOtp(phone.replace(/\s/g, ''))
       authTrack.otpSent()
       setStep('otp')
-      setCountdown(60)
-      const timer = setInterval(() => {
-        setCountdown((c) => { if (c <= 1) { clearInterval(timer); return 0 } return c - 1 })
-      }, 1000)
+      setOtp('')
+      startCountdown()
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : t(lang, { uz: 'Xatolik yuz berdi', ru: 'Произошла ошибка' }))
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  // OTP kodni qayta yuborish — telefon bosqichiga qaytmasdan
+  async function handleResend() {
+    setError('')
+    setOtp('')
+    setLoading(true)
+    try {
+      await authApi.sendOtp(phone.replace(/\s/g, ''))
+      authTrack.otpSent()
+      startCountdown()
+      otpRef.current?.focus()
     } catch (err: unknown) {
       setError(err instanceof Error ? err.message : t(lang, { uz: 'Xatolik yuz berdi', ru: 'Произошла ошибка' }))
     } finally {
@@ -257,9 +280,15 @@ export default function AuthPage() {
                   {error && <ErrorBox msg={error} />}
                 </div>
 
-                {/* SMS form — hozircha yashirilgan */}
-                {false && (
-                  <form onSubmit={handleSendOtp} className="space-y-4">
+                {/* Ajratuvchi: Telegram YOKI SMS */}
+                <div className="flex items-center gap-3">
+                  <div className="h-px flex-1 bg-gray-200" />
+                  <span className="text-xs font-semibold uppercase text-gray-400">{t(lang, ui.orDivider)}</span>
+                  <div className="h-px flex-1 bg-gray-200" />
+                </div>
+
+                {/* SMS form — Telegram'i yo'q foydalanuvchilar uchun muqobil yo'l */}
+                <form onSubmit={handleSendOtp} className="space-y-4">
                     <div>
                       <label className="mb-1.5 block text-sm font-semibold text-gray-700">
                         {t(lang, ui.phoneLabel)}
@@ -288,7 +317,6 @@ export default function AuthPage() {
                       {loading ? t(lang, ui.sending) : t(lang, ui.sendBtn)}
                     </button>
                   </form>
-                )}
               </div>
             )}
 
@@ -361,8 +389,9 @@ export default function AuthPage() {
                   ) : (
                     <button
                       type="button"
-                      onClick={() => { setStep('phone'); setOtp('') }}
-                      className="font-semibold text-primary-600 hover:underline"
+                      onClick={handleResend}
+                      disabled={loading}
+                      className="font-semibold text-primary-600 hover:underline disabled:opacity-50"
                     >
                       {t(lang, ui.resend)}
                     </button>

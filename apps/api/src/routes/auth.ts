@@ -3,7 +3,10 @@ import { z } from 'zod'
 import { env } from '../utils/env'
 import { sendOtpSchema, verifyOtpSchema, refreshSchema, updateProfileSchema } from '../schemas/auth'
 import { normalizePhone, generateOtp } from '../utils/phone'
-import { redis, setOtp, verifyOtp, canSendOtp, markOtpSent } from '../utils/redis'
+import {
+  redis, setOtp, verifyOtp, canSendOtp, markOtpSent,
+  withinHourlyOtpLimit, incrementAttempts, safeCompare,
+} from '../utils/redis'
 import { sendSmsOtp } from '../services/sms'
 import { verifyTelegramAuth } from '../services/telegram'
 import { generateTokens, verifyRefreshToken, revokeRefreshToken } from '../services/tokens'
@@ -26,7 +29,10 @@ export default async function authRoutes(fastify: FastifyInstance) {
   // Rate limit: 10 req/min/IP (global config'da)
   // ─────────────────────────────────────────────
 
-  fastify.post('/auth/send-otp', async (request, reply) => {
+  fastify.post('/auth/send-otp', {
+    // SMS pumping himoyasi: bitta IP dan daqiqasiga ko'pi bilan 5 ta OTP so'rovi
+    config: { rateLimit: { max: 5, timeWindow: '1 minute' } },
+  }, async (request, reply) => {
     const { phone: rawPhone } = sendOtpSchema.parse(request.body)
 
     const phone = normalizePhone(rawPhone)
@@ -40,6 +46,14 @@ export default async function authRoutes(fastify: FastifyInstance) {
       return reply.status(429).send({
         error: 'Iltimos, 60 soniya kuting',
         retryAfter: 60,
+      })
+    }
+
+    // Bitta raqamga soatiga ko'pi bilan 5 ta SMS (xarajat himoyasi)
+    if (!(await withinHourlyOtpLimit(phone))) {
+      return reply.status(429).send({
+        error: "Juda ko'p urinish. 1 soatdan keyin qayta urinib ko'ring.",
+        retryAfter: 3600,
       })
     }
 
@@ -58,7 +72,10 @@ export default async function authRoutes(fastify: FastifyInstance) {
   // POST /auth/verify-otp
   // ─────────────────────────────────────────────
 
-  fastify.post('/auth/verify-otp', async (request, reply) => {
+  fastify.post('/auth/verify-otp', {
+    // Brute-force himoyasi: bitta IP dan daqiqasiga ko'pi bilan 10 ta tekshirish
+    config: { rateLimit: { max: 10, timeWindow: '1 minute' } },
+  }, async (request, reply) => {
     const { phone: rawPhone, otp } = verifyOtpSchema.parse(request.body)
 
     const phone = normalizePhone(rawPhone)
@@ -269,9 +286,20 @@ export default async function authRoutes(fastify: FastifyInstance) {
         return reply.status(403).send({ error: 'Faqat adminlar uchun' })
       }
 
-      if (pin !== env.ADMIN_PIN) {
+      // PIN brute-force himoyasi: 15 daqiqada ko'pi bilan 5 urinish
+      const attempts = await incrementAttempts(`pin_attempts:${userId}`, 900)
+      if (attempts > 5) {
+        return reply.status(429).send({
+          error: "Juda ko'p noto'g'ri urinish. 15 daqiqadan keyin qayta urining.",
+        })
+      }
+
+      if (!safeCompare(pin, env.ADMIN_PIN)) {
         return reply.status(401).send({ error: "Admin PIN noto'g'ri" })
       }
+
+      // Muvaffaqiyatli kirishda hisoblagichni tozalash
+      await redis.del(`pin_attempts:${userId}`)
 
       // Redis'da admin kirish tasdiqlangani 1 soat saqlanadi
       await redis.setex(`admin_verified:${userId}`, 3600, '1')
@@ -306,13 +334,28 @@ export default async function authRoutes(fastify: FastifyInstance) {
   // Auth shart emas — faqat PIN bilan himoyalangan
   // ─────────────────────────────────────────────
 
-  fastify.post('/auth/setup-super-admin', async (request, reply) => {
+  fastify.post('/auth/setup-super-admin', {
+    // Bootstrap endpoint — juda qattiq rate limit
+    config: { rateLimit: { max: 3, timeWindow: '1 hour' } },
+  }, async (request, reply) => {
     const { phone: rawPhone, pin } = z.object({
       phone: z.string().min(9),
       pin:   z.string().min(4),
     }).parse(request.body)
 
-    if (pin !== env.ADMIN_PIN) {
+    // Faqat BIRINCHI super adminni yaratish uchun ishlaydi.
+    // Super admin allaqachon mavjud bo'lsa — endpoint yopiq (privilege escalation himoyasi).
+    const existingSuperAdmin = await prisma.user.findFirst({
+      where: { role: 'SUPER_ADMIN' },
+      select: { id: true },
+    })
+    if (existingSuperAdmin) {
+      return reply.status(403).send({
+        error: "Super admin allaqachon mavjud. Yangi adminlar faqat super admin panelidan tayinlanadi.",
+      })
+    }
+
+    if (!safeCompare(pin, env.ADMIN_PIN)) {
       return reply.status(401).send({ error: "PIN noto'g'ri" })
     }
 

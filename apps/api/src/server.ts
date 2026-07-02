@@ -70,6 +70,17 @@ async function buildApp() {
   await fastify.register(authMiddleware)
   await fastify.register(rbacMiddleware)
 
+  // ─── Xavfsizlik headerlari ───────────────────
+  fastify.addHook('onSend', async (_request, reply) => {
+    reply.header('X-Content-Type-Options', 'nosniff')
+    reply.header('X-Frame-Options', 'DENY')
+    reply.header('Referrer-Policy', 'strict-origin-when-cross-origin')
+    reply.header('Cross-Origin-Opener-Policy', 'same-origin')
+    if (env.NODE_ENV === 'production') {
+      reply.header('Strict-Transport-Security', 'max-age=31536000; includeSubDomains')
+    }
+  })
+
   // ─── Health check ────────────────────────────
   fastify.get('/health', async () => ({
     status: 'ok',

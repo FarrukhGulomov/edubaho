@@ -32,5 +32,10 @@ export function verifyTelegramAuth(data: TelegramAuthData, botToken: string): bo
     .join('\n')
 
   const computedHash = crypto.createHmac('sha256', secretKey).update(checkString).digest('hex')
-  return computedHash === hash
+
+  // Timing-safe taqqoslash (timing attack himoyasi)
+  const a = Buffer.from(computedHash)
+  const b = Buffer.from(hash)
+  if (a.length !== b.length) return false
+  return crypto.timingSafeEqual(a, b)
 }
