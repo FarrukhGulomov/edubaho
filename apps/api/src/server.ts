@@ -33,6 +33,10 @@ async function buildApp() {
       env.NODE_ENV === 'development'
         ? { level: 'info', transport: { target: 'pino-pretty', options: { colorize: true } } }
         : { level: 'warn' },
+    // Railway/Vercel kabi reverse-proxy ortida ishlaganda haqiqiy client IP
+    // X-Forwarded-For headeridan olinadi — busiz rate-limit hamma
+    // foydalanuvchini bitta (proxy) IP sifatida ko'radi
+    trustProxy: true,
   })
 
   // ─── CORS ────────────────────────────────────
