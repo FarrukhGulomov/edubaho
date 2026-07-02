@@ -60,6 +60,7 @@ export interface Institution {
   isVerified: boolean
   avgRating?: number
   reviewCount: number
+  city?: { id?: string; nameUz: string; nameRu?: string | null } | null
   subscription?: { plan: string }
   details?: {
     descriptionUz?: string

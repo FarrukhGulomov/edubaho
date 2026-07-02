@@ -32,5 +32,74 @@ export function verifyTelegramAuth(data: TelegramAuthData, botToken: string): bo
     .join('\n')
 
   const computedHash = crypto.createHmac('sha256', secretKey).update(checkString).digest('hex')
-  return computedHash === hash
+
+  return safeHashCompare(computedHash, hash)
+}
+
+// ─────────────────────────────────────────────────────────────
+// Telegram Mini App (Web App) initData tekshiruvi
+// https://core.telegram.org/bots/webapps#validating-data-received-via-the-mini-app
+// ─────────────────────────────────────────────────────────────
+
+export interface TelegramWebAppUser {
+  id: number
+  first_name: string
+  last_name?: string
+  username?: string
+  photo_url?: string
+}
+
+/**
+ * Mini App'dan kelgan initData satrini tekshirish.
+ *
+ * Login Widget'dan farqi: secret = HMAC_SHA256(bot_token, key="WebAppData").
+ * Muvaffaqiyatda user obyektini, aks holda null qaytaradi.
+ *
+ * @param maxAgeSeconds — initData eskirish muddati (default 24 soat;
+ *   Mini App sessiyasi davomida initData yangilanmaydi)
+ */
+export function verifyTelegramWebAppInitData(
+  initData: string,
+  botToken: string,
+  maxAgeSeconds = 86400,
+): TelegramWebAppUser | null {
+  const params = new URLSearchParams(initData)
+  const hash = params.get('hash')
+  if (!hash) return null
+
+  // auth_date eskirganini tekshirish (replay himoyasi)
+  const authDate = Number(params.get('auth_date'))
+  if (!authDate || Math.floor(Date.now() / 1000) - authDate > maxAgeSeconds) return null
+
+  // hash'dan tashqari barcha maydonlar alfavit tartibida "key=value\n..." bo'ladi
+  params.delete('hash')
+  const checkString = [...params.entries()]
+    .sort(([a], [b]) => a.localeCompare(b))
+    .map(([k, v]) => `${k}=${v}`)
+    .join('\n')
+
+  // Mini App uchun maxsus secret: HMAC("WebAppData", bot_token)
+  const secretKey = crypto.createHmac('sha256', 'WebAppData').update(botToken).digest()
+  const computedHash = crypto.createHmac('sha256', secretKey).update(checkString).digest('hex')
+
+  if (!safeHashCompare(computedHash, hash)) return null
+
+  // user maydoni JSON satr sifatida keladi
+  const userJson = params.get('user')
+  if (!userJson) return null
+  try {
+    const user = JSON.parse(userJson) as TelegramWebAppUser
+    if (!user.id || !user.first_name) return null
+    return user
+  } catch {
+    return null
+  }
+}
+
+/** Timing-safe hex hash taqqoslash */
+function safeHashCompare(a: string, b: string): boolean {
+  const bufA = Buffer.from(a)
+  const bufB = Buffer.from(b)
+  if (bufA.length !== bufB.length) return false
+  return crypto.timingSafeEqual(bufA, bufB)
 }

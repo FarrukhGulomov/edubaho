@@ -31,6 +31,9 @@ const envSchema = z.object({
   // ── Telegram Login Widget — ixtiyoriy, yo'q bo'lsa Telegram kirish o'chiq ─
   TELEGRAM_BOT_TOKEN: z.string().default(''),
 
+  // ── Google OAuth (Gmail orqali kirish) — ixtiyoriy ──────────────────────
+  GOOGLE_CLIENT_ID: z.string().default(''),
+
   // ── Meilisearch — ixtiyoriy, yo'q bo'lsa search DB fallback ishlatadi ────
   MEILISEARCH_URL: z.string().default('http://localhost:7700'),
   MEILISEARCH_KEY: z.string().default(''),
@@ -49,6 +52,30 @@ if (!parsed.success) {
   console.error("❌ Noto'g'ri muhit o'zgaruvchilari:")
   console.error(parsed.error.flatten().fieldErrors)
   process.exit(1)
+}
+
+// Production'da zaif/standart qiymatlar bilan ishga tushishga yo'l qo'ymaslik
+if (parsed.data.NODE_ENV === 'production') {
+  const problems: string[] = []
+
+  if (parsed.data.ADMIN_PIN === '1234' || parsed.data.ADMIN_PIN === '147258') {
+    problems.push("ADMIN_PIN standart qiymatda — production uchun kuchli PIN o'rnating")
+  }
+  if (parsed.data.ADMIN_PIN.length < 6) {
+    problems.push("ADMIN_PIN production'da kamida 6 ta belgi bo'lishi kerak")
+  }
+  if (parsed.data.JWT_SECRET === parsed.data.REFRESH_SECRET) {
+    problems.push("JWT_SECRET va REFRESH_SECRET bir xil bo'lmasligi kerak")
+  }
+  if (process.env.ALLOW_DEV_OTP === 'true') {
+    problems.push("ALLOW_DEV_OTP production'da yoqib bo'lmaydi — OTP oshkor bo'ladi")
+  }
+
+  if (problems.length > 0) {
+    console.error("❌ Production xavfsizlik talablari bajarilmadi:")
+    problems.forEach((p) => console.error(`   • ${p}`))
+    process.exit(1)
+  }
 }
 
 export const env = parsed.data

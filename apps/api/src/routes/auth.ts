@@ -3,9 +3,13 @@ import { z } from 'zod'
 import { env } from '../utils/env'
 import { sendOtpSchema, verifyOtpSchema, refreshSchema, updateProfileSchema } from '../schemas/auth'
 import { normalizePhone, generateOtp } from '../utils/phone'
-import { redis, setOtp, verifyOtp, canSendOtp, markOtpSent } from '../utils/redis'
+import {
+  redis, setOtp, verifyOtp, canSendOtp, markOtpSent,
+  withinHourlyOtpLimit, incrementAttempts, safeCompare,
+} from '../utils/redis'
 import { sendSmsOtp } from '../services/sms'
-import { verifyTelegramAuth } from '../services/telegram'
+import { verifyTelegramAuth, verifyTelegramWebAppInitData } from '../services/telegram'
+import { verifyGoogleIdToken } from '../services/google'
 import { generateTokens, verifyRefreshToken, revokeRefreshToken } from '../services/tokens'
 
 /**
@@ -26,7 +30,10 @@ export default async function authRoutes(fastify: FastifyInstance) {
   // Rate limit: 10 req/min/IP (global config'da)
   // ─────────────────────────────────────────────
 
-  fastify.post('/auth/send-otp', async (request, reply) => {
+  fastify.post('/auth/send-otp', {
+    // SMS pumping himoyasi: bitta IP dan daqiqasiga ko'pi bilan 5 ta OTP so'rovi
+    config: { rateLimit: { max: 5, timeWindow: '1 minute' } },
+  }, async (request, reply) => {
     const { phone: rawPhone } = sendOtpSchema.parse(request.body)
 
     const phone = normalizePhone(rawPhone)
@@ -40,6 +47,14 @@ export default async function authRoutes(fastify: FastifyInstance) {
       return reply.status(429).send({
         error: 'Iltimos, 60 soniya kuting',
         retryAfter: 60,
+      })
+    }
+
+    // Bitta raqamga soatiga ko'pi bilan 5 ta SMS (xarajat himoyasi)
+    if (!(await withinHourlyOtpLimit(phone))) {
+      return reply.status(429).send({
+        error: "Juda ko'p urinish. 1 soatdan keyin qayta urinib ko'ring.",
+        retryAfter: 3600,
       })
     }
 
@@ -58,7 +73,10 @@ export default async function authRoutes(fastify: FastifyInstance) {
   // POST /auth/verify-otp
   // ─────────────────────────────────────────────
 
-  fastify.post('/auth/verify-otp', async (request, reply) => {
+  fastify.post('/auth/verify-otp', {
+    // Brute-force himoyasi: bitta IP dan daqiqasiga ko'pi bilan 10 ta tekshirish
+    config: { rateLimit: { max: 10, timeWindow: '1 minute' } },
+  }, async (request, reply) => {
     const { phone: rawPhone, otp } = verifyOtpSchema.parse(request.body)
 
     const phone = normalizePhone(rawPhone)
@@ -269,9 +287,20 @@ export default async function authRoutes(fastify: FastifyInstance) {
         return reply.status(403).send({ error: 'Faqat adminlar uchun' })
       }
 
-      if (pin !== env.ADMIN_PIN) {
+      // PIN brute-force himoyasi: 15 daqiqada ko'pi bilan 5 urinish
+      const attempts = await incrementAttempts(`pin_attempts:${userId}`, 900)
+      if (attempts > 5) {
+        return reply.status(429).send({
+          error: "Juda ko'p noto'g'ri urinish. 15 daqiqadan keyin qayta urining.",
+        })
+      }
+
+      if (!safeCompare(pin, env.ADMIN_PIN)) {
         return reply.status(401).send({ error: "Admin PIN noto'g'ri" })
       }
+
+      // Muvaffaqiyatli kirishda hisoblagichni tozalash
+      await redis.del(`pin_attempts:${userId}`)
 
       // Redis'da admin kirish tasdiqlangani 1 soat saqlanadi
       await redis.setex(`admin_verified:${userId}`, 3600, '1')
@@ -306,13 +335,28 @@ export default async function authRoutes(fastify: FastifyInstance) {
   // Auth shart emas — faqat PIN bilan himoyalangan
   // ─────────────────────────────────────────────
 
-  fastify.post('/auth/setup-super-admin', async (request, reply) => {
+  fastify.post('/auth/setup-super-admin', {
+    // Bootstrap endpoint — juda qattiq rate limit
+    config: { rateLimit: { max: 3, timeWindow: '1 hour' } },
+  }, async (request, reply) => {
     const { phone: rawPhone, pin } = z.object({
       phone: z.string().min(9),
       pin:   z.string().min(4),
     }).parse(request.body)
 
-    if (pin !== env.ADMIN_PIN) {
+    // Faqat BIRINCHI super adminni yaratish uchun ishlaydi.
+    // Super admin allaqachon mavjud bo'lsa — endpoint yopiq (privilege escalation himoyasi).
+    const existingSuperAdmin = await prisma.user.findFirst({
+      where: { role: 'SUPER_ADMIN' },
+      select: { id: true },
+    })
+    if (existingSuperAdmin) {
+      return reply.status(403).send({
+        error: "Super admin allaqachon mavjud. Yangi adminlar faqat super admin panelidan tayinlanadi.",
+      })
+    }
+
+    if (!safeCompare(pin, env.ADMIN_PIN)) {
       return reply.status(401).send({ error: "PIN noto'g'ri" })
     }
 
@@ -377,6 +421,146 @@ export default async function authRoutes(fastify: FastifyInstance) {
     })
 
     const isNewUser = !user.phone && !user.name
+    const institutionId = user.institutionClaims[0]?.institutionId
+    const { accessToken, refreshToken } = await generateTokens(
+      user.id,
+      user.role as Parameters<typeof generateTokens>[1],
+      institutionId,
+    )
+
+    return reply.send({
+      success: true,
+      isNewUser,
+      user: { id: user.id, phone: user.phone, name: user.name, role: user.role },
+      accessToken,
+      refreshToken,
+    })
+  })
+
+  // ─────────────────────────────────────────────
+  // POST /auth/telegram-webapp
+  // Telegram Mini App ichidan avtomatik kirish (initData bilan).
+  // Foydalanuvchi hech narsa bosmaydi — Telegram o'zi imzolangan
+  // ma'lumotni beradi, biz tekshirib token qaytaramiz.
+  // ─────────────────────────────────────────────
+
+  fastify.post('/auth/telegram-webapp', {
+    config: { rateLimit: { max: 20, timeWindow: '1 minute' } },
+  }, async (request, reply) => {
+    if (!env.TELEGRAM_BOT_TOKEN) {
+      return reply.status(503).send({ error: 'Telegram kirish hali sozlanmagan' })
+    }
+
+    const { initData } = z.object({ initData: z.string().min(20).max(8192) }).parse(request.body)
+
+    const tgUser = verifyTelegramWebAppInitData(initData, env.TELEGRAM_BOT_TOKEN)
+    if (!tgUser) {
+      return reply.status(401).send({ error: 'Telegram tasdiqlanmadi yoki muddati o\'tgan' })
+    }
+
+    const telegramId = String(tgUser.id)
+    const name = [tgUser.first_name, tgUser.last_name].filter(Boolean).join(' ')
+    const telegramUsername = tgUser.username ?? null
+
+    const user = await prisma.user.upsert({
+      where:  { telegramId },
+      update: { lastActiveAt: new Date(), telegramUsername },
+      create: {
+        telegramId,
+        telegramUsername,
+        name,
+        avatarUrl: tgUser.photo_url,
+        isVerified: true,
+      },
+      select: {
+        id: true, phone: true, name: true, role: true,
+        institutionClaims: {
+          where:  { status: 'APPROVED' },
+          select: { institutionId: true },
+          take:   1,
+        },
+      },
+    })
+
+    const isNewUser = !user.phone && !user.name
+    const institutionId = user.institutionClaims[0]?.institutionId
+    const { accessToken, refreshToken } = await generateTokens(
+      user.id,
+      user.role as Parameters<typeof generateTokens>[1],
+      institutionId,
+    )
+
+    return reply.send({
+      success: true,
+      isNewUser,
+      user: { id: user.id, phone: user.phone, name: user.name, role: user.role },
+      accessToken,
+      refreshToken,
+    })
+  })
+
+  // ─────────────────────────────────────────────
+  // POST /auth/google
+  // Google (Gmail) orqali kirish — GIS ID token bilan
+  // ─────────────────────────────────────────────
+
+  fastify.post('/auth/google', {
+    config: { rateLimit: { max: 10, timeWindow: '1 minute' } },
+  }, async (request, reply) => {
+    if (!env.GOOGLE_CLIENT_ID) {
+      return reply.status(503).send({ error: 'Google orqali kirish hali sozlanmagan' })
+    }
+
+    const { idToken } = z.object({ idToken: z.string().min(20) }).parse(request.body)
+
+    const googleUser = await verifyGoogleIdToken(idToken)
+    if (!googleUser) {
+      return reply.status(401).send({ error: 'Google hisobi tasdiqlanmadi' })
+    }
+
+    const userSelect = {
+      id: true, phone: true, name: true, role: true, email: true,
+      institutionClaims: {
+        where:  { status: 'APPROVED' },
+        select: { institutionId: true },
+        take:   1,
+      },
+    } as const
+
+    // 1) googleId bo'yicha izlash, 2) email bo'yicha mavjud hisobga bog'lash, 3) yangi hisob
+    let user = await prisma.user.findUnique({ where: { googleId: googleUser.googleId }, select: userSelect })
+
+    if (user) {
+      await prisma.user.update({ where: { id: user.id }, data: { lastActiveAt: new Date() } })
+    } else {
+      const byEmail = await prisma.user.findUnique({ where: { email: googleUser.email }, select: { id: true } })
+
+      if (byEmail) {
+        // Email allaqachon ro'yxatda — Google hisobini shu foydalanuvchiga bog'laymiz
+        user = await prisma.user.update({
+          where: { id: byEmail.id },
+          data: {
+            googleId: googleUser.googleId,
+            lastActiveAt: new Date(),
+            isVerified: true,
+          },
+          select: userSelect,
+        })
+      } else {
+        user = await prisma.user.create({
+          data: {
+            googleId:  googleUser.googleId,
+            email:     googleUser.email,
+            name:      googleUser.name,
+            avatarUrl: googleUser.avatarUrl,
+            isVerified: true,
+          },
+          select: userSelect,
+        })
+      }
+    }
+
+    const isNewUser = !user.phone
     const institutionId = user.institutionClaims[0]?.institutionId
     const { accessToken, refreshToken } = await generateTokens(
       user.id,

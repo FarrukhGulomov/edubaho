@@ -16,9 +16,11 @@ import authRoutes from './routes/auth'
 import institutionRoutes from './routes/institutions'
 import reviewRoutes from './routes/reviews'
 import searchRoutes from './routes/search'
+import matchRoutes from './routes/match'
 import geoRoutes from './routes/geo'
 import adminReviewRoutes from './routes/admin/reviews'
 import adminInstitutionRoutes from './routes/admin/institutions'
+import adminClaimRoutes from './routes/admin/claims'
 import superAdminRoutes from './routes/super-admin/index'
 import superAdminAnalytics from './routes/super-admin/analytics'
 import trackRoutes from './routes/track'
@@ -31,6 +33,10 @@ async function buildApp() {
       env.NODE_ENV === 'development'
         ? { level: 'info', transport: { target: 'pino-pretty', options: { colorize: true } } }
         : { level: 'warn' },
+    // Railway/Vercel kabi reverse-proxy ortida ishlaganda haqiqiy client IP
+    // X-Forwarded-For headeridan olinadi — busiz rate-limit hamma
+    // foydalanuvchini bitta (proxy) IP sifatida ko'radi
+    trustProxy: true,
   })
 
   // ─── CORS ────────────────────────────────────
@@ -70,6 +76,17 @@ async function buildApp() {
   await fastify.register(authMiddleware)
   await fastify.register(rbacMiddleware)
 
+  // ─── Xavfsizlik headerlari ───────────────────
+  fastify.addHook('onSend', async (_request, reply) => {
+    reply.header('X-Content-Type-Options', 'nosniff')
+    reply.header('X-Frame-Options', 'DENY')
+    reply.header('Referrer-Policy', 'strict-origin-when-cross-origin')
+    reply.header('Cross-Origin-Opener-Policy', 'same-origin')
+    if (env.NODE_ENV === 'production') {
+      reply.header('Strict-Transport-Security', 'max-age=31536000; includeSubDomains')
+    }
+  })
+
   // ─── Health check ────────────────────────────
   fastify.get('/health', async () => ({
     status: 'ok',
@@ -86,11 +103,13 @@ async function buildApp() {
       await api.register(institutionRoutes)
       await api.register(reviewRoutes)
       await api.register(searchRoutes)
+      await api.register(matchRoutes)
       await api.register(geoRoutes)
 
       // Admin routes
       await api.register(adminReviewRoutes)
       await api.register(adminInstitutionRoutes)
+      await api.register(adminClaimRoutes)
 
       // Super Admin routes
       await api.register(superAdminRoutes)

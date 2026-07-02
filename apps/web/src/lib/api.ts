@@ -70,6 +70,17 @@ export const institutionsApi = {
 
   view: (id: string) =>
     apiFetch(`/institutions/${id}/view`, { method: 'POST' }),
+
+  // Muassasa egaligi so'rovi (hamkorlar uchun)
+  claim: (id: string, data: { note?: string; contactPhone?: string; position?: string }, token: string) =>
+    apiFetch<{ data: unknown; message: string }>(`/institutions/${id}/claim`, {
+      method: 'POST', body: JSON.stringify(data), token,
+    }),
+
+  myClaims: (token: string) =>
+    apiFetch<{ data: Array<{ id: string; status: string; institution: { id: string; nameUz: string; slug: string } }> }>(
+      '/institutions/claims/me', { token },
+    ),
 }
 
 // ─── Geo ──────────────────────────────────────────────────────
@@ -78,6 +89,60 @@ export const geoApi = {
   regions: () => apiFetch<{ data: unknown[] }>('/geo/regions'),
   cities: (q?: string, regionId?: string) =>
     apiFetch<{ data: unknown[] }>(`/geo/cities?${new URLSearchParams({ ...(q && { q }), ...(regionId && { regionId }) })}`),
+}
+
+// ─── EduFit (moslik bo'yicha tavsiya) ─────────────────────────
+
+export interface MatchInstitution {
+  id: string
+  nameUz: string
+  nameRu?: string | null
+  slug: string
+  type: string
+  isVerified: boolean
+  avgRating?: number | null
+  reviewCount: number
+  address?: string | null
+  city?: { nameUz: string; nameRu?: string | null } | null
+  pricing?: { monthlyMin?: number | null; monthlyMax?: number | null } | null
+}
+
+export interface MatchComponent {
+  key: string
+  labelUz: string
+  labelRu: string
+  score: number
+  weight: number
+  hasData: boolean
+  reasonUz: string
+  reasonRu: string
+}
+
+export interface MatchItem {
+  institution: MatchInstitution
+  match: {
+    score: number
+    confidence: number
+    components: MatchComponent[]
+    topReasonsUz: string[]
+    topReasonsRu: string[]
+  }
+}
+
+export const matchApi = {
+  find: (prefs: {
+    type: string
+    goal?: string
+    cityId?: string
+    regionId?: string
+    budget?: number
+    shift?: string
+    age?: number
+  }) =>
+    apiFetch<{ data: MatchItem[]; meta: { total: number } }>('/match', {
+      method: 'POST',
+      body: JSON.stringify(prefs),
+    }),
 }
 
 // ─── Search ───────────────────────────────────────────────────
@@ -126,6 +191,13 @@ export const authApi = {
 
   telegramLogin: (data: object) =>
     apiFetch('/auth/telegram', { method: 'POST', body: JSON.stringify(data) }),
+
+  // Telegram Mini App ichidan avtomatik kirish
+  telegramWebAppLogin: (initData: string) =>
+    apiFetch('/auth/telegram-webapp', { method: 'POST', body: JSON.stringify({ initData }) }),
+
+  googleLogin: (idToken: string) =>
+    apiFetch('/auth/google', { method: 'POST', body: JSON.stringify({ idToken }) }),
 
   refresh: (refreshToken: string) =>
     apiFetch('/auth/refresh', { method: 'POST', body: JSON.stringify({ refreshToken }) }),

@@ -12,6 +12,15 @@ const nextConfig: NextConfig = {
         hostname: 'media.edureyting.uz',
       },
       {
+        protocol: 'https',
+        hostname: 'media.edubaho.uz',
+      },
+      {
+        // Cloudflare R2 default public domenlari
+        protocol: 'https',
+        hostname: '**.r2.dev',
+      },
+      {
         // Development uchun
         protocol: 'http',
         hostname: 'localhost',

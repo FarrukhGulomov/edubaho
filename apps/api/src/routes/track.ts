@@ -32,6 +32,8 @@ const ALLOWED_EVENTS = new Set([
   // Engagement (auth bo'lgan userlar)
   'contact_click', 'review_started', 'review_submitted',
   'filter_applied', 'price_viewed', 'compare_opened',
+  // EduFit moslik wizard'i
+  'match_started', 'match_completed', 'match_result_click',
 ])
 
 const CATEGORIES = new Set([
@@ -64,13 +66,14 @@ export default async function trackRoutes(fastify: FastifyInstance) {
       return reply.status(400).send({ error: 'Noto\'g\'ri voqea nomi' })
     }
 
-    // Ixtiyoriy: JWT dan userId olamiz (xato bo'lsa o'tkazib yuboramiz)
+    // Ixtiyoriy: JWT dan userId olamiz.
+    // MUHIM: imzo tekshiriladi (verify) — aks holda istalgan userId ni soxtalashtirish mumkin.
     let userId: string | undefined
     try {
       const auth = request.headers.authorization
       if (auth?.startsWith('Bearer ')) {
         const token = auth.slice(7)
-        const decoded = fastify.jwt.decode<{ id: string }>(token)
+        const decoded = fastify.jwt.verify<{ id: string }>(token)
         if (decoded?.id) userId = decoded.id
       }
     } catch { /* token yo'q yoki noto'g'ri — mehmon sifatida davom etamiz */ }

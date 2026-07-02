@@ -72,8 +72,11 @@ export async function revokeRefreshToken(userId: string, jti: string): Promise<v
  * Foydalanuvchining barcha refresh token'larini o'chirish (barcha qurilmalardan chiqish)
  */
 export async function revokeAllTokens(userId: string): Promise<void> {
-  const keys = await redis.keys(`refresh:${userId}:*`)
-  if (keys.length > 0) {
-    await redis.del(...keys)
-  }
+  // KEYS o'rniga SCAN — Redis'ni bloklamaydi
+  let cursor = '0'
+  do {
+    const [next, keys] = await redis.scan(cursor, 'MATCH', `refresh:${userId}:*`, 'COUNT', 100)
+    cursor = next
+    if (keys.length > 0) await redis.del(...keys)
+  } while (cursor !== '0')
 }

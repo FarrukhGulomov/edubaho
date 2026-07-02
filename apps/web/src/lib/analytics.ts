@@ -42,6 +42,7 @@ export type TrackEvent =
   | 'auth_otp_error' | 'auth_completed' | 'auth_abandoned'
   | 'contact_click' | 'review_started' | 'review_submitted'
   | 'filter_applied' | 'price_viewed' | 'compare_opened'
+  | 'match_started' | 'match_completed' | 'match_result_click'
 
 export interface TrackPayload {
   category:      EventCategory

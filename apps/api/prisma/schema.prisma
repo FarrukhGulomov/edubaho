@@ -110,6 +110,7 @@ model User {
   phone        String?   @unique
   telegramId       String?   @unique
   telegramUsername String?
+  googleId         String?   @unique
   name             String?
   email        String?   @unique
   avatarUrl    String?
@@ -134,6 +135,7 @@ model User {
   @@index([phone])
   @@index([telegramId])
   @@index([telegramUsername])
+  @@index([googleId])
   @@index([cityId])
 }
 

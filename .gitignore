@@ -45,3 +45,6 @@ uploads/
 
 # Railway / Docker
 .railway/
+
+# TypeScript build info
+*.tsbuildinfo
