@@ -9,6 +9,7 @@ import {
 } from '../utils/redis'
 import { sendSmsOtp } from '../services/sms'
 import { verifyTelegramAuth } from '../services/telegram'
+import { verifyGoogleIdToken } from '../services/google'
 import { generateTokens, verifyRefreshToken, revokeRefreshToken } from '../services/tokens'
 
 /**
@@ -420,6 +421,84 @@ export default async function authRoutes(fastify: FastifyInstance) {
     })
 
     const isNewUser = !user.phone && !user.name
+    const institutionId = user.institutionClaims[0]?.institutionId
+    const { accessToken, refreshToken } = await generateTokens(
+      user.id,
+      user.role as Parameters<typeof generateTokens>[1],
+      institutionId,
+    )
+
+    return reply.send({
+      success: true,
+      isNewUser,
+      user: { id: user.id, phone: user.phone, name: user.name, role: user.role },
+      accessToken,
+      refreshToken,
+    })
+  })
+
+  // ─────────────────────────────────────────────
+  // POST /auth/google
+  // Google (Gmail) orqali kirish — GIS ID token bilan
+  // ─────────────────────────────────────────────
+
+  fastify.post('/auth/google', {
+    config: { rateLimit: { max: 10, timeWindow: '1 minute' } },
+  }, async (request, reply) => {
+    if (!env.GOOGLE_CLIENT_ID) {
+      return reply.status(503).send({ error: 'Google orqali kirish hali sozlanmagan' })
+    }
+
+    const { idToken } = z.object({ idToken: z.string().min(20) }).parse(request.body)
+
+    const googleUser = await verifyGoogleIdToken(idToken)
+    if (!googleUser) {
+      return reply.status(401).send({ error: 'Google hisobi tasdiqlanmadi' })
+    }
+
+    const userSelect = {
+      id: true, phone: true, name: true, role: true, email: true,
+      institutionClaims: {
+        where:  { status: 'APPROVED' },
+        select: { institutionId: true },
+        take:   1,
+      },
+    } as const
+
+    // 1) googleId bo'yicha izlash, 2) email bo'yicha mavjud hisobga bog'lash, 3) yangi hisob
+    let user = await prisma.user.findUnique({ where: { googleId: googleUser.googleId }, select: userSelect })
+
+    if (user) {
+      await prisma.user.update({ where: { id: user.id }, data: { lastActiveAt: new Date() } })
+    } else {
+      const byEmail = await prisma.user.findUnique({ where: { email: googleUser.email }, select: { id: true } })
+
+      if (byEmail) {
+        // Email allaqachon ro'yxatda — Google hisobini shu foydalanuvchiga bog'laymiz
+        user = await prisma.user.update({
+          where: { id: byEmail.id },
+          data: {
+            googleId: googleUser.googleId,
+            lastActiveAt: new Date(),
+            isVerified: true,
+          },
+          select: userSelect,
+        })
+      } else {
+        user = await prisma.user.create({
+          data: {
+            googleId:  googleUser.googleId,
+            email:     googleUser.email,
+            name:      googleUser.name,
+            avatarUrl: googleUser.avatarUrl,
+            isVerified: true,
+          },
+          select: userSelect,
+        })
+      }
+    }
+
+    const isNewUser = !user.phone
     const institutionId = user.institutionClaims[0]?.institutionId
     const { accessToken, refreshToken } = await generateTokens(
       user.id,

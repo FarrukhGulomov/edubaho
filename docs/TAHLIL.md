@@ -69,7 +69,35 @@ foydalanuvchi bo'lmasa muassasa pul to'lamaydi. MVP bosqichida **kontent to'ldir
 5. **CSP header** frontend (Next.js) tomonida — Telegram widget uchun `telegram.org` ruxsati bilan.
 6. **Dependency skanerlash** — CI'ga `npm audit` qo'shish.
 
-## 5. Texnik qarz
+## 5. Autentifikatsiya strategiyasi (yangilangan)
+
+Foydalanuvchi endi 3 usulda kira oladi — hammasi parolsiz:
+
+| Usul | Kim uchun | Izoh |
+|---|---|---|
+| **Telegram** | Asosiy (O'zbekistonda eng ommabop) | Login Widget, bir bosishda |
+| **SMS OTP** | Telegram'i yo'qlar | Playmobile orqali, 6 xonali kod |
+| **Google (Gmail)** | Desktop/xorijiy foydalanuvchilar | GIS ID token, backend'da tokeninfo orqali tekshiriladi |
+
+Bitta odam bir nechta usul bilan kirsa: Google email allaqachon ro'yxatda bo'lsa hisobga
+avtomatik bog'lanadi (`googleId` → mavjud user).
+
+### Hamkorlar (o'quv markazlari) uchun kirish
+
+O'zbekistonda ko'p o'quv markazlarida korporativ pochta YO'Q — shuning uchun
+**alohida «biznes-login» qilinmadi**. Optimal yechim — **claim (egalik so'rovi) oqimi**:
+
+1. Muassasa vakili oddiy usulda kiradi (telefon/Telegram/Gmail — qaysi biri qulay bo'lsa)
+2. Muassasa sahifasida **«Bu muassasa siznikimi?»** kartasi orqali so'rov yuboradi
+   (lavozim + aloqa telefoni + izoh)
+3. Admin `/admin/claims` da so'rovni ko'rib chiqadi, kerak bo'lsa telefon orqali tekshiradi
+4. Tasdiqlangach: foydalanuvchi `INSTITUTION_OWNER` roliga o'tadi, muassasa `verified`
+   belgisini oladi, B2B dashboard ochiladi
+
+Bu yondashuv email-domen tekshiruviga qaraganda O'zbekiston bozoriga mos: ishonch
+moderatsiya orqali quriladi, texnik to'siq esa nolga teng.
+
+## 6. Texnik qarz
 
 - `apps/api` typecheck'da Prisma client generatsiyasiz ko'p xato — CI'da `prisma generate` + `tsc --noEmit` bosqichi kerak.
 - `InstitutionDetail.tsx`da `city` maydoni type'da yo'q (mavjud xato) — shared types yangilash kerak.

@@ -10,6 +10,24 @@ import Logo from '@/components/shared/Logo'
 type Step = 'phone' | 'otp' | 'done'
 
 const BOT_USERNAME = process.env.NEXT_PUBLIC_TELEGRAM_BOT_USERNAME ?? 'edubahobot'
+const GOOGLE_CLIENT_ID = process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID ?? ''
+
+// Google Identity Services global tipi
+declare global {
+  interface Window {
+    google?: {
+      accounts: {
+        id: {
+          initialize: (config: {
+            client_id: string
+            callback: (response: { credential: string }) => void
+          }) => void
+          renderButton: (parent: HTMLElement, options: Record<string, string | number>) => void
+        }
+      }
+    }
+  }
+}
 
 export default function AuthPage() {
   const { lang, setLang } = useLang()
@@ -21,6 +39,7 @@ export default function AuthPage() {
   const [countdown, setCountdown] = useState(0)
   const otpRef  = useRef<HTMLInputElement>(null)
   const tgRef   = useRef<HTMLDivElement>(null)
+  const googleRef = useRef<HTMLDivElement>(null)
 
   // Auth sahifasi ochildi
   useEffect(() => { authTrack.started() }, [])
@@ -103,6 +122,53 @@ export default function AuthPage() {
     container.appendChild(script)
 
     return () => { container.innerHTML = '' }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [step])
+
+  // Google Identity Services tugmasini yuklash
+  useEffect(() => {
+    if (step !== 'phone' || !GOOGLE_CLIENT_ID) return
+    const container = googleRef.current
+    if (!container) return
+
+    function renderGoogleButton() {
+      if (!window.google || !googleRef.current) return
+      window.google.accounts.id.initialize({
+        client_id: GOOGLE_CLIENT_ID,
+        callback: (response) => {
+          setLoading(true)
+          setError('')
+          authApi.googleLogin(response.credential)
+            .then((result) => {
+              const r = result as { accessToken: string; refreshToken: string; isNewUser: boolean }
+              localStorage.setItem('accessToken', r.accessToken)
+              localStorage.setItem('refreshToken', r.refreshToken)
+              authTrack.completed(r.isNewUser ?? false)
+              setStep('done')
+            })
+            .catch((err: unknown) => {
+              setError(err instanceof Error ? err.message : 'Google orqali kirish muvaffaqiyatsiz')
+              setLoading(false)
+            })
+        },
+      })
+      window.google.accounts.id.renderButton(googleRef.current, {
+        theme: 'outline', size: 'large', shape: 'pill', width: 280,
+      })
+    }
+
+    // Skript allaqachon yuklangan bo'lsa qayta qo'shmaymiz
+    if (window.google) {
+      renderGoogleButton()
+      return
+    }
+    const script = document.createElement('script')
+    script.src = 'https://accounts.google.com/gsi/client'
+    script.async = true
+    script.onload = renderGoogleButton
+    document.head.appendChild(script)
+
+    return () => { if (container) container.innerHTML = '' }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [step])
 
@@ -268,14 +334,19 @@ export default function AuthPage() {
             {step === 'phone' && (
               <div className="space-y-4">
 
-                {/* Telegram Login Widget */}
+                {/* Telegram + Google — bir bosishda kirish */}
                 <div className="space-y-3">
                   {loading ? (
                     <div className="flex justify-center py-3">
                       <div className="h-6 w-6 animate-spin rounded-full border-2 border-primary-200 border-t-primary-600" />
                     </div>
                   ) : (
-                    <div ref={tgRef} className="flex justify-center min-h-[48px] items-center" />
+                    <>
+                      <div ref={tgRef} className="flex justify-center min-h-[48px] items-center" />
+                      {GOOGLE_CLIENT_ID && (
+                        <div ref={googleRef} className="flex justify-center min-h-[44px] items-center" />
+                      )}
+                    </>
                   )}
                   {error && <ErrorBox msg={error} />}
                 </div>

@@ -48,6 +48,26 @@ curl http://localhost:3001/api/v1/auth/dev-otp/+998909775255
 
 ---
 
+## Google (Gmail) orqali kirish — sozlash
+
+1. [Google Cloud Console](https://console.cloud.google.com/apis/credentials) da OAuth Client ID yarating (Web application)
+2. Authorized JavaScript origins: `http://localhost:3000` (prod'da domen)
+3. Env o'zgaruvchilar:
+   - API (`apps/api/.env`): `GOOGLE_CLIENT_ID=xxx.apps.googleusercontent.com`
+   - Web (`apps/web/.env.local`): `NEXT_PUBLIC_GOOGLE_CLIENT_ID=xxx.apps.googleusercontent.com`
+4. Ikkalasi bir xil Client ID bo'lishi shart. O'rnatilmagan bo'lsa Google tugmasi ko'rinmaydi.
+
+---
+
+## Hamkor (muassasa egasi) oqimi
+
+1. Vakil istalgan usulda kiradi (telefon/Telegram/Gmail)
+2. Muassasa sahifasida «Bu muassasa siznikimi?» → so'rov yuboradi
+3. Admin tasdiqlaydi: `POST /api/v1/admin/claims/:id/approve` (yoki panel orqali)
+4. Foydalanuvchi INSTITUTION_OWNER bo'ladi → `/dashboard` ochiladi
+
+---
+
 ## Admin panelga kirish
 
 **URL:** http://localhost:3000/admin/login

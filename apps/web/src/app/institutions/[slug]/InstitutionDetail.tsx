@@ -4,6 +4,7 @@ import Link from 'next/link'
 import { useEffect, useRef, useState } from 'react'
 import StarRating from '@/components/shared/StarRating'
 import InstActions from '@/components/institutions/InstActions'
+import ClaimInstitution from '@/components/institutions/ClaimInstitution'
 import WriteReview from '@/components/institutions/WriteReview'
 import GuestLeadWidget from '@/components/shared/GuestLeadWidget'
 import { useLang, t } from '@/contexts/LangContext'
@@ -915,6 +916,9 @@ export default function InstitutionDetail({ inst }: { inst: Institution }) {
 
             {/* Guest — Ro'yxatdan o'tish CTA (sidebar) */}
             {isGuest && <RegisterBanner lang={lang} />}
+
+            {/* Hamkorlar uchun: muassasa egaligi so'rovi */}
+            <ClaimInstitution institutionId={inst.id} isVerified={inst.isVerified} />
 
             {/* Price card — faqat auth bo'lganda */}
             {!isGuest && inst.pricing?.monthlyMin && (

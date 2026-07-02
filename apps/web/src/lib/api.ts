@@ -70,6 +70,17 @@ export const institutionsApi = {
 
   view: (id: string) =>
     apiFetch(`/institutions/${id}/view`, { method: 'POST' }),
+
+  // Muassasa egaligi so'rovi (hamkorlar uchun)
+  claim: (id: string, data: { note?: string; contactPhone?: string; position?: string }, token: string) =>
+    apiFetch<{ data: unknown; message: string }>(`/institutions/${id}/claim`, {
+      method: 'POST', body: JSON.stringify(data), token,
+    }),
+
+  myClaims: (token: string) =>
+    apiFetch<{ data: Array<{ id: string; status: string; institution: { id: string; nameUz: string; slug: string } }> }>(
+      '/institutions/claims/me', { token },
+    ),
 }
 
 // ─── Geo ──────────────────────────────────────────────────────
@@ -126,6 +137,9 @@ export const authApi = {
 
   telegramLogin: (data: object) =>
     apiFetch('/auth/telegram', { method: 'POST', body: JSON.stringify(data) }),
+
+  googleLogin: (idToken: string) =>
+    apiFetch('/auth/google', { method: 'POST', body: JSON.stringify({ idToken }) }),
 
   refresh: (refreshToken: string) =>
     apiFetch('/auth/refresh', { method: 'POST', body: JSON.stringify({ refreshToken }) }),

@@ -1,4 +1,5 @@
 import type { FastifyInstance } from 'fastify'
+import { z } from 'zod'
 import { Prisma } from '@prisma/client'
 import { listInstitutionsQuerySchema, nearbyQuerySchema, compareQuerySchema } from '../../schemas/institutions'
 import type { InstitutionStatus } from '@prisma/client'
@@ -467,6 +468,107 @@ export default async function institutionRoutes(fastify: FastifyInstance) {
       ])
 
       return reply.send({ success: true })
+    },
+  )
+
+  // ─────────────────────────────────────────────
+  // POST /institutions/:id/claim
+  // Hamkor (muassasa egasi) egalik so'rovi yuboradi.
+  // Korporativ email talab qilinmaydi — telefon/Telegram/Google
+  // orqali kirgan har qanday foydalanuvchi so'rov yubora oladi,
+  // tasdiqlash admin moderatsiyasi orqali amalga oshiriladi.
+  // ─────────────────────────────────────────────
+
+  fastify.post<{ Params: { id: string } }>(
+    '/institutions/:id/claim',
+    {
+      preHandler: [fastify.authenticate],
+      config: { rateLimit: { max: 5, timeWindow: '1 hour' } },
+    },
+    async (request, reply) => {
+      const { id: institutionId } = request.params
+      const { id: userId } = request.user as { id: string }
+
+      const { note, contactPhone, position } = z.object({
+        // Ariza izohi: lavozim, muassasa haqida qo'shimcha ma'lumot
+        note:         z.string().max(1000).optional(),
+        contactPhone: z.string().max(20).optional(),
+        position:     z.string().max(100).optional(),
+      }).parse(request.body ?? {})
+
+      const institution = await prisma.institution.findUnique({
+        where: { id: institutionId },
+        select: { id: true, nameUz: true },
+      })
+      if (!institution) {
+        return reply.status(404).send({ error: 'Muassasa topilmadi' })
+      }
+
+      // Muassasa allaqachon boshqa ega tomonidan tasdiqlangan bo'lsa
+      const approved = await prisma.institutionClaim.findFirst({
+        where: { institutionId, status: 'APPROVED' },
+        select: { id: true },
+      })
+      if (approved) {
+        return reply.status(409).send({
+          error: "Bu muassasa allaqachon egasi tomonidan boshqarilmoqda. Xatolik deb hisoblasangiz, Telegram orqali murojaat qiling.",
+        })
+      }
+
+      // Shu foydalanuvchining kutilayotgan so'rovi bormi?
+      const pending = await prisma.institutionClaim.findFirst({
+        where: { institutionId, userId, status: 'PENDING' },
+        select: { id: true },
+      })
+      if (pending) {
+        return reply.status(409).send({
+          error: "So'rovingiz allaqachon yuborilgan va ko'rib chiqilmoqda",
+        })
+      }
+
+      const claim = await prisma.institutionClaim.create({
+        data: {
+          institutionId,
+          userId,
+          note: [
+            position && `Lavozim: ${position}`,
+            contactPhone && `Aloqa: ${contactPhone}`,
+            note,
+          ].filter(Boolean).join('\n') || null,
+        },
+        select: { id: true, status: true, createdAt: true },
+      })
+
+      return reply.status(201).send({
+        data: claim,
+        message: "So'rovingiz qabul qilindi! Moderatorlarimiz 1 ish kuni ichida ko'rib chiqib, siz bilan bog'lanadi.",
+      })
+    },
+  )
+
+  // ─────────────────────────────────────────────
+  // GET /institutions/claims/me
+  // Foydalanuvchining o'z egalik so'rovlari holati
+  // ─────────────────────────────────────────────
+
+  fastify.get(
+    '/institutions/claims/me',
+    { preHandler: [fastify.authenticate] },
+    async (request, reply) => {
+      const { id: userId } = request.user as { id: string }
+
+      const claims = await prisma.institutionClaim.findMany({
+        where: { userId },
+        orderBy: { createdAt: 'desc' },
+        select: {
+          id: true,
+          status: true,
+          createdAt: true,
+          institution: { select: { id: true, nameUz: true, slug: true } },
+        },
+      })
+
+      return reply.send({ data: claims })
     },
   )
 }

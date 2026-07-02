@@ -19,6 +19,7 @@ import searchRoutes from './routes/search'
 import geoRoutes from './routes/geo'
 import adminReviewRoutes from './routes/admin/reviews'
 import adminInstitutionRoutes from './routes/admin/institutions'
+import adminClaimRoutes from './routes/admin/claims'
 import superAdminRoutes from './routes/super-admin/index'
 import superAdminAnalytics from './routes/super-admin/analytics'
 import trackRoutes from './routes/track'
@@ -102,6 +103,7 @@ async function buildApp() {
       // Admin routes
       await api.register(adminReviewRoutes)
       await api.register(adminInstitutionRoutes)
+      await api.register(adminClaimRoutes)
 
       // Super Admin routes
       await api.register(superAdminRoutes)

@@ -31,6 +31,9 @@ const envSchema = z.object({
   // ── Telegram Login Widget — ixtiyoriy, yo'q bo'lsa Telegram kirish o'chiq ─
   TELEGRAM_BOT_TOKEN: z.string().default(''),
 
+  // ── Google OAuth (Gmail orqali kirish) — ixtiyoriy ──────────────────────
+  GOOGLE_CLIENT_ID: z.string().default(''),
+
   // ── Meilisearch — ixtiyoriy, yo'q bo'lsa search DB fallback ishlatadi ────
   MEILISEARCH_URL: z.string().default('http://localhost:7700'),
   MEILISEARCH_KEY: z.string().default(''),
