@@ -1,6 +1,38 @@
 # EDUBAHO — Production Deploy Qo'llanmasi
 
-Arxitektura: **API → Railway**, **Web → Vercel**, **DB/Redis → Railway**.
+Ikkita variant qo'llab-quvvatlanadi:
+
+- **A varianti — hammasi Railway'da** (web + api + db + redis bitta project'da) — quyida
+- **B varianti — Web Vercel'da, qolgani Railway'da** — 4-qadamda
+
+## A varianti: Hammasi Railway'da (tavsiya — bitta joyda boshqariladi)
+
+Bitta Railway project ichida 4 ta servis:
+
+```
+[web]  Next.js    Root Directory: apps/web   (apps/web/railway.json avtomatik)
+[api]  Fastify    Root Directory: apps/api   (apps/api/railway.json avtomatik)
+[Postgres]        + New → Database → PostgreSQL
+[Redis]           + New → Database → Redis
+```
+
+Tartib:
+1. **+ New → Database** bilan PostgreSQL va Redis qo'shing
+2. **api** servisda: Settings → Root Directory: `apps/api`; Variables — quyidagi
+   2-qadam jadvalidagi barcha o'zgaruvchilar; Settings → Networking → **Generate Domain**
+3. **web** servisda: Settings → Root Directory: `apps/web`; Variables:
+   `NEXT_PUBLIC_API_URL=https://<api-domen>/api/v1` va boshqa `NEXT_PUBLIC_*` lar
+   (4-qadam jadvali); **Generate Domain**
+4. **api** servisga qaytib `ALLOWED_ORIGINS=https://<web-domen>` qo'ying
+5. Seed va super admin — 3 va 5-qadamlar
+
+Muhim: har bir servisda **Root Directory** to'g'ri bo'lishi shart, aks holda
+Railway monorepo ildizidan build qilishga urinadi.
+
+---
+
+Quyidagi batafsil qadamlar B variant (Web → Vercel) tartibida yozilgan,
+lekin 1–3 va 5–9 qadamlar A variantga ham birxil tegishli.
 
 ```
 [Foydalanuvchi] → Vercel (Next.js) → Railway (Fastify API) → Railway Postgres
