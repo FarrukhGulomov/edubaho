@@ -23,8 +23,7 @@
     "date-fns": "^3.6.0",
     "@googlemaps/js-api-loader": "^1.16.6",
     "clsx": "^2.1.1",
-    "tailwind-merge": "^2.3.0",
-    "@edureyting/shared": "*"
+    "tailwind-merge": "^2.3.0"
   },
   "devDependencies": {
     "@types/react": "^18.3.3",
