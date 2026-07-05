@@ -12,17 +12,14 @@ COPY package.json package-lock.json ./
 COPY packages/shared/package.json ./packages/shared/
 COPY apps/api/package.json ./apps/api/
 
-# Barcha workspace dependencylarni o'rnatish
-RUN npm install --frozen-lockfile
+# Barcha workspace dependencylarni o'rnatish (package-lock.json'ga qat'iy mos)
+RUN npm ci
 
 # Manba kodlarni ko'chirish
 COPY packages/shared ./packages/shared
 COPY apps/api ./apps/api
 
-# Prisma client generate qilish
-RUN cd apps/api && npx prisma generate
-
-# TypeScript build
+# "build" skripti prisma generate + tsc'ni birga bajaradi
 RUN cd apps/api && npm run build
 
 # ─────────────────────────────────────────────────
@@ -42,13 +39,14 @@ COPY package.json package-lock.json ./
 COPY packages/shared/package.json ./packages/shared/
 COPY apps/api/package.json ./apps/api/
 
-# Faqat production deps o'rnatish
-RUN npm install --frozen-lockfile --omit=dev
-
-# Prisma schema va migrations
+# Prisma schema'ni npm ci'dan OLDIN nusxalaymiz — @prisma/client'ning
+# postinstall generate qadami schema topilmasa nomuvofiq holatga tushishi mumkin
 COPY --from=builder /app/apps/api/prisma ./apps/api/prisma
 
-# Prisma client (generated)
+# Faqat production deps o'rnatish (package-lock.json'ga qat'iy mos)
+RUN npm ci --omit=dev
+
+# Generate qilingan Prisma client (query engine) — builder'dan tayyor holda
 COPY --from=builder /app/node_modules/.prisma ./node_modules/.prisma
 COPY --from=builder /app/node_modules/@prisma ./node_modules/@prisma
 
@@ -59,5 +57,9 @@ WORKDIR /app/apps/api
 
 EXPOSE 3001
 
-# Migration muvaffaqiyatli bo'lsa serverga o'tamiz; seed xatosi serverni to'xtatmasin
-CMD ["sh", "-c", "node /app/node_modules/prisma/build/index.js migrate deploy && (node dist/seed.js; node dist/server.js)"]
+# Migratsiyalar avtomatik qo'llanadi, keyin server ishga tushadi.
+# Seed BU YERDA ISHLAMAYDI — u faqat bir martalik, qo'lda bajariladigan
+# amal (npm run db:seed:prod). Har restart'da avtomatik seed xavfli:
+# admin biror yozuvni o'chirgan bo'lsa, keyingi qayta ishga tushishda
+# upsert uni qayta tiklab qo'yishi mumkin edi.
+CMD ["sh", "-c", "npx prisma migrate deploy && node dist/server.js"]

@@ -1,0 +1,34 @@
+# Docker build context'ni yengil va xavfsiz qilish uchun.
+# Dockerfile'lar kerakli fayllarni COPY orqali aniq tanlab oladi —
+# shu tufayli bu yerda repo'ning katta/keraksiz qismlarini chiqarib tashlaymiz.
+
+node_modules
+**/node_modules
+.next
+**/.next
+dist
+**/dist
+.turbo
+**/.turbo
+coverage
+**/coverage
+
+.git
+.github
+
+# Maxfiy fayllar — image ichiga sira tushmasligi kerak
+.env
+.env.*
+!.env.example
+!.env.local.example
+apps/api/.env.test
+
+*.log
+npm-debug.log*
+
+.DS_Store
+.vscode
+.idea
+
+uploads
+*.tsbuildinfo

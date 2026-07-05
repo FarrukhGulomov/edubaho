@@ -1,65 +1,61 @@
-# EDUBAHO — Production Deploy Qo'llanmasi
+# EDUBAHO — Production Deploy Qo'llanmasi (Docker + Railway)
 
-Ikkita variant qo'llab-quvvatlanadi:
-
-- **A varianti — hammasi Railway'da** (web + api + db + redis bitta project'da) — quyida
-- **B varianti — Web Vercel'da, qolgani Railway'da** — 4-qadamda
-
-## A varianti: Hammasi Railway'da (tavsiya — bitta joyda boshqariladi)
-
-Bitta Railway project ichida 4 ta servis:
+Barcha servislar **bitta Railway project**ida, **Docker** orqali ishga tushiriladi:
 
 ```
-[web]  Next.js    Root Directory: apps/web   (apps/web/railway.json avtomatik)
-[api]  Fastify    Root Directory: apps/api   (apps/api/railway.json avtomatik)
-[Postgres]        + New → Database → PostgreSQL
-[Redis]           + New → Database → Redis
+Railway project "edubaho"
+├── Postgres      — managed database
+├── Redis         — managed cache/session
+├── api           — Dockerfile: apps/api/Dockerfile
+└── web           — Dockerfile: apps/web/Dockerfile
 ```
 
-Tartib:
-1. **+ New → Database** bilan PostgreSQL va Redis qo'shing
-2. **api** servisda: Settings → Root Directory: `apps/api`; Variables — quyidagi
-   2-qadam jadvalidagi barcha o'zgaruvchilar; Settings → Networking → **Generate Domain**
-3. **web** servisda: Settings → Root Directory: `apps/web`; Variables:
-   `NEXT_PUBLIC_API_URL=https://<api-domen>/api/v1` va boshqa `NEXT_PUBLIC_*` lar
-   (4-qadam jadvali); **Generate Domain**
-4. **api** servisga qaytib `ALLOWED_ORIGINS=https://<web-domen>` qo'ying
-5. Seed va super admin — 3 va 5-qadamlar
-
-Muhim: har bir servisda **Root Directory** to'g'ri bo'lishi shart, aks holda
-Railway monorepo ildizidan build qilishga urinadi.
+Har bir servis o'zining `Dockerfile`i orqali build bo'ladi (Nixpacks/Railpack
+ishlatilmaydi) — bu avvalgi "monorepo'ni Railway noto'g'ri build qildi"
+muammosini butunlay bartaraf etadi, chunki build jarayoni endi to'liq
+bizning nazoratimizda: `apps/api/Dockerfile` va `apps/web/Dockerfile`.
 
 ---
 
-Quyidagi batafsil qadamlar B variant (Web → Vercel) tartibida yozilgan,
-lekin 1–3 va 5–9 qadamlar A variantga ham birxil tegishli.
+## ⚠️ ENG MUHIM QOIDA — Root Directory
 
-```
-[Foydalanuvchi] → Vercel (Next.js) → Railway (Fastify API) → Railway Postgres
-                                                           → Railway Redis
-                                                           → Meilisearch (ixtiyoriy)
-                                                           → Cloudflare R2 (ixtiyoriy)
-```
+**Ikkala servis uchun ham Root Directory'ni BO'SH qoldiring** (repo ildizi).
+
+Sabab: `Dockerfile`lar ichidagi `COPY` buyruqlari repo ildiziga nisbatan
+yozilgan (`COPY packages/shared/package.json ./packages/shared/` va h.k.),
+chunki bu Turborepo monorepo — API va Web ikkalasi ham `packages/shared`ga
+bog'liq. Agar Root Directory'ni `apps/api` yoki `apps/web` qilib qo'ysangiz,
+Docker build context faqat o'sha papka bilan cheklanadi va `packages/shared`
+topilmay build ishlamay qoladi.
+
+Buning o'rniga build kontekstini repo ildizida qoldirib, **faqat Dockerfile
+manzilini** ko'rsatamiz — buni har bir servis Settings'ida alohida qilamiz
+(quyida 2- va 3-qadamlarda).
 
 ---
 
-## 1-qadam. Railway: Database va Redis
+## 1-qadam. Railway: yangi project + Postgres + Redis
 
-1. [railway.app](https://railway.app) da yangi Project yarating (masalan, `edubaho`)
+1. [railway.app](https://railway.app) → **New Project** → nom bering (`edubaho`)
 2. **+ New → Database → PostgreSQL** qo'shing
 3. **+ New → Database → Redis** qo'shing
 
-Hech narsa sozlash shart emas — connection stringlar avtomatik yaratiladi.
+Hech narsa qo'shimcha sozlash shart emas — connection stringlar avtomatik yaratiladi.
 
-## 2-qadam. Railway: API servis
+## 2-qadam. `api` servisi
 
-1. **+ New → GitHub Repo** → `edubaho` repozitoriyni tanlang
-2. Service Settings:
-   - **Root Directory**: `apps/api`
-   - Build/start buyruqlari `apps/api/railway.json` dan avtomatik olinadi
-     (build: `npm run build`, start: `npm run start:prod` — migratsiyalar avtomatik qo'llanadi)
-3. **Variables** bo'limida quyidagilarni kiriting
-   (to'liq ro'yxat va izohlar: `apps/api/.env.example`):
+1. **+ New → GitHub Repo** → `edubaho` repozitoriyni tanlang (bu birinchi servis)
+2. **Settings → Source**:
+   - **Root Directory**: **bo'sh qoldiring**
+3. **Settings → Build**:
+   - **Builder**: `Dockerfile`
+   - **Dockerfile Path**: `apps/api/Dockerfile`
+
+   (Bu sozlama `apps/api/railway.json` faylida ham yozilgan, lekin Root
+   Directory bo'sh bo'lgani uchun Railway uni avtomatik topmasligi mumkin —
+   shu ikki maydonni Dashboard'da qo'lda kiritish eng ishonchli yo'l.)
+
+4. **Variables** bo'limiga kiriting (to'liq izohlar: `apps/api/.env.example`):
 
    | O'zgaruvchi | Qiymat |
    |---|---|
@@ -69,59 +65,82 @@ Hech narsa sozlash shart emas — connection stringlar avtomatik yaratiladi.
    | `JWT_SECRET` | `openssl rand -hex 32` natijasi |
    | `REFRESH_SECRET` | boshqa `openssl rand -hex 32` natijasi |
    | `NODE_ENV` | `production` |
-   | `PORT` | `3001` |
-   | `ALLOWED_ORIGINS` | Vercel domeningiz (masalan `https://edubaho.vercel.app`) — 4-qadamdan keyin yangilang |
+   | `ALLOWED_ORIGINS` | Web servis domeni (3-qadamdan keyin yangilanadi) |
    | `ADMIN_PIN` | kuchli PIN (kamida 6 belgi; `1234`/`147258` bilan server ishga tushmaydi) |
-   | `SMS_LOGIN`/`SMS_PASSWORD` | Playmobile hisobingiz (bo'lmasa OTP faqat logda) |
+   | `SMS_LOGIN` / `SMS_PASSWORD` | Playmobile hisobingiz (bo'lmasa OTP faqat logda) |
    | `TELEGRAM_BOT_TOKEN` | @BotFather'dan (ixtiyoriy) |
    | `GOOGLE_CLIENT_ID` | Google Cloud Console'dan (ixtiyoriy) |
 
-4. **Settings → Networking → Generate Domain** — API uchun public domen oling
-   (masalan `edubaho-api.up.railway.app`)
-5. Deploy tugagach tekshiring: `https://<api-domen>/health` → `{"status":"ok"}`
+   `PORT`ni **qo'lda kiritmang** — Railway uni avtomatik beradi, server
+   `env.PORT` orqali shuni o'qiydi.
 
-## 3-qadam. Ma'lumotlar bazasini to'ldirish (seed)
+5. **Settings → Networking → Generate Domain** — public domen oling
+   (masalan `edubaho-api-production.up.railway.app`)
+6. Deploy tugagach: `https://<api-domen>/health` → `{"status":"ok"}`
 
-Railway CLI orqali (bir marta):
+## 3-qadam. `web` servisi
+
+1. Bir xil Railway project ichida **+ New → GitHub Repo** → **yana o'sha
+   `edubaho` repozitoriyni tanlang** (ha, bir xil repo — bu ikkinchi, alohida
+   servis bo'ladi)
+2. **Settings → Source**:
+   - **Root Directory**: **bo'sh qoldiring** (2-qadamdagi qoida bilan bir xil sabab)
+3. **Settings → Build**:
+   - **Builder**: `Dockerfile`
+   - **Dockerfile Path**: `apps/web/Dockerfile`
+4. **Variables** bo'limiga kiriting:
+
+   | O'zgaruvchi | Qiymat |
+   |---|---|
+   | `NEXT_PUBLIC_API_URL` | `https://<api-domen>/api/v1` (2-qadamdagi domen) |
+   | `NEXT_PUBLIC_SITE_URL` | shu servisning domeni (keyin to'ldirasiz) |
+   | `NEXT_PUBLIC_APP_NAME` | `EDUBAHO` |
+   | `NEXT_PUBLIC_TELEGRAM_BOT_USERNAME` | bot username (ixtiyoriy) |
+   | `NEXT_PUBLIC_GOOGLE_CLIENT_ID` | API'dagi `GOOGLE_CLIENT_ID` bilan bir xil (ixtiyoriy) |
+
+   **Muhim:** `NEXT_PUBLIC_*` qiymatlar Next.js tomonidan **build vaqtida**
+   client kodga yoziladi. `apps/web/Dockerfile` bu o'zgaruvchilarni `ARG`
+   sifatida kutadi — Railway Dockerfile builder ishlatilganda servisga
+   qo'shilgan barcha Variables avtomatik ravishda mos nomli `ARG`larga
+   uzatiladi, qo'shimcha sozlash shart emas.
+
+5. **Settings → Networking → Generate Domain** — domen oling
+   (masalan `edubaho-web-production.up.railway.app`)
+6. Shu domenni `NEXT_PUBLIC_SITE_URL`ga yozing va **qayta deploy** qiling
+   (NEXT_PUBLIC_* build-time bo'lgani uchun qiymat o'zgarsa qayta build kerak)
+
+## 4-qadam. CORS'ni ulash
+
+`api` servisiga qaytib, `ALLOWED_ORIGINS`ni `web` servisining domeniga yangilang:
+```
+ALLOWED_ORIGINS=https://<web-domen>
+```
+(Telegram Mini App yoki custom domen qo'shsangiz, vergul bilan ajratib qo'shing.)
+
+## 5-qadam. Ma'lumotlar bazasini to'ldirish (seed)
+
+`apps/api/Dockerfile`ning `CMD`i har safar konteyner ishga tushganda
+**faqat migratsiyalarni** qo'llaydi (`prisma migrate deploy`) — bu xavfsiz
+va idempotent. **Seed avtomatik ishlamaydi**, chunki u har restart'da
+ishlasa, adminlar o'chirgan yozuvlarni ham qayta tiklab qo'yishi mumkin edi.
+
+Birinchi deploy'dan keyin, ma'lumotlar bazasini **bir marta** namunaviy
+muassasalar bilan to'ldirish uchun:
 
 ```bash
 npm i -g @railway/cli
 railway login
-railway link          # loyihani tanlang
-railway run --service <api-service> npm run db:seed:prod
+railway link
+railway run --service api npm run db:seed:prod
 ```
 
-Yoki lokal mashinadan (Railway Postgres'ning public connection stringi bilan):
+Bu 31 ta real muassasa (Najot Ta'lim, PDP Academy va h.k.) va 14 ta viloyat
+ma'lumotini yozadi. Skript **idempotent** — upsert asosida, xohlasangiz
+xavfsiz qayta ishga tushirish mumkin (mavjud yozuvlarni dublikat qilmaydi).
 
-```bash
-cd apps/api
-DATABASE_URL="<railway-postgres-public-url>" DIRECT_URL="<shu-url>" npm run db:seed:prod
-```
+## 6-qadam. Birinchi Super Admin
 
-## 4-qadam. Vercel: Web
-
-1. [vercel.com](https://vercel.com) → **Add New → Project** → repozitoriyni import qiling
-2. Sozlamalar:
-   - **Root Directory**: `apps/web`
-   - **Framework Preset**: Next.js (avtomatik)
-   - Install/build buyruqlarini o'zgartirish shart emas — Vercel monorepo
-     workspace'larni o'zi aniqlaydi
-3. **Environment Variables** (to'liq izohlar: `apps/web/.env.example`):
-
-   | O'zgaruvchi | Qiymat |
-   |---|---|
-   | `NEXT_PUBLIC_API_URL` | `https://<railway-api-domen>/api/v1` |
-   | `NEXT_PUBLIC_SITE_URL` | Vercel domeningiz yoki custom domen |
-   | `NEXT_PUBLIC_APP_NAME` | `EDUBAHO` |
-   | `NEXT_PUBLIC_TELEGRAM_BOT_USERNAME` | bot username (ixtiyoriy) |
-   | `NEXT_PUBLIC_GOOGLE_CLIENT_ID` | API'dagi bilan bir xil (ixtiyoriy) |
-
-4. Deploy → domen olasiz (masalan `edubaho.vercel.app`)
-5. **Railway'ga qaytib** `ALLOWED_ORIGINS` ni shu domenga yangilang (CORS)
-
-## 5-qadam. Birinchi Super Admin
-
-Faqat DB'da hali super admin yo'q bo'lganda ishlaydi (bootstrap):
+Faqat DB'da hali super admin yo'q bo'lganda ishlaydi (bootstrap, keyin o'zi yopiladi):
 
 ```bash
 curl -X POST https://<api-domen>/api/v1/auth/setup-super-admin \
@@ -132,59 +151,80 @@ curl -X POST https://<api-domen>/api/v1/auth/setup-super-admin \
 Keyin `https://<web-domen>/admin/login` orqali kiring
 (telefon → OTP → ADMIN_PIN). Keyingi adminlar faqat super admin panelidan tayinlanadi.
 
-## 6-qadam (ixtiyoriy). Meilisearch
+## 7-qadam (ixtiyoriy). Meilisearch
 
 Meilisearch'siz ham qidiruv ishlaydi (PostgreSQL fallback). Kuchli qidiruv uchun:
 
 1. Railway → **+ New → Template → Meilisearch** (yoki [Meilisearch Cloud](https://cloud.meilisearch.com))
-2. API servisga qo'shing: `MEILISEARCH_URL`, `MEILISEARCH_KEY` (master key)
+2. `api` servisga qo'shing: `MEILISEARCH_URL`, `MEILISEARCH_KEY` (master key)
 
-## 7-qadam (ixtiyoriy). Cloudflare R2 (rasm yuklash)
+## 8-qadam (ixtiyoriy). Cloudflare R2 (rasm yuklash)
 
 1. Cloudflare Dashboard → R2 → bucket yarating (`edubaho-media`)
 2. R2 API Token yarating (Object Read & Write)
-3. API servisga: `R2_ACCOUNT_ID`, `R2_ACCESS_KEY`, `R2_SECRET_KEY`, `R2_BUCKET`, `R2_PUBLIC_URL`
-4. Bucket'ga public domen ulang va `R2_PUBLIC_URL` ga yozing —
-   `apps/web/next.config.ts` da `**.r2.dev` allaqachon ruxsat etilgan
+3. `api` servisga: `R2_ACCOUNT_ID`, `R2_ACCESS_KEY`, `R2_SECRET_KEY`, `R2_BUCKET`, `R2_PUBLIC_URL`
+4. Bucket'ga public domen ulang va `R2_PUBLIC_URL`ga yozing —
+   `apps/web/next.config.ts`da `**.r2.dev` allaqachon ruxsat etilgan
 
-## 8-qadam (ixtiyoriy). Telegram va Google login
+## 9-qadam (ixtiyoriy). Telegram va Google login
 
-**Telegram:** @BotFather → `/newbot` → token'ni `TELEGRAM_BOT_TOKEN` ga.
-Keyin `/setdomain` bilan web domeningizni bog'lang (masalan `edubaho.vercel.app`).
+**Telegram:** @BotFather → `/newbot` → token'ni `api`ning `TELEGRAM_BOT_TOKEN`iga.
+Keyin `/setdomain` bilan web domeningizni bog'lang.
 
 **Google:** [console.cloud.google.com](https://console.cloud.google.com/apis/credentials)
-→ OAuth Client ID (Web application) → Authorized JavaScript origins'ga web domeningizni
-qo'shing → Client ID'ni API (`GOOGLE_CLIENT_ID`) va Vercel
-(`NEXT_PUBLIC_GOOGLE_CLIENT_ID`) ga kiriting.
+→ OAuth Client ID (Web application) → Authorized JavaScript origins'ga web
+domeningizni qo'shing → Client ID'ni `api` (`GOOGLE_CLIENT_ID`) va `web`
+(`NEXT_PUBLIC_GOOGLE_CLIENT_ID`) servislariga kiriting.
 
-## 9-qadam. Telegram Mini App (Web App)
+## 10-qadam. Telegram Mini App (Web App)
 
 Sayt Telegram ichida to'liq ishlaydi: foydalanuvchi **avtomatik tizimga kiradi**
-(initData orqali, hech qanday tugma bosmaydi), native Back tugmasi va haptic
-feedback ishlaydi.
-
-Sozlash (bot allaqachon bor deb hisoblaymiz — `TELEGRAM_BOT_TOKEN` o'rnatilgan):
+(initData orqali), native Back tugmasi va haptic feedback ishlaydi.
 
 1. @BotFather → `/newapp` → botingizni tanlang
-   - **Web App URL**: `https://<web-domeningiz>` (Vercel yoki custom domen, HTTPS shart)
-   - Nom, tavsif va rasm kiriting
+   - **Web App URL**: `https://<web-domeningiz>` (HTTPS shart)
 2. @BotFather → `/mybots` → botingiz → **Bot Settings → Menu Button** →
-   Web App URL'ni kiriting — endi botning pastki chap tugmasi ilovani ochadi
+   Web App URL'ni kiriting
 3. Kanal/guruh postlarida to'g'ridan-to'g'ri havola:
    `https://t.me/<bot_username>/<app_qisqa_nomi>`
 
-Tekshirish: botni oching → Menu tugmasi → ilova ochiladi → yuqori o'ng
-burchakda profil avtomatik ko'rinadi (auto-login ishladi).
+Qo'shimcha sozlama kerak emas — `TELEGRAM_BOT_TOKEN` allaqachon `/auth/telegram-webapp`
+uchun ham ishlatiladi.
 
-Eslatma: Mini App auth uchun ham API'dagi `TELEGRAM_BOT_TOKEN` ishlatiladi —
-alohida sozlama kerak emas.
+---
+
+## Lokalda Docker image'larni sinash (ixtiyoriy, tavsiya etiladi)
+
+Railway'ga push qilishdan oldin ikkala image'ni lokal Docker'da qurib ko'rish
+mumkin:
+
+```bash
+# API
+docker build -f apps/api/Dockerfile -t edubaho-api .
+docker run --rm -p 3001:3001 --env-file apps/api/.env edubaho-api
+
+# Web
+docker build -f apps/web/Dockerfile \
+  --build-arg NEXT_PUBLIC_API_URL=http://localhost:3001/api/v1 \
+  --build-arg NEXT_PUBLIC_SITE_URL=http://localhost:3000 \
+  --build-arg NEXT_PUBLIC_APP_NAME=EDUBAHO \
+  -t edubaho-web .
+docker run --rm -p 3000:3000 edubaho-web
+```
+
+Ikkala buyruq ham **repo ildizidan** ishga tushirilishi kerak (`-f` bilan
+Dockerfile manzili ko'rsatilgan, lekin build context — oxirgi `.` — repo
+ildizi bo'lishi shart, yuqoridagi qoida bilan bir xil sabab).
 
 ---
 
 ## Go-live tekshiruv ro'yxati
 
+- [ ] `api` va `web` servislarida Root Directory **bo'sh**
+- [ ] `api`: Builder=Dockerfile, Dockerfile Path=`apps/api/Dockerfile`
+- [ ] `web`: Builder=Dockerfile, Dockerfile Path=`apps/web/Dockerfile`
 - [ ] `https://<api>/health` → `{"status":"ok"}`
-- [ ] `NODE_ENV=production` (Railway API)
+- [ ] `NODE_ENV=production` (api)
 - [ ] `JWT_SECRET` ≠ `REFRESH_SECRET`, har biri 32+ belgi
 - [ ] `ADMIN_PIN` kuchli (default emas)
 - [ ] `ALLOWED_ORIGINS` faqat o'z domenlaringiz
@@ -192,16 +232,17 @@ alohida sozlama kerak emas.
 - [ ] Super admin yaratildi va `/admin` ochiladi
 - [ ] Seed ma'lumotlar ko'rinadi (bosh sahifada muassasalar)
 - [ ] SMS yuborilishi tekshirildi (Playmobile balansini tekshiring)
-- [ ] Telegram login ishlaydi (agar yoqilgan bo'lsa)
 - [ ] `/match` wizard natija qaytaradi
 
 ## Muammolarni hal qilish
 
 | Belgisi | Sabab / Yechim |
 |---|---|
+| `packages/shared` topilmadi / build xatosi | Root Directory bo'sh emas — uni tozalang, faqat Dockerfile Path'ni sozlang |
+| Railway "static site" yoki `RAILPACK_SPA_OUTPUT_DIR` haqida yozadi | Builder hali `Dockerfile`ga o'zgartirilmagan — Settings → Build tekshiring |
+| `next build`da `NEXT_PUBLIC_*` bo'sh chiqadi | Railway Variables'ga qo'shilgan, lekin build keshi eski — "Redeploy"ni majburiy qiling |
 | Server ishga tushmayapti, logda "Production xavfsizlik talablari" | Zaif `ADMIN_PIN` yoki bir xil secretlar — env'ni to'g'rilang |
-| CORS xatosi browserda | `ALLOWED_ORIGINS` da web domeni yo'q yoki oxirida `/` bor |
-| `Environment variable not found: DIRECT_URL` | Railway'da `DIRECT_URL` qo'shing (DATABASE_URL bilan bir xil) |
+| CORS xatosi browserda | `ALLOWED_ORIGINS`da web domeni yo'q yoki oxirida `/` bor |
+| `Environment variable not found: DIRECT_URL` | `DIRECT_URL`ni qo'shing (DATABASE_URL bilan bir xil) |
 | OTP kelmayapti | `SMS_LOGIN` bo'sh — Railway loglarida `📱 OTP [...]` ko'rinadi |
-| 429 xatolar ko'p | Normal — rate limit ishlayapti; `trustProxy` yoqilganini tekshiring |
 | Rasm ko'rinmayapti | `R2_PUBLIC_URL` domeni `next.config.ts` remotePatterns'da bo'lishi kerak |
