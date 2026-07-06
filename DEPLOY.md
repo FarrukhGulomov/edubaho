@@ -124,19 +124,19 @@ ALLOWED_ORIGINS=https://<web-domen>
 va idempotent. **Seed avtomatik ishlamaydi**, chunki u har restart'da
 ishlasa, adminlar o'chirgan yozuvlarni ham qayta tiklab qo'yishi mumkin edi.
 
-Birinchi deploy'dan keyin, ma'lumotlar bazasini **bir marta** namunaviy
-muassasalar bilan to'ldirish uchun:
+Birinchi deploy'dan keyin, bazani **bir marta** to'ldirish uchun eng oson yo'l:
 
-```bash
-npm i -g @railway/cli
-railway login
-railway link
-railway run --service api npm run db:seed:prod
-```
+1. Railway'da `api` servis → **Variables** → qo'shing: `RUN_SEED` = `true`
+2. Servis avtomatik qayta deploy bo'ladi — ishga tushishda seed bajariladi
+   (Deploy Logs'da «Seed muvaffaqiyatli yakunlandi» ko'rinadi)
+3. Ma'lumot kirganini saytda tekshirib, **`RUN_SEED`ni o'chirib tashlang**
+   (doimiy yoqiq qolmasin)
+
+Muqobil (Railway CLI orqali): `railway run --service api npm run db:seed:prod`
 
 Bu 31 ta real muassasa (Najot Ta'lim, PDP Academy va h.k.) va 14 ta viloyat
-ma'lumotini yozadi. Skript **idempotent** — upsert asosida, xohlasangiz
-xavfsiz qayta ishga tushirish mumkin (mavjud yozuvlarni dublikat qilmaydi).
+ma'lumotini yozadi. Skript **idempotent** — upsert asosida, xavfsiz qayta
+ishga tushirish mumkin (dublikat yaratmaydi).
 
 ## 6-qadam. Birinchi Super Admin
 

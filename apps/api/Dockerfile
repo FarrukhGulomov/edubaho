@@ -58,8 +58,8 @@ WORKDIR /app/apps/api
 EXPOSE 3001
 
 # Migratsiyalar avtomatik qo'llanadi, keyin server ishga tushadi.
-# Seed BU YERDA ISHLAMAYDI — u faqat bir martalik, qo'lda bajariladigan
-# amal (npm run db:seed:prod). Har restart'da avtomatik seed xavfli:
-# admin biror yozuvni o'chirgan bo'lsa, keyingi qayta ishga tushishda
-# upsert uni qayta tiklab qo'yishi mumkin edi.
-CMD ["sh", "-c", "npx prisma migrate deploy && node dist/server.js"]
+# Seed faqat RUN_SEED=true env o'zgaruvchisi bilan ishlaydi (opt-in):
+# Railway'da RUN_SEED=true qo'yib redeploy qilinadi, ma'lumot kirgach
+# o'zgaruvchi o'chiriladi. Doimiy yoqiq qoldirish tavsiya etilmaydi —
+# admin o'chirgan yozuvlarni upsert qayta tiklab qo'yishi mumkin.
+CMD ["sh", "-c", "npx prisma migrate deploy && if [ \"$RUN_SEED\" = \"true\" ]; then node dist/seed.js; fi && node dist/server.js"]

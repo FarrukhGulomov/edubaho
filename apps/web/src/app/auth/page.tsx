@@ -385,7 +385,7 @@ export default function AuthPage() {
                         }}
                         placeholder="+998 90 123 45 67"
                         required
-                        className="w-full rounded-xl border border-gray-300 px-4 py-3.5 text-lg text-gray-900 outline-none placeholder:text-gray-300 focus:border-primary-500 focus:ring-2 focus:ring-primary-100"
+                        className="input text-lg"
                       />
                       <p className="mt-1 text-xs text-gray-400">
                         {t(lang, { uz: "Faqat O'zbekiston raqamlari (+998)", ru: 'Только номера Узбекистана (+998)' })}
@@ -394,7 +394,7 @@ export default function AuthPage() {
                     <button
                       type="submit"
                       disabled={loading || phone.replace(/\D/g, '').length < 12}
-                      className="w-full rounded-xl bg-primary-600 py-3.5 font-bold text-white hover:bg-primary-700 disabled:opacity-50 transition-colors text-base"
+                      className="btn-primary w-full"
                     >
                       {loading ? t(lang, ui.sending) : t(lang, ui.sendBtn)}
                     </button>
@@ -451,7 +451,7 @@ export default function AuthPage() {
                 <button
                   type="submit"
                   disabled={loading || otp.length !== 6}
-                  className="w-full rounded-xl bg-primary-600 py-3.5 font-bold text-white hover:bg-primary-700 disabled:opacity-50 transition-colors text-base"
+                  className="btn-primary w-full"
                 >
                   {loading ? t(lang, ui.checking) : t(lang, ui.confirmBtn)}
                 </button>

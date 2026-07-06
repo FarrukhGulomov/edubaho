@@ -17,6 +17,8 @@ export const viewport: Viewport = {
   initialScale: 1,
   maximumScale: 5,
   themeColor: '#0369a1',
+  // Telegram Mini App va iPhone notch: kontent xavfsiz zonagacha cho'zilsin
+  viewportFit: 'cover',
 }
 
 export const metadata: Metadata = {
