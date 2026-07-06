@@ -1,5 +1,5 @@
 import { PrismaClient, InstitutionType, InstitutionStatus, Role } from '@prisma/client'
-import { generateSlug } from '../src/utils/slug'
+import { generateSlug } from './utils/slug'
 
 const prisma = new PrismaClient()
 
@@ -923,19 +923,21 @@ async function main() {
     const ratings = [4, 5, 4, 5]
 
     for (let i = 0; i < Math.min(2, reviewUsers.length); i++) {
+      const reviewer = reviewUsers[i]
+      if (!reviewer) continue
       await prisma.review.upsert({
         where: {
-          institutionId_userId: { institutionId: result.id, userId: reviewUsers[i].id },
+          institutionId_userId: { institutionId: result.id, userId: reviewer.id },
         },
         update: {},
         create: {
           institutionId: result.id,
-          userId:        reviewUsers[i].id,
+          userId:        reviewer.id,
           status:        'APPROVED',
-          overallRating: ratings[i % ratings.length],
+          overallRating: ratings[i % ratings.length] ?? 4,
           teacherRating: 5,
           facilityRating: 4,
-          body:  reviewBodies[i % reviewBodies.length],
+          body:  reviewBodies[i % reviewBodies.length] ?? reviewBodies[0] ?? '',
           title: i === 0 ? "Yaxshi muassasa" : "Tavsiya etaman",
           helpfulCount: Math.floor(Math.random() * 10),
         },

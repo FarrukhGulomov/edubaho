@@ -56,6 +56,16 @@ export default function Header() {
             >
               📚 {t(lang, { uz: 'Maktablar', ru: 'Школы' })}
             </Link>
+            <Link
+              href="/match"
+              className={`flex items-center gap-2 rounded-2xl px-4 py-2.5 text-base font-bold transition-all ${
+                pathname === '/match'
+                  ? 'bg-primary-50 text-primary-700'
+                  : 'text-primary-600 hover:bg-primary-50'
+              }`}
+            >
+              🎯 {t(lang, { uz: 'Mos tanlash', ru: 'Подбор' })}
+            </Link>
             {(user?.role === 'ADMIN' || user?.role === 'SUPER_ADMIN' || user?.role === 'MODERATOR') && (
               <Link
                 href="/admin"
@@ -150,6 +160,7 @@ export default function Header() {
                 { href: '/search',                      label: { uz: '🔍 Qidirish',         ru: '🔍 Поиск' } },
                 { href: '/search?type=COURSE_CENTER',   label: { uz: "✏️ O'quv markazlar",  ru: '✏️ Учебные центры' } },
                 { href: '/search?type=SCHOOL',          label: { uz: '📚 Maktablar',         ru: '📚 Школы' } },
+                { href: '/match',                       label: { uz: '🎯 Menga mosini top',  ru: '🎯 Подобрать для меня' } },
               ].map(link => (
                 <Link
                   key={link.href}

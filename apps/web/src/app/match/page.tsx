@@ -177,7 +177,7 @@ export default function MatchPage() {
               <button
                 key={o.value}
                 onClick={() => { haptic('light'); setType(o.value); setStep('goal') }}
-                className={`flex flex-col items-center gap-2 rounded-2xl border-2 bg-white p-5 transition-all hover:border-primary-400 hover:shadow-md ${
+                className={`flex flex-col items-center gap-2 rounded-2xl border-2 bg-white p-5 shadow-sm transition-all hover:-translate-y-0.5 hover:border-primary-400 hover:shadow-md active:scale-95 ${
                   type === o.value ? 'border-primary-500 bg-primary-50' : 'border-gray-200'
                 }`}
               >
@@ -198,7 +198,7 @@ export default function MatchPage() {
               onChange={(e) => setGoal(e.target.value)}
               placeholder={t(lang, ui.qGoalHint)}
               maxLength={100}
-              className="w-full rounded-xl border border-gray-300 bg-white px-4 py-3.5 text-gray-900 outline-none placeholder:text-gray-400 focus:border-primary-500 focus:ring-2 focus:ring-primary-100"
+              className="input"
             />
             {(GOAL_SUGGESTIONS[type] ?? []).length > 0 && (
               <div className="flex flex-wrap gap-2">
@@ -267,7 +267,7 @@ export default function MatchPage() {
                 <button
                   key={b.value}
                   onClick={() => { setBudget(b.value || null); setStep('time') }}
-                  className={`w-full rounded-2xl border-2 bg-white px-5 py-3.5 text-left font-bold transition-all hover:border-primary-400 ${
+                  className={`w-full rounded-2xl border-2 bg-white px-5 py-3.5 text-left font-bold shadow-sm transition-all hover:border-primary-400 hover:shadow-md active:scale-[0.98] ${
                     budget === (b.value || null) ? 'border-primary-500 bg-primary-50' : 'border-gray-200'
                   }`}
                 >
@@ -291,7 +291,7 @@ export default function MatchPage() {
                   <button
                     key={val}
                     onClick={() => setShift(val)}
-                    className={`flex items-center gap-2.5 rounded-2xl border-2 bg-white px-4 py-3 font-bold transition-all hover:border-primary-400 ${
+                    className={`flex items-center gap-2.5 rounded-2xl border-2 bg-white px-4 py-3 font-bold shadow-sm transition-all hover:border-primary-400 active:scale-95 ${
                       shift === val ? 'border-primary-500 bg-primary-50' : 'border-gray-200'
                     }`}
                   >
@@ -311,7 +311,7 @@ export default function MatchPage() {
                 value={age}
                 onChange={(e) => setAge(e.target.value)}
                 placeholder="18"
-                className="w-32 rounded-xl border border-gray-300 bg-white px-4 py-2.5 text-gray-900 outline-none focus:border-primary-500"
+                className="input w-32 px-4 py-2.5"
               />
             </div>
 
@@ -321,7 +321,7 @@ export default function MatchPage() {
               </button>
               <button
                 onClick={() => runMatch(shift === 'any' ? null : shift)}
-                className="rounded-xl bg-primary-600 px-8 py-3.5 font-bold text-white shadow-md transition-colors hover:bg-primary-700"
+                className="btn-primary px-8"
               >
                 🎯 {uz ? 'Natijani ko\'rish' : 'Показать результат'}
               </button>
@@ -475,7 +475,7 @@ function WizardNav({ onBack, onNext, nextLabel, backLabel }: {
       {onNext && (
         <button
           onClick={onNext}
-          className="rounded-xl bg-primary-600 px-6 py-3 font-bold text-white transition-colors hover:bg-primary-700"
+          className="btn-primary px-6 py-3"
         >
           {nextLabel ?? 'Keyingisi →'}
         </button>

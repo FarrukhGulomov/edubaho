@@ -3,7 +3,7 @@
  * Ishlatish: npx ts-node prisma/seed-extra.ts
  */
 import { PrismaClient, InstitutionType, InstitutionStatus } from '@prisma/client'
-import { generateSlug } from '../src/utils/slug'
+import { generateSlug } from './utils/slug'
 
 const prisma = new PrismaClient()
 
@@ -2367,7 +2367,7 @@ async function main() {
       continue
     }
 
-    const slug = await generateSlug(inst.nameUz, prisma)
+    const slug = generateSlug(inst.nameUz)
 
     const result = await prisma.institution.upsert({
       where: { slug },
