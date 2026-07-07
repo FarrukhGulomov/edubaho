@@ -38,45 +38,45 @@ export default function Header() {
           </Link>
 
           {/* Desktop nav */}
-          <nav className="hidden items-center gap-1 sm:flex">
+          <nav className="hidden flex-nowrap items-center gap-1 lg:flex">
             <Link
               href="/search"
-              className={`flex items-center gap-2 rounded-xl px-3.5 py-2 text-sm font-semibold transition-colors ${
+              className={`flex shrink-0 items-center gap-2 whitespace-nowrap rounded-xl px-3.5 py-2 text-sm font-semibold transition-colors ${
                 pathname === '/search'
                   ? 'bg-primary-50 text-primary-700'
                   : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900'
               }`}
             >
-              <Search className="h-4 w-4" strokeWidth={1.75} /> {t(lang, { uz: 'Qidirish', ru: 'Найти' })}
+              <Search className="h-4 w-4 shrink-0" strokeWidth={1.75} /> {t(lang, { uz: 'Qidirish', ru: 'Найти' })}
             </Link>
             <Link
               href="/search?type=COURSE_CENTER"
-              className="flex items-center gap-2 rounded-xl px-3.5 py-2 text-sm font-semibold text-gray-600 transition-colors hover:bg-gray-100 hover:text-gray-900"
+              className="flex shrink-0 items-center gap-2 whitespace-nowrap rounded-xl px-3.5 py-2 text-sm font-semibold text-gray-600 transition-colors hover:bg-gray-100 hover:text-gray-900"
             >
-              <PencilLine className="h-4 w-4" strokeWidth={1.75} /> {t(lang, { uz: "O'quv markazlar", ru: 'Учебные центры' })}
+              <PencilLine className="h-4 w-4 shrink-0" strokeWidth={1.75} /> {t(lang, { uz: "O'quv markazlar", ru: 'Учебные центры' })}
             </Link>
             <Link
               href="/search?type=SCHOOL"
-              className="flex items-center gap-2 rounded-xl px-3.5 py-2 text-sm font-semibold text-gray-600 transition-colors hover:bg-gray-100 hover:text-gray-900"
+              className="flex shrink-0 items-center gap-2 whitespace-nowrap rounded-xl px-3.5 py-2 text-sm font-semibold text-gray-600 transition-colors hover:bg-gray-100 hover:text-gray-900"
             >
-              <BookOpen className="h-4 w-4" strokeWidth={1.75} /> {t(lang, { uz: 'Maktablar', ru: 'Школы' })}
+              <BookOpen className="h-4 w-4 shrink-0" strokeWidth={1.75} /> {t(lang, { uz: 'Maktablar', ru: 'Школы' })}
             </Link>
             <Link
               href="/match"
-              className={`flex items-center gap-2 rounded-xl px-3.5 py-2 text-sm font-semibold transition-colors ${
+              className={`flex shrink-0 items-center gap-2 whitespace-nowrap rounded-xl px-3.5 py-2 text-sm font-semibold transition-colors ${
                 pathname === '/match'
                   ? 'bg-primary-50 text-primary-700'
                   : 'text-primary-600 hover:bg-primary-50'
               }`}
             >
-              <Target className="h-4 w-4" strokeWidth={1.75} /> {t(lang, { uz: 'Mos tanlash', ru: 'Подбор' })}
+              <Target className="h-4 w-4 shrink-0" strokeWidth={1.75} /> {t(lang, { uz: 'Mos tanlash', ru: 'Подбор' })}
             </Link>
             {(user?.role === 'ADMIN' || user?.role === 'SUPER_ADMIN' || user?.role === 'MODERATOR') && (
               <Link
                 href="/admin"
-                className="ml-1 flex items-center gap-2 rounded-xl bg-red-50 px-3.5 py-2 text-sm font-semibold text-red-600 transition-colors hover:bg-red-100"
+                className="ml-1 flex shrink-0 items-center gap-2 whitespace-nowrap rounded-xl bg-red-50 px-3.5 py-2 text-sm font-semibold text-red-600 transition-colors hover:bg-red-100"
               >
-                <ShieldCheck className="h-4 w-4" strokeWidth={1.75} /> Admin
+                <ShieldCheck className="h-4 w-4 shrink-0" strokeWidth={1.75} /> Admin
               </Link>
             )}
           </nav>
@@ -94,9 +94,9 @@ export default function Header() {
 
             {/* Auth — desktop */}
             {loading ? (
-              <div className="hidden h-10 w-28 animate-pulse rounded-xl bg-gray-100 sm:flex" />
+              <div className="hidden h-10 w-28 animate-pulse rounded-xl bg-gray-100 lg:flex" />
             ) : user ? (
-              <div className="hidden items-center gap-2 sm:flex">
+              <div className="hidden items-center gap-2 lg:flex">
                 <Link
                   href="/profile"
                   className="flex items-center gap-2 rounded-xl border border-gray-200 bg-white px-3.5 py-2 text-sm font-semibold text-gray-700 transition-colors hover:border-primary-300 hover:text-primary-700"
@@ -117,7 +117,7 @@ export default function Header() {
             ) : (
               <Link
                 href="/auth"
-                className="hidden rounded-xl bg-primary-600 px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-primary-700 sm:flex items-center gap-2"
+                className="hidden rounded-xl bg-primary-600 px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-primary-700 lg:flex items-center gap-2"
               >
                 <User className="h-4 w-4" strokeWidth={1.75} /> {t(lang, { uz: 'Kirish', ru: 'Войти' })}
               </Link>
@@ -125,7 +125,7 @@ export default function Header() {
 
             {/* Mobil: hamburger (faqat katta ekranlarda yo'q) */}
             <button
-              className="rounded-xl border border-gray-200 p-2 text-gray-600 transition-colors hover:bg-gray-100 sm:hidden"
+              className="rounded-xl border border-gray-200 p-2 text-gray-600 transition-colors hover:bg-gray-100 lg:hidden"
               onClick={() => setMenuOpen(v => !v)}
               aria-label="Menyu ochish"
             >
@@ -136,7 +136,7 @@ export default function Header() {
 
         {/* Mobil kengaytirilgan menyu (hamburger ochilganda) */}
         {menuOpen && (
-          <div className="animate-slide-down border-t border-gray-100 bg-white/98 px-4 pb-5 pt-4 sm:hidden">
+          <div className="animate-slide-down border-t border-gray-100 bg-white/98 px-4 pb-5 pt-4 lg:hidden">
             {user && (
               <Link
                 href="/profile"
@@ -216,7 +216,7 @@ export default function Header() {
 
       {/* ── Mobil pastki tab navigatsiyasi ────────────────────── */}
       {/* Har doim ko'rinadi — buvi ham topadi */}
-      <nav className="fixed bottom-0 left-0 right-0 z-50 border-t border-gray-200 bg-white/95 pb-safe backdrop-blur-sm sm:hidden">
+      <nav className="fixed bottom-0 left-0 right-0 z-50 border-t border-gray-200 bg-white/95 pb-safe backdrop-blur-sm lg:hidden">
         <div className="flex">
           {/* Bosh sahifa */}
           <Link
@@ -291,7 +291,7 @@ export default function Header() {
       </nav>
 
       {/* Mobil pastki nav uchun joy — content pastda yashirib qolmasin */}
-      <div className="h-[72px] sm:hidden" aria-hidden />
+      <div className="h-[72px] lg:hidden" aria-hidden />
     </>
   )
 }
