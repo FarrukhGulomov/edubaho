@@ -3,6 +3,10 @@
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { useState, useEffect, useRef } from 'react'
+import {
+  Search, X, MapPin, Globe2, Users2, UserCheck, BadgeCheck, Star,
+  ArrowLeftRight, Check, PencilLine, School, Laptop, GraduationCap, Palette,
+} from 'lucide-react'
 import StarRating from '@/components/shared/StarRating'
 import { useCompare, useSaved } from '@/hooks/useCompare'
 import { useLang, t } from '@/contexts/LangContext'
@@ -38,19 +42,19 @@ const TYPE_LABELS: Record<string, { uz: string; ru: string; color: string }> = {
 }
 
 const TYPE_FILTERS = [
-  { type: 'COURSE_CENTER',   icon: '✏️', uz: "O'quv markazlar", ru: 'Учебные центры', active: true },
-  { type: 'SCHOOL',          icon: '📚', uz: 'Maktablar',        ru: 'Школы',          active: true },
-  { type: 'IT_SCHOOL',       icon: '💻', uz: 'IT',               ru: 'IT',             active: false },
-  { type: 'UNIVERSITY',      icon: '🎓', uz: 'Universitet',      ru: 'Университет',    active: false },
-  { type: 'LANGUAGE_CENTER', icon: '🌐', uz: 'Til markazi',      ru: 'Языковой',       active: false },
-  { type: 'KINDERGARTEN',    icon: '🎨', uz: "Bog'cha",          ru: 'Детсад',         active: false },
+  { type: 'COURSE_CENTER',   Icon: PencilLine,    uz: "O'quv markazlar", ru: 'Учебные центры', active: true },
+  { type: 'SCHOOL',          Icon: School,        uz: 'Maktablar',        ru: 'Школы',          active: true },
+  { type: 'IT_SCHOOL',       Icon: Laptop,        uz: 'IT',               ru: 'IT',             active: false },
+  { type: 'UNIVERSITY',      Icon: GraduationCap, uz: 'Universitet',      ru: 'Университет',    active: false },
+  { type: 'LANGUAGE_CENTER', Icon: Globe2,        uz: 'Til markazi',      ru: 'Языковой',       active: false },
+  { type: 'KINDERGARTEN',    Icon: Palette,       uz: "Bog'cha",          ru: 'Детсад',         active: false },
 ]
 
 const SORT_OPTIONS = [
-  { value: 'rating',     uz: '⭐ Yuqori reyting', ru: '⭐ Высокий рейтинг' },
-  { value: 'newest',     uz: '🆕 Yangi',           ru: '🆕 Новые' },
-  { value: 'price_asc',  uz: '💰 Arzon',           ru: '💰 Дешевле' },
-  { value: 'price_desc', uz: '💎 Qimmat',           ru: '💎 Дороже' },
+  { value: 'rating',     uz: "Yuqori reyting", ru: 'Высокий рейтинг' },
+  { value: 'newest',     uz: 'Yangi',           ru: 'Новые' },
+  { value: 'price_asc',  uz: 'Arzon',           ru: 'Дешевле' },
+  { value: 'price_desc', uz: 'Qimmat',          ru: 'Дороже' },
 ]
 
 export default function SearchResults({ institutions, meta, params }: Props) {
@@ -134,29 +138,25 @@ export default function SearchResults({ institutions, meta, params }: Props) {
   return (
     <main className="min-h-screen bg-gray-50">
       {/* ── Qidiruv satri ─── */}
-      <div className="sticky top-[65px] z-30 border-b-2 border-gray-100 bg-white/97 backdrop-blur px-4 py-3 shadow-sm">
+      <div className="sticky top-[65px] z-30 border-b border-gray-200 bg-white/97 backdrop-blur px-4 py-3 shadow-sm">
         <div className="mx-auto max-w-6xl">
-          <form onSubmit={handleSearch} className="flex gap-2.5">
-            <div className="flex flex-1 items-center gap-3 rounded-2xl border-2 border-gray-200 bg-white px-4 focus-within:border-primary-400 focus-within:ring-4 focus-within:ring-primary-100 transition-all">
-              <svg className="h-5 w-5 shrink-0 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-4.35-4.35M17 11A6 6 0 1 1 5 11a6 6 0 0 1 12 0z"/>
-              </svg>
+          <form onSubmit={handleSearch} className="flex gap-2">
+            <div className="flex min-w-0 flex-1 items-center gap-3 rounded-xl border border-gray-200 bg-white px-4 focus-within:border-primary-400 transition-colors">
+              <Search className="h-5 w-5 shrink-0 text-gray-400" strokeWidth={1.75} />
               <input
                 type="text"
                 value={q}
                 onChange={e => setQ(e.target.value)}
                 placeholder={t(lang, ui.placeholder)}
-                className="flex-1 bg-transparent py-3 text-base text-gray-900 outline-none placeholder:text-gray-400"
+                className="min-w-0 flex-1 bg-transparent py-3 text-base text-gray-900 outline-none placeholder:text-gray-400"
               />
               {q && (
-                <button type="button" onClick={() => setQ('')} className="text-gray-400 hover:text-gray-600 p-1">
-                  <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12"/>
-                  </svg>
+                <button type="button" onClick={() => setQ('')} className="shrink-0 p-1 text-gray-400 hover:text-gray-600">
+                  <X className="h-5 w-5" strokeWidth={1.75} />
                 </button>
               )}
             </div>
-            <button type="submit" className="btn-primary shrink-0 px-5">
+            <button type="submit" className="btn-primary shrink-0 whitespace-nowrap px-5">
               {t(lang, ui.searchBtn)}
             </button>
           </form>
@@ -170,9 +170,9 @@ export default function SearchResults({ institutions, meta, params }: Props) {
           <div className="flex flex-wrap gap-1.5">
             <Link
               href={`/search?${(() => { const p = new URLSearchParams(params); p.delete('type'); p.delete('page'); return p.toString() })()}`}
-              className={`rounded-full border px-3 py-1 text-xs font-semibold transition-all ${
+              className={`shrink-0 whitespace-nowrap rounded-full border px-3 py-1 text-xs font-semibold transition-colors ${
                 !params.type
-                  ? 'border-primary-600 bg-primary-600 text-white shadow-sm'
+                  ? 'border-primary-600 bg-primary-600 text-white'
                   : 'border-gray-200 bg-white text-gray-600 hover:border-gray-300'
               }`}
             >
@@ -182,21 +182,21 @@ export default function SearchResults({ institutions, meta, params }: Props) {
               <Link
                 key={f.type}
                 href={`/search?${new URLSearchParams({ ...params, type: f.type, page: '1' }).toString()}`}
-                className={`flex items-center gap-1 rounded-full border px-3 py-1 text-xs font-semibold transition-all ${
+                className={`flex shrink-0 items-center gap-1 whitespace-nowrap rounded-full border px-3 py-1 text-xs font-semibold transition-colors ${
                   params.type === f.type
-                    ? 'border-primary-600 bg-primary-600 text-white shadow-sm'
+                    ? 'border-primary-600 bg-primary-600 text-white'
                     : 'border-gray-200 bg-white text-gray-600 hover:border-gray-300'
                 }`}
               >
-                {f.icon} {lang === 'uz' ? f.uz : f.ru}
+                <f.Icon className="h-3.5 w-3.5 shrink-0" strokeWidth={1.75} /> {lang === 'uz' ? f.uz : f.ru}
               </Link>
             ) : (
               <span
                 key={f.type}
                 title={t(lang, ui.comingSoon)}
-                className="flex items-center gap-1 rounded-full border border-dashed border-gray-200 px-3 py-1 text-xs font-medium text-gray-300 cursor-not-allowed select-none"
+                className="flex shrink-0 select-none items-center gap-1 whitespace-nowrap rounded-full border border-dashed border-gray-200 px-3 py-1 text-xs font-medium text-gray-300 cursor-not-allowed"
               >
-                {f.icon} {lang === 'uz' ? f.uz : f.ru}
+                <f.Icon className="h-3.5 w-3.5 shrink-0" strokeWidth={1.75} /> {lang === 'uz' ? f.uz : f.ru}
               </span>
             ))}
           </div>
@@ -211,7 +211,7 @@ export default function SearchResults({ institutions, meta, params }: Props) {
               onChange={e => setParam('regionId', e.target.value)}
               className="rounded-xl border border-gray-200 bg-white px-3 py-2 text-xs font-medium text-gray-700 shadow-sm outline-none focus:border-primary-400 cursor-pointer"
             >
-              <option value="">🗺️ {t(lang, ui.allRegions)}</option>
+              <option value="">{t(lang, ui.allRegions)}</option>
               {regions.map(r => (
                 <option key={r.id} value={r.id}>
                   {lang === 'ru'
@@ -230,7 +230,7 @@ export default function SearchResults({ institutions, meta, params }: Props) {
               onChange={e => setParam('cityId', e.target.value)}
               className="rounded-xl border border-gray-200 bg-white px-3 py-2 text-xs font-medium text-gray-700 shadow-sm outline-none focus:border-primary-400 cursor-pointer"
             >
-              <option value="">📍 {t(lang, ui.allCities)}</option>
+              <option value="">{t(lang, ui.allCities)}</option>
               {cities.map(c => (
                 <option key={c.id} value={c.id}>
                   {lang === 'ru' ? c.nameRu : c.nameUz}
@@ -264,18 +264,24 @@ export default function SearchResults({ institutions, meta, params }: Props) {
           </span>
           {/* Active region badge */}
           {activeRegion && (
-            <span className="flex items-center gap-1.5 rounded-full bg-blue-100 px-3 py-1 text-xs font-semibold text-blue-700">
-              🗺️ {lang === 'ru'
+            <span className="flex shrink-0 items-center gap-1.5 whitespace-nowrap rounded-full bg-blue-50 px-3 py-1 text-xs font-semibold text-blue-700">
+              <Globe2 className="h-3.5 w-3.5 shrink-0" strokeWidth={1.75} />
+              {lang === 'ru'
                 ? activeRegion.nameRu.replace('Республика ', '')
                 : activeRegion.nameUz.replace(' viloyati', '').replace(' Respublikasi', '')}
-              <button onClick={() => setParam('regionId', '')} className="ml-0.5 text-blue-500 hover:text-blue-700">✕</button>
+              <button onClick={() => setParam('regionId', '')} className="ml-0.5 text-blue-500 hover:text-blue-700">
+                <X className="h-3 w-3" strokeWidth={2.5} />
+              </button>
             </span>
           )}
           {/* Active city badge */}
           {activeCity && (
-            <span className="flex items-center gap-1.5 rounded-full bg-primary-100 px-3 py-1 text-xs font-semibold text-primary-700">
-              📍 {lang === 'ru' ? activeCity.nameRu : activeCity.nameUz}
-              <button onClick={() => setParam('cityId', '')} className="ml-0.5 text-primary-500 hover:text-primary-700">✕</button>
+            <span className="flex shrink-0 items-center gap-1.5 whitespace-nowrap rounded-full bg-primary-50 px-3 py-1 text-xs font-semibold text-primary-700">
+              <MapPin className="h-3.5 w-3.5 shrink-0" strokeWidth={1.75} />
+              {lang === 'ru' ? activeCity.nameRu : activeCity.nameUz}
+              <button onClick={() => setParam('cityId', '')} className="ml-0.5 text-primary-500 hover:text-primary-700">
+                <X className="h-3 w-3" strokeWidth={2.5} />
+              </button>
             </span>
           )}
         </div>
@@ -283,7 +289,9 @@ export default function SearchResults({ institutions, meta, params }: Props) {
         {/* ── Results ─── */}
         {institutions.length === 0 ? (
           <div className="flex flex-col items-center py-24 text-center">
-            <div className="mb-4 flex h-20 w-20 items-center justify-center rounded-3xl bg-gray-100 text-5xl">🔍</div>
+            <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-2xl bg-gray-100">
+              <Search className="h-7 w-7 text-gray-300" strokeWidth={1.5} />
+            </div>
             <p className="mb-2 text-xl font-bold text-gray-800">{t(lang, ui.emptyTitle)}</p>
             <p className="mb-6 text-sm text-gray-500">{t(lang, ui.emptySub)}</p>
             <Link href="/search" className="btn-secondary text-sm">
@@ -316,9 +324,9 @@ export default function SearchResults({ institutions, meta, params }: Props) {
               <Link
                 key={p}
                 href={`/search?${new URLSearchParams({ ...params, page: String(p) }).toString()}`}
-                className={`flex h-9 w-9 items-center justify-center rounded-xl border text-sm font-semibold transition-all ${
+                className={`flex h-9 w-9 items-center justify-center rounded-xl border text-sm font-semibold transition-colors ${
                   String(meta.page) === String(p)
-                    ? 'border-primary-600 bg-primary-600 text-white shadow-sm'
+                    ? 'border-primary-600 bg-primary-600 text-white'
                     : 'border-gray-200 bg-white text-gray-700 hover:border-primary-300 hover:text-primary-600'
                 }`}
               >
@@ -357,20 +365,20 @@ function InstitutionCardComp({
   const name = lang === 'ru' && i.nameRu ? i.nameRu : i.nameUz
 
   return (
-    <div className="group flex flex-col rounded-3xl border-2 border-gray-100 bg-white shadow-sm transition-all duration-200 hover:-translate-y-1 hover:border-primary-200 hover:shadow-lg">
+    <div className="group card flex flex-col">
       <Link
         href={`/institutions/${i.slug}`}
         className="flex flex-1 flex-col p-6"
         onClick={() => trackSearchClick(i.id, position, query)}
       >
         {/* Tur + tasdiqlangan */}
-        <div className="mb-4 flex items-center justify-between gap-2">
-          <span className={`inline-flex items-center gap-1.5 rounded-2xl px-3 py-1.5 text-sm font-bold ${typeInfo?.color ?? 'bg-gray-50 text-gray-700'}`}>
+        <div className="mb-4 flex flex-wrap items-center justify-between gap-2">
+          <span className={`inline-flex shrink-0 items-center gap-1.5 whitespace-nowrap rounded-xl px-3 py-1.5 text-sm font-semibold ${typeInfo?.color ?? 'bg-gray-50 text-gray-700'}`}>
             {typeInfo ? t(lang, typeInfo) : i.type}
           </span>
           {i.isVerified && (
-            <span className="flex items-center gap-1.5 rounded-full bg-emerald-50 px-3 py-1.5 text-sm font-bold text-emerald-700">
-              ✓ {t(lang, ui.verified)}
+            <span className="flex shrink-0 items-center gap-1.5 whitespace-nowrap rounded-full bg-emerald-50 px-3 py-1.5 text-sm font-semibold text-emerald-700">
+              <BadgeCheck className="h-4 w-4 shrink-0" strokeWidth={2} /> {t(lang, ui.verified)}
             </span>
           )}
         </div>
@@ -383,11 +391,8 @@ function InstitutionCardComp({
         {/* Shahar */}
         {(i.city?.nameUz ?? i.address) && (
           <div className="mb-3 flex items-center gap-2 text-base text-gray-500">
-            <svg className="h-4 w-4 shrink-0 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/>
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/>
-            </svg>
-            {lang === 'ru' && i.city?.nameRu ? i.city.nameRu : (i.city?.nameUz ?? i.address)}
+            <MapPin className="h-4 w-4 shrink-0 text-gray-400" strokeWidth={1.75} />
+            <span className="truncate">{lang === 'ru' && i.city?.nameRu ? i.city.nameRu : (i.city?.nameUz ?? i.address)}</span>
           </div>
         )}
 
@@ -395,13 +400,13 @@ function InstitutionCardComp({
         {(i.details?.studentCount || i.details?.teacherCount) && (
           <div className="mb-3 flex flex-wrap gap-2">
             {i.details.studentCount && (
-              <span className="flex items-center gap-1.5 rounded-2xl bg-blue-50 px-3 py-1.5 text-sm font-bold text-blue-700">
-                👥 {formatNum(i.details.studentCount)}+ {lang === 'uz' ? "o'quvchi" : 'уч.'}
+              <span className="flex shrink-0 items-center gap-1.5 whitespace-nowrap rounded-xl bg-blue-50 px-3 py-1.5 text-sm font-semibold text-blue-700">
+                <Users2 className="h-4 w-4 shrink-0" strokeWidth={2} /> {formatNum(i.details.studentCount)}+ {lang === 'uz' ? "o'quvchi" : 'уч.'}
               </span>
             )}
             {i.details.teacherCount && (
-              <span className="flex items-center gap-1.5 rounded-2xl bg-violet-50 px-3 py-1.5 text-sm font-bold text-violet-700">
-                👨‍🏫 {i.details.teacherCount} {lang === 'uz' ? "o'qit." : 'пед.'}
+              <span className="flex shrink-0 items-center gap-1.5 whitespace-nowrap rounded-xl bg-violet-50 px-3 py-1.5 text-sm font-semibold text-violet-700">
+                <UserCheck className="h-4 w-4 shrink-0" strokeWidth={2} /> {i.details.teacherCount} {lang === 'uz' ? "o'qit." : 'пед.'}
               </span>
             )}
           </div>
@@ -411,12 +416,12 @@ function InstitutionCardComp({
         {(i.details?.programs?.length ?? 0) > 0 && (
           <div className="mb-3 flex flex-wrap gap-1.5">
             {i.details!.programs!.slice(0, 3).map(prog => (
-              <span key={prog} className="rounded-xl bg-gray-100 px-2.5 py-1 text-sm font-semibold text-gray-600">
+              <span key={prog} className="rounded-lg bg-gray-100 px-2.5 py-1 text-sm font-medium text-gray-600">
                 {prog}
               </span>
             ))}
             {i.details!.programs!.length > 3 && (
-              <span className="rounded-xl bg-gray-100 px-2.5 py-1 text-sm font-semibold text-gray-400">
+              <span className="rounded-lg bg-gray-100 px-2.5 py-1 text-sm font-medium text-gray-400">
                 +{i.details!.programs!.length - 3} ta
               </span>
             )}
@@ -428,14 +433,13 @@ function InstitutionCardComp({
           {i.avgRating ? (
             <div className="flex items-center gap-1.5">
               <StarRating rating={i.avgRating} size="sm" />
-              <span className="text-base font-black text-gray-900">{i.avgRating.toFixed(1)}</span>
               <span className="text-sm text-gray-400">({i.reviewCount})</span>
             </div>
           ) : (
             <span className="text-sm text-gray-400">{t(lang, ui.noReview)}</span>
           )}
           {i.pricing?.monthlyMin && (
-            <span className="shrink-0 rounded-2xl bg-emerald-50 border border-emerald-200 px-3 py-1.5 text-sm font-black text-emerald-700">
+            <span className="price-badge shrink-0 whitespace-nowrap text-sm">
               {formatUzs(i.pricing.monthlyMin)}
             </span>
           )}
@@ -443,27 +447,27 @@ function InstitutionCardComp({
       </Link>
 
       {/* Amallar */}
-      <div className="flex divide-x-2 divide-gray-100 border-t-2 border-gray-100">
+      <div className="flex divide-x divide-gray-100 border-t border-gray-100">
         <button
           onClick={onSave}
-          className={`flex flex-1 items-center justify-center gap-2 py-3.5 text-sm font-bold transition-colors rounded-bl-3xl ${
+          className={`flex flex-1 items-center justify-center gap-1.5 whitespace-nowrap rounded-bl-2xl py-3 text-sm font-semibold transition-colors ${
             isSaved
               ? 'bg-amber-50 text-amber-600 hover:bg-amber-100'
               : 'text-gray-500 hover:bg-gray-50 hover:text-gray-800'
           }`}
         >
-          <span className="text-lg">{isSaved ? '⭐' : '☆'}</span>
+          <Star className="h-4 w-4 shrink-0" fill={isSaved ? 'currentColor' : 'none'} strokeWidth={2} />
           {isSaved ? t(lang, ui.saved) : t(lang, ui.save)}
         </button>
         <button
           onClick={onCompare}
-          className={`flex flex-1 items-center justify-center gap-2 py-3.5 text-sm font-bold transition-colors rounded-br-3xl ${
+          className={`flex flex-1 items-center justify-center gap-1.5 whitespace-nowrap rounded-br-2xl py-3 text-sm font-semibold transition-colors ${
             isCompared
               ? 'bg-primary-50 text-primary-700 hover:bg-primary-100'
               : 'text-gray-500 hover:bg-gray-50 hover:text-gray-800'
           }`}
         >
-          <span className="text-lg">{isCompared ? '✓' : '⇄'}</span>
+          {isCompared ? <Check className="h-4 w-4 shrink-0" strokeWidth={2.5} /> : <ArrowLeftRight className="h-4 w-4 shrink-0" strokeWidth={2} />}
           {isCompared ? t(lang, ui.compared) : t(lang, ui.compare)}
         </button>
       </div>

@@ -1,6 +1,11 @@
 'use client'
 
 import Link from 'next/link'
+import {
+  ArrowLeft, Star, Wallet, Info, Phone, Laptop, GraduationCap, School,
+  Palette, Globe2, PencilLine, Dumbbell, Trophy, Landmark, UserCheck,
+  BadgeCheck,
+} from 'lucide-react'
 import StarRating from '@/components/shared/StarRating'
 import { useLang, t } from '@/contexts/LangContext'
 
@@ -48,10 +53,10 @@ const TYPE_LABELS: Record<string, { uz: string; ru: string }> = {
   ARTS_SCHOOL:     { uz: "San'at maktabi", ru: 'Школа искусств' },
 }
 
-const TYPE_ICONS: Record<string, string> = {
-  IT_SCHOOL: '💻', UNIVERSITY: '🎓', SCHOOL: '📚', KINDERGARTEN: '🎨',
-  LANGUAGE_CENTER: '🌐', COURSE_CENTER: '✏️', SPORTS_SCHOOL: '⚽', LYCEUM: '🏫',
-  COLLEGE: '🏛️', TUTORING: '👨‍🏫', ARTS_SCHOOL: '🎭',
+const TYPE_ICONS: Record<string, typeof School> = {
+  IT_SCHOOL: Laptop, UNIVERSITY: GraduationCap, SCHOOL: School, KINDERGARTEN: Palette,
+  LANGUAGE_CENTER: Globe2, COURSE_CENTER: PencilLine, SPORTS_SCHOOL: Dumbbell, LYCEUM: Trophy,
+  COLLEGE: Landmark, TUTORING: UserCheck, ARTS_SCHOOL: Palette,
 }
 
 export default function CompareContent({ institutions }: { institutions: CompareInstitution[] }) {
@@ -60,20 +65,20 @@ export default function CompareContent({ institutions }: { institutions: Compare
 
   const ui = {
     title:      { uz: 'Muassasalarni solishtirish', ru: 'Сравнение учреждений' },
-    back:       { uz: '← Qidiruvga qaytish',       ru: '← Вернуться к поиску' },
-    rating:     { uz: '⭐ Reyting va sharhlar',     ru: '⭐ Рейтинг и отзывы' },
+    back:       { uz: 'Qidiruvga qaytish',          ru: 'Вернуться к поиску' },
+    rating:     { uz: 'Reyting va sharhlar',        ru: 'Рейтинг и отзывы' },
     avgRating:  { uz: 'Umumiy reyting',             ru: 'Общий рейтинг' },
     reviews:    { uz: 'Sharhlar soni',              ru: 'Кол-во отзывов' },
-    price:      { uz: '💰 Narxlar',                 ru: '💰 Цены' },
+    price:      { uz: 'Narxlar',                    ru: 'Цены' },
     priceMin:   { uz: 'Oylik narx (min)',           ru: 'Ежемес. цена (мин)' },
     priceMax:   { uz: 'Oylik narx (max)',           ru: 'Ежемес. цена (макс)' },
     payment:    { uz: "To'lov usullari",            ru: 'Способы оплаты' },
-    info:       { uz: "ℹ️ Ma'lumotlar",             ru: 'ℹ️ Информация' },
+    info:       { uz: "Ma'lumotlar",                ru: 'Информация' },
     founded:    { uz: 'Tashkil etilgan',            ru: 'Год основания' },
     students:   { uz: "O'quvchilar",                ru: 'Учеников' },
     teachers:   { uz: "O'qituvchilar",              ru: 'Преподавателей' },
     languages:  { uz: "O'qitish tillari",           ru: 'Языки обучения' },
-    contact:    { uz: '📞 Aloqa',                   ru: '📞 Контакты' },
+    contact:    { uz: 'Aloqa',                      ru: 'Контакты' },
     phone:      { uz: 'Telefon',                    ru: 'Телефон' },
     telegram:   { uz: 'Telegram',                   ru: 'Telegram' },
     address:    { uz: 'Manzil',                     ru: 'Адрес' },
@@ -101,11 +106,14 @@ export default function CompareContent({ institutions }: { institutions: Compare
     )
   }
 
-  function SectionHeader({ labelKey }: { labelKey: keyof typeof ui }) {
+  function SectionHeader({ labelKey, Icon }: { labelKey: keyof typeof ui; Icon: typeof Star }) {
     return (
       <tr className="bg-primary-600">
-        <td className="border border-primary-500 px-4 py-2.5 font-bold text-white text-sm" colSpan={cols + 1}>
-          {t(lang, ui[labelKey] as { uz: string; ru: string })}
+        <td className="border border-primary-500 px-4 py-2.5 text-sm font-semibold text-white" colSpan={cols + 1}>
+          <span className="flex items-center gap-2 whitespace-nowrap">
+            <Icon className="h-4 w-4 shrink-0" strokeWidth={1.75} />
+            {t(lang, ui[labelKey] as { uz: string; ru: string })}
+          </span>
         </td>
       </tr>
     )
@@ -113,8 +121,10 @@ export default function CompareContent({ institutions }: { institutions: Compare
 
   return (
     <main className="mx-auto max-w-5xl px-4 py-8 pb-24">
-      <div className="mb-6 flex items-center gap-2 text-sm text-gray-500">
-        <Link href="/search" className="hover:text-primary-600">{t(lang, ui.back)}</Link>
+      <div className="mb-6 flex items-center gap-1.5 text-sm text-gray-500">
+        <Link href="/search" className="flex items-center gap-1.5 hover:text-primary-600">
+          <ArrowLeft className="h-4 w-4 shrink-0" strokeWidth={1.75} /> {t(lang, ui.back)}
+        </Link>
       </div>
 
       <h1 className="mb-8 text-2xl font-bold text-gray-900">
@@ -130,20 +140,23 @@ export default function CompareContent({ institutions }: { institutions: Compare
         {institutions.map((inst) => {
           const typeLabel = TYPE_LABELS[inst.type]
           const name = lang === 'ru' && inst.nameRu ? inst.nameRu : inst.nameUz
+          const TypeIcon = TYPE_ICONS[inst.type] ?? School
           return (
             <Link
               key={inst.id}
               href={`/institutions/${inst.slug}`}
-              className="rounded-2xl border-2 border-primary-200 bg-white p-5 text-center hover:border-primary-400 hover:shadow-md transition-all"
+              className="card rounded-2xl p-5 text-center hover:border-primary-300"
             >
-              <div className="mb-2 text-4xl">{TYPE_ICONS[inst.type] ?? '🏫'}</div>
-              <h2 className="font-bold text-gray-900 leading-tight mb-1 line-clamp-2">{name}</h2>
+              <div className="mb-2 flex justify-center">
+                <TypeIcon className="h-9 w-9 text-primary-300" strokeWidth={1.5} />
+              </div>
+              <h2 className="mb-1 line-clamp-2 font-semibold leading-tight text-gray-900">{name}</h2>
               <span className="text-xs text-gray-400">
                 {typeLabel ? t(lang, typeLabel) : inst.type}
               </span>
               {inst.isVerified && (
-                <div className="mt-2 text-xs font-semibold text-green-600">
-                  ✓ {t(lang, ui.verified)}
+                <div className="mt-2 flex items-center justify-center gap-1 text-xs font-semibold text-emerald-600">
+                  <BadgeCheck className="h-3.5 w-3.5 shrink-0" strokeWidth={2} /> {t(lang, ui.verified)}
                 </div>
               )}
               {inst.avgRating && (
@@ -160,7 +173,7 @@ export default function CompareContent({ institutions }: { institutions: Compare
       <div className="overflow-x-auto rounded-2xl border border-gray-200 shadow-sm">
         <table className="w-full border-collapse text-sm">
           <tbody>
-            <SectionHeader labelKey="rating" />
+            <SectionHeader labelKey="rating" Icon={Star} />
             <Row
               labelKey="avgRating"
               highlight
@@ -177,7 +190,7 @@ export default function CompareContent({ institutions }: { institutions: Compare
               )}
             />
 
-            <SectionHeader labelKey="price" />
+            <SectionHeader labelKey="price" Icon={Wallet} />
             <Row
               labelKey="priceMin"
               highlight
@@ -192,7 +205,7 @@ export default function CompareContent({ institutions }: { institutions: Compare
               values={institutions.map((i) => i.pricing?.paymentMethods?.join(', ') ?? null)}
             />
 
-            <SectionHeader labelKey="info" />
+            <SectionHeader labelKey="info" Icon={Info} />
             <Row
               labelKey="founded"
               values={institutions.map((i) => i.details?.foundedYear ? String(i.details.foundedYear) : null)}
@@ -223,7 +236,7 @@ export default function CompareContent({ institutions }: { institutions: Compare
               )}
             />
 
-            <SectionHeader labelKey="contact" />
+            <SectionHeader labelKey="contact" Icon={Phone} />
             <Row labelKey="phone"    values={institutions.map((i) => i.phone    ?? null)} />
             <Row labelKey="telegram" values={institutions.map((i) => i.telegram ? `@${i.telegram}` : null)} />
             <Row labelKey="address"  values={institutions.map((i) => i.address  ?? null)} />

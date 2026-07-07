@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useRef } from 'react'
 import Link from 'next/link'
+import { Star, PencilLine, ArrowLeftRight, Smartphone, AlertCircle, CheckCircle2 } from 'lucide-react'
 import { authApi } from '@/lib/api'
 import { useLang, t } from '@/contexts/LangContext'
 import { authTrack } from '@/lib/analytics'
@@ -204,9 +205,9 @@ export default function AuthPage() {
     termsEnd:   { uz: 'ga rozilik bildirasiz', ru: '' },
     orDivider:  { uz: 'yoki', ru: 'или' },
     benefits: [
-      { icon: '⭐', uz: 'Muassasalarni saqlang', ru: 'Сохраняйте учреждения' },
-      { icon: '✍️', uz: 'Sharh yozing', ru: 'Оставляйте отзывы' },
-      { icon: '⇄', uz: 'Solishtiring', ru: 'Сравнивайте' },
+      { Icon: Star,           uz: 'Muassasalarni saqlang', ru: 'Сохраняйте учреждения' },
+      { Icon: PencilLine,     uz: 'Sharh yozing',           ru: 'Оставляйте отзывы' },
+      { Icon: ArrowLeftRight, uz: 'Solishtiring',           ru: 'Сравнивайте' },
     ],
   }
 
@@ -274,10 +275,10 @@ export default function AuthPage() {
   }
 
   return (
-    <div className="flex min-h-screen bg-gradient-to-br from-primary-50 to-white">
+    <div className="flex min-h-screen bg-gray-50">
 
       {/* Left panel — desktop only */}
-      <div className="hidden lg:flex lg:w-1/2 flex-col items-center justify-center bg-gradient-to-br from-primary-600 to-primary-800 px-12 text-white">
+      <div className="hidden lg:flex lg:w-1/2 flex-col items-center justify-center bg-primary-700 px-12 text-white">
         <Link href="/" className="mb-8 flex items-center justify-center">
           <Logo size={52} inverted />
         </Link>
@@ -289,8 +290,8 @@ export default function AuthPage() {
         </p>
         <div className="w-full space-y-3">
           {ui.benefits.map((b) => (
-            <div key={b.icon} className="flex items-center gap-3 rounded-2xl bg-white/15 px-5 py-3.5">
-              <span className="text-2xl">{b.icon}</span>
+            <div key={b.uz} className="flex items-center gap-3 rounded-xl border border-white/15 bg-white/5 px-5 py-3.5">
+              <b.Icon className="h-5 w-5 shrink-0" strokeWidth={1.75} />
               <span className="font-semibold">{lang === 'uz' ? b.uz : b.ru}</span>
             </div>
           ))}
@@ -318,9 +319,9 @@ export default function AuthPage() {
                 <button
                   key={l}
                   onClick={() => setLang(l)}
-                  className={`rounded-lg px-5 py-2 text-sm font-bold transition-all ${
+                  className={`rounded-lg px-5 py-2 text-sm font-semibold transition-colors ${
                     lang === l
-                      ? 'bg-primary-600 text-white shadow-sm'
+                      ? 'bg-primary-600 text-white'
                       : 'text-gray-500 hover:text-gray-700'
                   }`}
                 >
@@ -332,7 +333,7 @@ export default function AuthPage() {
 
           <div className="rounded-2xl border border-gray-200 bg-white p-8 shadow-sm">
             <div className="mb-6 text-center">
-              <h1 className="text-xl font-black text-gray-900">
+              <h1 className="text-xl font-bold text-gray-900">
                 {step === 'done'
                   ? t(lang, ui.doneTitle)
                   : step === 'otp'
@@ -406,7 +407,7 @@ export default function AuthPage() {
             {step === 'otp' && (
               <form onSubmit={handleVerifyOtp} className="space-y-4">
                 <div className="flex items-center gap-2 rounded-xl bg-blue-50 px-4 py-3 text-sm text-blue-800">
-                  <span className="text-lg">📱</span>
+                  <Smartphone className="h-5 w-5 shrink-0" strokeWidth={1.75} />
                   <span>
                     <strong>{phone}</strong> {t(lang, ui.otpInfo)}
                   </span>
@@ -432,7 +433,7 @@ export default function AuthPage() {
                       }
                     }}
                     placeholder="• • • • • •"
-                    className="w-full rounded-xl border-2 border-gray-300 px-4 py-3.5 text-center text-2xl font-mono font-bold tracking-[0.4em] text-gray-900 outline-none focus:border-primary-500 focus:ring-2 focus:ring-primary-100 sm:text-3xl sm:tracking-[0.5em]"
+                    className="w-full rounded-xl border border-gray-300 px-4 py-3.5 text-center text-2xl font-mono font-bold tracking-[0.4em] text-gray-900 outline-none focus:border-primary-500 sm:text-3xl sm:tracking-[0.5em]"
                   />
                   <div className="mt-2 flex justify-center gap-2">
                     {Array.from({ length: 6 }).map((_, i) => (
@@ -485,7 +486,9 @@ export default function AuthPage() {
             {/* ── Done ── */}
             {step === 'done' && (
               <div className="text-center py-4">
-                <div className="mb-4 text-6xl animate-bounce">✅</div>
+                <div className="mb-4 flex justify-center">
+                  <CheckCircle2 className="h-14 w-14 text-emerald-500" strokeWidth={1.5} />
+                </div>
                 <p className="text-gray-600">{t(lang, ui.doneSub)}</p>
                 <div className="mt-4 flex justify-center">
                   <div className="h-6 w-6 animate-spin rounded-full border-2 border-primary-200 border-t-primary-600" />
@@ -510,7 +513,7 @@ export default function AuthPage() {
 function ErrorBox({ msg }: { msg: string }) {
   return (
     <div className="flex items-start gap-2 rounded-xl bg-red-50 px-4 py-3 text-sm text-red-700">
-      <span className="mt-0.5 shrink-0">⚠️</span>
+      <AlertCircle className="mt-0.5 h-4 w-4 shrink-0" strokeWidth={2} />
       <span>{msg}</span>
     </div>
   )
