@@ -3,9 +3,9 @@
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import {
-  Target, PencilLine, Globe2, Laptop, School, Palette, GraduationCap,
-  Trophy, Dumbbell, Sunrise, Sun, Sunset, Calendar, Clock, Wallet, Globe,
-  MapPin, BadgeCheck, Lightbulb, AlertCircle, Search, RotateCcw, Medal,
+  Target, PencilLine, School, Trophy, Sunrise, Sun, Sunset, Calendar,
+  Clock, Wallet, Globe, MapPin, BadgeCheck, Lightbulb, AlertCircle,
+  Search, RotateCcw, Medal,
 } from 'lucide-react'
 import Header from '@/components/shared/Header'
 import StarRating from '@/components/shared/StarRating'
@@ -30,23 +30,18 @@ interface CityOption {
   region?: { nameUz: string; nameRu?: string | null } | null
 }
 
+// Faqat haqiqiy ma'lumoti bor turlar — aks holda user 5 savolga javob berib
+// bo'sh natija oladi (bosh sahifa/qidiruv filtrlari bilan bir xil siyosat)
 const TYPE_OPTIONS = [
-  { value: 'COURSE_CENTER',   Icon: PencilLine,    uz: "O'quv markaz",   ru: 'Учебный центр' },
-  { value: 'LANGUAGE_CENTER', Icon: Globe2,        uz: 'Til markazi',     ru: 'Языковой центр' },
-  { value: 'IT_SCHOOL',       Icon: Laptop,        uz: 'IT maktab',       ru: 'IT школа' },
-  { value: 'SCHOOL',          Icon: School,        uz: 'Maktab',          ru: 'Школа' },
-  { value: 'KINDERGARTEN',    Icon: Palette,       uz: "Bog'cha",         ru: 'Детский сад' },
-  { value: 'UNIVERSITY',      Icon: GraduationCap, uz: 'Universitet',     ru: 'Университет' },
-  { value: 'LYCEUM',          Icon: Trophy,        uz: 'Litsey',          ru: 'Лицей' },
-  { value: 'SPORTS_SCHOOL',   Icon: Dumbbell,      uz: 'Sport maktabi',   ru: 'Спортшкола' },
-  { value: 'ARTS_SCHOOL',     Icon: Palette,       uz: "San'at maktabi",  ru: 'Школа искусств' },
+  { value: 'COURSE_CENTER', Icon: PencilLine, uz: "O'quv markaz", ru: 'Учебный центр' },
+  { value: 'SCHOOL',        Icon: School,     uz: 'Maktab',       ru: 'Школа' },
+  { value: 'LYCEUM',        Icon: Trophy,     uz: 'Litsey',       ru: 'Лицей' },
 ]
 
 const GOAL_SUGGESTIONS: Record<string, string[]> = {
-  LANGUAGE_CENTER: ['IELTS', 'Ingliz tili', 'Rus tili', 'Koreys tili', 'Nemis tili'],
-  IT_SCHOOL:       ['Frontend', 'Backend', 'Python', 'Grafik dizayn', 'Kiberxavfsizlik'],
-  COURSE_CENTER:   ['Matematika', 'Fizika', 'Kimyo', 'Biologiya', 'DTM tayyorlov'],
-  SCHOOL:          ['Prezident maktabi', 'Xususiy maktab', 'Ingliz tili'],
+  COURSE_CENTER: ['IELTS', 'Ingliz tili', 'Frontend', 'Python', 'Matematika', 'DTM tayyorlov'],
+  SCHOOL:        ['Prezident maktabi', 'Xususiy maktab', 'Ingliz tili'],
+  LYCEUM:        ['Matematika (olimpiada)', 'Fizika', 'Kimyo'],
 }
 
 const BUDGET_OPTIONS = [

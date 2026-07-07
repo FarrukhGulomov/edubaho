@@ -166,12 +166,13 @@ export default function SearchResults({ institutions, meta, params }: Props) {
         <div className="mb-5 flex flex-wrap items-center gap-2">
           {/* Type chips */}
           <div className="flex flex-wrap gap-1.5">
+            {/* Bosh sahifadagi kategoriya tablar bilan bir xil standart shakl */}
             <Link
               href={`/search?${(() => { const p = new URLSearchParams(params); p.delete('type'); p.delete('page'); return p.toString() })()}`}
-              className={`shrink-0 whitespace-nowrap rounded-full border px-3 py-1 text-xs font-semibold transition-colors ${
+              className={`flex h-9 shrink-0 items-center whitespace-nowrap rounded-xl px-3.5 text-sm font-semibold transition-colors ${
                 !params.type
-                  ? 'border-primary-600 bg-primary-600 text-white'
-                  : 'border-gray-200 bg-white text-gray-600 hover:border-gray-300'
+                  ? 'bg-primary-600 text-white'
+                  : 'bg-gray-50 text-gray-600 hover:bg-gray-100 hover:text-gray-900'
               }`}
             >
               {t(lang, ui.allTypes)}
@@ -180,13 +181,13 @@ export default function SearchResults({ institutions, meta, params }: Props) {
               <Link
                 key={f.type}
                 href={`/search?${new URLSearchParams({ ...params, type: f.type, page: '1' }).toString()}`}
-                className={`flex shrink-0 items-center gap-1 whitespace-nowrap rounded-full border px-3 py-1 text-xs font-semibold transition-colors ${
+                className={`flex h-9 shrink-0 items-center gap-1.5 whitespace-nowrap rounded-xl px-3.5 text-sm font-semibold transition-colors ${
                   params.type === f.type
-                    ? 'border-primary-600 bg-primary-600 text-white'
-                    : 'border-gray-200 bg-white text-gray-600 hover:border-gray-300'
+                    ? 'bg-primary-600 text-white'
+                    : 'bg-gray-50 text-gray-600 hover:bg-gray-100 hover:text-gray-900'
                 }`}
               >
-                <f.Icon className="h-3.5 w-3.5 shrink-0" strokeWidth={1.75} /> {lang === 'uz' ? f.uz : f.ru}
+                <f.Icon className="h-4 w-4 shrink-0" strokeWidth={1.75} /> {lang === 'uz' ? f.uz : f.ru}
               </Link>
             ))}
           </div>
@@ -361,46 +362,42 @@ function InstitutionCardComp({
         className="flex flex-1 flex-col p-6"
         onClick={() => trackSearchClick(i.id, position, query)}
       >
-        {/* Tur + tasdiqlangan */}
-        <div className="mb-4 flex flex-wrap items-center justify-between gap-2">
-          <span className={`inline-flex shrink-0 items-center gap-1.5 whitespace-nowrap rounded-xl px-3 py-1.5 text-sm font-semibold ${typeInfo?.color ?? 'bg-gray-50 text-gray-700'}`}>
+        {/* Tur + tasdiqlangan — bosh sahifa kartasi bilan bir xil ixcham badge'lar */}
+        <div className="mb-2 flex flex-wrap items-center gap-1.5">
+          <span className="badge-sm bg-primary-50 text-primary-700">
             {typeInfo ? t(lang, typeInfo) : i.type}
           </span>
           {i.isVerified && (
-            <span className="flex shrink-0 items-center gap-1.5 whitespace-nowrap rounded-full bg-emerald-50 px-3 py-1.5 text-sm font-semibold text-emerald-700">
-              <BadgeCheck className="h-4 w-4 shrink-0" strokeWidth={2} /> {t(lang, ui.verified)}
+            <span className="flex items-center gap-1 rounded-full bg-emerald-50 px-2 py-0.5 text-[11px] font-semibold text-emerald-700">
+              <BadgeCheck className="h-3 w-3 shrink-0" strokeWidth={2} /> {t(lang, ui.verified)}
             </span>
           )}
         </div>
 
         {/* Nom */}
-        <h2 className="mb-2 text-xl font-black text-gray-900 group-hover:text-primary-700 transition-colors line-clamp-2 leading-snug">
+        <h2 className="mb-1.5 text-base font-black text-gray-900 group-hover:text-primary-700 transition-colors line-clamp-2 leading-snug">
           {name}
         </h2>
 
-        {/* Shahar */}
-        {(i.city?.nameUz ?? i.address) && (
-          <div className="mb-3 flex items-center gap-2 text-base text-gray-500">
-            <MapPin className="h-4 w-4 shrink-0 text-gray-400" strokeWidth={1.75} />
-            <span className="truncate">{lang === 'ru' && i.city?.nameRu ? i.city.nameRu : (i.city?.nameUz ?? i.address)}</span>
-          </div>
-        )}
-
-        {/* O'quvchilar + o'qituvchilar */}
-        {(i.details?.studentCount || i.details?.teacherCount) && (
-          <div className="mb-3 flex flex-wrap gap-2">
-            {i.details.studentCount && (
-              <span className="flex shrink-0 items-center gap-1.5 whitespace-nowrap rounded-xl bg-blue-50 px-3 py-1.5 text-sm font-semibold text-blue-700">
-                <Users2 className="h-4 w-4 shrink-0" strokeWidth={2} /> {formatNum(i.details.studentCount)}+ {lang === 'uz' ? "o'quvchi" : 'уч.'}
-              </span>
-            )}
-            {i.details.teacherCount && (
-              <span className="flex shrink-0 items-center gap-1.5 whitespace-nowrap rounded-xl bg-violet-50 px-3 py-1.5 text-sm font-semibold text-violet-700">
-                <UserCheck className="h-4 w-4 shrink-0" strokeWidth={2} /> {i.details.teacherCount} {lang === 'uz' ? "o'qit." : 'пед.'}
-              </span>
-            )}
-          </div>
-        )}
+        {/* Shahar + statistika — bitta ixcham qator (rangli pill'lar o'rniga) */}
+        <div className="mb-3 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-gray-500">
+          {(i.city?.nameUz ?? i.address) && (
+            <span className="flex items-center gap-1">
+              <MapPin className="h-3.5 w-3.5 shrink-0 text-gray-400" strokeWidth={1.75} />
+              {lang === 'ru' && i.city?.nameRu ? i.city.nameRu : (i.city?.nameUz ?? i.address)}
+            </span>
+          )}
+          {i.details?.studentCount && (
+            <span className="flex items-center gap-1 font-semibold text-primary-600">
+              <Users2 className="h-3.5 w-3.5 shrink-0" strokeWidth={2} /> {formatNum(i.details.studentCount)}+
+            </span>
+          )}
+          {i.details?.teacherCount && (
+            <span className="flex items-center gap-1 font-semibold">
+              <UserCheck className="h-3.5 w-3.5 shrink-0" strokeWidth={2} /> {i.details.teacherCount}
+            </span>
+          )}
+        </div>
 
         {/* Yo'nalishlar */}
         {(i.details?.programs?.length ?? 0) > 0 && (
