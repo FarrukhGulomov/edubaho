@@ -3,9 +3,8 @@
 import Link from 'next/link'
 import { useState, useEffect, useCallback, useRef } from 'react'
 import {
-  Search, PencilLine, BookOpen, Laptop, Globe2, GraduationCap, Palette,
-  Trophy, Dumbbell, School, BadgeCheck, Sparkles, MapPin, Users2,
-  UserCheck, Star, ArrowLeftRight, Target,
+  Search, PencilLine, BookOpen, Trophy, School, BadgeCheck, Sparkles,
+  MapPin, Users2, UserCheck, Star, ArrowLeftRight, Target,
 } from 'lucide-react'
 import Header from '@/components/shared/Header'
 import StarRating from '@/components/shared/StarRating'
@@ -43,19 +42,6 @@ const TYPE_LABELS: Record<string, { uz: string; ru: string }> = {
   LYCEUM:          { uz: 'Litsey',        ru: 'Лицей' },
   SPORTS_SCHOOL:   { uz: 'Sport',         ru: 'Спорт' },
   ARTS_SCHOOL:     { uz: "San'at",        ru: 'Искусство' },
-}
-
-// Bitta izchil aksent — lucide ikonalar (globals.css .icon-chip bilan bir xil uslub)
-const TYPE_ICONS: Record<string, typeof School> = {
-  COURSE_CENTER:   PencilLine,
-  SCHOOL:          School,
-  IT_SCHOOL:       Laptop,
-  LANGUAGE_CENTER: Globe2,
-  UNIVERSITY:      GraduationCap,
-  KINDERGARTEN:    Palette,
-  LYCEUM:          Trophy,
-  SPORTS_SCHOOL:   Dumbbell,
-  ARTS_SCHOOL:     Palette,
 }
 
 // Faqat haqiqiy ma'lumoti bor turlar ko'rsatiladi — bo'sh natija bilan
@@ -154,23 +140,25 @@ export default function HomePage() {
             {uz ? "Barcha ta'lim muassasalari" : "Все учебные заведения"}
           </h1>
 
-          {/* EduFit — platformaning asosiy fichasi, birinchi bo'lib ko'zga tashlanishi kerak */}
+          {/* EduFit — platformaning asosiy fichasi, birinchi bo'lib ko'zga tashlanishi kerak.
+              Oq fonda — reklama banneriga o'xshamasligi uchun; ustunlik katta o'lcham,
+              rangli chegara va aniq CTA tugma orqali beriladi (rangli fon emas). */}
           <Link
             href="/match"
-            className="group mb-4 flex items-center gap-3 rounded-2xl bg-primary-600 px-4 py-4 text-left text-white shadow-sm transition-colors hover:bg-primary-700 sm:gap-4 sm:px-6 sm:py-5"
+            className="group mb-4 flex items-center gap-3 rounded-2xl border-2 border-primary-100 bg-white px-4 py-4 text-left shadow-sm transition-colors hover:border-primary-300 sm:gap-4 sm:px-6 sm:py-5"
           >
-            <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-white/15 sm:h-12 sm:w-12">
+            <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-primary-50 text-primary-600 sm:h-12 sm:w-12">
               <Target className="h-5 w-5 sm:h-6 sm:w-6" strokeWidth={1.75} />
             </span>
             <span className="flex-1">
-              <span className="block text-sm font-bold sm:text-lg">
+              <span className="block text-sm font-bold text-gray-900 sm:text-lg">
                 {uz ? 'Qaysi muassasa senga mos? — 1 daqiqada bilib ol' : 'Какое учреждение вам подходит? — узнайте за 1 минуту'}
               </span>
-              <span className="hidden text-sm text-primary-100 sm:block">
+              <span className="hidden text-sm text-gray-500 sm:block">
                 {uz ? "Shaxsiy so'rovnoma orqali eng mos variantlarni toping" : 'Персональный подбор по вашим критериям и бюджету'}
               </span>
             </span>
-            <span className="flex shrink-0 items-center gap-1 rounded-xl bg-white px-3 py-2 text-sm font-bold text-primary-700 sm:px-4">
+            <span className="flex shrink-0 items-center gap-1 rounded-xl bg-primary-600 px-3 py-2 text-sm font-bold text-white transition-colors group-hover:bg-primary-700 sm:px-4">
               {uz ? 'Boshlash' : 'Начать'}
               <span className="transition-transform group-hover:translate-x-0.5">→</span>
             </span>
@@ -298,42 +286,36 @@ export default function HomePage() {
             <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
               {institutions.map(inst => {
                 const info     = TYPE_LABELS[inst.type]
-                const TypeIcon = TYPE_ICONS[inst.type] ?? School
                 const name     = uz || !inst.nameRu ? inst.nameUz : inst.nameRu
                 const city     = inst.city ? (uz || !inst.city.nameRu ? inst.city.nameUz : inst.city.nameRu) : null
                 const saved    = isSaved(inst.id)
                 const compared = isCompared(inst.id)
 
                 return (
-                  <div key={inst.id} className="group card flex flex-col overflow-hidden p-0">
-                    {/* Sarlavha: ikonka + status teglar */}
-                    <Link href={`/institutions/${inst.slug}`} className="relative flex h-20 items-center justify-center bg-gray-50 border-b border-gray-100">
-                      <TypeIcon className="h-9 w-9 text-primary-300" strokeWidth={1.5} />
-                      {inst.isVerified && (
-                        <span className="absolute right-2.5 top-2.5 flex items-center gap-1 rounded-full bg-emerald-50 px-2 py-0.5 text-[11px] font-semibold text-emerald-700">
-                          <BadgeCheck className="h-3 w-3" strokeWidth={2} /> {uz ? 'Tasdiqlangan' : 'Подтв.'}
-                        </span>
-                      )}
-                      {inst.subscription?.plan === 'PREMIUM' && (
-                        <span className="absolute left-2.5 top-2.5 flex items-center gap-1 rounded-full bg-amber-50 px-2 py-0.5 text-[11px] font-semibold text-amber-700">
-                          <Sparkles className="h-3 w-3" strokeWidth={2} /> Premium
-                        </span>
-                      )}
-                    </Link>
-
+                  <div key={inst.id} className="group card flex flex-col p-0">
                     {/* Karta tanasi */}
-                    <div className="flex flex-1 flex-col p-4">
-                      {/* Tur tegi */}
-                      <span className="badge-sm mb-2 self-start bg-primary-50 text-primary-700">
-                        {info ? (uz ? info.uz : info.ru) : inst.type}
-                      </span>
+                    <Link href={`/institutions/${inst.slug}`} className="flex flex-1 flex-col p-4 pb-0">
+                      {/* Tur + status teglar */}
+                      <div className="mb-2 flex flex-wrap items-center gap-1.5">
+                        <span className="badge-sm bg-primary-50 text-primary-700">
+                          {info ? (uz ? info.uz : info.ru) : inst.type}
+                        </span>
+                        {inst.isVerified && (
+                          <span className="flex items-center gap-1 rounded-full bg-emerald-50 px-2 py-0.5 text-[11px] font-semibold text-emerald-700">
+                            <BadgeCheck className="h-3 w-3" strokeWidth={2} /> {uz ? 'Tasdiqlangan' : 'Подтв.'}
+                          </span>
+                        )}
+                        {inst.subscription?.plan === 'PREMIUM' && (
+                          <span className="flex items-center gap-1 rounded-full bg-amber-50 px-2 py-0.5 text-[11px] font-semibold text-amber-700">
+                            <Sparkles className="h-3 w-3" strokeWidth={2} /> Premium
+                          </span>
+                        )}
+                      </div>
 
                       {/* Nom */}
-                      <Link href={`/institutions/${inst.slug}`}>
-                        <h3 className="mb-1.5 text-base font-black text-gray-900 group-hover:text-primary-700 transition-colors line-clamp-2 leading-snug">
-                          {name}
-                        </h3>
-                      </Link>
+                      <h3 className="mb-1.5 text-base font-black text-gray-900 group-hover:text-primary-700 transition-colors line-clamp-2 leading-snug">
+                        {name}
+                      </h3>
 
                       {/* Yo'nalishlar preview */}
                       {(inst.details?.programs?.length ?? 0) > 0 && (
@@ -390,32 +372,32 @@ export default function HomePage() {
                           </span>
                         )}
                       </div>
+                    </Link>
 
-                      {/* Saqlash / Solishtirish tugmalari */}
-                      <div className="mt-2 flex gap-1.5 border-t border-gray-50 pt-2">
-                        <button
-                          onClick={() => toggleSave(inst)}
-                          className={`flex flex-1 items-center justify-center gap-1 rounded-lg py-1.5 text-xs font-semibold transition-colors ${
-                            saved
-                              ? 'bg-amber-50 text-amber-700'
-                              : 'bg-gray-50 text-gray-500 hover:bg-gray-100'
-                          }`}
-                        >
-                          <Star className="h-3.5 w-3.5" fill={saved ? 'currentColor' : 'none'} strokeWidth={2} />
-                          {uz ? (saved ? "Saqlandi" : "Saqlash") : (saved ? "Сохранено" : "Сохранить")}
-                        </button>
-                        <button
-                          onClick={() => toggleCompare(inst)}
-                          className={`flex flex-1 items-center justify-center gap-1 rounded-lg py-1.5 text-xs font-semibold transition-colors ${
-                            compared
-                              ? 'bg-primary-50 text-primary-700'
-                              : 'bg-gray-50 text-gray-500 hover:bg-gray-100'
-                          }`}
-                        >
-                          <ArrowLeftRight className="h-3.5 w-3.5" strokeWidth={2} />
-                          {uz ? (compared ? "Tanlandi" : "Solishtir") : (compared ? "Выбрано" : "Сравнить")}
-                        </button>
-                      </div>
+                    {/* Saqlash / Solishtirish tugmalari */}
+                    <div className="flex gap-1.5 border-t border-gray-50 p-4 pt-2">
+                      <button
+                        onClick={() => toggleSave(inst)}
+                        className={`flex flex-1 items-center justify-center gap-1 rounded-lg py-1.5 text-xs font-semibold transition-colors ${
+                          saved
+                            ? 'bg-amber-50 text-amber-700'
+                            : 'bg-gray-50 text-gray-500 hover:bg-gray-100'
+                        }`}
+                      >
+                        <Star className="h-3.5 w-3.5" fill={saved ? 'currentColor' : 'none'} strokeWidth={2} />
+                        {uz ? (saved ? "Saqlandi" : "Saqlash") : (saved ? "Сохранено" : "Сохранить")}
+                      </button>
+                      <button
+                        onClick={() => toggleCompare(inst)}
+                        className={`flex flex-1 items-center justify-center gap-1 rounded-lg py-1.5 text-xs font-semibold transition-colors ${
+                          compared
+                            ? 'bg-primary-50 text-primary-700'
+                            : 'bg-gray-50 text-gray-500 hover:bg-gray-100'
+                        }`}
+                      >
+                        <ArrowLeftRight className="h-3.5 w-3.5" strokeWidth={2} />
+                        {uz ? (compared ? "Tanlandi" : "Solishtir") : (compared ? "Выбрано" : "Сравнить")}
+                      </button>
                     </div>
                   </div>
                 )
