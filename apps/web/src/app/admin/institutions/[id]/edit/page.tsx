@@ -1,6 +1,7 @@
 'use client'
 
 import Link from 'next/link'
+import { Ban, GraduationCap, PencilLine, AlertCircle } from 'lucide-react'
 import { useAuth } from '@/hooks/useAuth'
 import { useRouter, useParams } from 'next/navigation'
 import { useEffect, useState } from 'react'
@@ -78,7 +79,9 @@ export default function EditInstitutionPage() {
     return (
       <div className="flex min-h-screen items-center justify-center bg-gray-50 text-center px-4">
         <div>
-          <div className="text-5xl mb-4">🚫</div>
+          <div className="mb-4 flex justify-center">
+            <Ban className="h-12 w-12 text-gray-300" strokeWidth={1.5} />
+          </div>
           <h1 className="text-xl font-bold text-gray-900 mb-2">Ruxsat yo&apos;q</h1>
           <Link href="/" className="text-primary-600 hover:underline">Bosh sahifaga qaytish</Link>
         </div>
@@ -89,17 +92,19 @@ export default function EditInstitutionPage() {
   return (
     <div className="min-h-screen bg-gray-50">
       <header className="sticky top-0 z-10 border-b border-gray-200 bg-white shadow-sm">
-        <div className="mx-auto flex max-w-3xl items-center justify-between px-4 py-3">
-          <div className="flex items-center gap-3 text-sm">
-            <Link href="/" className="font-bold text-primary-600">🎓 EDUBAHO</Link>
-            <span className="text-gray-300">›</span>
-            <Link href="/admin/institutions" className="text-gray-500 hover:text-gray-700">Muassasalar</Link>
-            <span className="text-gray-300">›</span>
-            <span className="font-semibold text-gray-700 max-w-32 truncate">{instName || 'Tahrirlash'}</span>
+        <div className="mx-auto flex max-w-3xl items-center justify-between gap-3 px-4 py-3">
+          <div className="flex min-w-0 items-center gap-3 overflow-hidden text-sm">
+            <Link href="/" className="flex shrink-0 items-center gap-1.5 whitespace-nowrap font-bold text-primary-600">
+              <GraduationCap className="h-4 w-4 shrink-0" strokeWidth={1.75} /> EDUBAHO
+            </Link>
+            <span className="shrink-0 text-gray-300">›</span>
+            <Link href="/admin/institutions" className="shrink-0 whitespace-nowrap text-gray-500 hover:text-gray-700">Muassasalar</Link>
+            <span className="shrink-0 text-gray-300">›</span>
+            <span className="max-w-32 truncate font-semibold text-gray-700">{instName || 'Tahrirlash'}</span>
           </div>
           <Link
             href="/admin/institutions"
-            className="flex items-center gap-1.5 rounded-xl border-2 border-gray-200 bg-white px-4 py-2 text-sm font-bold text-gray-600 hover:bg-gray-50 hover:border-gray-300 transition-all active:scale-95"
+            className="shrink-0 whitespace-nowrap rounded-xl border border-gray-200 bg-white px-4 py-2 text-sm font-semibold text-gray-600 transition-colors hover:border-gray-300 hover:bg-gray-50"
           >
             ← Orqaga
           </Link>
@@ -108,19 +113,22 @@ export default function EditInstitutionPage() {
 
       <main className="mx-auto max-w-3xl px-4 py-8">
         <div className="mb-6">
-          <h1 className="text-2xl font-black text-gray-900">
-            ✏️ {instName ? `"${instName}"ni tahrirlash` : 'Tahrirlash'}
+          <h1 className="flex items-center gap-2 text-2xl font-bold text-gray-900">
+            <PencilLine className="h-6 w-6 shrink-0 text-primary-600" strokeWidth={1.75} />
+            {instName ? `"${instName}"ni tahrirlash` : 'Tahrirlash'}
           </h1>
           <p className="mt-1 text-gray-500">Ma'lumotlarni o'zgartirib, saqlash tugmasini bosing</p>
         </div>
 
         {fetchError ? (
           <div className="rounded-2xl border border-red-200 bg-red-50 p-8 text-center">
-            <div className="text-4xl mb-3">⚠️</div>
+            <div className="mb-3 flex justify-center">
+              <AlertCircle className="h-9 w-9 text-red-400" strokeWidth={1.5} />
+            </div>
             <p className="font-semibold text-red-700">{fetchError}</p>
             <Link
               href="/admin/institutions"
-              className="mt-4 inline-flex items-center gap-1.5 rounded-xl border-2 border-red-200 bg-white px-6 py-2.5 text-sm font-bold text-red-600 hover:bg-red-50 hover:border-red-300 transition-all active:scale-95"
+              className="mt-4 inline-flex items-center gap-1.5 rounded-xl border border-red-200 bg-white px-6 py-2.5 text-sm font-semibold text-red-600 transition-colors hover:border-red-300 hover:bg-red-50"
             >
               ← Orqaga qaytish
             </Link>
@@ -130,7 +138,7 @@ export default function EditInstitutionPage() {
             <div className="h-10 w-10 animate-spin rounded-full border-4 border-primary-200 border-t-primary-600" />
           </div>
         ) : (
-          <div className="rounded-2xl border-2 border-gray-100 bg-white p-6 shadow-sm">
+          <div className="rounded-2xl border border-gray-200 bg-white p-6 shadow-sm">
             <InstitutionForm
               mode="edit"
               institutionId={id}

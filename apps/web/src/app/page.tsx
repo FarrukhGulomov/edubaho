@@ -274,7 +274,9 @@ export default function HomePage() {
         /* Bo'sh holat */
         ) : institutions.length === 0 ? (
           <div className="flex flex-col items-center py-20 text-center">
-            <div className="mb-4 flex h-20 w-20 items-center justify-center rounded-3xl bg-gray-100 text-5xl">🔍</div>
+            <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-2xl bg-gray-100">
+              <Search className="h-7 w-7 text-gray-300" strokeWidth={1.5} />
+            </div>
             <p className="mb-2 text-xl font-bold text-gray-800">
               {uz ? "Hech narsa topilmadi" : "Ничего не найдено"}
             </p>

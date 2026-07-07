@@ -2,6 +2,10 @@
 
 import { useState, useEffect, useCallback } from 'react'
 import Link from 'next/link'
+import {
+  Lock, Ban, GraduationCap, RefreshCw, Clock, Flag, X, CheckCircle2,
+  User, School,
+} from 'lucide-react'
 import { useAuth } from '@/hooks/useAuth'
 
 const API = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:3001/api/v1'
@@ -69,7 +73,7 @@ export default function AdminReviewsPage() {
       if (res.ok) {
         setReviews((prev) => prev.filter((r) => r.id !== id))
         setMeta((m) => ({ ...m, total: m.total - 1 }))
-        setToast(action === 'approve' ? '✅ Sharh tasdiqlandi' : '🗑️ Sharh rad etildi')
+        setToast(action === 'approve' ? 'Sharh tasdiqlandi' : 'Sharh rad etildi')
         setTimeout(() => setToast(''), 3000)
       }
     } finally {
@@ -89,7 +93,9 @@ export default function AdminReviewsPage() {
     return (
       <div className="flex min-h-screen items-center justify-center bg-gray-50 text-center px-4">
         <div>
-          <div className="text-5xl mb-4">🔒</div>
+          <div className="mb-4 flex justify-center">
+            <Lock className="h-12 w-12 text-gray-300" strokeWidth={1.5} />
+          </div>
           <h1 className="text-xl font-bold text-gray-900 mb-2">Kirish talab etiladi</h1>
           <Link href="/auth" className="text-primary-600 hover:underline">Tizimga kirish →</Link>
         </div>
@@ -101,7 +107,9 @@ export default function AdminReviewsPage() {
     return (
       <div className="flex min-h-screen items-center justify-center bg-gray-50 text-center px-4">
         <div>
-          <div className="text-5xl mb-4">🚫</div>
+          <div className="mb-4 flex justify-center">
+            <Ban className="h-12 w-12 text-gray-300" strokeWidth={1.5} />
+          </div>
           <h1 className="text-xl font-bold text-gray-900 mb-2">Ruxsat yo'q</h1>
           <p className="text-gray-500 mb-4">Bu sahifa faqat moderatorlar uchun</p>
           <Link href="/" className="text-primary-600 hover:underline">Bosh sahifaga qaytish</Link>
@@ -114,20 +122,22 @@ export default function AdminReviewsPage() {
     <div className="min-h-screen bg-gray-50">
       {/* Header */}
       <header className="sticky top-0 z-10 border-b border-gray-200 bg-white shadow-sm">
-        <div className="mx-auto flex max-w-5xl items-center justify-between px-4 py-3">
-          <div className="flex items-center gap-3">
-            <Link href="/" className="font-bold text-primary-600">🎓 EDUBAHO</Link>
-            <span className="text-gray-300">›</span>
-            <span className="font-semibold text-gray-700">Admin panel</span>
+        <div className="mx-auto flex max-w-5xl items-center justify-between gap-3 px-4 py-3">
+          <div className="flex min-w-0 items-center gap-3 overflow-hidden">
+            <Link href="/" className="flex shrink-0 items-center gap-1.5 whitespace-nowrap font-bold text-primary-600">
+              <GraduationCap className="h-4 w-4 shrink-0" strokeWidth={1.75} /> EDUBAHO
+            </Link>
+            <span className="shrink-0 text-gray-300">›</span>
+            <span className="truncate font-semibold text-gray-700">Admin panel</span>
           </div>
-          <div className="flex items-center gap-2">
+          <div className="flex shrink-0 items-center gap-2">
             <Link
               href="/admin"
-              className="flex items-center gap-1.5 rounded-xl border-2 border-gray-200 bg-white px-3 py-2 text-sm font-medium text-gray-600 hover:bg-gray-50 transition-all active:scale-95"
+              className="whitespace-nowrap rounded-xl border border-gray-200 bg-white px-3 py-2 text-sm font-medium text-gray-600 transition-colors hover:bg-gray-50"
             >
               ← Orqaga
             </Link>
-            <span className="rounded-full bg-red-100 px-3 py-1.5 text-sm font-bold text-red-700">
+            <span className="whitespace-nowrap rounded-full bg-red-50 px-3 py-1.5 text-sm font-semibold text-red-700">
               {user.role}
             </span>
           </div>
@@ -145,31 +155,35 @@ export default function AdminReviewsPage() {
         {/* Title + stats */}
         <div className="mb-6 flex items-center justify-between">
           <div>
-            <h1 className="text-2xl font-black text-gray-900">Sharhlarni moderatsiya qilish</h1>
+            <h1 className="text-2xl font-bold text-gray-900">Sharhlarni moderatsiya qilish</h1>
             <p className="text-gray-500 mt-1">Ko'rib chiqish kerak: <strong>{meta.total} ta sharh</strong></p>
           </div>
           <button
             onClick={fetchReviews}
             disabled={fetching}
-            className="flex items-center gap-1.5 rounded-xl border-2 border-gray-200 bg-white px-4 py-2.5 text-sm font-bold text-gray-600 hover:bg-gray-50 hover:border-gray-300 disabled:opacity-50 transition-all active:scale-95"
+            className="flex items-center gap-1.5 whitespace-nowrap rounded-xl border border-gray-200 bg-white px-4 py-2.5 text-sm font-semibold text-gray-600 transition-colors hover:border-gray-300 hover:bg-gray-50 disabled:opacity-50"
           >
-            {fetching ? '⏳ Yuklanmoqda...' : '↻ Yangilash'}
+            <RefreshCw className={`h-4 w-4 shrink-0 ${fetching ? 'animate-spin' : ''}`} strokeWidth={1.75} /> Yangilash
           </button>
         </div>
 
         {/* Status tabs */}
-        <div className="mb-6 flex gap-2 flex-wrap">
-          {(['PENDING', 'FLAGGED', 'REJECTED'] as const).map((s) => (
+        <div className="mb-6 flex flex-wrap gap-2">
+          {([
+            { key: 'PENDING' as const, Icon: Clock, label: 'Kutayotgan' },
+            { key: 'FLAGGED' as const, Icon: Flag, label: 'Shikoyat' },
+            { key: 'REJECTED' as const, Icon: X, label: 'Rad etilgan' },
+          ]).map(({ key, Icon, label }) => (
             <button
-              key={s}
-              onClick={() => setStatus(s)}
-              className={`rounded-2xl px-5 py-2.5 text-sm font-bold transition-all active:scale-95 ${
-                status === s
-                  ? 'bg-gradient-to-r from-primary-600 to-primary-500 text-white shadow-md'
-                  : 'border-2 border-gray-200 bg-white text-gray-600 hover:bg-gray-50 hover:border-gray-300'
+              key={key}
+              onClick={() => setStatus(key)}
+              className={`flex items-center gap-1.5 whitespace-nowrap rounded-xl px-5 py-2.5 text-sm font-semibold transition-colors ${
+                status === key
+                  ? 'bg-primary-600 text-white'
+                  : 'border border-gray-200 bg-white text-gray-600 hover:border-gray-300 hover:bg-gray-50'
               }`}
             >
-              {s === 'PENDING' ? '⏳ Kutayotgan' : s === 'FLAGGED' ? '🚩 Shikoyat' : '❌ Rad etilgan'}
+              <Icon className="h-4 w-4 shrink-0" strokeWidth={1.75} /> {label}
             </button>
           ))}
         </div>
@@ -179,25 +193,30 @@ export default function AdminReviewsPage() {
           <div className="py-20 text-center text-gray-400">Yuklanmoqda...</div>
         ) : reviews.length === 0 ? (
           <div className="py-20 text-center">
-            <div className="text-5xl mb-3">✅</div>
+            <div className="mb-3 flex justify-center">
+              <CheckCircle2 className="h-12 w-12 text-emerald-400" strokeWidth={1.5} />
+            </div>
             <p className="text-lg font-semibold text-gray-600">Barcha sharhlar ko'rib chiqildi!</p>
           </div>
         ) : (
           <div className="space-y-4">
             {reviews.map((review) => (
-              <div key={review.id} className="rounded-2xl border-2 border-gray-100 bg-white p-6 shadow-sm hover:border-gray-200 hover:shadow-md transition-all">
+              <div key={review.id} className="rounded-2xl border border-gray-200 bg-white p-6 shadow-sm transition-colors hover:border-gray-300">
                 {/* Top row */}
                 <div className="mb-3 flex flex-wrap items-start justify-between gap-3">
                   <div>
                     <div className="flex items-center gap-2 flex-wrap">
-                      <span className={`rounded-full px-2.5 py-0.5 text-xs font-bold ${STATUS_COLORS[review.status]}`}>
+                      <span className={`whitespace-nowrap rounded-full px-2.5 py-0.5 text-xs font-semibold ${STATUS_COLORS[review.status]}`}>
                         {review.status}
                       </span>
                       <span className="text-yellow-500 font-bold">{STAR[review.overallRating]}</span>
                       <span className="text-sm text-gray-500">{review.overallRating}/5</span>
                     </div>
                     <div className="mt-1 flex items-center gap-2 text-sm text-gray-500">
-                      <span>👤 {review.isAnonymous ? 'Anonim' : (review.user?.name ?? review.user?.phone ?? 'Noma\'lum')}</span>
+                      <span className="flex items-center gap-1">
+                        <User className="h-3.5 w-3.5 shrink-0" strokeWidth={1.75} />
+                        {review.isAnonymous ? 'Anonim' : (review.user?.name ?? review.user?.phone ?? 'Noma\'lum')}
+                      </span>
                       <span>•</span>
                       <span>{new Date(review.createdAt).toLocaleDateString('uz-UZ')}</span>
                     </div>
@@ -206,9 +225,9 @@ export default function AdminReviewsPage() {
                     <Link
                       href={`/institutions/${review.institution.slug}`}
                       target="_blank"
-                      className="rounded-xl border-2 border-primary-100 bg-primary-50 px-3 py-2 text-sm font-bold text-primary-700 hover:bg-primary-100 hover:border-primary-200 transition-all active:scale-95"
+                      className="flex items-center gap-1.5 whitespace-nowrap rounded-xl border border-primary-100 bg-primary-50 px-3 py-2 text-sm font-semibold text-primary-700 transition-colors hover:border-primary-200 hover:bg-primary-100"
                     >
-                      🏫 {review.institution.nameUz} →
+                      <School className="h-3.5 w-3.5 shrink-0" strokeWidth={1.75} /> {review.institution.nameUz} →
                     </Link>
                   )}
                 </div>
@@ -225,16 +244,16 @@ export default function AdminReviewsPage() {
                     <button
                       onClick={() => handleAction(review.id, 'approve')}
                       disabled={actionId === review.id}
-                      className="flex-1 rounded-2xl bg-gradient-to-r from-green-500 to-emerald-500 py-3 text-base font-bold text-white shadow-sm hover:shadow-md hover:opacity-90 disabled:opacity-50 transition-all active:scale-95"
+                      className="flex flex-1 items-center justify-center gap-2 rounded-xl bg-emerald-600 py-3 text-base font-semibold text-white transition-colors hover:bg-emerald-700 disabled:opacity-50"
                     >
-                      {actionId === review.id ? '⏳ ...' : '✅ Tasdiqlash'}
+                      {actionId === review.id ? '...' : <><CheckCircle2 className="h-4 w-4 shrink-0" strokeWidth={1.75} /> Tasdiqlash</>}
                     </button>
                     <button
                       onClick={() => handleAction(review.id, 'reject')}
                       disabled={actionId === review.id}
-                      className="flex-1 rounded-2xl border-2 border-red-200 bg-white py-3 text-base font-bold text-red-600 hover:bg-red-50 hover:border-red-300 disabled:opacity-50 transition-all active:scale-95"
+                      className="flex flex-1 items-center justify-center gap-2 rounded-xl border border-red-200 bg-white py-3 text-base font-semibold text-red-600 transition-colors hover:border-red-300 hover:bg-red-50 disabled:opacity-50"
                     >
-                      {actionId === review.id ? '⏳ ...' : '❌ Rad etish'}
+                      {actionId === review.id ? '...' : <><X className="h-4 w-4 shrink-0" strokeWidth={1.75} /> Rad etish</>}
                     </button>
                   </div>
                 ) : (

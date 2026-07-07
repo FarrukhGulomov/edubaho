@@ -2,6 +2,7 @@
 
 import Link from 'next/link'
 import { useEffect, useState } from 'react'
+import { GraduationCap, ShieldCheck, Ban, Pencil, Check, X, School, Crown, AlertTriangle } from 'lucide-react'
 import { useAuth } from '@/hooks/useAuth'
 import { useRouter } from 'next/navigation'
 
@@ -110,7 +111,7 @@ export default function SuperAdminAdminsPage() {
       })
       const data = await res.json()
       if (res.ok) {
-        showToast("✅ Admin muvaffaqiyatli tayinlandi")
+        showToast("Admin muvaffaqiyatli tayinlandi")
         setShowCreate(false)
         setCreateUserId('')
         setCreatePerms({ ...EMPTY_PERMS })
@@ -134,7 +135,7 @@ export default function SuperAdminAdminsPage() {
       })
       const data = await res.json()
       if (res.ok) {
-        showToast('✅ Ruxsatlar yangilandi')
+        showToast('Ruxsatlar yangilandi')
         setEditingId(null)
         fetchAdmins()
       } else {
@@ -155,7 +156,7 @@ export default function SuperAdminAdminsPage() {
       })
       const data = await res.json()
       if (res.ok) {
-        showToast(`🗑️ "${admin.name ?? admin.phone}" admin huquqlari olib tashlandi`)
+        showToast(`"${admin.name ?? admin.phone}" admin huquqlari olib tashlandi`)
         setConfirmDemote(null)
         setAdmins(prev => prev.filter(a => a.id !== admin.id))
       } else {
@@ -175,7 +176,9 @@ export default function SuperAdminAdminsPage() {
   if (user.role !== 'SUPER_ADMIN') return (
     <div className="flex min-h-screen items-center justify-center bg-gray-50 text-center px-4">
       <div>
-        <div className="text-5xl mb-4">🚫</div>
+        <div className="mb-4 flex justify-center">
+          <Ban className="h-12 w-12 text-gray-300" strokeWidth={1.5} />
+        </div>
         <h1 className="text-xl font-bold mb-2">Ruxsat yo&apos;q</h1>
         <Link href="/" className="text-primary-600 hover:underline">Bosh sahifaga qaytish</Link>
       </div>
@@ -186,19 +189,21 @@ export default function SuperAdminAdminsPage() {
     <div className="min-h-screen bg-gray-50">
       {/* Header */}
       <header className="sticky top-0 z-10 border-b border-gray-200 bg-white shadow-sm">
-        <div className="mx-auto flex max-w-5xl items-center justify-between px-4 py-3">
-          <div className="flex items-center gap-2 text-sm">
-            <Link href="/" className="font-bold text-primary-600">🎓 EDUBAHO</Link>
-            <span className="text-gray-300">›</span>
-            <Link href="/admin" className="text-gray-500 hover:text-gray-700">Admin</Link>
-            <span className="text-gray-300">›</span>
-            <Link href="/admin/super" className="text-gray-500 hover:text-gray-700">Super Admin</Link>
-            <span className="text-gray-300">›</span>
-            <span className="font-semibold text-gray-700">Adminlar</span>
+        <div className="mx-auto flex max-w-5xl items-center justify-between gap-3 px-4 py-3">
+          <div className="flex min-w-0 items-center gap-2 overflow-hidden text-sm">
+            <Link href="/" className="flex shrink-0 items-center gap-1.5 whitespace-nowrap font-bold text-primary-600">
+              <GraduationCap className="h-4 w-4 shrink-0" strokeWidth={1.75} /> EDUBAHO
+            </Link>
+            <span className="shrink-0 text-gray-300">›</span>
+            <Link href="/admin" className="shrink-0 whitespace-nowrap text-gray-500 hover:text-gray-700">Admin</Link>
+            <span className="shrink-0 text-gray-300">›</span>
+            <Link href="/admin/super" className="shrink-0 whitespace-nowrap text-gray-500 hover:text-gray-700">Super Admin</Link>
+            <span className="shrink-0 text-gray-300">›</span>
+            <span className="truncate font-semibold text-gray-700">Adminlar</span>
           </div>
           <button
             onClick={() => { setShowCreate(true); setCreatePerms({ ...EMPTY_PERMS }) }}
-            className="rounded-xl bg-purple-600 px-4 py-2 text-sm font-bold text-white hover:bg-purple-700 transition-colors"
+            className="shrink-0 whitespace-nowrap rounded-xl bg-purple-600 px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-purple-700"
           >
             + Admin tayinlash
           </button>
@@ -216,8 +221,10 @@ export default function SuperAdminAdminsPage() {
 
       <main className="mx-auto max-w-5xl px-4 py-8">
         <div className="mb-6 flex items-center justify-between">
-          <h1 className="text-2xl font-black text-gray-900">🛡️ Adminlar boshqaruvi</h1>
-          <span className="rounded-full bg-gray-100 px-3 py-1 text-sm font-semibold text-gray-600">
+          <h1 className="flex items-center gap-2 text-2xl font-bold text-gray-900">
+            <ShieldCheck className="h-6 w-6 shrink-0 text-purple-600" strokeWidth={1.75} /> Adminlar boshqaruvi
+          </h1>
+          <span className="whitespace-nowrap rounded-full bg-gray-100 px-3 py-1 text-sm font-semibold text-gray-600">
             {admins.length} ta admin
           </span>
         </div>
@@ -228,11 +235,13 @@ export default function SuperAdminAdminsPage() {
           </div>
         ) : admins.length === 0 ? (
           <div className="rounded-2xl border border-dashed border-gray-300 bg-white py-16 text-center">
-            <div className="mb-3 text-5xl">🛡️</div>
+            <div className="mb-3 flex justify-center">
+              <ShieldCheck className="h-12 w-12 text-gray-300" strokeWidth={1.5} />
+            </div>
             <p className="font-semibold text-gray-600">Hozircha adminlar yo&apos;q</p>
             <button
               onClick={() => setShowCreate(true)}
-              className="mt-4 rounded-xl bg-purple-600 px-5 py-2.5 text-sm font-bold text-white hover:bg-purple-700"
+              className="mt-4 rounded-xl bg-purple-600 px-5 py-2.5 text-sm font-semibold text-white hover:bg-purple-700"
             >
               + Birinchi adminni tayinlash
             </button>
@@ -267,15 +276,15 @@ export default function SuperAdminAdminsPage() {
                             setEditPerms(p ? { ...p } : { ...EMPTY_PERMS })
                           }
                         }}
-                        className="rounded-lg border border-purple-200 px-3 py-1.5 text-xs font-semibold text-purple-700 hover:bg-purple-50 transition-colors"
+                        className="flex items-center gap-1 whitespace-nowrap rounded-lg border border-purple-200 px-3 py-1.5 text-xs font-semibold text-purple-700 hover:bg-purple-50 transition-colors"
                       >
-                        {isEditing ? 'Yopish' : '✏️ Ruxsatlar'}
+                        {isEditing ? 'Yopish' : <><Pencil className="h-3 w-3 shrink-0" strokeWidth={1.75} /> Ruxsatlar</>}
                       </button>
                       <button
                         onClick={() => setConfirmDemote(admin)}
-                        className="rounded-lg border border-red-200 px-3 py-1.5 text-xs font-semibold text-red-600 hover:bg-red-50 transition-colors"
+                        className="flex items-center gap-1 whitespace-nowrap rounded-lg border border-red-200 px-3 py-1.5 text-xs font-semibold text-red-600 hover:bg-red-50 transition-colors"
                       >
-                        🚫 Bekor qilish
+                        <Ban className="h-3 w-3 shrink-0" strokeWidth={1.75} /> Bekor qilish
                       </button>
                     </div>
                   </div>
@@ -286,18 +295,20 @@ export default function SuperAdminAdminsPage() {
                       {PERM_LABELS.map(({ key, label }) => key !== 'institutionIds' && (
                         <span
                           key={key}
-                          className={`rounded-full px-2.5 py-0.5 text-xs font-semibold ${
+                          className={`flex items-center gap-1 whitespace-nowrap rounded-full px-2.5 py-0.5 text-xs font-semibold ${
                             (p[key] as boolean)
-                              ? 'bg-green-100 text-green-700'
+                              ? 'bg-emerald-50 text-emerald-700'
                               : 'bg-gray-100 text-gray-400'
                           }`}
                         >
-                          {(p[key] as boolean) ? '✓' : '✗'} {label}
+                          {(p[key] as boolean)
+                            ? <Check className="h-3 w-3 shrink-0" strokeWidth={2} />
+                            : <X className="h-3 w-3 shrink-0" strokeWidth={2} />} {label}
                         </span>
                       ))}
                       {p.institutionIds.length > 0 && (
-                        <span className="rounded-full bg-blue-100 px-2.5 py-0.5 text-xs font-semibold text-blue-700">
-                          🏫 {p.institutionIds.length} ta muassasa
+                        <span className="flex items-center gap-1 whitespace-nowrap rounded-full bg-blue-50 px-2.5 py-0.5 text-xs font-semibold text-blue-700">
+                          <School className="h-3 w-3 shrink-0" strokeWidth={1.75} /> {p.institutionIds.length} ta muassasa
                         </span>
                       )}
                     </div>
@@ -324,9 +335,9 @@ export default function SuperAdminAdminsPage() {
                         <button
                           onClick={() => handleSavePerms(admin.id)}
                           disabled={saving}
-                          className="rounded-xl bg-purple-600 px-5 py-2 text-sm font-bold text-white hover:bg-purple-700 disabled:opacity-60 transition-colors"
+                          className="flex items-center gap-1.5 rounded-xl bg-purple-600 px-5 py-2 text-sm font-semibold text-white hover:bg-purple-700 disabled:opacity-60 transition-colors"
                         >
-                          {saving ? 'Saqlanmoqda...' : '✓ Saqlash'}
+                          {saving ? 'Saqlanmoqda...' : <><Check className="h-4 w-4 shrink-0" strokeWidth={2} /> Saqlash</>}
                         </button>
                         <button
                           onClick={() => setEditingId(null)}
@@ -348,7 +359,9 @@ export default function SuperAdminAdminsPage() {
       {showCreate && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 px-4">
           <div className="w-full max-w-lg rounded-2xl bg-white p-6 shadow-xl">
-            <h2 className="mb-1 text-xl font-black text-gray-900">👑 Admin tayinlash</h2>
+            <h2 className="mb-1 flex items-center gap-2 text-xl font-bold text-gray-900">
+              <Crown className="h-5 w-5 shrink-0 text-purple-600" strokeWidth={1.75} /> Admin tayinlash
+            </h2>
             <p className="mb-5 text-sm text-gray-500">Foydalanuvchini admin qiling va ruxsatlarini belgilang</p>
 
             <div className="mb-4">
@@ -392,9 +405,9 @@ export default function SuperAdminAdminsPage() {
               <button
                 onClick={handleCreate}
                 disabled={creating || !createUserId.trim()}
-                className="flex-1 rounded-xl bg-purple-600 py-3 font-bold text-white hover:bg-purple-700 disabled:opacity-60 transition-colors"
+                className="flex flex-1 items-center justify-center gap-1.5 rounded-xl bg-purple-600 py-3 font-semibold text-white hover:bg-purple-700 disabled:opacity-60 transition-colors"
               >
-                {creating ? 'Tayinlanmoqda...' : '✓ Admin qilish'}
+                {creating ? 'Tayinlanmoqda...' : <><Check className="h-4 w-4 shrink-0" strokeWidth={2} /> Admin qilish</>}
               </button>
             </div>
           </div>
@@ -405,7 +418,9 @@ export default function SuperAdminAdminsPage() {
       {confirmDemote && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 px-4">
           <div className="w-full max-w-md rounded-2xl bg-white p-6 shadow-xl text-center">
-            <div className="mb-2 text-5xl">⚠️</div>
+            <div className="mb-2 flex justify-center">
+              <AlertTriangle className="h-10 w-10 text-amber-400" strokeWidth={1.5} />
+            </div>
             <h2 className="mb-2 text-lg font-bold text-gray-900">Admin huquqlarini bekor qilish</h2>
             <p className="mb-5 text-gray-600">
               <strong>&quot;{confirmDemote.name ?? confirmDemote.phone}&quot;</strong> admin huquqlarini olib

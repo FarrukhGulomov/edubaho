@@ -2,6 +2,7 @@
 
 import Link from 'next/link'
 import { useEffect, useState, useCallback } from 'react'
+import { GraduationCap, Crown, Ban, Users2, Search, BadgeCheck, Lock, CheckCircle2, Trash2, AlertTriangle } from 'lucide-react'
 import { useAuth } from '@/hooks/useAuth'
 import { useRouter } from 'next/navigation'
 
@@ -152,7 +153,7 @@ export default function SuperAdminUsersPage() {
       })
       const data = await res.json()
       if (res.ok) {
-        showToast(`🗑️ "${u.name ?? u.phone}" o'chirildi`)
+        showToast(`"${u.name ?? u.phone}" o'chirildi`)
         setDeleteTarget(null)
         setUsers(prev => prev.filter(x => x.id !== u.id))
         setMeta(m => ({ ...m, total: m.total - 1 }))
@@ -173,7 +174,9 @@ export default function SuperAdminUsersPage() {
   if (user.role !== 'SUPER_ADMIN') return (
     <div className="flex min-h-screen items-center justify-center bg-gray-50 text-center px-4">
       <div>
-        <div className="text-5xl mb-4">🚫</div>
+        <div className="mb-4 flex justify-center">
+          <Ban className="h-12 w-12 text-gray-300" strokeWidth={1.5} />
+        </div>
         <h1 className="text-xl font-bold mb-2">Ruxsat yo&apos;q</h1>
         <Link href="/" className="text-primary-600 hover:underline">Bosh sahifaga qaytish</Link>
       </div>
@@ -184,17 +187,21 @@ export default function SuperAdminUsersPage() {
     <div className="min-h-screen bg-gray-50">
       {/* Header */}
       <header className="sticky top-0 z-10 border-b border-gray-200 bg-white shadow-sm">
-        <div className="mx-auto flex max-w-7xl items-center justify-between px-4 py-3">
-          <div className="flex items-center gap-2 text-sm">
-            <Link href="/" className="font-bold text-primary-600">🎓 EDUBAHO</Link>
-            <span className="text-gray-300">›</span>
-            <Link href="/admin" className="text-gray-500 hover:text-gray-700">Admin</Link>
-            <span className="text-gray-300">›</span>
-            <Link href="/admin/super" className="text-gray-500 hover:text-gray-700">Super Admin</Link>
-            <span className="text-gray-300">›</span>
-            <span className="font-semibold text-gray-700">Foydalanuvchilar</span>
+        <div className="mx-auto flex max-w-7xl items-center justify-between gap-3 px-4 py-3">
+          <div className="flex min-w-0 items-center gap-2 overflow-hidden text-sm">
+            <Link href="/" className="flex shrink-0 items-center gap-1.5 whitespace-nowrap font-bold text-primary-600">
+              <GraduationCap className="h-4 w-4 shrink-0" strokeWidth={1.75} /> EDUBAHO
+            </Link>
+            <span className="shrink-0 text-gray-300">›</span>
+            <Link href="/admin" className="shrink-0 whitespace-nowrap text-gray-500 hover:text-gray-700">Admin</Link>
+            <span className="shrink-0 text-gray-300">›</span>
+            <Link href="/admin/super" className="shrink-0 whitespace-nowrap text-gray-500 hover:text-gray-700">Super Admin</Link>
+            <span className="shrink-0 text-gray-300">›</span>
+            <span className="truncate font-semibold text-gray-700">Foydalanuvchilar</span>
           </div>
-          <span className="rounded-full bg-purple-100 px-3 py-1 text-sm font-bold text-purple-700">👑 SUPER_ADMIN</span>
+          <span className="flex shrink-0 items-center gap-1.5 whitespace-nowrap rounded-full bg-purple-50 px-3 py-1 text-sm font-semibold text-purple-700">
+            <Crown className="h-3.5 w-3.5 shrink-0" strokeWidth={1.75} /> SUPER_ADMIN
+          </span>
         </div>
       </header>
 
@@ -209,7 +216,9 @@ export default function SuperAdminUsersPage() {
 
       <main className="mx-auto max-w-7xl px-4 py-8">
         <div className="mb-6">
-          <h1 className="text-2xl font-black text-gray-900">👥 Barcha foydalanuvchilar</h1>
+          <h1 className="flex items-center gap-2 text-2xl font-bold text-gray-900">
+            <Users2 className="h-6 w-6 shrink-0 text-blue-600" strokeWidth={1.75} /> Barcha foydalanuvchilar
+          </h1>
           <p className="mt-1 text-sm text-gray-500">
             Jami: <strong>{meta.total.toLocaleString()}</strong> ta
           </p>
@@ -217,16 +226,14 @@ export default function SuperAdminUsersPage() {
 
         {/* Search + Filters */}
         <form onSubmit={handleSearch} className="mb-6 flex flex-wrap gap-2">
-          <div className="flex flex-1 min-w-[200px] items-center gap-2 rounded-xl border border-gray-200 bg-white px-3 focus-within:border-blue-400 focus-within:ring-2 focus-within:ring-blue-100">
-            <svg className="h-4 w-4 shrink-0 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-4.35-4.35M17 11A6 6 0 1 1 5 11a6 6 0 0 1 12 0z"/>
-            </svg>
+          <div className="flex min-w-[200px] flex-1 items-center gap-2 rounded-xl border border-gray-200 bg-white px-3 focus-within:border-blue-400">
+            <Search className="h-4 w-4 shrink-0 text-gray-400" strokeWidth={1.75} />
             <input
               type="text"
               value={q}
               onChange={e => setQ(e.target.value)}
               placeholder="Ism, telefon yoki email..."
-              className="flex-1 bg-transparent py-2.5 text-sm outline-none placeholder:text-gray-400"
+              className="min-w-0 flex-1 bg-transparent py-2.5 text-sm outline-none placeholder:text-gray-400"
             />
           </div>
           <select
@@ -251,7 +258,7 @@ export default function SuperAdminUsersPage() {
           </select>
           <button
             type="submit"
-            className="rounded-xl bg-blue-600 px-5 py-2.5 text-sm font-bold text-white hover:bg-blue-700 transition-colors"
+            className="whitespace-nowrap rounded-xl bg-blue-600 px-5 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-blue-700"
           >
             Qidirish
           </button>
@@ -264,7 +271,9 @@ export default function SuperAdminUsersPage() {
           </div>
         ) : users.length === 0 ? (
           <div className="rounded-2xl border border-dashed border-gray-300 bg-white py-16 text-center">
-            <div className="mb-3 text-4xl">👥</div>
+            <div className="mb-3 flex justify-center">
+              <Users2 className="h-10 w-10 text-gray-300" strokeWidth={1.5} />
+            </div>
             <p className="text-gray-500">Foydalanuvchilar topilmadi</p>
           </div>
         ) : (
@@ -310,14 +319,16 @@ export default function SuperAdminUsersPage() {
                               {ROLE_LABELS[u.role] ?? u.role}
                             </span>
                             {u.isVerified && (
-                              <span className="ml-1 text-xs text-green-600" title="Tasdiqlangan">✓</span>
+                              <span title="Tasdiqlangan" className="ml-1 inline-flex align-middle">
+                                <BadgeCheck className="h-3.5 w-3.5 text-emerald-600" strokeWidth={2} />
+                              </span>
                             )}
                           </td>
                           <td className="px-4 py-3">
-                            <span className={`rounded-full px-2.5 py-0.5 text-xs font-semibold ${
-                              u.isActive ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-600'
+                            <span className={`whitespace-nowrap rounded-full px-2.5 py-0.5 text-xs font-semibold ${
+                              u.isActive ? 'bg-emerald-50 text-emerald-700' : 'bg-red-50 text-red-600'
                             }`}>
-                              {u.isActive ? '● Aktiv' : '○ Deaktiv'}
+                              {u.isActive ? 'Aktiv' : 'Deaktiv'}
                             </span>
                           </td>
                           <td className="hidden px-4 py-3 text-xs text-gray-500 sm:table-cell">
@@ -338,13 +349,17 @@ export default function SuperAdminUsersPage() {
                                     disabled={isLoading}
                                     onClick={() => handleToggleActive(u)}
                                     title={u.isActive ? 'Deaktivlashtirish' : 'Aktivlashtirish'}
-                                    className={`rounded-lg px-2.5 py-1.5 text-xs font-semibold transition-colors disabled:opacity-50 ${
+                                    className={`flex items-center gap-1 whitespace-nowrap rounded-lg px-2.5 py-1.5 text-xs font-semibold transition-colors disabled:opacity-50 ${
                                       u.isActive
                                         ? 'border border-orange-200 text-orange-600 hover:bg-orange-50'
-                                        : 'border border-green-200 text-green-600 hover:bg-green-50'
+                                        : 'border border-emerald-200 text-emerald-600 hover:bg-emerald-50'
                                     }`}
                                   >
-                                    {isLoading ? '...' : u.isActive ? '🔒 Deaktiv' : '✅ Aktiv'}
+                                    {isLoading
+                                      ? '...'
+                                      : u.isActive
+                                        ? <><Lock className="h-3 w-3 shrink-0" strokeWidth={1.75} /> Deaktiv</>
+                                        : <><CheckCircle2 className="h-3 w-3 shrink-0" strokeWidth={1.75} /> Aktiv</>}
                                   </button>
                                   {/* O'chirish */}
                                   <button
@@ -352,7 +367,7 @@ export default function SuperAdminUsersPage() {
                                     title="O'chirish"
                                     className="rounded-lg border border-red-200 px-2.5 py-1.5 text-xs font-semibold text-red-600 hover:bg-red-50 transition-colors"
                                   >
-                                    🗑️
+                                    <Trash2 className="h-3 w-3" strokeWidth={1.75} />
                                   </button>
                                 </>
                               )}
@@ -401,13 +416,15 @@ export default function SuperAdminUsersPage() {
       {deleteTarget && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 px-4">
           <div className="w-full max-w-md rounded-2xl bg-white p-6 shadow-xl text-center">
-            <div className="mb-2 text-5xl">⚠️</div>
+            <div className="mb-2 flex justify-center">
+              <AlertTriangle className="h-10 w-10 text-amber-400" strokeWidth={1.5} />
+            </div>
             <h2 className="mb-2 text-lg font-bold text-gray-900">Foydalanuvchini o&apos;chirish</h2>
             <p className="mb-1 text-gray-600">
               <strong>&quot;{deleteTarget.name ?? deleteTarget.phone}&quot;</strong> ni tizimdan butunlay o&apos;chirasizmi?
             </p>
             <p className="mb-5 text-sm text-red-600 font-medium">
-              ⚠️ Bu amalni qaytarib bo&apos;lmaydi! Barcha sharhlar va ma&apos;lumotlar ham o&apos;chiriladi.
+              Bu amalni qaytarib bo&apos;lmaydi! Barcha sharhlar va ma&apos;lumotlar ham o&apos;chiriladi.
             </p>
             <div className="flex gap-3">
               <button
