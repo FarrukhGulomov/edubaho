@@ -3,6 +3,7 @@
 import Link from 'next/link'
 import { useState, useEffect, useRef } from 'react'
 import { useRouter } from 'next/navigation'
+import { GraduationCap, ShieldCheck, Info, Crown, Lock, Unlock, CheckCircle2, AlertCircle, Check } from 'lucide-react'
 import { authApi } from '@/lib/api'
 
 const API          = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:3001/api/v1'
@@ -190,23 +191,23 @@ export default function AdminLoginPage() {
   }
 
   return (
-    <div className="flex min-h-screen bg-gradient-to-br from-gray-900 via-purple-950 to-gray-900">
+    <div className="flex min-h-screen bg-gray-900">
       <div className="flex flex-1 flex-col items-center justify-center px-4 py-12">
         <div className="w-full max-w-sm">
 
           {/* Logo */}
           <div className="mb-8 text-center">
-            <Link href="/" className="inline-flex items-center gap-2 text-2xl font-black text-white">
-              🎓 EDUBAHO.uz
+            <Link href="/" className="inline-flex items-center gap-2 text-2xl font-bold text-white">
+              <GraduationCap className="h-6 w-6 shrink-0" strokeWidth={1.75} /> EDUBAHO.uz
             </Link>
             <div className="mt-2 flex justify-center">
-              <span className="rounded-full bg-purple-900/60 px-4 py-1 text-xs font-bold text-purple-300 border border-purple-800">
-                🛡️ ADMIN KIRISH
+              <span className="flex items-center gap-1.5 whitespace-nowrap rounded-full border border-purple-800 bg-purple-900/60 px-4 py-1 text-xs font-semibold text-purple-300">
+                <ShieldCheck className="h-3.5 w-3.5 shrink-0" strokeWidth={1.75} /> ADMIN KIRISH
               </span>
             </div>
           </div>
 
-          <div className="rounded-2xl border border-white/10 bg-white/5 backdrop-blur-md p-8 shadow-2xl">
+          <div className="rounded-2xl border border-white/10 bg-white/5 p-8 shadow-2xl">
 
             {/* Progress steps */}
             <div className="mb-6 flex items-center justify-center gap-2">
@@ -219,7 +220,7 @@ export default function AdminLoginPage() {
                         ? 'bg-green-500 text-white'
                         : 'bg-white/10 text-white/40'
                   }`}>
-                    {((step === 'pin' && i === 0) || step === 'done') ? '✓' : i + 1}
+                    {((step === 'pin' && i === 0) || step === 'done') ? <Check className="h-3.5 w-3.5" strokeWidth={2.5} /> : i + 1}
                   </div>
                   {i < 1 && (
                     <div className={`h-px w-8 transition-all ${
@@ -269,19 +270,19 @@ export default function AdminLoginPage() {
                     }}
                     placeholder="+998 90 123 45 67"
                     required
-                    className="w-full rounded-xl border-2 border-white/20 bg-white/10 px-4 py-3 text-white outline-none placeholder:text-white/30 focus:border-purple-400 focus:ring-2 focus:ring-purple-400/20 transition-all"
+                    className="w-full rounded-xl border border-white/20 bg-white/10 px-4 py-3 text-white outline-none placeholder:text-white/30 focus:border-purple-400 transition-colors"
                   />
                   <button
                     type="submit"
                     disabled={loading || phone.replace(/\D/g, '').length < 12}
-                    className="w-full rounded-xl border border-purple-500/40 bg-purple-500/20 py-3 font-bold text-purple-200 hover:bg-purple-500/30 disabled:opacity-40 transition-colors"
+                    className="w-full rounded-xl border border-purple-500/40 bg-purple-500/20 py-3 font-semibold text-purple-200 hover:bg-purple-500/30 disabled:opacity-40 transition-colors"
                   >
                     SMS kod olish
                   </button>
                 </form>
 
-                <div className="rounded-xl border border-blue-500/20 bg-blue-500/10 px-4 py-3 text-xs text-blue-300 text-center">
-                  ℹ️ Faqat admin huquqidagi akkauntlar kira oladi
+                <div className="flex items-center justify-center gap-1.5 rounded-xl border border-blue-500/20 bg-blue-500/10 px-4 py-3 text-center text-xs text-blue-300">
+                  <Info className="h-3.5 w-3.5 shrink-0" strokeWidth={1.75} /> Faqat admin huquqidagi akkauntlar kira oladi
                 </div>
               </div>
             )}
@@ -301,13 +302,13 @@ export default function AdminLoginPage() {
                   value={otp}
                   onChange={(e) => setOtp(e.target.value.replace(/\D/g, ''))}
                   placeholder="• • • • • •"
-                  className="w-full rounded-xl border-2 border-white/20 bg-white/10 px-4 py-3.5 text-center text-2xl font-mono tracking-[0.4em] text-white outline-none focus:border-purple-400 focus:ring-2 focus:ring-purple-400/20 transition-all placeholder:text-white/30"
+                  className="w-full rounded-xl border border-white/20 bg-white/10 px-4 py-3.5 text-center text-2xl font-mono tracking-[0.4em] text-white outline-none focus:border-purple-400 transition-colors placeholder:text-white/30"
                 />
                 {error && <ErrorBox msg={error} />}
                 <button
                   type="submit"
                   disabled={loading || otp.length !== 6}
-                  className="w-full rounded-xl bg-purple-600 py-3.5 font-bold text-white hover:bg-purple-500 disabled:opacity-50 transition-colors"
+                  className="w-full rounded-xl bg-purple-600 py-3.5 font-semibold text-white hover:bg-purple-500 disabled:opacity-50 transition-colors"
                 >
                   {loading ? 'Tekshirilmoqda...' : 'Tasdiqlash'}
                 </button>
@@ -325,7 +326,11 @@ export default function AdminLoginPage() {
             {step === 'pin' && (
               <form onSubmit={handleVerifyPin} className="space-y-4">
                 <div className="text-center mb-4">
-                  <div className="mb-2 text-3xl">{role === 'SUPER_ADMIN' ? '👑' : '🛡️'}</div>
+                  <div className="mb-2 flex justify-center">
+                    {role === 'SUPER_ADMIN'
+                      ? <Crown className="h-8 w-8 text-amber-400" strokeWidth={1.5} />
+                      : <ShieldCheck className="h-8 w-8 text-purple-400" strokeWidth={1.5} />}
+                  </div>
                   <h1 className="text-lg font-bold text-white">Admin PIN kodi</h1>
                   <p className="text-xs text-white/50 mt-1">
                     {role === 'SUPER_ADMIN' ? 'Super Admin' : 'Admin'} uchun maxsus PIN
@@ -339,18 +344,18 @@ export default function AdminLoginPage() {
                   onChange={e => setPin(e.target.value.replace(/\D/g, '').slice(0, 8))}
                   placeholder="PIN kiriting"
                   required
-                  className="w-full rounded-xl border-2 border-white/20 bg-white/10 px-4 py-3.5 text-center text-2xl font-mono tracking-widest text-white outline-none focus:border-purple-400 focus:ring-2 focus:ring-purple-400/20 transition-all placeholder:text-white/30"
+                  className="w-full rounded-xl border border-white/20 bg-white/10 px-4 py-3.5 text-center text-2xl font-mono tracking-widest text-white outline-none focus:border-purple-400 transition-colors placeholder:text-white/30"
                 />
-                <div className="rounded-xl border border-yellow-500/30 bg-yellow-500/10 px-4 py-3 text-xs text-yellow-300">
-                  🔒 Bu PIN faqat admin va super adminlarga berilgan maxfiy raqam
+                <div className="flex items-center gap-1.5 rounded-xl border border-yellow-500/30 bg-yellow-500/10 px-4 py-3 text-xs text-yellow-300">
+                  <Lock className="h-3.5 w-3.5 shrink-0" strokeWidth={1.75} /> Bu PIN faqat admin va super adminlarga berilgan maxfiy raqam
                 </div>
                 {error && <ErrorBox msg={error} />}
                 <button
                   type="submit"
                   disabled={loading || pin.length < 4}
-                  className="w-full rounded-xl bg-purple-600 py-3.5 font-bold text-white hover:bg-purple-500 disabled:opacity-50 transition-colors"
+                  className="flex w-full items-center justify-center gap-2 rounded-xl bg-purple-600 py-3.5 font-semibold text-white hover:bg-purple-500 disabled:opacity-50 transition-colors"
                 >
-                  {loading ? 'Tekshirilmoqda...' : '🔓 Admin paneliga kirish'}
+                  {loading ? 'Tekshirilmoqda...' : <><Unlock className="h-4 w-4 shrink-0" strokeWidth={1.75} /> Admin paneliga kirish</>}
                 </button>
               </form>
             )}
@@ -358,7 +363,9 @@ export default function AdminLoginPage() {
             {/* ── Done ── */}
             {step === 'done' && (
               <div className="py-6 text-center">
-                <div className="mb-4 text-6xl animate-bounce">✅</div>
+                <div className="mb-4 flex justify-center">
+                  <CheckCircle2 className="h-14 w-14 text-emerald-400" strokeWidth={1.5} />
+                </div>
                 <h2 className="font-bold text-white text-lg">Muvaffaqiyatli kirdingiz!</h2>
                 <p className="text-white/50 text-sm mt-1">Admin panelga o&apos;tilmoqda...</p>
                 <div className="mt-4 flex justify-center">
@@ -383,7 +390,7 @@ export default function AdminLoginPage() {
 function ErrorBox({ msg }: { msg: string }) {
   return (
     <div className="flex items-start gap-2 rounded-xl border border-red-500/30 bg-red-500/10 px-4 py-3 text-sm text-red-300">
-      <span className="mt-0.5 shrink-0">⚠️</span>
+      <AlertCircle className="mt-0.5 h-4 w-4 shrink-0" strokeWidth={2} />
       <span>{msg}</span>
     </div>
   )

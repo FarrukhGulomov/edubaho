@@ -2,6 +2,7 @@
 
 import Link from 'next/link'
 import { useEffect, useState } from 'react'
+import { GraduationCap, Crown, ShieldCheck, ClipboardList, School } from 'lucide-react'
 import { useAuth } from '@/hooks/useAuth'
 import { useRouter } from 'next/navigation'
 
@@ -57,33 +58,42 @@ export default function AdminPage() {
     <div className="min-h-screen bg-gray-50">
       <header className="sticky top-0 z-10 border-b border-gray-200 bg-white shadow-sm">
         <div className="mx-auto flex max-w-5xl items-center justify-between px-4 py-3">
-          <div className="flex items-center gap-3">
-            <Link href="/" className="font-bold text-primary-600">🎓 EDUBAHO</Link>
-            <span className="text-gray-300">›</span>
-            <span className="font-semibold text-gray-700">Admin panel</span>
+          <div className="flex min-w-0 items-center gap-3">
+            <Link href="/" className="flex shrink-0 items-center gap-1.5 whitespace-nowrap font-bold text-primary-600">
+              <GraduationCap className="h-4 w-4 shrink-0" strokeWidth={1.75} /> EDUBAHO
+            </Link>
+            <span className="shrink-0 text-gray-300">›</span>
+            <span className="truncate font-semibold text-gray-700">Admin panel</span>
           </div>
-          <div className="flex items-center gap-2">
-            <span className={`rounded-full px-3 py-1 text-sm font-bold ${
+          <div className="flex shrink-0 items-center gap-2">
+            <span className={`flex items-center gap-1.5 whitespace-nowrap rounded-full px-3 py-1 text-sm font-semibold ${
               user.role === 'SUPER_ADMIN'
-                ? 'bg-purple-100 text-purple-700'
-                : 'bg-red-100 text-red-700'
+                ? 'bg-purple-50 text-purple-700'
+                : 'bg-red-50 text-red-700'
             }`}>
-              {user.role === 'SUPER_ADMIN' ? '👑' : '🛡️'} {user.role}
+              {user.role === 'SUPER_ADMIN'
+                ? <Crown className="h-3.5 w-3.5 shrink-0" strokeWidth={1.75} />
+                : <ShieldCheck className="h-3.5 w-3.5 shrink-0" strokeWidth={1.75} />}
+              {user.role}
             </span>
           </div>
         </div>
       </header>
 
       <main className="mx-auto max-w-5xl px-4 py-10">
-        <h1 className="mb-2 text-3xl font-black text-gray-900">🛡️ Admin panel</h1>
+        <h1 className="mb-2 flex items-center gap-2 text-3xl font-bold text-gray-900">
+          <ShieldCheck className="h-7 w-7 shrink-0 text-primary-600" strokeWidth={1.75} /> Admin panel
+        </h1>
         <p className="mb-8 text-gray-500">Xush kelibsiz, {user.name ?? user.phone}!</p>
 
         <div className="grid gap-4 sm:grid-cols-2">
           <Link
             href="/admin/reviews"
-            className="flex items-center gap-4 rounded-2xl border-2 border-orange-200 bg-orange-50 p-6 hover:border-orange-400 hover:shadow-md transition-all"
+            className="flex items-center gap-4 rounded-2xl border border-orange-200 bg-orange-50 p-6 transition-colors hover:border-orange-400"
           >
-            <span className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-orange-500 text-3xl text-white">📋</span>
+            <span className="icon-chip h-14 w-14 shrink-0 bg-orange-500 text-white">
+              <ClipboardList className="h-6 w-6" strokeWidth={1.75} />
+            </span>
             <div>
               <h2 className="text-lg font-bold text-orange-900">Sharhlarni moderatsiya</h2>
               <p className="text-sm text-orange-700">Kutayotgan, shikoyat qilingan va rad etilgan sharhlar</p>
@@ -92,9 +102,11 @@ export default function AdminPage() {
 
           <Link
             href="/admin/institutions"
-            className="flex items-center gap-4 rounded-2xl border-2 border-primary-200 bg-primary-50 p-6 hover:border-primary-400 hover:shadow-md transition-all"
+            className="flex items-center gap-4 rounded-2xl border border-primary-200 bg-primary-50 p-6 transition-colors hover:border-primary-400"
           >
-            <span className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-primary-600 text-3xl text-white">🏫</span>
+            <span className="icon-chip h-14 w-14 shrink-0 bg-primary-600 text-white">
+              <School className="h-6 w-6" strokeWidth={1.75} />
+            </span>
             <div>
               <h2 className="text-lg font-bold text-primary-900">Muassasalar boshqaruvi</h2>
               <p className="text-sm text-primary-700">Qo&apos;shish, tahrirlash, o&apos;chirish, status o&apos;zgartirish</p>
@@ -104,9 +116,11 @@ export default function AdminPage() {
           {user.role === 'SUPER_ADMIN' && (
             <Link
               href="/admin/super"
-              className="flex items-center gap-4 rounded-2xl border-2 border-purple-200 bg-purple-50 p-6 hover:border-purple-400 hover:shadow-md transition-all sm:col-span-2"
+              className="flex items-center gap-4 rounded-2xl border border-purple-200 bg-purple-50 p-6 transition-colors hover:border-purple-400 sm:col-span-2"
             >
-              <span className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-purple-600 text-3xl text-white">👑</span>
+              <span className="icon-chip h-14 w-14 shrink-0 bg-purple-600 text-white">
+                <Crown className="h-6 w-6" strokeWidth={1.75} />
+              </span>
               <div>
                 <h2 className="text-lg font-bold text-purple-900">Super Admin boshqaruvi</h2>
                 <p className="text-sm text-purple-700">Adminlarni tayinlash, ruxsatlarni sozlash, barcha foydalanuvchilarni ko&apos;rish</p>
