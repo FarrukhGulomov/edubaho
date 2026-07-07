@@ -566,56 +566,7 @@ export default function InstitutionDetail({ inst }: { inst: Institution }) {
               </div>
             )}
 
-            {/* ════════════════════════════════════════
-                5. NARXI — Pricing (inline, auth bo'lganda)
-                ════════════════════════════════════════ */}
-            {!isGuest && inst.pricing?.monthlyMin && (
-              <div className="card p-6">
-                <h2 className="mb-4 flex items-center gap-3 text-lg font-semibold text-gray-900">
-                  <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-emerald-50 text-emerald-600">
-                    <Wallet className="h-[18px] w-[18px]" strokeWidth={1.75} />
-                  </span>
-                  {t(lang, ui.priceTitle)}
-                </h2>
-                <div className="flex flex-wrap items-end gap-4">
-                  <div>
-                    <p className="text-sm text-gray-500">{t(lang, ui.priceFrom)}</p>
-                    <p className="text-3xl font-bold text-emerald-700">
-                      {formatUzs(inst.pricing.monthlyMin)}
-                    </p>
-                    {inst.pricing.monthlyMax && inst.pricing.monthlyMax !== inst.pricing.monthlyMin && (
-                      <p className="mt-0.5 text-base text-emerald-600">
-                        — {formatUzs(inst.pricing.monthlyMax)} / {t(lang, ui.perMonth)}
-                      </p>
-                    )}
-                  </div>
-                </div>
-                {(inst.pricing.paymentMethods?.length ?? 0) > 0 && (
-                  <div className="mt-4 flex flex-wrap gap-1.5 border-t border-gray-100 pt-4">
-                    <span className="text-xs text-gray-400 font-semibold">{t(lang, ui.payment)}:</span>
-                    {(inst.pricing.paymentMethods ?? []).map(m => (
-                      <span key={m} className="rounded-md bg-gray-100 px-2 py-0.5 text-xs font-semibold text-gray-600">{m}</span>
-                    ))}
-                  </div>
-                )}
-              </div>
-            )}
-
-            {/* Narx hint mehmon uchun */}
-            {isGuest && inst.pricing?.monthlyMin && (
-              <div className="flex items-center gap-4 rounded-2xl border border-emerald-100 bg-emerald-50 px-5 py-4">
-                <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-white text-emerald-600">
-                  <Wallet className="h-5 w-5" strokeWidth={1.75} />
-                </span>
-                <div className="flex-1">
-                  <p className="text-sm text-emerald-600 font-semibold">{t(lang, ui.priceFrom)}</p>
-                  <p className="text-2xl font-bold text-emerald-700">{formatUzs(inst.pricing.monthlyMin)}</p>
-                </div>
-                <Link href="/auth" className="shrink-0 rounded-xl bg-emerald-600 px-4 py-2.5 text-sm font-semibold text-white hover:bg-emerald-700 transition-colors">
-                  {lang === 'ru' ? 'Полная цена →' : "To'liq narx →"}
-                </Link>
-              </div>
-            )}
+            {/* Narx — faqat sidebar'da ko'rsatiladi (takrorlanmaslik uchun) */}
 
             {/* ════════════════════════════════════════
                 6. JOYLASHUV VA FORMAT

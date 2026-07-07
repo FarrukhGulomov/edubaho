@@ -58,13 +58,14 @@ const TYPE_ICONS: Record<string, typeof School> = {
   ARTS_SCHOOL:     Palette,
 }
 
+// Faqat haqiqiy ma'lumoti bor turlar ko'rsatiladi — bo'sh natija bilan
+// tugaydigan "o'lik" filtrlarni chiqarmaslik uchun (IT maktab/Universitet/
+// Til markazi kabi turlarda hozircha muassasa yo'q)
 const TYPE_FILTERS = [
-  { type: '',                Icon: School,     uz: 'Barchasi',        ru: 'Все' },
-  { type: 'COURSE_CENTER',   Icon: PencilLine, uz: "O'quv markazlar", ru: 'Учебные центры' },
-  { type: 'IT_SCHOOL',       Icon: Laptop,     uz: 'IT maktablar',    ru: 'IT школы' },
-  { type: 'SCHOOL',          Icon: BookOpen,   uz: 'Maktablar',       ru: 'Школы' },
-  { type: 'LANGUAGE_CENTER', Icon: Globe2,     uz: 'Til markazlari',  ru: 'Языковые' },
-  { type: 'UNIVERSITY',      Icon: GraduationCap, uz: 'Universitetlar', ru: 'Университеты' },
+  { type: '',              Icon: School,     uz: 'Barchasi',        ru: 'Все' },
+  { type: 'COURSE_CENTER', Icon: PencilLine, uz: "O'quv markazlar", ru: 'Учебные центры' },
+  { type: 'SCHOOL',        Icon: BookOpen,   uz: 'Maktablar',       ru: 'Школы' },
+  { type: 'LYCEUM',        Icon: Trophy,     uz: 'Litseylar',       ru: 'Лицеи' },
 ]
 
 const SORT_OPTIONS = [

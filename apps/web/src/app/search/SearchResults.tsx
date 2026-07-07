@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation'
 import { useState, useEffect, useRef } from 'react'
 import {
   Search, X, MapPin, Globe2, Users2, UserCheck, BadgeCheck, Star,
-  ArrowLeftRight, Check, PencilLine, School, Laptop, GraduationCap, Palette,
+  ArrowLeftRight, Check, PencilLine, School, Trophy,
 } from 'lucide-react'
 import StarRating from '@/components/shared/StarRating'
 import { useCompare, useSaved } from '@/hooks/useCompare'
@@ -41,13 +41,12 @@ const TYPE_LABELS: Record<string, { uz: string; ru: string; color: string }> = {
   ARTS_SCHOOL:     { uz: "San'at",        ru: 'Школа искусств', color: 'bg-rose-50 text-rose-700' },
 }
 
+// Faqat haqiqiy ma'lumoti bor turlar ko'rsatiladi — bo'sh natija bilan
+// tugaydigan "o'lik" filtrlarni chiqarmaslik uchun
 const TYPE_FILTERS = [
-  { type: 'COURSE_CENTER',   Icon: PencilLine,    uz: "O'quv markazlar", ru: 'Учебные центры', active: true },
-  { type: 'SCHOOL',          Icon: School,        uz: 'Maktablar',        ru: 'Школы',          active: true },
-  { type: 'IT_SCHOOL',       Icon: Laptop,        uz: 'IT',               ru: 'IT',             active: false },
-  { type: 'UNIVERSITY',      Icon: GraduationCap, uz: 'Universitet',      ru: 'Университет',    active: false },
-  { type: 'LANGUAGE_CENTER', Icon: Globe2,        uz: 'Til markazi',      ru: 'Языковой',       active: false },
-  { type: 'KINDERGARTEN',    Icon: Palette,       uz: "Bog'cha",          ru: 'Детсад',         active: false },
+  { type: 'COURSE_CENTER', Icon: PencilLine, uz: "O'quv markazlar", ru: 'Учебные центры' },
+  { type: 'SCHOOL',        Icon: School,     uz: 'Maktablar',       ru: 'Школы' },
+  { type: 'LYCEUM',        Icon: Trophy,     uz: 'Litseylar',       ru: 'Лицеи' },
 ]
 
 const SORT_OPTIONS = [
@@ -128,7 +127,6 @@ export default function SearchResults({ institutions, meta, params }: Props) {
     allRegions:  { uz: 'Barcha viloyatlar', ru: 'Все регионы' },
     students:    { uz: "o'quvchi", ru: 'учеников' },
     teachers:    { uz: "o'qituvchi", ru: 'преподавателей' },
-    comingSoon:  { uz: 'Tez kunda', ru: 'Скоро' },
   }
 
   // Active labels
@@ -178,7 +176,7 @@ export default function SearchResults({ institutions, meta, params }: Props) {
             >
               {t(lang, ui.allTypes)}
             </Link>
-            {TYPE_FILTERS.map(f => f.active ? (
+            {TYPE_FILTERS.map(f => (
               <Link
                 key={f.type}
                 href={`/search?${new URLSearchParams({ ...params, type: f.type, page: '1' }).toString()}`}
@@ -190,14 +188,6 @@ export default function SearchResults({ institutions, meta, params }: Props) {
               >
                 <f.Icon className="h-3.5 w-3.5 shrink-0" strokeWidth={1.75} /> {lang === 'uz' ? f.uz : f.ru}
               </Link>
-            ) : (
-              <span
-                key={f.type}
-                title={t(lang, ui.comingSoon)}
-                className="flex shrink-0 select-none items-center gap-1 whitespace-nowrap rounded-full border border-dashed border-gray-200 px-3 py-1 text-xs font-medium text-gray-300 cursor-not-allowed"
-              >
-                <f.Icon className="h-3.5 w-3.5 shrink-0" strokeWidth={1.75} /> {lang === 'uz' ? f.uz : f.ru}
-              </span>
             ))}
           </div>
 
