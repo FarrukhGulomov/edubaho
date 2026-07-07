@@ -1,6 +1,7 @@
 'use client'
 
 import { useState } from 'react'
+import { PencilLine, X, CheckCircle2, AlertCircle, UserCheck, School, Wallet, Leaf, Phone } from 'lucide-react'
 
 interface Props {
   institutionId: string
@@ -15,11 +16,11 @@ const RATING_LABELS: Record<number, string> = {
 
 // Batafsil baholash mezonlari — foydalanuvchi tanlagan 5 ta asosiy mezon
 const DIMENSIONS = [
-  { key: 'teacherRating',    icon: '👨‍🏫', label: "O'qituvchilar",  hint: 'Tajriba, tushuntirish uslubi' },
-  { key: 'facilityRating',   icon: '🏫',  label: 'Sharoit',         hint: 'Sinfxona, jihozlar, qulay' },
-  { key: 'valueRating',      icon: '💰',  label: 'Narx/Sifat',      hint: "To'lov oilaga mos kelishi" },
-  { key: 'atmosphereRating', icon: '🌿',  label: 'Muhit',           hint: 'Xavfsizlik, intizom, atmosfera' },
-  { key: 'serviceRating',    icon: '📞',  label: "Aloqa va nazorat", hint: "Ota-onaga feedback berilishi" },
+  { key: 'teacherRating',    Icon: UserCheck, label: "O'qituvchilar",   hint: 'Tajriba, tushuntirish uslubi' },
+  { key: 'facilityRating',   Icon: School,    label: 'Sharoit',         hint: 'Sinfxona, jihozlar, qulay' },
+  { key: 'valueRating',      Icon: Wallet,    label: 'Narx/Sifat',      hint: "To'lov oilaga mos kelishi" },
+  { key: 'atmosphereRating', Icon: Leaf,      label: 'Muhit',           hint: 'Xavfsizlik, intizom, atmosfera' },
+  { key: 'serviceRating',    Icon: Phone,     label: "Aloqa va nazorat", hint: "Ota-onaga feedback berilishi" },
 ] as const
 
 type DimensionKey = typeof DIMENSIONS[number]['key']
@@ -120,9 +121,9 @@ export default function WriteReview({ institutionId, institutionName }: Props) {
     return (
       <a
         href="/auth"
-        className="flex w-full items-center justify-center gap-2 rounded-2xl border-2 border-dashed border-gray-300 py-4 text-sm font-semibold text-gray-500 hover:border-primary-400 hover:text-primary-600 transition-colors"
+        className="flex w-full items-center justify-center gap-2 rounded-xl border border-dashed border-gray-300 py-4 text-sm font-semibold text-gray-500 transition-colors hover:border-primary-400 hover:text-primary-600"
       >
-        <span className="text-xl">✏️</span>
+        <PencilLine className="h-4 w-4 shrink-0" strokeWidth={1.75} />
         Sharh yozish uchun kiring
       </a>
     )
@@ -133,9 +134,9 @@ export default function WriteReview({ institutionId, institutionName }: Props) {
     return (
       <button
         onClick={() => setOpen(true)}
-        className="flex w-full items-center justify-center gap-2 rounded-2xl bg-primary-600 py-4 font-bold text-white hover:bg-primary-700 transition-colors shadow-sm active:scale-95"
+        className="flex w-full items-center justify-center gap-2 rounded-xl bg-primary-600 py-4 font-semibold text-white shadow-sm transition-colors hover:bg-primary-700"
       >
-        <span className="text-xl">✏️</span>
+        <PencilLine className="h-4 w-4 shrink-0" strokeWidth={1.75} />
         Sharh yozish
       </button>
     )
@@ -144,15 +145,17 @@ export default function WriteReview({ institutionId, institutionName }: Props) {
   // Done state
   if (done) {
     return (
-      <div className="rounded-2xl border-2 border-green-200 bg-green-50 p-6 text-center">
-        <div className="mb-3 text-5xl">✅</div>
-        <h3 className="mb-2 text-lg font-bold text-green-800">Rahmat!</h3>
-        <p className="mb-4 text-sm text-green-700">
+      <div className="rounded-2xl border border-emerald-200 bg-emerald-50 p-6 text-center">
+        <div className="mb-3 flex justify-center">
+          <CheckCircle2 className="h-12 w-12 text-emerald-500" strokeWidth={1.5} />
+        </div>
+        <h3 className="mb-2 text-lg font-bold text-emerald-800">Rahmat!</h3>
+        <p className="mb-4 text-sm text-emerald-700">
           Sharhingiz moderatsiyadan o&apos;tgach nashr etiladi (odatda 1-2 soat ichida)
         </p>
         <button
           onClick={reset}
-          className="rounded-xl bg-green-600 px-6 py-2.5 font-semibold text-white hover:bg-green-700 active:scale-95 transition-all"
+          className="rounded-xl bg-emerald-600 px-6 py-2.5 font-semibold text-white transition-colors hover:bg-emerald-700"
         >
           Yopish
         </button>
@@ -163,10 +166,14 @@ export default function WriteReview({ institutionId, institutionName }: Props) {
   const activeRating = hovered || rating
 
   return (
-    <div className="rounded-2xl border-2 border-primary-200 bg-white p-5 shadow-sm">
+    <div className="rounded-2xl border border-primary-200 bg-white p-5 shadow-sm">
       <div className="mb-4 flex items-center justify-between">
-        <h3 className="font-bold text-gray-900">✏️ Sharh yozish</h3>
-        <button onClick={reset} className="flex h-8 w-8 items-center justify-center rounded-lg border border-gray-200 text-gray-400 hover:bg-gray-50 hover:text-gray-600 transition-colors">✕</button>
+        <h3 className="flex items-center gap-2 font-bold text-gray-900">
+          <PencilLine className="h-4 w-4 shrink-0 text-primary-500" strokeWidth={1.75} /> Sharh yozish
+        </h3>
+        <button onClick={reset} className="flex h-8 w-8 items-center justify-center rounded-lg border border-gray-200 text-gray-400 transition-colors hover:bg-gray-50 hover:text-gray-600">
+          <X className="h-4 w-4" strokeWidth={1.75} />
+        </button>
       </div>
 
       <form onSubmit={handleSubmit} className="space-y-5">
@@ -203,9 +210,9 @@ export default function WriteReview({ institutionId, institutionName }: Props) {
             Mezonlar bo&apos;yicha baho <span className="normal-case font-normal text-gray-400">(ixtiyoriy)</span>
           </p>
           <div className="space-y-3">
-            {DIMENSIONS.map(({ key, icon, label, hint }) => (
+            {DIMENSIONS.map(({ key, Icon, label, hint }) => (
               <div key={key} className="flex items-center gap-3">
-                <span className="w-6 text-center text-lg shrink-0">{icon}</span>
+                <Icon className="h-4 w-4 shrink-0 text-gray-400" strokeWidth={1.75} />
                 <div className="min-w-[110px] shrink-0">
                   <span className="text-sm font-semibold text-gray-700">{label}</span>
                   <p className="text-xs text-gray-400 leading-tight">{hint}</p>
@@ -233,7 +240,7 @@ export default function WriteReview({ institutionId, institutionName }: Props) {
             onChange={(e) => setTitle(e.target.value)}
             placeholder="Masalan: Ajoyib o'qituvchilar!"
             maxLength={100}
-            className="w-full rounded-xl border-2 border-gray-200 px-4 py-2.5 text-gray-900 outline-none focus:border-primary-400 transition-colors"
+            className="w-full rounded-xl border border-gray-200 px-4 py-2.5 text-gray-900 outline-none focus:border-primary-400 transition-colors"
           />
         </div>
 
@@ -250,7 +257,7 @@ export default function WriteReview({ institutionId, institutionName }: Props) {
             minLength={2}
             maxLength={2000}
             rows={4}
-            className="w-full resize-none rounded-xl border-2 border-gray-200 px-4 py-2.5 text-gray-900 outline-none focus:border-primary-400 transition-colors"
+            className="w-full resize-none rounded-xl border border-gray-200 px-4 py-2.5 text-gray-900 outline-none focus:border-primary-400 transition-colors"
           />
           <p className={`mt-1 text-right text-xs ${body.length > 1800 ? 'text-orange-500 font-medium' : 'text-gray-400'}`}>
             {body.length}/2000
@@ -273,7 +280,7 @@ export default function WriteReview({ institutionId, institutionName }: Props) {
 
         {error && (
           <div className="flex items-start gap-2 rounded-xl bg-red-50 px-4 py-3 text-sm text-red-600">
-            <span className="mt-0.5 shrink-0">⚠️</span>
+            <AlertCircle className="mt-0.5 h-4 w-4 shrink-0" strokeWidth={2} />
             <span>{error}</span>
           </div>
         )}
@@ -282,14 +289,14 @@ export default function WriteReview({ institutionId, institutionName }: Props) {
           <button
             type="submit"
             disabled={loading || rating === 0 || body.trim().length < 2}
-            className="flex-1 rounded-xl bg-gradient-to-r from-primary-600 to-primary-500 py-3 font-bold text-white hover:shadow-md disabled:opacity-50 transition-all active:scale-95"
+            className="flex-1 rounded-xl bg-primary-600 py-3 font-semibold text-white transition-colors hover:bg-primary-700 disabled:opacity-50"
           >
             {loading ? 'Yuborilmoqda...' : 'Sharh yuborish →'}
           </button>
           <button
             type="button"
             onClick={reset}
-            className="rounded-xl border-2 border-gray-200 px-4 py-3 font-medium text-gray-600 hover:bg-gray-50 active:scale-95 transition-all"
+            className="rounded-xl border border-gray-200 px-4 py-3 font-medium text-gray-600 transition-colors hover:bg-gray-50"
           >
             ← Bekor
           </button>

@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
+import { CheckCircle2, Building2, AlertCircle } from 'lucide-react'
 import { institutionsApi } from '@/lib/api'
 import { useLang, t } from '@/contexts/LangContext'
 
@@ -83,9 +84,9 @@ export default function ClaimInstitution({ institutionId, isVerified }: Props) {
 
   if (success) {
     return (
-      <div className="rounded-3xl border border-emerald-200 bg-emerald-50 p-5">
+      <div className="rounded-2xl border border-emerald-200 bg-emerald-50 p-5">
         <div className="flex items-start gap-3">
-          <span className="text-2xl">✅</span>
+          <CheckCircle2 className="h-6 w-6 shrink-0 text-emerald-500" strokeWidth={1.75} />
           <p className="text-sm font-semibold text-emerald-800">{success}</p>
         </div>
       </div>
@@ -93,9 +94,9 @@ export default function ClaimInstitution({ institutionId, isVerified }: Props) {
   }
 
   return (
-    <div className="rounded-3xl border border-dashed border-primary-200 bg-primary-50/50 p-5">
-      <h3 className="mb-1.5 flex items-center gap-2 font-black text-gray-900">
-        <span className="text-xl">🏢</span>
+    <div className="rounded-2xl border border-dashed border-primary-200 bg-primary-50/50 p-5">
+      <h3 className="mb-1.5 flex items-center gap-2 font-bold text-gray-900">
+        <Building2 className="h-5 w-5 shrink-0 text-primary-500" strokeWidth={1.75} />
         {t(lang, ui.title)}
       </h3>
       <p className="mb-3 text-sm text-gray-600">{t(lang, ui.desc)}</p>
@@ -107,7 +108,7 @@ export default function ClaimInstitution({ institutionId, isVerified }: Props) {
             if (!token) { router.push('/auth'); return }
             setOpen(true)
           }}
-          className="w-full rounded-xl border-2 border-primary-500 bg-white py-2.5 text-sm font-bold text-primary-600 transition-colors hover:bg-primary-600 hover:text-white"
+          className="w-full rounded-xl border border-primary-500 bg-white py-2.5 text-sm font-semibold text-primary-600 transition-colors hover:bg-primary-600 hover:text-white"
         >
           {t(lang, ui.cta)}
         </button>
@@ -139,7 +140,9 @@ export default function ClaimInstitution({ institutionId, isVerified }: Props) {
           />
 
           {error && (
-            <p className="rounded-xl bg-red-50 px-3 py-2 text-xs text-red-700">⚠️ {error}</p>
+            <p className="flex items-center gap-1.5 rounded-xl bg-red-50 px-3 py-2 text-xs text-red-700">
+              <AlertCircle className="h-3.5 w-3.5 shrink-0" strokeWidth={2} /> {error}
+            </p>
           )}
 
           <div className="flex gap-2">

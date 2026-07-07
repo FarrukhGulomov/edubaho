@@ -331,7 +331,7 @@ const courseCenters: SeedInstitution[] = [
     achievements: "O'zbekistonda 25+ yillik faoliyat. Yiliga 10 000+ IELTS imtihoni o'tkaziladi.",
     founded: 1994, students: 2000, teachers: 50,
     monthlyMin: 700000, monthlyMax: 2000000,
-    paymentMethods: ['Payme', 'Click', 'Visa'],
+    paymentMethods: ['Payme', 'Click', 'Uzcard'],
     isVerified: true, avgRating: 4.7,
   },
   {

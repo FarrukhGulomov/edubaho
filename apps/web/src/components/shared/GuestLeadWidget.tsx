@@ -12,6 +12,7 @@
  */
 
 import { useState, useEffect } from 'react'
+import { MessageCircle, X, Smartphone, Mail, CheckCircle2 } from 'lucide-react'
 import { track } from '@/lib/analytics'
 import { useLang, t } from '@/contexts/LangContext'
 
@@ -108,7 +109,7 @@ export default function GuestLeadWidget({ triggerOnMount = true }: Props) {
     emailLabel: { uz: 'Email pochta', ru: 'Электронная почта' },
     btn:        { uz: 'Maslahat olish', ru: 'Получить консультацию' },
     sending:    { uz: 'Yuborilmoqda...', ru: 'Отправляется...' },
-    done:       { uz: "✅ Rahmat! Tez orada bog'lanamiz.", ru: '✅ Спасибо! Скоро свяжемся с вами.' },
+    done:       { uz: "Rahmat! Tez orada bog'lanamiz.", ru: 'Спасибо! Скоро свяжемся с вами.' },
     orEmail:    { uz: 'yoki email bilan', ru: 'или через email' },
     orPhone:    { uz: 'yoki telefon bilan', ru: 'или по телефону' },
   }
@@ -118,22 +119,20 @@ export default function GuestLeadWidget({ triggerOnMount = true }: Props) {
       {!expanded ? (
         /* ── Compact bar ── */
         <div className="flex items-center justify-between gap-3 border-t border-amber-200 bg-amber-50 px-4 py-3 shadow-lg">
-          <div className="flex items-center gap-2 text-sm font-semibold text-amber-800">
-            <span className="text-lg">💬</span>
-            <span className="hidden sm:inline">{t(lang, ui.bar)}</span>
-            <span className="sm:hidden">{t(lang, { uz: 'Bepul maslahat oling!', ru: 'Бесплатная консультация!' })}</span>
+          <div className="flex min-w-0 flex-1 items-center gap-2 text-sm font-semibold text-amber-800">
+            <MessageCircle className="h-5 w-5 shrink-0" strokeWidth={1.75} />
+            <span className="hidden truncate sm:inline">{t(lang, ui.bar)}</span>
+            <span className="truncate sm:hidden">{t(lang, { uz: 'Bepul maslahat oling!', ru: 'Бесплатная консультация!' })}</span>
           </div>
           <div className="flex shrink-0 items-center gap-2">
             <button
               onClick={() => setExpanded(true)}
-              className="rounded-xl bg-amber-500 px-4 py-2 text-sm font-bold text-white hover:bg-amber-600 transition-colors"
+              className="whitespace-nowrap rounded-xl bg-amber-500 px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-amber-600"
             >
               {t(lang, { uz: "Xabar qoldirish", ru: 'Оставить контакт' })}
             </button>
-            <button onClick={handleClose} className="p-1 text-amber-400 hover:text-amber-600" aria-label="close">
-              <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12"/>
-              </svg>
+            <button onClick={handleClose} className="shrink-0 p-1 text-amber-400 hover:text-amber-600" aria-label="close">
+              <X className="h-5 w-5" strokeWidth={1.75} />
             </button>
           </div>
         </div>
@@ -142,20 +141,18 @@ export default function GuestLeadWidget({ triggerOnMount = true }: Props) {
         <div className="border-t border-gray-200 bg-white px-4 py-5 shadow-2xl">
           <div className="mx-auto max-w-sm">
             {sent ? (
-              <p className="py-2 text-center text-base font-semibold text-emerald-700">
-                {t(lang, ui.done)}
+              <p className="flex items-center justify-center gap-2 py-2 text-center text-base font-semibold text-emerald-700">
+                <CheckCircle2 className="h-5 w-5 shrink-0" strokeWidth={1.75} /> {t(lang, ui.done)}
               </p>
             ) : (
               <>
-                <div className="mb-3 flex items-start justify-between">
-                  <div>
+                <div className="mb-3 flex items-start justify-between gap-3">
+                  <div className="min-w-0">
                     <h3 className="font-bold text-gray-900">{t(lang, ui.title)}</h3>
                     <p className="mt-0.5 text-xs text-gray-500">{t(lang, ui.subtitle)}</p>
                   </div>
-                  <button onClick={handleClose} className="p-1 text-gray-400 hover:text-gray-600 shrink-0">
-                    <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12"/>
-                    </svg>
+                  <button onClick={handleClose} className="shrink-0 p-1 text-gray-400 hover:text-gray-600">
+                    <X className="h-5 w-5" strokeWidth={1.75} />
                   </button>
                 </div>
 
@@ -164,20 +161,20 @@ export default function GuestLeadWidget({ triggerOnMount = true }: Props) {
                   <button
                     type="button"
                     onClick={() => setMode('phone')}
-                    className={`flex-1 rounded-lg py-1.5 text-xs font-bold transition-all ${
+                    className={`flex flex-1 items-center justify-center gap-1 whitespace-nowrap rounded-lg py-1.5 text-xs font-semibold transition-colors ${
                       mode === 'phone' ? 'bg-white text-amber-700 shadow-sm' : 'text-gray-400 hover:text-gray-600'
                     }`}
                   >
-                    📱 {t(lang, { uz: 'Telefon', ru: 'Телефон' })}
+                    <Smartphone className="h-3.5 w-3.5 shrink-0" strokeWidth={1.75} /> {t(lang, { uz: 'Telefon', ru: 'Телефон' })}
                   </button>
                   <button
                     type="button"
                     onClick={() => setMode('email')}
-                    className={`flex-1 rounded-lg py-1.5 text-xs font-bold transition-all ${
+                    className={`flex flex-1 items-center justify-center gap-1 whitespace-nowrap rounded-lg py-1.5 text-xs font-semibold transition-colors ${
                       mode === 'email' ? 'bg-white text-blue-700 shadow-sm' : 'text-gray-400 hover:text-gray-600'
                     }`}
                   >
-                    ✉️ Email
+                    <Mail className="h-3.5 w-3.5 shrink-0" strokeWidth={1.75} /> Email
                   </button>
                 </div>
 
@@ -218,7 +215,7 @@ export default function GuestLeadWidget({ triggerOnMount = true }: Props) {
                   <button
                     type="submit"
                     disabled={loading || !canSubmit}
-                    className={`self-end rounded-xl px-4 py-2.5 text-sm font-bold text-white disabled:opacity-50 transition-colors ${
+                    className={`self-end whitespace-nowrap rounded-xl px-4 py-2.5 text-sm font-semibold text-white disabled:opacity-50 transition-colors ${
                       mode === 'phone'
                         ? 'bg-amber-500 hover:bg-amber-600'
                         : 'bg-blue-500 hover:bg-blue-600'
