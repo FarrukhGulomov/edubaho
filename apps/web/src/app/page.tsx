@@ -2,6 +2,11 @@
 
 import Link from 'next/link'
 import { useState, useEffect, useCallback, useRef } from 'react'
+import {
+  Search, PencilLine, BookOpen, Laptop, Globe2, GraduationCap, Palette,
+  Trophy, Dumbbell, School, BadgeCheck, Sparkles, MapPin, Users2,
+  UserCheck, Star, ArrowLeftRight, Target,
+} from 'lucide-react'
 import Header from '@/components/shared/Header'
 import StarRating from '@/components/shared/StarRating'
 import { useLang, t } from '@/contexts/LangContext'
@@ -28,44 +33,45 @@ interface InstCard {
 
 interface Meta { total: number; page: number; limit: number; totalPages: number }
 
-const TYPE_LABELS: Record<string, { uz: string; ru: string; icon: string }> = {
-  COURSE_CENTER:   { uz: "O'quv markaz",  ru: 'Учебный центр', icon: '✏️' },
-  SCHOOL:          { uz: 'Maktab',        ru: 'Школа',          icon: '📚' },
-  IT_SCHOOL:       { uz: 'IT maktab',     ru: 'IT школа',       icon: '💻' },
-  LANGUAGE_CENTER: { uz: 'Til markazi',   ru: 'Языковой',       icon: '🌐' },
-  UNIVERSITY:      { uz: 'Universitet',   ru: 'Университет',    icon: '🎓' },
-  KINDERGARTEN:    { uz: "Bog'cha",       ru: 'Детсад',         icon: '🎨' },
-  LYCEUM:          { uz: 'Litsey',        ru: 'Лицей',          icon: '🏆' },
-  SPORTS_SCHOOL:   { uz: 'Sport',         ru: 'Спорт',          icon: '⚽' },
-  ARTS_SCHOOL:     { uz: "San'at",        ru: 'Искусство',      icon: '🎭' },
+const TYPE_LABELS: Record<string, { uz: string; ru: string }> = {
+  COURSE_CENTER:   { uz: "O'quv markaz",  ru: 'Учебный центр' },
+  SCHOOL:          { uz: 'Maktab',        ru: 'Школа' },
+  IT_SCHOOL:       { uz: 'IT maktab',     ru: 'IT школа' },
+  LANGUAGE_CENTER: { uz: 'Til markazi',   ru: 'Языковой' },
+  UNIVERSITY:      { uz: 'Universitet',   ru: 'Университет' },
+  KINDERGARTEN:    { uz: "Bog'cha",       ru: 'Детсад' },
+  LYCEUM:          { uz: 'Litsey',        ru: 'Лицей' },
+  SPORTS_SCHOOL:   { uz: 'Sport',         ru: 'Спорт' },
+  ARTS_SCHOOL:     { uz: "San'at",        ru: 'Искусство' },
 }
 
-const CARD_GRADIENTS: Record<string, string> = {
-  COURSE_CENTER:   'from-blue-500 to-sky-400',
-  SCHOOL:          'from-green-500 to-emerald-400',
-  IT_SCHOOL:       'from-violet-600 to-purple-500',
-  LANGUAGE_CENTER: 'from-cyan-500 to-teal-400',
-  UNIVERSITY:      'from-amber-500 to-orange-400',
-  KINDERGARTEN:    'from-pink-500 to-rose-400',
-  LYCEUM:          'from-teal-600 to-emerald-500',
-  SPORTS_SCHOOL:   'from-green-600 to-lime-500',
-  ARTS_SCHOOL:     'from-fuchsia-500 to-pink-400',
+// Bitta izchil aksent — lucide ikonalar (globals.css .icon-chip bilan bir xil uslub)
+const TYPE_ICONS: Record<string, typeof School> = {
+  COURSE_CENTER:   PencilLine,
+  SCHOOL:          School,
+  IT_SCHOOL:       Laptop,
+  LANGUAGE_CENTER: Globe2,
+  UNIVERSITY:      GraduationCap,
+  KINDERGARTEN:    Palette,
+  LYCEUM:          Trophy,
+  SPORTS_SCHOOL:   Dumbbell,
+  ARTS_SCHOOL:     Palette,
 }
 
 const TYPE_FILTERS = [
-  { type: '',               icon: '🏫', uz: 'Barchasi',         ru: 'Все' },
-  { type: 'COURSE_CENTER',  icon: '✏️', uz: "O'quv markazlar", ru: 'Учебные центры' },
-  { type: 'IT_SCHOOL',      icon: '💻', uz: 'IT maktablar',    ru: 'IT школы' },
-  { type: 'SCHOOL',         icon: '📚', uz: 'Maktablar',       ru: 'Школы' },
-  { type: 'LANGUAGE_CENTER',icon: '🌐', uz: 'Til markazlari',  ru: 'Языковые' },
-  { type: 'UNIVERSITY',     icon: '🎓', uz: 'Universitetlar',  ru: 'Университеты' },
+  { type: '',                Icon: School,     uz: 'Barchasi',        ru: 'Все' },
+  { type: 'COURSE_CENTER',   Icon: PencilLine, uz: "O'quv markazlar", ru: 'Учебные центры' },
+  { type: 'IT_SCHOOL',       Icon: Laptop,     uz: 'IT maktablar',    ru: 'IT школы' },
+  { type: 'SCHOOL',          Icon: BookOpen,   uz: 'Maktablar',       ru: 'Школы' },
+  { type: 'LANGUAGE_CENTER', Icon: Globe2,     uz: 'Til markazlari',  ru: 'Языковые' },
+  { type: 'UNIVERSITY',      Icon: GraduationCap, uz: 'Universitetlar', ru: 'Университеты' },
 ]
 
 const SORT_OPTIONS = [
-  { value: 'rating',     uz: "⭐ Reyting bo'yicha", ru: '⭐ По рейтингу' },
-  { value: 'newest',     uz: '🆕 Yangilar',          ru: '🆕 Новые' },
-  { value: 'price_asc',  uz: '💰 Arzon avval',       ru: '💰 Сначала дешевле' },
-  { value: 'price_desc', uz: '💎 Qimmat avval',       ru: '💎 Сначала дороже' },
+  { value: 'rating',     uz: "Reyting bo'yicha", ru: 'По рейтингу' },
+  { value: 'newest',     uz: 'Yangilar',          ru: 'Новые' },
+  { value: 'price_asc',  uz: 'Arzon avval',       ru: 'Сначала дешевле' },
+  { value: 'price_desc', uz: 'Qimmat avval',       ru: 'Сначала дороже' },
 ]
 
 function fmtNum(n: number) { return n.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ' ') }
@@ -141,24 +147,15 @@ export default function HomePage() {
       <Header />
 
       {/* ── Qidiruv banner (compact) ── */}
-      <div className="relative overflow-hidden bg-gradient-to-br from-primary-900 via-primary-700 to-sky-500 px-4 py-6 sm:py-8">
-        <div
-          className="pointer-events-none absolute inset-0 opacity-[0.06]"
-          style={{ backgroundImage: 'radial-gradient(circle, white 1px, transparent 1px)', backgroundSize: '28px 28px' }}
-        />
-        <div className="pointer-events-none absolute -top-20 -right-20 h-64 w-64 rounded-full bg-sky-300/20 blur-3xl" />
-
-        <div className="relative mx-auto max-w-3xl">
-          <h1 className="mb-4 text-center text-xl font-black text-white sm:text-2xl">
-            {uz ? "🏫 Barcha ta'lim muassasalari" : "🏫 Все учебные заведения"}
+      <div className="border-b border-gray-200 bg-white px-4 py-6 sm:py-8">
+        <div className="mx-auto max-w-3xl">
+          <h1 className="mb-4 text-center text-xl font-bold text-gray-900 sm:text-2xl">
+            {uz ? "Barcha ta'lim muassasalari" : "Все учебные заведения"}
           </h1>
           {/* Qidiruv qutisi */}
-          <div className="flex items-center gap-2 rounded-2xl bg-white p-2 shadow-xl ring-1 ring-white/20">
-            <div className="flex flex-1 items-center gap-2 px-3">
-              <svg className="h-5 w-5 shrink-0 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
-                  d="M21 21l-4.35-4.35M17 11A6 6 0 1 1 5 11a6 6 0 0 1 12 0z"/>
-              </svg>
+          <div className="flex items-center gap-2 rounded-xl border border-gray-200 bg-white p-2 shadow-sm">
+            <div className="flex flex-1 items-center gap-2 px-2">
+              <Search className="h-5 w-5 shrink-0 text-gray-400" strokeWidth={1.75} />
               <input
                 type="text"
                 value={query}
@@ -184,9 +181,9 @@ export default function HomePage() {
           <div className="mt-3 flex justify-center">
             <Link
               href="/match"
-              className="group inline-flex items-center gap-2 rounded-full bg-white/15 px-5 py-2 text-sm font-bold text-white ring-1 ring-white/30 backdrop-blur-sm transition-all hover:bg-white hover:text-primary-700"
+              className="group inline-flex items-center gap-2 rounded-full border border-primary-200 bg-primary-50 px-4 py-2 text-sm font-semibold text-primary-700 transition-colors hover:bg-primary-100"
             >
-              <span className="text-base">🎯</span>
+              <Target className="h-4 w-4" strokeWidth={1.75} />
               {uz ? 'Qaysi biri menga mos? — 1 daqiqada aniqlang' : 'Что мне подходит? — узнайте за 1 минуту'}
               <span className="transition-transform group-hover:translate-x-0.5">→</span>
             </Link>
@@ -202,13 +199,13 @@ export default function HomePage() {
               <button
                 key={f.type}
                 onClick={() => { setActiveType(f.type); setCurrentPage(1) }}
-                className={`flex shrink-0 items-center gap-1.5 rounded-2xl px-4 py-2 text-sm font-semibold transition-all ${
+                className={`flex shrink-0 items-center gap-1.5 rounded-xl px-3.5 py-2 text-sm font-semibold transition-colors ${
                   activeType === f.type
-                    ? 'bg-primary-600 text-white shadow-sm'
+                    ? 'bg-primary-600 text-white'
                     : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900'
                 }`}
               >
-                <span>{f.icon}</span>
+                <f.Icon className="h-4 w-4" strokeWidth={1.75} />
                 <span>{uz ? f.uz : f.ru}</span>
               </button>
             ))}
@@ -284,29 +281,25 @@ export default function HomePage() {
             <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
               {institutions.map(inst => {
                 const info     = TYPE_LABELS[inst.type]
+                const TypeIcon = TYPE_ICONS[inst.type] ?? School
                 const name     = uz || !inst.nameRu ? inst.nameUz : inst.nameRu
                 const city     = inst.city ? (uz || !inst.city.nameRu ? inst.city.nameUz : inst.city.nameRu) : null
-                const gradient = CARD_GRADIENTS[inst.type] ?? 'from-primary-500 to-sky-400'
                 const saved    = isSaved(inst.id)
                 const compared = isCompared(inst.id)
 
                 return (
                   <div key={inst.id} className="group card flex flex-col overflow-hidden p-0">
-                    {/* Gradient sarlavha */}
-                    <Link href={`/institutions/${inst.slug}`} className={`relative flex h-20 items-center justify-center overflow-hidden bg-gradient-to-br ${gradient}`}>
-                      <div
-                        className="pointer-events-none absolute inset-0 opacity-10"
-                        style={{ backgroundImage: 'radial-gradient(circle, white 1px, transparent 1px)', backgroundSize: '14px 14px' }}
-                      />
-                      <span className="relative z-10 text-4xl">{info?.icon ?? '🏫'}</span>
+                    {/* Sarlavha: ikonka + status teglar */}
+                    <Link href={`/institutions/${inst.slug}`} className="relative flex h-20 items-center justify-center bg-gray-50 border-b border-gray-100">
+                      <TypeIcon className="h-9 w-9 text-primary-300" strokeWidth={1.5} />
                       {inst.isVerified && (
-                        <span className="absolute right-2.5 top-2.5 z-10 flex items-center gap-0.5 rounded-full border border-white/30 bg-white/25 px-2 py-0.5 text-[11px] font-bold text-white backdrop-blur-sm">
-                          ✓ {uz ? 'Tasdiqlangan' : 'Подтв.'}
+                        <span className="absolute right-2.5 top-2.5 flex items-center gap-1 rounded-full bg-emerald-50 px-2 py-0.5 text-[11px] font-semibold text-emerald-700">
+                          <BadgeCheck className="h-3 w-3" strokeWidth={2} /> {uz ? 'Tasdiqlangan' : 'Подтв.'}
                         </span>
                       )}
                       {inst.subscription?.plan === 'PREMIUM' && (
-                        <span className="absolute left-2.5 top-2.5 z-10 flex items-center gap-0.5 rounded-full border border-amber-300/30 bg-amber-400/25 px-2 py-0.5 text-[11px] font-bold text-amber-100 backdrop-blur-sm">
-                          ⭐ Premium
+                        <span className="absolute left-2.5 top-2.5 flex items-center gap-1 rounded-full bg-amber-50 px-2 py-0.5 text-[11px] font-semibold text-amber-700">
+                          <Sparkles className="h-3 w-3" strokeWidth={2} /> Premium
                         </span>
                       )}
                     </Link>
@@ -353,13 +346,13 @@ export default function HomePage() {
                           </span>
                         )}
                         {inst.details?.studentCount && (
-                          <span className="flex items-center gap-1 text-blue-600 font-semibold">
-                            👥 {fmtNum(inst.details.studentCount)}+
+                          <span className="flex items-center gap-1 text-primary-600 font-semibold">
+                            <Users2 className="h-3.5 w-3.5" strokeWidth={2} /> {fmtNum(inst.details.studentCount)}+
                           </span>
                         )}
                         {inst.details?.teacherCount && (
-                          <span className="flex items-center gap-1 text-violet-600 font-semibold">
-                            👨‍🏫 {inst.details.teacherCount}
+                          <span className="flex items-center gap-1 text-gray-500 font-semibold">
+                            <UserCheck className="h-3.5 w-3.5" strokeWidth={2} /> {inst.details.teacherCount}
                           </span>
                         )}
                       </div>
@@ -369,7 +362,6 @@ export default function HomePage() {
                         {inst.avgRating ? (
                           <div className="flex items-center gap-1.5">
                             <StarRating rating={inst.avgRating} size="sm" />
-                            <span className="text-sm font-black text-gray-900">{inst.avgRating.toFixed(1)}</span>
                             <span className="text-xs text-gray-400">({inst.reviewCount})</span>
                           </div>
                         ) : (
@@ -386,23 +378,25 @@ export default function HomePage() {
                       <div className="mt-2 flex gap-1.5 border-t border-gray-50 pt-2">
                         <button
                           onClick={() => toggleSave(inst)}
-                          className={`flex flex-1 items-center justify-center gap-1 rounded-xl py-1.5 text-xs font-semibold transition-all ${
+                          className={`flex flex-1 items-center justify-center gap-1 rounded-lg py-1.5 text-xs font-semibold transition-colors ${
                             saved
-                              ? 'bg-primary-50 text-primary-700'
-                              : 'bg-gray-50 text-gray-500 hover:bg-gray-100'
-                          }`}
-                        >
-                          {saved ? '🔖' : '🔖'} {uz ? (saved ? "Saqlandi" : "Saqlash") : (saved ? "Сохранено" : "Сохранить")}
-                        </button>
-                        <button
-                          onClick={() => toggleCompare(inst)}
-                          className={`flex flex-1 items-center justify-center gap-1 rounded-xl py-1.5 text-xs font-semibold transition-all ${
-                            compared
                               ? 'bg-amber-50 text-amber-700'
                               : 'bg-gray-50 text-gray-500 hover:bg-gray-100'
                           }`}
                         >
-                          ⇄ {uz ? (compared ? "Tanlandi" : "Solishtir") : (compared ? "Выбрано" : "Сравнить")}
+                          <Star className="h-3.5 w-3.5" fill={saved ? 'currentColor' : 'none'} strokeWidth={2} />
+                          {uz ? (saved ? "Saqlandi" : "Saqlash") : (saved ? "Сохранено" : "Сохранить")}
+                        </button>
+                        <button
+                          onClick={() => toggleCompare(inst)}
+                          className={`flex flex-1 items-center justify-center gap-1 rounded-lg py-1.5 text-xs font-semibold transition-colors ${
+                            compared
+                              ? 'bg-primary-50 text-primary-700'
+                              : 'bg-gray-50 text-gray-500 hover:bg-gray-100'
+                          }`}
+                        >
+                          <ArrowLeftRight className="h-3.5 w-3.5" strokeWidth={2} />
+                          {uz ? (compared ? "Tanlandi" : "Solishtir") : (compared ? "Выбрано" : "Сравнить")}
                         </button>
                       </div>
                     </div>
