@@ -317,11 +317,11 @@ export default function InstitutionDetail({ inst }: { inst: Institution }) {
         <div className="mx-auto max-w-5xl px-4">
           {/* Breadcrumb */}
           <nav className="flex items-center gap-1 py-4 text-sm text-gray-500">
-            <Link href="/" className="rounded-md px-1 py-0.5 hover:text-gray-900 transition-colors">{t(lang, ui.breadHome)}</Link>
+            <Link href="/" className="shrink-0 whitespace-nowrap rounded-md px-1 py-0.5 hover:text-gray-900 transition-colors">{t(lang, ui.breadHome)}</Link>
             <ChevronRight className="h-3.5 w-3.5 shrink-0 text-gray-300" />
-            <Link href="/search" className="rounded-md px-1 py-0.5 hover:text-gray-900 transition-colors">{t(lang, ui.breadSearch)}</Link>
+            <Link href="/search" className="shrink-0 whitespace-nowrap rounded-md px-1 py-0.5 hover:text-gray-900 transition-colors">{t(lang, ui.breadSearch)}</Link>
             <ChevronRight className="h-3.5 w-3.5 shrink-0 text-gray-300" />
-            <span className="max-w-48 truncate font-medium text-gray-900">{displayName}</span>
+            <span className="min-w-0 flex-1 truncate font-medium text-gray-900">{displayName}</span>
           </nav>
 
           {/* Muassasa ma'lumotlari */}
