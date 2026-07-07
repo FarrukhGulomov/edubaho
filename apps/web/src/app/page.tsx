@@ -146,13 +146,39 @@ export default function HomePage() {
     <div className="flex min-h-screen flex-col bg-gray-50">
       <Header />
 
-      {/* ── Qidiruv banner (compact) ── */}
+      {/* ── Bosh banner ── */}
       <div className="border-b border-gray-200 bg-white px-4 py-6 sm:py-8">
         <div className="mx-auto max-w-3xl">
           <h1 className="mb-4 text-center text-xl font-bold text-gray-900 sm:text-2xl">
             {uz ? "Barcha ta'lim muassasalari" : "Все учебные заведения"}
           </h1>
-          {/* Qidiruv qutisi */}
+
+          {/* EduFit — platformaning asosiy fichasi, birinchi bo'lib ko'zga tashlanishi kerak */}
+          <Link
+            href="/match"
+            className="group mb-4 flex items-center gap-3 rounded-2xl bg-primary-600 px-4 py-4 text-left text-white shadow-sm transition-colors hover:bg-primary-700 sm:gap-4 sm:px-6 sm:py-5"
+          >
+            <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-white/15 sm:h-12 sm:w-12">
+              <Target className="h-5 w-5 sm:h-6 sm:w-6" strokeWidth={1.75} />
+            </span>
+            <span className="flex-1">
+              <span className="block text-sm font-bold sm:text-lg">
+                {uz ? 'Qaysi muassasa senga mos? — 1 daqiqada bilib ol' : 'Какое учреждение вам подходит? — узнайте за 1 минуту'}
+              </span>
+              <span className="hidden text-sm text-primary-100 sm:block">
+                {uz ? "Shaxsiy so'rovnoma orqali eng mos variantlarni toping" : 'Персональный подбор по вашим критериям и бюджету'}
+              </span>
+            </span>
+            <span className="flex shrink-0 items-center gap-1 rounded-xl bg-white px-3 py-2 text-sm font-bold text-primary-700 sm:px-4">
+              {uz ? 'Boshlash' : 'Начать'}
+              <span className="transition-transform group-hover:translate-x-0.5">→</span>
+            </span>
+          </Link>
+
+          {/* Qidiruv qutisi — ikkilamchi, o'zi nima izlashini biladiganlar uchun */}
+          <p className="mb-2 text-center text-xs font-medium text-gray-400">
+            {uz ? "yoki o'zingiz qidiring" : 'или найдите самостоятельно'}
+          </p>
           <div className="flex items-center gap-2 rounded-xl border border-gray-200 bg-white p-2 shadow-sm">
             <div className="flex flex-1 items-center gap-2 px-2">
               <Search className="h-5 w-5 shrink-0 text-gray-400" strokeWidth={1.75} />
@@ -176,36 +202,24 @@ export default function HomePage() {
               )}
             </div>
           </div>
-
-          {/* EduFit wizard CTA */}
-          <div className="mt-3 flex justify-center">
-            <Link
-              href="/match"
-              className="group inline-flex items-center gap-2 rounded-full border border-primary-200 bg-primary-50 px-4 py-2 text-sm font-semibold text-primary-700 transition-colors hover:bg-primary-100"
-            >
-              <Target className="h-4 w-4" strokeWidth={1.75} />
-              {uz ? 'Qaysi biri menga mos? — 1 daqiqada aniqlang' : 'Что мне подходит? — узнайте за 1 минуту'}
-              <span className="transition-transform group-hover:translate-x-0.5">→</span>
-            </Link>
-          </div>
         </div>
       </div>
 
-      {/* ── Kategoriya tablar (sticky) ── */}
+      {/* ── Kategoriya tablar (sticky, bitta qatorda, bir xil shakl) ── */}
       <div className="sticky top-[65px] z-30 border-b border-gray-200 bg-white/97 shadow-sm backdrop-blur-sm">
         <div className="mx-auto max-w-6xl px-4">
-          <div className="flex gap-1 overflow-x-auto py-2.5" style={{ scrollbarWidth: 'none' }}>
+          <div className="flex flex-nowrap gap-1.5 overflow-x-auto py-2.5" style={{ scrollbarWidth: 'none' }}>
             {TYPE_FILTERS.map(f => (
               <button
                 key={f.type}
                 onClick={() => { setActiveType(f.type); setCurrentPage(1) }}
-                className={`flex shrink-0 items-center gap-1.5 rounded-xl px-3.5 py-2 text-sm font-semibold transition-colors ${
+                className={`flex h-9 shrink-0 items-center gap-1.5 whitespace-nowrap rounded-xl px-3.5 text-sm font-semibold transition-colors ${
                   activeType === f.type
                     ? 'bg-primary-600 text-white'
-                    : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900'
+                    : 'bg-gray-50 text-gray-600 hover:bg-gray-100 hover:text-gray-900'
                 }`}
               >
-                <f.Icon className="h-4 w-4" strokeWidth={1.75} />
+                <f.Icon className="h-4 w-4 shrink-0" strokeWidth={1.75} />
                 <span>{uz ? f.uz : f.ru}</span>
               </button>
             ))}
