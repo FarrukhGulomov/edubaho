@@ -2,6 +2,12 @@
 
 import Link from 'next/link'
 import { useEffect, useRef, useState } from 'react'
+import {
+  ChevronRight, MapPin, BadgeCheck, Sparkles, Lock, BookOpen, Trophy,
+  Users2, GraduationCap, Palette, Laptop, Globe2, UserCheck, Dumbbell,
+  PencilLine, Wallet, Info, BarChart3, MessageCircle, Phone, Send,
+  Instagram, Globe, Clock, ThumbsUp, Star,
+} from 'lucide-react'
 import StarRating from '@/components/shared/StarRating'
 import InstActions from '@/components/institutions/InstActions'
 import ClaimInstitution from '@/components/institutions/ClaimInstitution'
@@ -32,33 +38,19 @@ const TYPE_LABELS: Record<string, { uz: string; ru: string }> = {
   ARTS_SCHOOL:     { uz: "San'at maktabi", ru: 'Школа искусств' },
 }
 
-// Muassasa turi bo'yicha gradient va ikonlar
-const CARD_GRADIENTS: Record<string, string> = {
-  KINDERGARTEN:    'from-pink-500 to-rose-400',
-  SCHOOL:          'from-green-500 to-emerald-400',
-  LYCEUM:          'from-teal-600 to-emerald-500',
-  COLLEGE:         'from-indigo-500 to-blue-400',
-  UNIVERSITY:      'from-amber-500 to-orange-400',
-  COURSE_CENTER:   'from-blue-500 to-sky-400',
-  LANGUAGE_CENTER: 'from-cyan-500 to-teal-400',
-  IT_SCHOOL:       'from-violet-600 to-purple-500',
-  TUTORING:        'from-orange-500 to-amber-400',
-  SPORTS_SCHOOL:   'from-green-600 to-lime-500',
-  ARTS_SCHOOL:     'from-fuchsia-500 to-pink-400',
-}
-
-const TYPE_ICONS: Record<string, string> = {
-  KINDERGARTEN:    '🎨',
-  SCHOOL:          '📚',
-  LYCEUM:          '🏆',
-  COLLEGE:         '📖',
-  UNIVERSITY:      '🎓',
-  COURSE_CENTER:   '✏️',
-  LANGUAGE_CENTER: '🌐',
-  IT_SCHOOL:       '💻',
-  TUTORING:        '👨‍🏫',
-  SPORTS_SCHOOL:   '⚽',
-  ARTS_SCHOOL:     '🎭',
+// Muassasa turi bo'yicha ikonka (lucide) — bitta izchil aksent rangda
+const TYPE_ICONS: Record<string, typeof BookOpen> = {
+  KINDERGARTEN:    Palette,
+  SCHOOL:          BookOpen,
+  LYCEUM:          Trophy,
+  COLLEGE:         GraduationCap,
+  UNIVERSITY:      GraduationCap,
+  COURSE_CENTER:   PencilLine,
+  LANGUAGE_CENTER: Globe2,
+  IT_SCHOOL:       Laptop,
+  TUTORING:        UserCheck,
+  SPORTS_SCHOOL:   Dumbbell,
+  ARTS_SCHOOL:     Palette,
 }
 
 function calcRatingBreakdown(reviews: Institution['reviews']) {
@@ -70,11 +62,11 @@ function calcRatingBreakdown(reviews: Institution['reviews']) {
 
 // Mezonlar bo'yicha o'rtacha baholar
 const DIM_DEFS = [
-  { key: 'teacherRating',    icon: '👨‍🏫', label: "O'qituvchilar" },
-  { key: 'facilityRating',   icon: '🏫',  label: 'Sharoit' },
-  { key: 'valueRating',      icon: '💰',  label: 'Narx/Sifat' },
-  { key: 'atmosphereRating', icon: '🌿',  label: 'Muhit' },
-  { key: 'serviceRating',    icon: '📞',  label: 'Aloqa' },
+  { key: 'teacherRating',    Icon: UserCheck,     label: "O'qituvchilar" },
+  { key: 'facilityRating',   Icon: BookOpen,      label: 'Sharoit' },
+  { key: 'valueRating',      Icon: Wallet,        label: 'Narx/Sifat' },
+  { key: 'atmosphereRating', Icon: Sparkles,      label: 'Muhit' },
+  { key: 'serviceRating',    Icon: Phone,         label: 'Aloqa' },
 ] as const
 
 type ReviewDimKey = 'teacherRating' | 'facilityRating' | 'valueRating' | 'atmosphereRating' | 'serviceRating'
@@ -117,7 +109,7 @@ function GuestGate({
   if (!isGuest) return <>{children}</>
 
   return (
-    <div className="relative rounded-3xl overflow-hidden" data-gate-type={gateType}>
+    <div className="relative rounded-2xl overflow-hidden" data-gate-type={gateType}>
       {/* Blurred preview content */}
       {blurPreview && (
         <div className="pointer-events-none select-none blur-[3px] opacity-60 saturate-50">
@@ -127,11 +119,11 @@ function GuestGate({
 
       {/* Overlay */}
       <div className={`${blurPreview ? 'absolute inset-0' : ''} flex items-center justify-center bg-white/80 backdrop-blur-sm`}>
-        <div className="mx-4 w-full max-w-sm rounded-3xl border-2 border-primary-100 bg-white p-7 text-center shadow-xl">
-          <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-2xl bg-gradient-to-br from-primary-500 to-primary-600 text-3xl shadow-md">
-            🔐
+        <div className="mx-4 w-full max-w-sm rounded-2xl border border-gray-200 bg-white p-7 text-center shadow-lg">
+          <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-xl bg-primary-50 text-primary-600">
+            <Lock className="h-6 w-6" strokeWidth={1.75} />
           </div>
-          <h3 className="mb-2 text-xl font-black text-gray-900">
+          <h3 className="mb-2 text-xl font-bold text-gray-900">
             {lang === 'ru' ? 'Войдите для просмотра' : "Ko'rish uchun kiring"}
           </h3>
           <p className="mb-5 text-base text-gray-500 leading-relaxed">
@@ -142,7 +134,7 @@ function GuestGate({
           <Link
             href="/auth"
             onClick={() => trackGateCta(gateType ?? 'gate', institutionId)}
-            className="btn-primary w-full text-base py-4"
+            className="btn-primary w-full text-base py-3.5"
           >
             {lang === 'ru' ? 'Зарегистрироваться / Войти' : "Ro'yxatdan o'tish / Kirish"}
           </Link>
@@ -159,29 +151,34 @@ function GuestGate({
 // Registration CTA banner — sahifa o'rtasida bitta ulkan taklif
 // ─────────────────────────────────────────────────────────────
 function RegisterBanner({ lang }: { lang: 'uz' | 'ru' }) {
+  const items: Array<[typeof Phone, string]> = lang === 'ru' ? [
+    [Phone, 'Контакты: телефон, Telegram, Instagram'],
+    [Wallet, 'Актуальные цены и способы оплаты'],
+    [MessageCircle, 'Все отзывы родителей и учеников'],
+    [PencilLine, 'Оставить свой отзыв'],
+    [BadgeCheck, 'Сохранять и сравнивать учреждения'],
+  ] : [
+    [Phone, 'Kontaktlar: telefon, Telegram, Instagram'],
+    [Wallet, "Narxlar va to'lov usullari"],
+    [MessageCircle, "Ota-onalar va o'quvchilarning barcha sharhlari"],
+    [PencilLine, "O'z sharhingizni yozish"],
+    [BadgeCheck, 'Muassasalarni saqlash va solishtirish'],
+  ]
+
   return (
-    <div className="overflow-hidden rounded-3xl shadow-lg">
-      {/* Gradient header */}
-      <div className="relative bg-gradient-to-br from-primary-700 to-sky-500 px-6 py-5">
-        <div
-          className="pointer-events-none absolute inset-0 opacity-[0.08]"
-          style={{ backgroundImage: 'radial-gradient(circle, white 1px, transparent 1px)', backgroundSize: '20px 20px' }}
-        />
-        <div className="relative flex items-center gap-3">
-          <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-white/20 text-2xl backdrop-blur-sm border border-white/25">
-            🔐
-          </div>
-          <div>
-            <p className="text-sm font-black uppercase tracking-wider text-white/80">EDUBAHO.uz</p>
-            <h3 className="text-lg font-black text-white leading-tight">
-              {lang === 'ru' ? 'Войдите для полного доступа' : "To'liq kirish uchun tizimga kiring"}
-            </h3>
-          </div>
+    <div className="overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-sm">
+      {/* Sarlavha */}
+      <div className="flex items-center gap-3 border-b border-gray-100 px-6 py-4">
+        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-primary-50 text-primary-600">
+          <Lock className="h-5 w-5" strokeWidth={1.75} />
         </div>
+        <h3 className="font-semibold text-gray-900 leading-tight">
+          {lang === 'ru' ? 'Войдите для полного доступа' : "To'liq kirish uchun tizimga kiring"}
+        </h3>
       </div>
 
       {/* Body */}
-      <div className="border-2 border-t-0 border-primary-100 bg-white px-6 pb-6 pt-5 rounded-b-3xl">
+      <div className="px-6 pb-6 pt-5">
         <p className="mb-4 text-sm text-gray-500 leading-relaxed">
           {lang === 'ru'
             ? 'Зарегистрируйтесь бесплатно — контакты, цены и все отзывы'
@@ -189,27 +186,17 @@ function RegisterBanner({ lang }: { lang: 'uz' | 'ru' }) {
         </p>
 
         <ul className="mb-5 space-y-2.5">
-          {(lang === 'ru' ? [
-            ['📞', 'Контакты: телефон, Telegram, Instagram'],
-            ['💰', 'Актуальные цены и способы оплаты'],
-            ['💬', 'Все отзывы родителей и учеников'],
-            ['✍️', 'Оставить свой отзыв'],
-            ['🔖', 'Сохранять и сравнивать учреждения'],
-          ] : [
-            ['📞', 'Kontaktlar: telefon, Telegram, Instagram'],
-            ['💰', "Narxlar va to'lov usullari"],
-            ['💬', "Ota-onalar va o'quvchilarning barcha sharhlari"],
-            ['✍️', "O'z sharhingizni yozish"],
-            ['🔖', 'Muassasalarni saqlash va solishtirish'],
-          ]).map(([icon, text]) => (
+          {items.map(([Icon, text]) => (
             <li key={text} className="flex items-center gap-2.5 text-sm text-gray-700">
-              <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-xl bg-primary-50 text-sm">{icon}</span>
+              <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-primary-50 text-primary-600">
+                <Icon className="h-3.5 w-3.5" strokeWidth={2} />
+              </span>
               {text}
             </li>
           ))}
         </ul>
 
-        <Link href="/auth" className="btn-primary w-full py-3.5 text-base">
+        <Link href="/auth" className="btn-primary w-full py-3 text-base">
           {lang === 'ru' ? 'Зарегистрироваться бесплатно →' : "Bepul ro'yxatdan o'tish →"}
         </Link>
         <p className="mt-3 text-center text-xs text-gray-400">
@@ -272,8 +259,7 @@ export default function InstitutionDetail({ inst }: { inst: Institution }) {
   }, [authChecked, isGuest, inst.id])
 
   const typeLabel      = TYPE_LABELS[inst.type]
-  const typeIcon       = TYPE_ICONS[inst.type] ?? '🏫'
-  const bannerGradient = CARD_GRADIENTS[inst.type] ?? 'from-primary-700 to-sky-500'
+  const TypeIcon       = TYPE_ICONS[inst.type] ?? BookOpen
   const displayName    = lang === 'ru' && inst.nameRu ? inst.nameRu : inst.nameUz
   const cityDisplayName = inst.city
     ? (lang === 'ru' && inst.city.nameRu ? inst.city.nameRu : inst.city.nameUz)
@@ -326,73 +312,63 @@ export default function InstitutionDetail({ inst }: { inst: Institution }) {
 
   return (
     <main className="min-h-screen bg-gray-50">
-      {/* ── To'liq rang gradient hero banner ─── */}
-      <div className={`relative overflow-hidden bg-gradient-to-br ${bannerGradient} text-white`}>
-        {/* Dot grid */}
-        <div
-          className="pointer-events-none absolute inset-0 opacity-[0.07]"
-          style={{ backgroundImage: 'radial-gradient(circle, white 1px, transparent 1px)', backgroundSize: '28px 28px' }}
-        />
-        {/* Glow orblari */}
-        <div className="pointer-events-none absolute -top-24 -right-24 h-64 w-64 rounded-full bg-white/10 blur-3xl" />
-        <div className="pointer-events-none absolute -bottom-16 -left-16 h-48 w-48 rounded-full bg-white/10 blur-2xl" />
-
-        <div className="relative mx-auto max-w-5xl px-4">
-          {/* Breadcrumb — banner ichida */}
-          <nav className="flex items-center gap-1.5 py-4 text-sm text-white/70">
-            <Link href="/" className="hover:text-white transition-colors font-medium">{t(lang, ui.breadHome)}</Link>
-            <span className="text-white/40">›</span>
-            <Link href="/search" className="hover:text-white transition-colors font-medium">{t(lang, ui.breadSearch)}</Link>
-            <span className="text-white/40">›</span>
-            <span className="text-white/90 font-semibold max-w-48 truncate">{displayName}</span>
+      {/* ── Toza, minimalistik hero — gradient/dekor yo'q ─── */}
+      <div className="border-b border-gray-200 bg-white">
+        <div className="mx-auto max-w-5xl px-4">
+          {/* Breadcrumb */}
+          <nav className="flex items-center gap-1 py-4 text-sm text-gray-500">
+            <Link href="/" className="rounded-md px-1 py-0.5 hover:text-gray-900 transition-colors">{t(lang, ui.breadHome)}</Link>
+            <ChevronRight className="h-3.5 w-3.5 shrink-0 text-gray-300" />
+            <Link href="/search" className="rounded-md px-1 py-0.5 hover:text-gray-900 transition-colors">{t(lang, ui.breadSearch)}</Link>
+            <ChevronRight className="h-3.5 w-3.5 shrink-0 text-gray-300" />
+            <span className="max-w-48 truncate font-medium text-gray-900">{displayName}</span>
           </nav>
 
           {/* Muassasa ma'lumotlari */}
-          <div className="flex flex-col gap-5 pb-8 sm:flex-row sm:items-end">
-            {/* Tur ikonasi */}
-            <div className="flex h-20 w-20 shrink-0 items-center justify-center rounded-3xl border border-white/25 bg-white/20 text-5xl shadow-lg backdrop-blur-sm">
-              {typeIcon}
-            </div>
+          <div className="flex flex-col gap-5 pb-6 sm:flex-row sm:items-start sm:justify-between">
+            <div className="flex min-w-0 gap-4">
+              {/* Tur ikonasi */}
+              <div className="flex h-16 w-16 shrink-0 items-center justify-center rounded-2xl bg-primary-50 text-primary-600">
+                <TypeIcon className="h-8 w-8" strokeWidth={1.6} />
+              </div>
 
-            {/* Nom va teglar */}
-            <div className="min-w-0 flex-1">
-              <div className="mb-3 flex flex-wrap items-center gap-2">
-                <span className="inline-flex items-center rounded-full border border-white/25 bg-white/20 px-3 py-1.5 text-sm font-semibold text-white backdrop-blur-sm">
-                  {typeLabel ? t(lang, typeLabel) : inst.type}
-                </span>
-                {inst.isVerified && (
-                  <span className="inline-flex items-center gap-1.5 rounded-full border border-emerald-300/30 bg-emerald-500/30 px-3 py-1.5 text-sm font-bold text-emerald-100">
-                    <svg className="h-3.5 w-3.5" fill="currentColor" viewBox="0 0 20 20">
-                      <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd"/>
-                    </svg>
-                    {t(lang, ui.verified)}
+              {/* Nom va teglar */}
+              <div className="min-w-0">
+                <div className="mb-2 flex flex-wrap items-center gap-1.5">
+                  <span className="inline-flex items-center rounded-full bg-gray-100 px-2.5 py-1 text-xs font-medium text-gray-600">
+                    {typeLabel ? t(lang, typeLabel) : inst.type}
                   </span>
+                  {inst.isVerified && (
+                    <span className="inline-flex items-center gap-1 rounded-full bg-emerald-50 px-2.5 py-1 text-xs font-semibold text-emerald-700">
+                      <BadgeCheck className="h-3.5 w-3.5" strokeWidth={2} />
+                      {t(lang, ui.verified)}
+                    </span>
+                  )}
+                  {inst.subscription?.plan === 'PREMIUM' && (
+                    <span className="inline-flex items-center gap-1 rounded-full bg-amber-50 px-2.5 py-1 text-xs font-semibold text-amber-700">
+                      <Sparkles className="h-3.5 w-3.5" strokeWidth={2} />
+                      {t(lang, ui.premium)}
+                    </span>
+                  )}
+                </div>
+
+                <h1 className="text-2xl font-bold leading-tight text-gray-900 sm:text-3xl">{displayName}</h1>
+                {lang === 'uz' && inst.nameRu && (
+                  <p className="mt-0.5 text-sm text-gray-400">{inst.nameRu}</p>
                 )}
-                {inst.subscription?.plan === 'PREMIUM' && (
-                  <span className="inline-flex items-center gap-1.5 rounded-full border border-amber-300/30 bg-amber-400/30 px-3 py-1.5 text-sm font-bold text-amber-100">
-                    ⭐ {t(lang, ui.premium)}
-                  </span>
+                {cityDisplayName && (
+                  <div className="mt-2 flex items-center gap-1.5 text-sm text-gray-500">
+                    <MapPin className="h-4 w-4 shrink-0" strokeWidth={1.75} />
+                    {cityDisplayName}
+                  </div>
                 )}
                 {isGuest && (
-                  <Link href="/auth" className="inline-flex items-center gap-1.5 rounded-full border border-orange-400/30 bg-orange-500/30 px-3 py-1.5 text-sm font-bold text-orange-100 transition-colors hover:bg-orange-500/40">
-                    🔐 {lang === 'ru' ? 'Войдите для полного доступа' : "To'liq ma'lumot uchun kiring"}
+                  <Link href="/auth" className="mt-3 inline-flex items-center gap-1.5 text-sm font-semibold text-primary-600 hover:text-primary-700">
+                    <Lock className="h-3.5 w-3.5" strokeWidth={2} />
+                    {lang === 'ru' ? 'Войдите для полного доступа' : "To'liq ma'lumot uchun kiring"}
                   </Link>
                 )}
               </div>
-
-              <h1 className="text-2xl font-black leading-tight text-white sm:text-4xl">{displayName}</h1>
-              {lang === 'uz' && inst.nameRu && (
-                <p className="mt-1 text-base text-white/60">{inst.nameRu}</p>
-              )}
-              {cityDisplayName && (
-                <div className="mt-2 flex items-center gap-1.5 text-sm text-white/70">
-                  <svg className="h-4 w-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
-                      d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0zM15 11a3 3 0 11-6 0 3 3 0 016 0z"/>
-                  </svg>
-                  {cityDisplayName}
-                </div>
-              )}
             </div>
 
             {/* Reyting bloki */}
@@ -402,16 +378,16 @@ export default function InstitutionDetail({ inst }: { inst: Institution }) {
                   if (isGuest) document.getElementById('auth-gate-reviews')?.scrollIntoView({ behavior: 'smooth' })
                   else document.getElementById('reviews')?.scrollIntoView({ behavior: 'smooth' })
                 }}
-                className="flex shrink-0 flex-col items-center rounded-3xl border border-white/20 bg-white/15 px-6 py-4 text-center backdrop-blur-sm transition-all hover:bg-white/25"
+                className="flex shrink-0 flex-col items-center rounded-2xl border border-gray-200 bg-gray-50 px-6 py-4 text-center transition-colors hover:border-primary-200 hover:bg-primary-50"
               >
-                <span className="text-5xl font-black text-yellow-300">{inst.avgRating.toFixed(1)}</span>
-                <StarRating rating={inst.avgRating} size="lg" />
-                <span className="mt-1 text-sm text-white/70">{inst.reviewCount} {t(lang, ui.reviews)}</span>
+                <span className="text-4xl font-bold text-gray-900">{inst.avgRating.toFixed(1)}</span>
+                <StarRating rating={inst.avgRating} size="lg" showValue={false} />
+                <span className="mt-1 text-sm text-gray-500">{inst.reviewCount} {t(lang, ui.reviews)}</span>
               </button>
             ) : (
-              <div className="flex shrink-0 flex-col items-center rounded-3xl border border-white/15 bg-white/10 px-6 py-4 text-center">
-                <span className="mb-1 text-3xl">💬</span>
-                <span className="text-sm text-white/70">{t(lang, ui.noReviews)}</span>
+              <div className="flex shrink-0 flex-col items-center gap-1.5 rounded-2xl border border-gray-200 bg-gray-50 px-6 py-4 text-center">
+                <MessageCircle className="h-6 w-6 text-gray-300" strokeWidth={1.5} />
+                <span className="text-sm text-gray-500">{t(lang, ui.noReviews)}</span>
               </div>
             )}
           </div>
@@ -429,9 +405,9 @@ export default function InstitutionDetail({ inst }: { inst: Institution }) {
                 ════════════════════════════════════════ */}
             {((inst.details?.programs?.length ?? 0) > 0 ||
               (inst.details?.specializations?.length ?? 0) > 0) && (
-              <div className="rounded-3xl bg-white p-6 shadow-md border border-gray-100">
-                <h2 className="mb-4 flex items-center gap-2.5 text-xl font-black text-gray-900">
-                  <span className="flex h-10 w-10 items-center justify-center rounded-2xl bg-blue-50 text-xl">📚</span>
+              <div className="card p-6">
+                <h2 className="mb-4 flex items-center gap-3 text-lg font-semibold text-gray-900">
+                  <span className="icon-chip"><BookOpen className="h-[18px] w-[18px]" strokeWidth={1.75} /></span>
                   {lang === 'ru' ? 'Направления и курсы' : "Yo'nalishlar va kurslar"}
                 </h2>
 
@@ -444,7 +420,7 @@ export default function InstitutionDetail({ inst }: { inst: Institution }) {
                     )}
                     <div className="flex flex-wrap gap-2">
                       {(inst.details!.programs ?? []).map(prog => (
-                        <span key={prog} className="rounded-2xl border border-primary-100 bg-primary-50 px-4 py-2.5 text-sm font-semibold text-primary-700">
+                        <span key={prog} className="rounded-lg border border-primary-100 bg-primary-50 px-3 py-1.5 text-sm font-medium text-primary-700">
                           {prog}
                         </span>
                       ))}
@@ -454,12 +430,12 @@ export default function InstitutionDetail({ inst }: { inst: Institution }) {
 
                 {(inst.details?.specializations?.length ?? 0) > 0 && (
                   <>
-                    <p className="mb-2 mt-4 text-xs font-bold uppercase tracking-wider text-gray-400">
+                    <p className="mb-2 mt-4 text-xs font-semibold uppercase tracking-wider text-gray-400">
                       {t(lang, ui.specializations)}
                     </p>
                     <div className="flex flex-wrap gap-2">
                       {(inst.details!.specializations ?? []).map(spec => (
-                        <span key={spec} className="rounded-2xl border border-orange-100 bg-orange-50 px-4 py-2.5 text-sm font-semibold text-orange-700">
+                        <span key={spec} className="rounded-lg border border-orange-100 bg-orange-50 px-3 py-1.5 text-sm font-medium text-orange-700">
                           {spec}
                         </span>
                       ))}
@@ -469,12 +445,12 @@ export default function InstitutionDetail({ inst }: { inst: Institution }) {
 
                 {/* O'qitish tillari */}
                 {(inst.details?.languages?.length ?? 0) > 0 && (
-                  <div className="mt-4 flex flex-wrap items-center gap-2 border-t border-gray-50 pt-4">
+                  <div className="mt-4 flex flex-wrap items-center gap-2 border-t border-gray-100 pt-4">
                     <span className="text-xs font-semibold text-gray-500">
                       {t(lang, ui.languages)}:
                     </span>
                     {(inst.details!.languages ?? []).map(l => (
-                      <span key={l} className="rounded-lg bg-teal-50 px-3 py-1 text-xs font-black text-teal-700">
+                      <span key={l} className="rounded-md bg-teal-50 px-2 py-0.5 text-xs font-bold text-teal-700">
                         {l.toUpperCase()}
                       </span>
                     ))}
@@ -483,14 +459,14 @@ export default function InstitutionDetail({ inst }: { inst: Institution }) {
 
                 {/* Mehmon foydalanuvchi uchun qo'shimcha ma'lumot chaqiruvi */}
                 {isGuest && (
-                  <div className="mt-4 flex items-center gap-3 rounded-2xl border border-primary-100 bg-primary-50 px-4 py-3">
-                    <span className="shrink-0 text-xl">🔓</span>
+                  <div className="mt-4 flex items-center gap-3 rounded-xl border border-primary-100 bg-primary-50 px-4 py-3">
+                    <Lock className="h-4 w-4 shrink-0 text-primary-500" strokeWidth={2} />
                     <p className="flex-1 text-sm font-medium text-primary-700">
                       {lang === 'ru'
                         ? 'Войдите чтобы увидеть все курсы и детали'
                         : "Barcha kurslarni ko'rish uchun tizimga kiring"}
                     </p>
-                    <Link href="/auth" className="shrink-0 rounded-xl bg-primary-600 px-3 py-2 text-sm font-bold text-white hover:bg-primary-700 transition-colors">
+                    <Link href="/auth" className="shrink-0 rounded-lg bg-primary-600 px-3 py-1.5 text-sm font-semibold text-white hover:bg-primary-700 transition-colors">
                       {lang === 'ru' ? 'Войти' : 'Kirish'}
                     </Link>
                   </div>
@@ -502,25 +478,19 @@ export default function InstitutionDetail({ inst }: { inst: Institution }) {
                 2. NATIJA KO'RSATKICHLARI — Achievements
                 ════════════════════════════════════════ */}
             {inst.details?.achievements && (
-              <div className="overflow-hidden rounded-3xl shadow-md">
-                {/* Sarlavha */}
-                <div className="relative bg-gradient-to-br from-emerald-600 to-green-500 px-6 py-4">
-                  <div className="pointer-events-none absolute inset-0 opacity-[0.08]"
-                    style={{ backgroundImage: 'radial-gradient(circle, white 1px, transparent 1px)', backgroundSize: '18px 18px' }} />
-                  <h2 className="relative flex items-center gap-2.5 text-xl font-black text-white">
-                    <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-white/20 text-xl">🏆</span>
-                    {t(lang, ui.achievements)}
-                  </h2>
-                  <p className="relative mt-1 text-sm text-emerald-100">
-                    {lang === 'ru' ? 'Результаты и достижения учеников' : "O'quvchilar natijalari va yutuqlari"}
-                  </p>
-                </div>
-                {/* Matn */}
-                <div className="border border-t-0 border-emerald-100 bg-white px-6 py-5 rounded-b-3xl">
-                  <p className="whitespace-pre-line text-base leading-relaxed text-gray-700">
-                    {inst.details.achievements}
-                  </p>
-                </div>
+              <div className="card p-6">
+                <h2 className="mb-1 flex items-center gap-3 text-lg font-semibold text-gray-900">
+                  <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-emerald-50 text-emerald-600">
+                    <Trophy className="h-[18px] w-[18px]" strokeWidth={1.75} />
+                  </span>
+                  {t(lang, ui.achievements)}
+                </h2>
+                <p className="mb-3 ml-12 text-sm text-gray-400">
+                  {lang === 'ru' ? 'Результаты и достижения учеников' : "O'quvchilar natijalari va yutuqlari"}
+                </p>
+                <p className="whitespace-pre-line text-base leading-relaxed text-gray-700">
+                  {inst.details.achievements}
+                </p>
               </div>
             )}
 
@@ -528,27 +498,31 @@ export default function InstitutionDetail({ inst }: { inst: Institution }) {
                 3. O'QITUVCHILAR SIFATI
                 ════════════════════════════════════════ */}
             {(inst.details?.teacherCount || (inst.details?.shifts?.length ?? 0) > 0) && (
-              <div className="rounded-3xl bg-white p-6 shadow-md border border-gray-100">
-                <h2 className="mb-4 flex items-center gap-2.5 text-xl font-black text-gray-900">
-                  <span className="flex h-10 w-10 items-center justify-center rounded-2xl bg-violet-50 text-xl">👨‍🏫</span>
+              <div className="card p-6">
+                <h2 className="mb-4 flex items-center gap-3 text-lg font-semibold text-gray-900">
+                  <span className="icon-chip"><UserCheck className="h-[18px] w-[18px]" strokeWidth={1.75} /></span>
                   {lang === 'ru' ? "Качество преподавания" : "O'qituvchilar sifati"}
                 </h2>
                 <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
                   {inst.details?.teacherCount && (
-                    <div className="flex items-center gap-3 rounded-2xl bg-violet-50 p-4">
-                      <span className="text-3xl">👨‍🏫</span>
+                    <div className="flex items-center gap-3 rounded-xl bg-gray-50 p-4">
+                      <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-white text-gray-500 shadow-sm">
+                        <UserCheck className="h-5 w-5" strokeWidth={1.75} />
+                      </span>
                       <div>
-                        <p className="text-xs text-violet-500 font-medium">{t(lang, ui.teachers)}</p>
-                        <p className="text-xl font-black text-violet-700">{inst.details.teacherCount}</p>
+                        <p className="text-xs text-gray-500 font-medium">{t(lang, ui.teachers)}</p>
+                        <p className="text-xl font-bold text-gray-900">{inst.details.teacherCount}</p>
                       </div>
                     </div>
                   )}
                   {inst.details?.foundedYear && (
-                    <div className="flex items-center gap-3 rounded-2xl bg-blue-50 p-4">
-                      <span className="text-3xl">📅</span>
+                    <div className="flex items-center gap-3 rounded-xl bg-gray-50 p-4">
+                      <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-white text-gray-500 shadow-sm">
+                        <Info className="h-5 w-5" strokeWidth={1.75} />
+                      </span>
                       <div>
-                        <p className="text-xs text-blue-500 font-medium">{t(lang, ui.founded)}</p>
-                        <p className="text-xl font-black text-blue-700">{inst.details.foundedYear}</p>
+                        <p className="text-xs text-gray-500 font-medium">{t(lang, ui.founded)}</p>
+                        <p className="text-xl font-bold text-gray-900">{inst.details.foundedYear}</p>
                       </div>
                     </div>
                   )}
@@ -556,13 +530,14 @@ export default function InstitutionDetail({ inst }: { inst: Institution }) {
                 {/* Dars vaqtlari */}
                 {(inst.details?.shifts?.length ?? 0) > 0 && (
                   <div className="mt-4">
-                    <p className="mb-2 text-xs font-bold uppercase tracking-wider text-gray-400">
+                    <p className="mb-2 text-xs font-semibold uppercase tracking-wider text-gray-400">
                       {t(lang, ui.shifts)}
                     </p>
                     <div className="flex flex-wrap gap-2">
                       {(inst.details!.shifts ?? []).map(shift => (
-                        <span key={shift} className="flex items-center gap-2 rounded-2xl border border-sky-100 bg-sky-50 px-4 py-2.5 text-sm font-semibold text-sky-700">
-                          🕐 {shift}
+                        <span key={shift} className="flex items-center gap-1.5 rounded-lg border border-gray-200 bg-white px-3 py-1.5 text-sm font-medium text-gray-700">
+                          <Clock className="h-3.5 w-3.5 text-gray-400" strokeWidth={2} />
+                          {shift}
                         </span>
                       ))}
                     </div>
@@ -575,16 +550,16 @@ export default function InstitutionDetail({ inst }: { inst: Institution }) {
                 4. O'QUVCHILAR SONI
                 ════════════════════════════════════════ */}
             {inst.details?.studentCount && (
-              <div className="rounded-3xl bg-gradient-to-br from-cyan-50 to-sky-50 border border-cyan-100 p-6 shadow-md">
-                <h2 className="mb-4 flex items-center gap-2.5 text-xl font-black text-gray-900">
-                  <span className="flex h-10 w-10 items-center justify-center rounded-2xl bg-cyan-100 text-xl">👥</span>
+              <div className="card p-6">
+                <h2 className="mb-4 flex items-center gap-3 text-lg font-semibold text-gray-900">
+                  <span className="icon-chip"><Users2 className="h-[18px] w-[18px]" strokeWidth={1.75} /></span>
                   {t(lang, ui.students)}
                 </h2>
-                <div className="flex items-end gap-3">
-                  <span className="text-5xl font-black text-cyan-600">
+                <div className="flex items-end gap-2">
+                  <span className="text-4xl font-bold text-gray-900">
                     {formatNum(inst.details.studentCount)}+
                   </span>
-                  <span className="mb-1 text-base text-cyan-500">
+                  <span className="mb-1 text-base text-gray-500">
                     {lang === 'ru' ? 'учеников обучается' : "o'quvchi tahsil olmoqda"}
                   </span>
                 </div>
@@ -595,50 +570,48 @@ export default function InstitutionDetail({ inst }: { inst: Institution }) {
                 5. NARXI — Pricing (inline, auth bo'lganda)
                 ════════════════════════════════════════ */}
             {!isGuest && inst.pricing?.monthlyMin && (
-              <div className="overflow-hidden rounded-3xl shadow-md">
-                <div className="relative bg-gradient-to-br from-emerald-500 to-teal-500 px-6 py-4">
-                  <div className="pointer-events-none absolute inset-0 opacity-[0.08]"
-                    style={{ backgroundImage: 'radial-gradient(circle, white 1px, transparent 1px)', backgroundSize: '18px 18px' }} />
-                  <h2 className="relative flex items-center gap-2.5 text-xl font-black text-white">
-                    <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-white/20 text-xl">💰</span>
-                    {t(lang, ui.priceTitle)}
-                  </h2>
-                </div>
-                <div className="border border-t-0 border-emerald-100 bg-white px-6 py-5 rounded-b-3xl">
-                  <div className="flex flex-wrap items-end gap-4">
-                    <div>
-                      <p className="text-sm text-gray-500">{t(lang, ui.priceFrom)}</p>
-                      <p className="text-4xl font-black text-emerald-700">
-                        {formatUzs(inst.pricing.monthlyMin)}
+              <div className="card p-6">
+                <h2 className="mb-4 flex items-center gap-3 text-lg font-semibold text-gray-900">
+                  <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-emerald-50 text-emerald-600">
+                    <Wallet className="h-[18px] w-[18px]" strokeWidth={1.75} />
+                  </span>
+                  {t(lang, ui.priceTitle)}
+                </h2>
+                <div className="flex flex-wrap items-end gap-4">
+                  <div>
+                    <p className="text-sm text-gray-500">{t(lang, ui.priceFrom)}</p>
+                    <p className="text-3xl font-bold text-emerald-700">
+                      {formatUzs(inst.pricing.monthlyMin)}
+                    </p>
+                    {inst.pricing.monthlyMax && inst.pricing.monthlyMax !== inst.pricing.monthlyMin && (
+                      <p className="mt-0.5 text-base text-emerald-600">
+                        — {formatUzs(inst.pricing.monthlyMax)} / {t(lang, ui.perMonth)}
                       </p>
-                      {inst.pricing.monthlyMax && inst.pricing.monthlyMax !== inst.pricing.monthlyMin && (
-                        <p className="mt-0.5 text-base text-emerald-500">
-                          — {formatUzs(inst.pricing.monthlyMax)} / {t(lang, ui.perMonth)}
-                        </p>
-                      )}
-                    </div>
+                    )}
                   </div>
-                  {(inst.pricing.paymentMethods?.length ?? 0) > 0 && (
-                    <div className="mt-4 flex flex-wrap gap-1.5 border-t border-gray-50 pt-4">
-                      <span className="text-xs text-gray-400 font-semibold">{t(lang, ui.payment)}:</span>
-                      {(inst.pricing.paymentMethods ?? []).map(m => (
-                        <span key={m} className="rounded-lg bg-gray-100 px-3 py-1 text-xs font-semibold text-gray-600">{m}</span>
-                      ))}
-                    </div>
-                  )}
                 </div>
+                {(inst.pricing.paymentMethods?.length ?? 0) > 0 && (
+                  <div className="mt-4 flex flex-wrap gap-1.5 border-t border-gray-100 pt-4">
+                    <span className="text-xs text-gray-400 font-semibold">{t(lang, ui.payment)}:</span>
+                    {(inst.pricing.paymentMethods ?? []).map(m => (
+                      <span key={m} className="rounded-md bg-gray-100 px-2 py-0.5 text-xs font-semibold text-gray-600">{m}</span>
+                    ))}
+                  </div>
+                )}
               </div>
             )}
 
             {/* Narx hint mehmon uchun */}
             {isGuest && inst.pricing?.monthlyMin && (
-              <div className="flex items-center gap-4 rounded-3xl border border-emerald-100 bg-emerald-50 px-5 py-4">
-                <span className="text-3xl">💰</span>
+              <div className="flex items-center gap-4 rounded-2xl border border-emerald-100 bg-emerald-50 px-5 py-4">
+                <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-white text-emerald-600">
+                  <Wallet className="h-5 w-5" strokeWidth={1.75} />
+                </span>
                 <div className="flex-1">
                   <p className="text-sm text-emerald-600 font-semibold">{t(lang, ui.priceFrom)}</p>
-                  <p className="text-2xl font-black text-emerald-700">{formatUzs(inst.pricing.monthlyMin)}</p>
+                  <p className="text-2xl font-bold text-emerald-700">{formatUzs(inst.pricing.monthlyMin)}</p>
                 </div>
-                <Link href="/auth" className="shrink-0 rounded-2xl bg-emerald-600 px-4 py-2.5 text-sm font-bold text-white hover:bg-emerald-700 transition-colors">
+                <Link href="/auth" className="shrink-0 rounded-xl bg-emerald-600 px-4 py-2.5 text-sm font-semibold text-white hover:bg-emerald-700 transition-colors">
                   {lang === 'ru' ? 'Полная цена →' : "To'liq narx →"}
                 </Link>
               </div>
@@ -648,16 +621,16 @@ export default function InstitutionDetail({ inst }: { inst: Institution }) {
                 6. JOYLASHUV VA FORMAT
                 ════════════════════════════════════════ */}
             {(inst.address || inst.phone || inst.phone2 || inst.website) && (
-              <div className="rounded-3xl bg-white p-6 shadow-md border border-gray-100">
-                <h2 className="mb-4 flex items-center gap-2.5 text-xl font-black text-gray-900">
-                  <span className="flex h-10 w-10 items-center justify-center rounded-2xl bg-rose-50 text-xl">📍</span>
+              <div className="card p-6">
+                <h2 className="mb-4 flex items-center gap-3 text-lg font-semibold text-gray-900">
+                  <span className="icon-chip"><MapPin className="h-[18px] w-[18px]" strokeWidth={1.75} /></span>
                   {lang === 'ru' ? 'Расположение и формат' : "Joylashuv va format"}
                 </h2>
 
                 <div className="space-y-3">
                   {inst.address && (
-                    <div className="flex items-start gap-3 rounded-2xl bg-gray-50 px-4 py-3.5 border border-gray-100">
-                      <span className="mt-0.5 text-xl shrink-0">📍</span>
+                    <div className="flex items-start gap-3 rounded-xl bg-gray-50 px-4 py-3.5">
+                      <MapPin className="mt-0.5 h-4 w-4 shrink-0 text-gray-400" strokeWidth={1.75} />
                       <div>
                         <p className="text-xs text-gray-400 font-semibold mb-1">{t(lang, ui.address)}</p>
                         <p className="text-base font-medium text-gray-800 leading-snug">{inst.address}</p>
@@ -669,16 +642,16 @@ export default function InstitutionDetail({ inst }: { inst: Institution }) {
                   <div className="flex flex-wrap gap-2">
                     {inst.type === 'IT_SCHOOL' || inst.type === 'LANGUAGE_CENTER' || inst.type === 'COURSE_CENTER' ? (
                       <>
-                        <span className="flex items-center gap-1.5 rounded-2xl border border-blue-100 bg-blue-50 px-4 py-2.5 text-sm font-semibold text-blue-700">
-                          🏫 {lang === 'ru' ? 'Офлайн' : 'Offline'}
+                        <span className="flex items-center gap-1.5 rounded-lg border border-gray-200 bg-white px-3 py-1.5 text-sm font-medium text-gray-700">
+                          <BookOpen className="h-3.5 w-3.5 text-gray-400" strokeWidth={2} /> {lang === 'ru' ? 'Офлайн' : 'Offline'}
                         </span>
-                        <span className="flex items-center gap-1.5 rounded-2xl border border-primary-100 bg-primary-50 px-4 py-2.5 text-sm font-semibold text-primary-700">
-                          💻 {lang === 'ru' ? 'Онлайн' : 'Online'}
+                        <span className="flex items-center gap-1.5 rounded-lg border border-primary-100 bg-primary-50 px-3 py-1.5 text-sm font-medium text-primary-700">
+                          <Laptop className="h-3.5 w-3.5" strokeWidth={2} /> {lang === 'ru' ? 'Онлайн' : 'Online'}
                         </span>
                       </>
                     ) : (
-                      <span className="flex items-center gap-1.5 rounded-2xl border border-blue-100 bg-blue-50 px-4 py-2.5 text-sm font-semibold text-blue-700">
-                        🏫 {lang === 'ru' ? 'Очное обучение' : "Offline ta'lim"}
+                      <span className="flex items-center gap-1.5 rounded-lg border border-gray-200 bg-white px-3 py-1.5 text-sm font-medium text-gray-700">
+                        <BookOpen className="h-3.5 w-3.5 text-gray-400" strokeWidth={2} /> {lang === 'ru' ? 'Очное обучение' : "Offline ta'lim"}
                       </span>
                     )}
                   </div>
@@ -689,9 +662,9 @@ export default function InstitutionDetail({ inst }: { inst: Institution }) {
             {/* ════════════════════════════════════════
                 7. MUASSASA HAQIDA — About
                 ════════════════════════════════════════ */}
-            <div className="rounded-3xl bg-white p-6 shadow-md border border-gray-100">
-              <h2 className="mb-4 flex items-center gap-2.5 text-xl font-black text-gray-900">
-                <span className="flex h-10 w-10 items-center justify-center rounded-2xl bg-blue-50 text-xl">📖</span>
+            <div className="card p-6">
+              <h2 className="mb-4 flex items-center gap-3 text-lg font-semibold text-gray-900">
+                <span className="icon-chip"><Info className="h-[18px] w-[18px]" strokeWidth={1.75} /></span>
                 {t(lang, ui.about)}
               </h2>
 
@@ -703,14 +676,14 @@ export default function InstitutionDetail({ inst }: { inst: Institution }) {
                       <span className="text-gray-400">…</span>
                     </p>
                   )}
-                  <div className="mt-4 flex items-center gap-3 rounded-2xl border border-orange-100 bg-orange-50 px-5 py-4">
-                    <span className="shrink-0 text-2xl">🔐</span>
+                  <div className="mt-4 flex items-center gap-3 rounded-xl border border-orange-100 bg-orange-50 px-5 py-4">
+                    <Lock className="h-5 w-5 shrink-0 text-orange-500" strokeWidth={1.75} />
                     <p className="flex-1 text-base font-medium text-orange-700">
                       {lang === 'ru'
                         ? 'Полное описание доступно после входа'
                         : "To'liq ta'rif tizimga kirgandan so'ng ko'rinadi"}
                     </p>
-                    <Link href="/auth" className="ml-auto shrink-0 rounded-xl bg-orange-500 px-4 py-2.5 text-sm font-bold text-white hover:bg-orange-600 transition-colors">
+                    <Link href="/auth" className="ml-auto shrink-0 rounded-lg bg-orange-500 px-4 py-2 text-sm font-semibold text-white hover:bg-orange-600 transition-colors">
                       {lang === 'ru' ? 'Войти' : 'Kirish'}
                     </Link>
                   </div>
@@ -730,21 +703,21 @@ export default function InstitutionDetail({ inst }: { inst: Institution }) {
 
             {/* Rating breakdown — faqat auth bo'lganda */}
             {!isGuest && totalReviews > 0 && (
-              <div className="rounded-3xl bg-white p-6 shadow-md border border-gray-100">
-                <h2 className="mb-5 font-black text-gray-900 text-xl flex items-center gap-2.5">
-                  <span className="flex h-10 w-10 items-center justify-center rounded-2xl bg-amber-50 text-xl">📊</span>
+              <div className="card p-6">
+                <h2 className="mb-5 font-semibold text-gray-900 text-lg flex items-center gap-3">
+                  <span className="icon-chip"><BarChart3 className="h-[18px] w-[18px]" strokeWidth={1.75} /></span>
                   {t(lang, ui.ratingTitle)}
                 </h2>
-                <div className="space-y-3">
+                <div className="space-y-2.5">
                   {[5, 4, 3, 2, 1].map(star => {
                     const count = ratingBreakdown[star] ?? 0
                     const pct = totalReviews > 0 ? Math.round((count / totalReviews) * 100) : 0
                     return (
                       <div key={star} className="flex items-center gap-3">
-                        <span className="w-5 text-base font-black text-gray-700 text-right shrink-0">{star}</span>
-                        <span className="text-yellow-400 text-lg shrink-0">★</span>
-                        <div className="flex-1 rounded-full bg-gray-100 h-3 overflow-hidden">
-                          <div className="h-full rounded-full bg-gradient-to-r from-yellow-400 to-amber-400 transition-all" style={{ width: `${pct}%` }} />
+                        <span className="w-3 text-sm font-semibold text-gray-600 text-right shrink-0">{star}</span>
+                        <Star className="h-4 w-4 shrink-0 fill-amber-400 text-amber-400" strokeWidth={0} />
+                        <div className="flex-1 rounded-full bg-gray-100 h-2 overflow-hidden">
+                          <div className="h-full rounded-full bg-amber-400 transition-all" style={{ width: `${pct}%` }} />
                         </div>
                         <span className="w-7 text-sm text-gray-500 text-right shrink-0">{count}</span>
                       </div>
@@ -757,21 +730,21 @@ export default function InstitutionDetail({ inst }: { inst: Institution }) {
                   <div className="mt-5 border-t border-gray-100 pt-5">
                     <p className="mb-3 text-xs font-semibold uppercase tracking-wide text-gray-400">Mezonlar bo&apos;yicha</p>
                     <div className="space-y-2.5">
-                      {DIM_DEFS.map(({ key, icon, label }) => {
+                      {DIM_DEFS.map(({ key, Icon, label }) => {
                         const avg = dimAverages[key]
                         if (!avg) return null
                         const pct = (avg / 5) * 100
                         return (
                           <div key={key} className="flex items-center gap-2.5">
-                            <span className="w-6 text-center text-base shrink-0">{icon}</span>
+                            <Icon className="h-4 w-4 shrink-0 text-gray-400" strokeWidth={1.75} />
                             <span className="w-28 text-sm font-medium text-gray-600 shrink-0">{label}</span>
                             <div className="flex-1 rounded-full bg-gray-100 h-2 overflow-hidden">
                               <div
-                                className="h-full rounded-full bg-gradient-to-r from-primary-400 to-primary-500 transition-all"
+                                className="h-full rounded-full bg-primary-500 transition-all"
                                 style={{ width: `${pct}%` }}
                               />
                             </div>
-                            <span className="w-8 text-sm font-bold text-primary-600 text-right shrink-0">{avg}</span>
+                            <span className="w-8 text-sm font-semibold text-primary-600 text-right shrink-0">{avg}</span>
                           </div>
                         )
                       })}
@@ -797,19 +770,19 @@ export default function InstitutionDetail({ inst }: { inst: Institution }) {
                 institutionId={inst.id}
                 blurPreview={
                   inst.reviews && inst.reviews.length > 0 ? (
-                    <div className="rounded-3xl bg-white p-6 shadow-md border border-gray-100">
-                      <h2 className="mb-5 text-xl font-black text-gray-900 flex items-center gap-2.5">
-                        <span className="flex h-10 w-10 items-center justify-center rounded-2xl bg-blue-50 text-xl">💬</span>
+                    <div className="card p-6">
+                      <h2 className="mb-5 text-lg font-semibold text-gray-900 flex items-center gap-3">
+                        <span className="icon-chip"><MessageCircle className="h-[18px] w-[18px]" strokeWidth={1.75} /></span>
                         {t(lang, ui.reviewsTitle)}
-                        <span className="ml-1 rounded-full bg-primary-100 px-2.5 py-1 text-sm font-black text-primary-700">
+                        <span className="ml-1 rounded-full bg-primary-100 px-2.5 py-0.5 text-sm font-semibold text-primary-700">
                           {inst.reviewCount}
                         </span>
                       </h2>
                       <div className="space-y-4">
                         {inst.reviews.slice(0, 2).map(review => (
-                          <div key={review.id} className="rounded-2xl border border-gray-100 bg-gray-50 p-5">
+                          <div key={review.id} className="rounded-xl border border-gray-100 bg-gray-50 p-5">
                             <div className="mb-3 flex items-center gap-3">
-                              <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-primary-400 to-primary-600 text-base font-black text-white">
+                              <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-primary-600 text-base font-semibold text-white">
                                 {review.isAnonymous ? '?' : (review.user?.name?.[0]?.toUpperCase() ?? '?')}
                               </div>
                               <StarRating rating={review.overallRating} size="sm" />
@@ -823,12 +796,12 @@ export default function InstitutionDetail({ inst }: { inst: Institution }) {
                 }
               >
                 {/* Auth bo'lganda ko'rinadigan to'liq sharhlar */}
-                <div id="reviews" className="rounded-3xl bg-white p-6 shadow-md border border-gray-100">
-                  <h2 className="mb-5 text-xl font-black text-gray-900 flex items-center gap-2.5">
-                    <span className="flex h-10 w-10 items-center justify-center rounded-2xl bg-blue-50 text-xl">💬</span>
+                <div id="reviews" className="card p-6">
+                  <h2 className="mb-5 text-lg font-semibold text-gray-900 flex items-center gap-3">
+                    <span className="icon-chip"><MessageCircle className="h-[18px] w-[18px]" strokeWidth={1.75} /></span>
                     {t(lang, ui.reviewsTitle)}
                     {inst.reviewCount > 0 && (
-                      <span className="ml-1 rounded-full bg-primary-100 px-2.5 py-1 text-sm font-black text-primary-700">
+                      <span className="ml-1 rounded-full bg-primary-100 px-2.5 py-0.5 text-sm font-semibold text-primary-700">
                         {inst.reviewCount}
                       </span>
                     )}
@@ -840,22 +813,22 @@ export default function InstitutionDetail({ inst }: { inst: Institution }) {
                           ? '?'
                           : (review.user?.name?.[0]?.toUpperCase() ?? '?')
                         return (
-                          <div key={review.id} className="overflow-hidden rounded-2xl border border-gray-100 bg-white shadow-sm">
+                          <div key={review.id} className="overflow-hidden rounded-xl border border-gray-100 bg-white">
                             {/* Review header */}
-                            <div className="flex items-center justify-between gap-3 border-b border-gray-50 bg-gray-50/80 px-5 py-3">
+                            <div className="flex items-center justify-between gap-3 border-b border-gray-100 bg-gray-50/80 px-5 py-3">
                               <div className="flex items-center gap-3">
-                                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-primary-500 to-primary-700 text-sm font-black text-white shadow-sm">
+                                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-primary-600 text-sm font-semibold text-white">
                                   {initials}
                                 </div>
                                 <div>
-                                  <span className="block text-sm font-bold text-gray-800">
+                                  <span className="block text-sm font-semibold text-gray-800">
                                     {review.isAnonymous ? t(lang, ui.anon) : (review.user?.name ?? t(lang, ui.user))}
                                   </span>
                                   <StarRating rating={review.overallRating} size="sm" />
                                 </div>
                               </div>
                               {review.createdAt && (
-                                <span className="shrink-0 rounded-lg bg-white px-2.5 py-1 text-xs text-gray-400 border border-gray-100">
+                                <span className="shrink-0 rounded-md bg-white px-2 py-0.5 text-xs text-gray-400 border border-gray-100">
                                   {new Date(review.createdAt).toLocaleDateString(lang === 'ru' ? 'ru-RU' : 'uz-UZ')}
                                 </span>
                               )}
@@ -863,27 +836,28 @@ export default function InstitutionDetail({ inst }: { inst: Institution }) {
                             {/* Review body */}
                             <div className="px-5 py-4">
                               {review.title && (
-                                <p className="mb-1.5 text-base font-bold text-gray-800">{review.title}</p>
+                                <p className="mb-1.5 text-base font-semibold text-gray-800">{review.title}</p>
                               )}
                               <p className="text-base leading-relaxed text-gray-600">{review.body}</p>
                               {DIM_DEFS.some(({ key }) => (review[key] ?? 0) > 0) && (
                                 <div className="mt-3 flex flex-wrap gap-1.5">
-                                  {DIM_DEFS.map(({ key, icon, label }) => {
+                                  {DIM_DEFS.map(({ key, Icon, label }) => {
                                     const v = review[key]
                                     if (!v) return null
                                     return (
                                       <span key={key} className="inline-flex items-center gap-1 rounded-full border border-primary-100 bg-primary-50 px-2.5 py-1 text-xs font-semibold text-primary-700">
-                                        <span>{icon}</span>
+                                        <Icon className="h-3 w-3" strokeWidth={2} />
                                         <span>{label}</span>
-                                        <span className="font-black text-yellow-500">{'★'.repeat(v)}</span>
+                                        <span className="text-amber-500">{'★'.repeat(v)}</span>
                                       </span>
                                     )
                                   })}
                                 </div>
                               )}
                               {review.helpfulCount > 0 && (
-                                <p className="mt-3 text-xs text-gray-400">
-                                  👍 {review.helpfulCount} {t(lang, ui.helpful)}
+                                <p className="mt-3 flex items-center gap-1 text-xs text-gray-400">
+                                  <ThumbsUp className="h-3.5 w-3.5" strokeWidth={2} />
+                                  {review.helpfulCount} {t(lang, ui.helpful)}
                                 </p>
                               )}
                             </div>
@@ -893,8 +867,10 @@ export default function InstitutionDetail({ inst }: { inst: Institution }) {
                     </div>
                   ) : (
                     <div className="py-12 text-center">
-                      <div className="mx-auto mb-4 flex h-20 w-20 items-center justify-center rounded-3xl bg-gray-100 text-4xl">💬</div>
-                      <p className="text-lg font-bold text-gray-600">{t(lang, ui.noReviews)}</p>
+                      <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-2xl bg-gray-100 text-gray-300">
+                        <MessageCircle className="h-7 w-7" strokeWidth={1.5} />
+                      </div>
+                      <p className="text-lg font-semibold text-gray-600">{t(lang, ui.noReviews)}</p>
                       <p className="mt-1 text-base text-gray-400">{t(lang, ui.beFirst)}</p>
                     </div>
                   )}
@@ -922,27 +898,29 @@ export default function InstitutionDetail({ inst }: { inst: Institution }) {
 
             {/* Price card — faqat auth bo'lganda */}
             {!isGuest && inst.pricing?.monthlyMin && (
-              <div className="rounded-3xl border border-emerald-100 bg-white p-5 shadow-md">
-                <h3 className="mb-4 font-black text-gray-900 text-lg flex items-center gap-2.5">
-                  <span className="flex h-9 w-9 items-center justify-center rounded-2xl bg-emerald-50 text-xl">💰</span>
+              <div className="card p-5">
+                <h3 className="mb-4 font-semibold text-gray-900 text-base flex items-center gap-3">
+                  <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-emerald-50 text-emerald-600">
+                    <Wallet className="h-[18px] w-[18px]" strokeWidth={1.75} />
+                  </span>
                   {t(lang, ui.priceTitle)}
                 </h3>
-                <div className="rounded-2xl bg-gradient-to-br from-emerald-50 to-green-50 p-5 border border-emerald-100">
-                  <p className="text-sm text-emerald-600 font-semibold mb-1.5">{t(lang, ui.priceFrom)}</p>
-                  <p className="text-3xl font-black text-emerald-700 leading-none">
+                <div className="rounded-xl bg-emerald-50 p-4">
+                  <p className="text-sm text-emerald-600 font-medium mb-1">{t(lang, ui.priceFrom)}</p>
+                  <p className="text-2xl font-bold text-emerald-700 leading-none">
                     {formatUzs(inst.pricing.monthlyMin)}
                   </p>
                   {inst.pricing.monthlyMax && inst.pricing.monthlyMax !== inst.pricing.monthlyMin && (
-                    <p className="mt-1.5 text-base text-emerald-600">— {formatUzs(inst.pricing.monthlyMax)}</p>
+                    <p className="mt-1.5 text-sm text-emerald-600">— {formatUzs(inst.pricing.monthlyMax)}</p>
                   )}
-                  <p className="mt-1 text-sm text-emerald-500">/ {t(lang, ui.perMonth)}</p>
+                  <p className="mt-1 text-xs text-emerald-500">/ {t(lang, ui.perMonth)}</p>
                 </div>
                 {(inst.pricing.paymentMethods?.length ?? 0) > 0 && (
                   <div className="mt-4">
-                    <p className="mb-2 text-sm font-bold text-gray-500">{t(lang, ui.payment)}</p>
+                    <p className="mb-2 text-xs font-semibold text-gray-500">{t(lang, ui.payment)}</p>
                     <div className="flex flex-wrap gap-1.5">
                       {(inst.pricing.paymentMethods ?? []).map((m: string) => (
-                        <span key={m} className="rounded-xl bg-gray-100 px-3 py-1 text-sm font-semibold text-gray-600">{m}</span>
+                        <span key={m} className="rounded-md bg-gray-100 px-2.5 py-1 text-xs font-semibold text-gray-600">{m}</span>
                       ))}
                     </div>
                   </div>
@@ -952,16 +930,18 @@ export default function InstitutionDetail({ inst }: { inst: Institution }) {
 
             {/* Guest — narx hint */}
             {isGuest && inst.pricing?.monthlyMin && (
-              <div className="rounded-3xl border border-emerald-100 bg-emerald-50 p-5">
+              <div className="rounded-2xl border border-emerald-100 bg-emerald-50 p-5">
                 <div className="flex items-center gap-3 mb-4">
-                  <span className="flex h-10 w-10 items-center justify-center rounded-2xl bg-emerald-100 text-2xl">💰</span>
+                  <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-white text-emerald-600">
+                    <Wallet className="h-5 w-5" strokeWidth={1.75} />
+                  </span>
                   <div>
-                    <p className="text-sm text-emerald-600 font-semibold">{t(lang, ui.priceFrom)}</p>
-                    <p className="text-2xl font-black text-emerald-700">{formatUzs(inst.pricing.monthlyMin)}</p>
+                    <p className="text-sm text-emerald-600 font-medium">{t(lang, ui.priceFrom)}</p>
+                    <p className="text-2xl font-bold text-emerald-700">{formatUzs(inst.pricing.monthlyMin)}</p>
                   </div>
                 </div>
-                <div className="rounded-2xl bg-white/70 px-4 py-3.5 text-base text-emerald-700 font-medium flex items-center gap-2">
-                  <span>🔐</span>
+                <div className="rounded-xl bg-white/70 px-4 py-3 text-sm text-emerald-700 font-medium flex items-center gap-2">
+                  <Lock className="h-4 w-4 shrink-0" strokeWidth={1.75} />
                   <span>
                     {lang === 'ru'
                       ? 'Все детали после входа'
@@ -972,22 +952,22 @@ export default function InstitutionDetail({ inst }: { inst: Institution }) {
             )}
 
             {/* Contact card — faqat auth bo'lganda */}
-            {!isGuest && <>
-              <div className="rounded-3xl bg-white p-5 shadow-md border border-gray-100">
-                <h3 className="mb-4 font-black text-gray-900 text-lg flex items-center gap-2.5">
-                  <span className="flex h-9 w-9 items-center justify-center rounded-2xl bg-blue-50 text-xl">📞</span>
+            {!isGuest && (
+              <div className="card p-5">
+                <h3 className="mb-4 font-semibold text-gray-900 text-base flex items-center gap-3">
+                  <span className="icon-chip"><Phone className="h-[18px] w-[18px]" strokeWidth={1.75} /></span>
                   {t(lang, ui.contactTitle)}
                 </h3>
-                <div className="space-y-2.5">
+                <div className="space-y-2">
                   {inst.phone && (
                     <a
                       href={`tel:${inst.phone}`}
                       onClick={() => trackContactClick('phone', inst.id)}
-                      className="flex items-center gap-3 rounded-2xl bg-gradient-to-r from-green-500 to-emerald-500 px-4 py-4 font-bold text-white shadow-sm transition-all hover:shadow-md hover:opacity-95 active:scale-95"
+                      className="flex items-center gap-3 rounded-xl bg-emerald-600 px-4 py-3.5 font-semibold text-white transition-colors hover:bg-emerald-700"
                     >
-                      <span className="text-2xl shrink-0">📞</span>
+                      <Phone className="h-5 w-5 shrink-0" strokeWidth={1.75} />
                       <div className="min-w-0">
-                        <div className="text-base font-bold">{t(lang, ui.call)}</div>
+                        <div className="text-sm font-semibold">{t(lang, ui.call)}</div>
                         <div className="text-sm font-normal opacity-90 truncate">{inst.phone}</div>
                       </div>
                     </a>
@@ -997,11 +977,11 @@ export default function InstitutionDetail({ inst }: { inst: Institution }) {
                       href={`https://t.me/${inst.telegram.replace('@', '')}`}
                       target="_blank" rel="noopener noreferrer"
                       onClick={() => trackContactClick('telegram', inst.id)}
-                      className="flex items-center gap-3 rounded-2xl bg-gradient-to-r from-sky-500 to-blue-500 px-4 py-4 font-bold text-white shadow-sm transition-all hover:shadow-md hover:opacity-95 active:scale-95"
+                      className="flex items-center gap-3 rounded-xl bg-sky-500 px-4 py-3.5 font-semibold text-white transition-colors hover:bg-sky-600"
                     >
-                      <span className="text-2xl shrink-0">✈️</span>
+                      <Send className="h-5 w-5 shrink-0" strokeWidth={1.75} />
                       <div className="min-w-0">
-                        <div className="text-base font-bold">Telegram</div>
+                        <div className="text-sm font-semibold">Telegram</div>
                         <div className="text-sm font-normal opacity-90 truncate">@{inst.telegram.replace('@', '')}</div>
                       </div>
                     </a>
@@ -1011,11 +991,11 @@ export default function InstitutionDetail({ inst }: { inst: Institution }) {
                       href={`https://instagram.com/${inst.instagram.replace('@', '')}`}
                       target="_blank" rel="noopener noreferrer"
                       onClick={() => trackContactClick('instagram', inst.id)}
-                      className="flex items-center gap-3 rounded-2xl bg-gradient-to-r from-pink-500 to-orange-400 px-4 py-4 font-bold text-white shadow-sm transition-all hover:shadow-md hover:opacity-95 active:scale-95"
+                      className="flex items-center gap-3 rounded-xl bg-pink-600 px-4 py-3.5 font-semibold text-white transition-colors hover:bg-pink-700"
                     >
-                      <span className="text-2xl shrink-0">📸</span>
+                      <Instagram className="h-5 w-5 shrink-0" strokeWidth={1.75} />
                       <div className="min-w-0">
-                        <div className="text-base font-bold">Instagram</div>
+                        <div className="text-sm font-semibold">Instagram</div>
                         <div className="text-sm font-normal opacity-90 truncate">@{inst.instagram.replace('@', '')}</div>
                       </div>
                     </a>
@@ -1025,35 +1005,36 @@ export default function InstitutionDetail({ inst }: { inst: Institution }) {
                       href={inst.website.startsWith('http') ? inst.website : `https://${inst.website}`}
                       target="_blank" rel="noopener noreferrer"
                       onClick={() => trackContactClick('website', inst.id)}
-                      className="flex items-center gap-3 rounded-2xl border-2 border-gray-100 bg-gray-50 px-4 py-4 font-semibold text-gray-700 transition-all hover:border-primary-200 hover:bg-primary-50 hover:text-primary-700"
+                      className="flex items-center gap-3 rounded-xl border border-gray-200 bg-white px-4 py-3.5 font-medium text-gray-700 transition-colors hover:border-primary-200 hover:bg-primary-50 hover:text-primary-700"
                     >
-                      <span className="text-2xl shrink-0">🌐</span>
+                      <Globe className="h-5 w-5 shrink-0 text-gray-400" strokeWidth={1.75} />
                       <div className="min-w-0">
-                        <div className="text-base font-bold">{t(lang, ui.website)}</div>
-                        <div className="text-sm text-gray-400 truncate">{inst.website.replace(/^https?:\/\//, '')}</div>
+                        <div className="text-sm font-semibold">{t(lang, ui.website)}</div>
+                        <div className="text-xs text-gray-400 truncate">{inst.website.replace(/^https?:\/\//, '')}</div>
                       </div>
                     </a>
                   )}
                   {inst.address && (
-                    <div className="flex items-start gap-3 rounded-2xl bg-gray-50 px-4 py-4 border border-gray-100">
-                      <span className="mt-0.5 text-2xl shrink-0">📍</span>
+                    <div className="flex items-start gap-3 rounded-xl bg-gray-50 px-4 py-3.5">
+                      <MapPin className="mt-0.5 h-5 w-5 shrink-0 text-gray-400" strokeWidth={1.75} />
                       <div>
-                        <p className="text-sm text-gray-400 font-semibold mb-1">{t(lang, ui.address)}</p>
-                        <p className="text-base text-gray-700 leading-snug">{inst.address}</p>
+                        <p className="text-xs text-gray-400 font-semibold mb-1">{t(lang, ui.address)}</p>
+                        <p className="text-sm text-gray-700 leading-snug">{inst.address}</p>
                       </div>
                     </div>
                   )}
                 </div>
               </div>
-            </>}
+            )}
 
             {/* Sharh yozish tugmasi — auth bo'lganda */}
             {!isGuest && (
               <a
                 href="#write-review"
-                className="btn-primary w-full text-base py-4"
+                className="btn-primary w-full text-base py-3.5"
               >
-                ✍️ {t(lang, ui.writeReview)}
+                <PencilLine className="h-[18px] w-[18px]" strokeWidth={1.75} />
+                {t(lang, ui.writeReview)}
               </a>
             )}
 
@@ -1061,9 +1042,10 @@ export default function InstitutionDetail({ inst }: { inst: Institution }) {
             {isGuest && (
               <Link
                 href="/auth"
-                className="btn-secondary w-full text-base py-4"
+                className="btn-secondary w-full text-base py-3.5"
               >
-                ✍️ {lang === 'ru' ? 'Войдите чтобы оставить отзыв' : "Sharh yozish uchun kiring"}
+                <PencilLine className="h-[18px] w-[18px]" strokeWidth={1.75} />
+                {lang === 'ru' ? 'Войдите чтобы оставить отзыв' : "Sharh yozish uchun kiring"}
               </Link>
             )}
           </div>

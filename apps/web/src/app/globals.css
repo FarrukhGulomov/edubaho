@@ -48,66 +48,72 @@
     min-width: 44px;
   }
 
-  h1 { @apply text-2xl font-black tracking-tight sm:text-3xl md:text-4xl; }
-  h2 { @apply text-xl font-black tracking-tight sm:text-2xl md:text-3xl; }
-  h3 { @apply text-lg font-bold sm:text-xl; }
+  h1 { @apply text-2xl font-bold tracking-tight sm:text-3xl md:text-4xl; }
+  h2 { @apply text-xl font-bold tracking-tight sm:text-2xl md:text-3xl; }
+  h3 { @apply text-lg font-semibold sm:text-xl; }
 }
 
 @layer components {
 
   /* ─── Kartochka ─────────────────────────────────────────────── */
+  /* Minimalistik: kichikroq radius, yengil soya, harakatsiz hover — shovqinsiz */
   .card {
-    @apply rounded-3xl border border-gray-200 bg-white shadow-sm
-           transition-all duration-200
-           hover:-translate-y-1 hover:border-primary-200 hover:shadow-lg;
+    @apply rounded-2xl border border-gray-200 bg-white shadow-sm
+           transition-colors duration-150
+           hover:border-primary-200;
   }
 
   .card-flat {
-    @apply rounded-3xl border border-gray-100 bg-white;
+    @apply rounded-2xl border border-gray-100 bg-white;
   }
 
   /* ─── Tugmalar ──────────────────────────────────────────────── */
   .btn-primary {
     @apply inline-flex items-center justify-center gap-2
-           rounded-2xl bg-primary-600 px-6 py-3.5
-           text-base font-bold text-white
-           transition-all duration-150
-           hover:bg-primary-700 hover:shadow-lg hover:-translate-y-0.5
-           active:scale-95 active:translate-y-0
-           disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:translate-y-0;
+           rounded-xl bg-primary-600 px-5 py-3
+           text-base font-semibold text-white
+           transition-colors duration-150
+           hover:bg-primary-700
+           active:bg-primary-800
+           disabled:opacity-50 disabled:cursor-not-allowed;
   }
 
   .btn-secondary {
     @apply inline-flex items-center justify-center gap-2
-           rounded-2xl border-2 border-gray-200 bg-white px-6 py-3.5
-           text-base font-bold text-gray-700
-           transition-all duration-150
+           rounded-xl border border-gray-300 bg-white px-5 py-3
+           text-base font-semibold text-gray-700
+           transition-colors duration-150
            hover:border-primary-300 hover:text-primary-700 hover:bg-primary-50
-           active:scale-95;
+           active:bg-primary-100;
   }
 
   .btn-sm {
     @apply inline-flex items-center justify-center gap-1.5
-           rounded-xl px-4 py-2.5
+           rounded-lg px-3.5 py-2
            text-sm font-semibold
-           transition-all duration-150 active:scale-95;
+           transition-colors duration-150;
   }
 
   /* ─── Badge ─────────────────────────────────────────────────── */
   .badge {
-    @apply inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-sm font-semibold;
+    @apply inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-sm font-medium;
   }
 
   .badge-sm {
-    @apply inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-xs font-semibold;
+    @apply inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-xs font-medium;
+  }
+
+  /* ─── Icon chip — bo'lim sarlavhalari uchun bir xil andoza ───── */
+  .icon-chip {
+    @apply flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-primary-50 text-primary-600;
   }
 
   /* ─── Input ─────────────────────────────────────────────────── */
   .input {
-    @apply w-full rounded-2xl border-2 border-gray-200 bg-white px-5 py-4
+    @apply w-full rounded-xl border border-gray-300 bg-white px-4 py-3
            text-base text-gray-900 outline-none
-           transition-all placeholder:text-gray-400
-           focus:border-primary-400 focus:ring-4 focus:ring-primary-100;
+           transition-colors placeholder:text-gray-400
+           focus:border-primary-400 focus:ring-2 focus:ring-primary-100;
   }
 
   /* ─── Section ───────────────────────────────────────────────── */
@@ -116,13 +122,13 @@
   /* ─── Narx badge ─────────────────────────────────────────────── */
   .price-badge {
     @apply inline-flex items-center gap-1 rounded-full bg-emerald-50
-           border border-emerald-200 px-3 py-1.5 text-sm font-bold text-emerald-700;
+           border border-emerald-200 px-3 py-1 text-sm font-semibold text-emerald-700;
   }
 
   /* ─── Tasdiqlangan badge ─────────────────────────────────────── */
   .verified-badge {
     @apply inline-flex items-center gap-1 rounded-full bg-emerald-50
-           border border-emerald-200 px-2.5 py-1 text-xs font-bold text-emerald-700;
+           border border-emerald-200 px-2.5 py-1 text-xs font-semibold text-emerald-700;
   }
 
   /* ─── Gradient text ──────────────────────────────────────────── */
@@ -132,7 +138,7 @@
 
   /* ─── Section header ─────────────────────────────────────────── */
   .section-title {
-    @apply text-2xl font-black text-gray-900 sm:text-3xl;
+    @apply text-xl font-bold text-gray-900 sm:text-2xl;
   }
   .section-sub {
     @apply mt-2 text-base text-gray-500 leading-relaxed;
@@ -209,4 +215,7 @@
 
   /* Mobil pastki satr uchun joy (bottom nav) */
   .pb-safe { padding-bottom: env(safe-area-inset-bottom, 16px); }
+
+  /* Telegram Mini App: status-bar/notch orqasiga yashiringan kontentni himoya qilish */
+  .pt-safe { padding-top: env(safe-area-inset-top, 0px); }
 }
