@@ -1,7 +1,7 @@
 import { notFound } from 'next/navigation'
-import Link from 'next/link'
 import Header from '@/components/shared/Header'
 import CompareContent from './CompareContent'
+import CompareEmpty from './CompareEmpty'
 
 const API = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:3001/api/v1'
 
@@ -55,24 +55,7 @@ export default async function ComparePage({ searchParams }: Props) {
     return (
       <>
         <Header />
-        <main className="mx-auto max-w-4xl px-4 py-20 text-center">
-          <div className="text-6xl mb-4">⇄</div>
-          <h1 className="text-2xl font-bold text-gray-900 mb-3">
-            Kamida 2 ta muassasa tanlang
-          </h1>
-          <p className="text-gray-500 mb-2">
-            Минимум 2 учреждения для сравнения
-          </p>
-          <p className="text-sm text-gray-400 mb-8">
-            Qidiruv sahifasida muassasalar yonidagi &quot;Solishtir&quot; tugmasini bosing
-          </p>
-          <Link
-            href="/search"
-            className="inline-block rounded-2xl bg-primary-600 px-8 py-4 font-bold text-white hover:bg-primary-700 transition-colors"
-          >
-            Muassasalarni ko&apos;rish
-          </Link>
-        </main>
+        <CompareEmpty />
       </>
     )
   }

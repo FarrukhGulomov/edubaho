@@ -244,13 +244,12 @@ export default function HomePage() {
           </select>
         </div>
 
-        {/* Skeleton loader */}
+        {/* Skeleton loader — haqiqiy karta tuzilishiga mos (badge, nom, statistika) */}
         {loading ? (
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
             {Array.from({ length: 6 }).map((_, i) => (
-              <div key={i} className="overflow-hidden rounded-3xl border border-gray-100 bg-white shadow-sm">
-                <div className="shimmer h-20" />
-                <div className="space-y-3 p-4">
+              <div key={i} className="rounded-2xl border border-gray-100 bg-white p-4 shadow-sm">
+                <div className="space-y-3">
                   <div className="shimmer h-4 w-24 rounded-full" />
                   <div className="shimmer h-5 w-4/5 rounded-xl" />
                   <div className="shimmer h-4 w-1/2 rounded-xl" />
@@ -425,9 +424,8 @@ export default function HomePage() {
             {loadingMore && (
               <div className="mt-4 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
                 {Array.from({ length: 3 }).map((_, i) => (
-                  <div key={i} className="overflow-hidden rounded-3xl border border-gray-100 bg-white shadow-sm">
-                    <div className="shimmer h-20" />
-                    <div className="space-y-3 p-4">
+                  <div key={i} className="rounded-2xl border border-gray-100 bg-white p-4 shadow-sm">
+                    <div className="space-y-3">
                       <div className="shimmer h-4 w-24 rounded-full" />
                       <div className="shimmer h-5 w-3/4 rounded-xl" />
                     </div>
@@ -442,7 +440,7 @@ export default function HomePage() {
       {/* ── Footer ── */}
       <footer className="border-t border-gray-200 bg-gray-900 px-4 py-8 text-sm text-gray-400">
         <div className="mx-auto flex max-w-6xl flex-wrap items-center justify-between gap-3">
-          <span>© 2025 EDUBAHO.uz — {uz ? "O'zbekiston ta'lim platformasi" : "Платформа образования Узбекистана"}</span>
+          <span>© {new Date().getFullYear()} EDUBAHO.uz — {uz ? "O'zbekiston ta'lim platformasi" : "Платформа образования Узбекистана"}</span>
           <div className="flex gap-4">
             <Link href="/compare" className="transition-colors hover:text-white">{uz ? "Solishtirish" : "Сравнение"}</Link>
             <Link href="/auth"    className="transition-colors hover:text-white">{uz ? "Kirish" : "Войти"}</Link>

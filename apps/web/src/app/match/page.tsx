@@ -62,6 +62,11 @@ const SHIFT_OPTIONS = [
 
 const STEPS: Step[] = ['type', 'goal', 'city', 'budget', 'time']
 
+/** UZS format: 1 500 000 so'm (loyiha standarti — bo'shliq ajratuvchi) */
+function fmtUzs(n: number) {
+  return `${n.toLocaleString('ru-RU').replace(/,/g, ' ')} so'm`
+}
+
 export default function MatchPage() {
   const { lang } = useLang()
   const uz = lang === 'uz'
@@ -416,6 +421,13 @@ export default function MatchPage() {
                               {uz ? r.institution.city.nameUz : (r.institution.city.nameRu ?? r.institution.city.nameUz)}
                             </span>
                           )}
+                          {/* Narx — byudjet so'ralgani uchun natijada ham ko'rsatamiz */}
+                          {r.institution.pricing?.monthlyMin && (
+                            <span className="flex items-center gap-1 font-semibold text-emerald-600">
+                              <Wallet className="h-3.5 w-3.5 shrink-0" strokeWidth={1.75} />
+                              {fmtUzs(r.institution.pricing.monthlyMin)}{uz ? '/oy' : '/мес'}
+                            </span>
+                          )}
                         </div>
 
                         {/* Top sabablar */}
@@ -429,16 +441,30 @@ export default function MatchPage() {
                       </div>
                     </div>
 
-                    {/* Breakdown (nega bu tavsiya) */}
+                    {/* Breakdown (nega bu tavsiya) + aniq CTA */}
                     <div className="border-t border-gray-100 px-5 py-2.5">
-                      <button
-                        onClick={() => setExpanded(expanded === r.institution.id ? null : r.institution.id)}
-                        className="flex items-center gap-1.5 text-xs font-semibold text-gray-400 hover:text-primary-600"
-                      >
-                        {expanded === r.institution.id
-                          ? t(lang, ui.hide)
-                          : <><Lightbulb className="h-3.5 w-3.5 shrink-0" strokeWidth={1.75} /> {t(lang, ui.why)}</>}
-                      </button>
+                      <div className="flex items-center justify-between gap-3">
+                        <button
+                          onClick={() => setExpanded(expanded === r.institution.id ? null : r.institution.id)}
+                          className="flex items-center gap-1.5 text-xs font-semibold text-gray-400 hover:text-primary-600"
+                        >
+                          {expanded === r.institution.id
+                            ? t(lang, ui.hide)
+                            : <><Lightbulb className="h-3.5 w-3.5 shrink-0" strokeWidth={1.75} /> {t(lang, ui.why)}</>}
+                        </button>
+                        {/* Sahifaga o'tish uchun ko'rinadigan CTA — faqat nom-havola yetarli emas */}
+                        <Link
+                          href={`/institutions/${r.institution.slug}`}
+                          onClick={() => track('match_result_click', {
+                            category: 'engagement',
+                            institutionId: r.institution.id,
+                            properties: { score: r.match.score, position: idx + 1 },
+                          })}
+                          className="flex shrink-0 items-center gap-1 whitespace-nowrap rounded-lg bg-primary-50 px-3 py-1.5 text-xs font-bold text-primary-700 transition-colors hover:bg-primary-100"
+                        >
+                          {uz ? "Ko'rish" : 'Смотреть'} →
+                        </Link>
+                      </div>
 
                       {expanded === r.institution.id && (
                         <div className="mt-3 space-y-2 pb-2">
