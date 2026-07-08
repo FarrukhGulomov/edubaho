@@ -38,6 +38,13 @@ const TYPE_LABELS: Record<string, { uz: string; ru: string }> = {
   ARTS_SCHOOL:     { uz: "San'at maktabi", ru: 'Школа искусств' },
 }
 
+// O'qitish tili kodlari → tushunarli nom (xom "UZ"/"RU" ko'rsatmaslik uchun)
+const LANGUAGE_NAMES: Record<string, { uz: string; ru: string }> = {
+  UZ: { uz: "O'zbek tili",  ru: 'Узбекский' },
+  RU: { uz: 'Rus tili',     ru: 'Русский' },
+  EN: { uz: 'Ingliz tili',  ru: 'Английский' },
+}
+
 // Muassasa turi bo'yicha ikonka (lucide) — bitta izchil aksent rangda
 const TYPE_ICONS: Record<string, typeof BookOpen> = {
   KINDERGARTEN:    Palette,
@@ -86,6 +93,23 @@ function calcDimAverages(reviews: Institution['reviews']) {
     if (counts[k] > 0) result[k] = Math.round((sums[k] / counts[k]) * 10) / 10
   }
   return Object.keys(result).length > 0 ? result : null
+}
+
+// ─────────────────────────────────────────────────────────────
+// GateHint — bo'lim ichidagi tinch, bir qatorli "kirish kerak" eslatmasi.
+// Sahifadagi asosiy ro'yxatdan o'tish chaqiruvi sidebar'da bitta —
+// bo'lim ichidagi eslatmalar esa e'tiborni tortmaydigan, bir xil uslubda.
+// ─────────────────────────────────────────────────────────────
+function GateHint({ lang, uz, ru }: { lang: 'uz' | 'ru'; uz: string; ru: string }) {
+  return (
+    <div className="mt-4 flex items-center gap-2 rounded-xl bg-gray-50 px-4 py-2.5 text-sm text-gray-500">
+      <Lock className="h-3.5 w-3.5 shrink-0 text-gray-400" strokeWidth={2} />
+      <span className="flex-1">{lang === 'ru' ? ru : uz}</span>
+      <Link href="/auth" className="shrink-0 font-semibold text-primary-600 hover:text-primary-700">
+        {lang === 'ru' ? 'Войти' : 'Kirish'}
+      </Link>
+    </div>
+  )
 }
 
 // ─────────────────────────────────────────────────────────────
@@ -353,7 +377,8 @@ export default function InstitutionDetail({ inst }: { inst: Institution }) {
                 </div>
 
                 <h1 className="text-2xl font-bold leading-tight text-gray-900 sm:text-3xl">{displayName}</h1>
-                {lang === 'uz' && inst.nameRu && (
+                {/* Ruscha nom faqat farq qilsa ko'rsatiladi — bir xil nomni ikki marta chiqarmaymiz */}
+                {lang === 'uz' && inst.nameRu && inst.nameRu !== inst.nameUz && (
                   <p className="mt-0.5 text-sm text-gray-400">{inst.nameRu}</p>
                 )}
                 {cityDisplayName && (
@@ -451,25 +476,20 @@ export default function InstitutionDetail({ inst }: { inst: Institution }) {
                     </span>
                     {(inst.details!.languages ?? []).map(l => (
                       <span key={l} className="rounded-md bg-teal-50 px-2 py-0.5 text-xs font-bold text-teal-700">
-                        {l.toUpperCase()}
+                        {/* Xom kod (UZ/RU/EN) o'rniga tushunarli nom */}
+                        {LANGUAGE_NAMES[l.toUpperCase()]?.[lang] ?? l.toUpperCase()}
                       </span>
                     ))}
                   </div>
                 )}
 
-                {/* Mehmon foydalanuvchi uchun qo'shimcha ma'lumot chaqiruvi */}
+                {/* Mehmon uchun tinch eslatma — yagona standart uslub (GateHint) */}
                 {isGuest && (
-                  <div className="mt-4 flex items-center gap-3 rounded-xl border border-primary-100 bg-primary-50 px-4 py-3">
-                    <Lock className="h-4 w-4 shrink-0 text-primary-500" strokeWidth={2} />
-                    <p className="flex-1 text-sm font-medium text-primary-700">
-                      {lang === 'ru'
-                        ? 'Войдите чтобы увидеть все курсы и детали'
-                        : "Barcha kurslarni ko'rish uchun tizimga kiring"}
-                    </p>
-                    <Link href="/auth" className="shrink-0 rounded-lg bg-primary-600 px-3 py-1.5 text-sm font-semibold text-white hover:bg-primary-700 transition-colors">
-                      {lang === 'ru' ? 'Войти' : 'Kirish'}
-                    </Link>
-                  </div>
+                  <GateHint
+                    lang={lang}
+                    uz="Barcha kurslar tizimga kirgandan so'ng ko'rinadi"
+                    ru="Все курсы видны после входа"
+                  />
                 )}
               </div>
             )}
@@ -627,17 +647,11 @@ export default function InstitutionDetail({ inst }: { inst: Institution }) {
                       <span className="text-gray-400">…</span>
                     </p>
                   )}
-                  <div className="mt-4 flex items-center gap-3 rounded-xl border border-orange-100 bg-orange-50 px-5 py-4">
-                    <Lock className="h-5 w-5 shrink-0 text-orange-500" strokeWidth={1.75} />
-                    <p className="flex-1 text-base font-medium text-orange-700">
-                      {lang === 'ru'
-                        ? 'Полное описание доступно после входа'
-                        : "To'liq ta'rif tizimga kirgandan so'ng ko'rinadi"}
-                    </p>
-                    <Link href="/auth" className="ml-auto shrink-0 rounded-lg bg-orange-500 px-4 py-2 text-sm font-semibold text-white hover:bg-orange-600 transition-colors">
-                      {lang === 'ru' ? 'Войти' : 'Kirish'}
-                    </Link>
-                  </div>
+                  <GateHint
+                    lang={lang}
+                    uz="To'liq ta'rif tizimga kirgandan so'ng ko'rinadi"
+                    ru="Полное описание доступно после входа"
+                  />
                 </>
               ) : (
                 description ? (

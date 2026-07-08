@@ -39,6 +39,9 @@ export default function AuthPage() {
   const [loading, setLoading] = useState(false)
   const [error, setError]     = useState('')
   const [countdown, setCountdown] = useState(0)
+  // Telegram widget haqiqatan render bo'ldimi — bo'lmasa bo'sh joy va
+  // "yoki" ajratgichni ko'rsatmaymiz (sahifa buzilgandek ko'rinmasligi uchun)
+  const [tgReady, setTgReady] = useState(false)
   const otpRef  = useRef<HTMLInputElement>(null)
   const tgRef   = useRef<HTMLDivElement>(null)
   const googleRef = useRef<HTMLDivElement>(null)
@@ -133,7 +136,21 @@ export default function AuthPage() {
     script.async = true
     container.appendChild(script)
 
-    return () => { container.innerHTML = '' }
+    // Widget iframe sifatida qo'shiladi — chiqqanini kuzatib turamiz
+    setTgReady(false)
+    const check = setInterval(() => {
+      if (container.querySelector('iframe')) {
+        setTgReady(true)
+        clearInterval(check)
+      }
+    }, 300)
+    const stop = setTimeout(() => clearInterval(check), 6000)
+
+    return () => {
+      clearInterval(check)
+      clearTimeout(stop)
+      container.innerHTML = ''
+    }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [step])
 
@@ -286,7 +303,7 @@ export default function AuthPage() {
           {t(lang, ui.title)}
         </h2>
         <p className="mb-10 text-primary-200 text-center">
-          {t(lang, { uz: "O'zbekistondagi 500+ muassasa", ru: '500+ учреждений Узбекистана' })}
+          {t(lang, { uz: "O'zbekiston ta'lim muassasalari — bir joyda", ru: 'Учебные заведения Узбекистана — в одном месте' })}
         </p>
         <div className="w-full space-y-3">
           {ui.benefits.map((b) => (
@@ -354,7 +371,8 @@ export default function AuthPage() {
                     </div>
                   ) : (
                     <>
-                      <div ref={tgRef} className="flex justify-center min-h-[48px] items-center" />
+                      {/* min-h yo'q — widget chiqmasa joy egallamaydi */}
+                      <div ref={tgRef} className="flex items-center justify-center" />
                       {GOOGLE_CLIENT_ID && (
                         <div ref={googleRef} className="flex justify-center min-h-[44px] items-center" />
                       )}
@@ -363,12 +381,14 @@ export default function AuthPage() {
                   {error && <ErrorBox msg={error} />}
                 </div>
 
-                {/* Ajratuvchi: Telegram YOKI SMS */}
-                <div className="flex items-center gap-3">
-                  <div className="h-px flex-1 bg-gray-200" />
-                  <span className="text-xs font-semibold uppercase text-gray-400">{t(lang, ui.orDivider)}</span>
-                  <div className="h-px flex-1 bg-gray-200" />
-                </div>
+                {/* Ajratuvchi — faqat yuqorida haqiqiy muqobil (Telegram/Google) turgan bo'lsa */}
+                {(tgReady || GOOGLE_CLIENT_ID) && (
+                  <div className="flex items-center gap-3">
+                    <div className="h-px flex-1 bg-gray-200" />
+                    <span className="text-xs font-semibold uppercase text-gray-400">{t(lang, ui.orDivider)}</span>
+                    <div className="h-px flex-1 bg-gray-200" />
+                  </div>
+                )}
 
                 {/* SMS form — Telegram'i yo'q foydalanuvchilar uchun muqobil yo'l */}
                 <form onSubmit={handleSendOtp} className="space-y-4">

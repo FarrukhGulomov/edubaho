@@ -3,9 +3,9 @@
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import {
-  Target, PencilLine, Globe2, Laptop, School, Palette, GraduationCap,
-  Trophy, Dumbbell, Sunrise, Sun, Sunset, Calendar, Clock, Wallet, Globe,
-  MapPin, BadgeCheck, Lightbulb, AlertCircle, Search, RotateCcw, Medal,
+  Target, PencilLine, School, Trophy, Sunrise, Sun, Sunset, Calendar,
+  Clock, Wallet, Globe, MapPin, BadgeCheck, Lightbulb, AlertCircle,
+  Search, RotateCcw, Medal,
 } from 'lucide-react'
 import Header from '@/components/shared/Header'
 import StarRating from '@/components/shared/StarRating'
@@ -30,23 +30,18 @@ interface CityOption {
   region?: { nameUz: string; nameRu?: string | null } | null
 }
 
+// Faqat haqiqiy ma'lumoti bor turlar — aks holda user 5 savolga javob berib
+// bo'sh natija oladi (bosh sahifa/qidiruv filtrlari bilan bir xil siyosat)
 const TYPE_OPTIONS = [
-  { value: 'COURSE_CENTER',   Icon: PencilLine,    uz: "O'quv markaz",   ru: 'Учебный центр' },
-  { value: 'LANGUAGE_CENTER', Icon: Globe2,        uz: 'Til markazi',     ru: 'Языковой центр' },
-  { value: 'IT_SCHOOL',       Icon: Laptop,        uz: 'IT maktab',       ru: 'IT школа' },
-  { value: 'SCHOOL',          Icon: School,        uz: 'Maktab',          ru: 'Школа' },
-  { value: 'KINDERGARTEN',    Icon: Palette,       uz: "Bog'cha",         ru: 'Детский сад' },
-  { value: 'UNIVERSITY',      Icon: GraduationCap, uz: 'Universitet',     ru: 'Университет' },
-  { value: 'LYCEUM',          Icon: Trophy,        uz: 'Litsey',          ru: 'Лицей' },
-  { value: 'SPORTS_SCHOOL',   Icon: Dumbbell,      uz: 'Sport maktabi',   ru: 'Спортшкола' },
-  { value: 'ARTS_SCHOOL',     Icon: Palette,       uz: "San'at maktabi",  ru: 'Школа искусств' },
+  { value: 'COURSE_CENTER', Icon: PencilLine, uz: "O'quv markaz", ru: 'Учебный центр' },
+  { value: 'SCHOOL',        Icon: School,     uz: 'Maktab',       ru: 'Школа' },
+  { value: 'LYCEUM',        Icon: Trophy,     uz: 'Litsey',       ru: 'Лицей' },
 ]
 
 const GOAL_SUGGESTIONS: Record<string, string[]> = {
-  LANGUAGE_CENTER: ['IELTS', 'Ingliz tili', 'Rus tili', 'Koreys tili', 'Nemis tili'],
-  IT_SCHOOL:       ['Frontend', 'Backend', 'Python', 'Grafik dizayn', 'Kiberxavfsizlik'],
-  COURSE_CENTER:   ['Matematika', 'Fizika', 'Kimyo', 'Biologiya', 'DTM tayyorlov'],
-  SCHOOL:          ['Prezident maktabi', 'Xususiy maktab', 'Ingliz tili'],
+  COURSE_CENTER: ['IELTS', 'Ingliz tili', 'Frontend', 'Python', 'Matematika', 'DTM tayyorlov'],
+  SCHOOL:        ['Prezident maktabi', 'Xususiy maktab', 'Ingliz tili'],
+  LYCEUM:        ['Matematika (olimpiada)', 'Fizika', 'Kimyo'],
 }
 
 const BUDGET_OPTIONS = [
@@ -66,6 +61,11 @@ const SHIFT_OPTIONS = [
 ]
 
 const STEPS: Step[] = ['type', 'goal', 'city', 'budget', 'time']
+
+/** UZS format: 1 500 000 so'm (loyiha standarti — bo'shliq ajratuvchi) */
+function fmtUzs(n: number) {
+  return `${n.toLocaleString('ru-RU').replace(/,/g, ' ')} so'm`
+}
 
 export default function MatchPage() {
   const { lang } = useLang()
@@ -421,6 +421,13 @@ export default function MatchPage() {
                               {uz ? r.institution.city.nameUz : (r.institution.city.nameRu ?? r.institution.city.nameUz)}
                             </span>
                           )}
+                          {/* Narx — byudjet so'ralgani uchun natijada ham ko'rsatamiz */}
+                          {r.institution.pricing?.monthlyMin && (
+                            <span className="flex items-center gap-1 font-semibold text-emerald-600">
+                              <Wallet className="h-3.5 w-3.5 shrink-0" strokeWidth={1.75} />
+                              {fmtUzs(r.institution.pricing.monthlyMin)}{uz ? '/oy' : '/мес'}
+                            </span>
+                          )}
                         </div>
 
                         {/* Top sabablar */}
@@ -434,16 +441,30 @@ export default function MatchPage() {
                       </div>
                     </div>
 
-                    {/* Breakdown (nega bu tavsiya) */}
+                    {/* Breakdown (nega bu tavsiya) + aniq CTA */}
                     <div className="border-t border-gray-100 px-5 py-2.5">
-                      <button
-                        onClick={() => setExpanded(expanded === r.institution.id ? null : r.institution.id)}
-                        className="flex items-center gap-1.5 text-xs font-semibold text-gray-400 hover:text-primary-600"
-                      >
-                        {expanded === r.institution.id
-                          ? t(lang, ui.hide)
-                          : <><Lightbulb className="h-3.5 w-3.5 shrink-0" strokeWidth={1.75} /> {t(lang, ui.why)}</>}
-                      </button>
+                      <div className="flex items-center justify-between gap-3">
+                        <button
+                          onClick={() => setExpanded(expanded === r.institution.id ? null : r.institution.id)}
+                          className="flex items-center gap-1.5 text-xs font-semibold text-gray-400 hover:text-primary-600"
+                        >
+                          {expanded === r.institution.id
+                            ? t(lang, ui.hide)
+                            : <><Lightbulb className="h-3.5 w-3.5 shrink-0" strokeWidth={1.75} /> {t(lang, ui.why)}</>}
+                        </button>
+                        {/* Sahifaga o'tish uchun ko'rinadigan CTA — faqat nom-havola yetarli emas */}
+                        <Link
+                          href={`/institutions/${r.institution.slug}`}
+                          onClick={() => track('match_result_click', {
+                            category: 'engagement',
+                            institutionId: r.institution.id,
+                            properties: { score: r.match.score, position: idx + 1 },
+                          })}
+                          className="flex shrink-0 items-center gap-1 whitespace-nowrap rounded-lg bg-primary-50 px-3 py-1.5 text-xs font-bold text-primary-700 transition-colors hover:bg-primary-100"
+                        >
+                          {uz ? "Ko'rish" : 'Смотреть'} →
+                        </Link>
+                      </div>
 
                       {expanded === r.institution.id && (
                         <div className="mt-3 space-y-2 pb-2">
