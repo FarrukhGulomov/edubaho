@@ -44,6 +44,14 @@ const TYPE_LABELS: Record<string, { uz: string; ru: string }> = {
   ARTS_SCHOOL:     { uz: "San'at",        ru: 'Искусство' },
 }
 
+// Hero'dagi EduFit 1-qadam turlari — match wizard'dagi TYPE_OPTIONS bilan
+// bir xil bo'lishi shart (bosilganda /match?type=X 2-qadamdan davom etadi)
+const HERO_MATCH_TYPES = [
+  { type: 'COURSE_CENTER', Icon: PencilLine, uz: "O'quv markaz", ru: 'Учебный центр' },
+  { type: 'SCHOOL',        Icon: School,     uz: 'Maktab',       ru: 'Школа' },
+  { type: 'LYCEUM',        Icon: Trophy,     uz: 'Litsey',       ru: 'Лицей' },
+]
+
 // Faqat haqiqiy ma'lumoti bor turlar ko'rsatiladi — bo'sh natija bilan
 // tugaydigan "o'lik" filtrlarni chiqarmaslik uchun (IT maktab/Universitet/
 // Til markazi kabi turlarda hozircha muassasa yo'q)
@@ -133,40 +141,45 @@ export default function HomePage() {
     <div className="flex min-h-screen flex-col bg-gray-50">
       <Header />
 
-      {/* ── Bosh banner ── */}
-      <div className="border-b border-gray-200 bg-white px-4 py-6 sm:py-8">
+      {/* ── EduFit hero — user saytga kirganda BIRINCHI ko'radigan narsa.
+             Banner emas: wizard'ning 1-qadami to'g'ridan-to'g'ri shu yerda,
+             tur tanlangach /match 2-qadamdan davom etadi. ── */}
+      <div className="border-b border-gray-200 bg-white px-4 py-8 sm:py-12">
         <div className="mx-auto max-w-3xl">
-          <h1 className="mb-4 text-center text-xl font-bold text-gray-900 sm:text-2xl">
-            {uz ? "Barcha ta'lim muassasalari" : "Все учебные заведения"}
+          <div className="mb-1.5 flex items-center justify-center gap-2 text-primary-600">
+            <Target className="h-5 w-5 shrink-0" strokeWidth={2} />
+            <span className="text-sm font-bold uppercase tracking-wide">EduFit</span>
+          </div>
+          <h1 className="mb-2 text-center text-2xl font-bold leading-tight text-gray-900 sm:text-4xl">
+            {uz ? 'Qaysi ta\'lim muassasasi senga mos?' : 'Какое учебное заведение вам подходит?'}
           </h1>
+          <p className="mb-6 text-center text-sm text-gray-500 sm:text-base">
+            {uz
+              ? "Turini tanlang — 1 daqiqada shaxsiy tavsiyalar tayyor bo'ladi"
+              : 'Выберите тип — персональные рекомендации будут готовы за 1 минуту'}
+          </p>
 
-          {/* EduFit — platformaning asosiy fichasi, birinchi bo'lib ko'zga tashlanishi kerak.
-              Oq fonda — reklama banneriga o'xshamasligi uchun; ustunlik katta o'lcham,
-              rangli chegara va aniq CTA tugma orqali beriladi (rangli fon emas). */}
-          <Link
-            href="/match"
-            className="group mb-4 flex items-center gap-3 rounded-2xl border-2 border-primary-100 bg-white px-4 py-4 text-left shadow-sm transition-colors hover:border-primary-300 sm:gap-4 sm:px-6 sm:py-5"
-          >
-            <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-primary-50 text-primary-600 sm:h-12 sm:w-12">
-              <Target className="h-5 w-5 sm:h-6 sm:w-6" strokeWidth={1.75} />
-            </span>
-            <span className="flex-1">
-              <span className="block text-sm font-bold text-gray-900 sm:text-lg">
-                {uz ? 'Qaysi muassasa senga mos? — 1 daqiqada bilib ol' : 'Какое учреждение вам подходит? — узнайте за 1 минуту'}
-              </span>
-              <span className="hidden text-sm text-gray-500 sm:block">
-                {uz ? "Shaxsiy so'rovnoma orqali eng mos variantlarni toping" : 'Персональный подбор по вашим критериям и бюджету'}
-              </span>
-            </span>
-            <span className="flex shrink-0 items-center gap-1 rounded-xl bg-primary-600 px-3 py-2 text-sm font-bold text-white transition-colors group-hover:bg-primary-700 sm:px-4">
-              {uz ? 'Boshlash' : 'Начать'}
-              <span className="transition-transform group-hover:translate-x-0.5">→</span>
-            </span>
-          </Link>
+          {/* Wizard 1-qadam: tur tanlash (bosilsa /match 2-qadamdan davom etadi) */}
+          <div className="mb-6 grid grid-cols-3 gap-2.5 sm:gap-4">
+            {HERO_MATCH_TYPES.map(o => (
+              <Link
+                key={o.type}
+                href={`/match?type=${o.type}`}
+                className="group flex flex-col items-center gap-2.5 rounded-2xl border-2 border-gray-200 bg-white px-2 py-5 text-center shadow-sm transition-colors hover:border-primary-400 hover:bg-primary-50/40 sm:py-7"
+              >
+                <span className="flex h-12 w-12 items-center justify-center rounded-xl bg-primary-50 text-primary-600 transition-colors group-hover:bg-primary-100 sm:h-14 sm:w-14">
+                  <o.Icon className="h-6 w-6 sm:h-7 sm:w-7" strokeWidth={1.75} />
+                </span>
+                <span className="text-sm font-bold leading-tight text-gray-900 sm:text-base">
+                  {uz ? o.uz : o.ru}
+                </span>
+              </Link>
+            ))}
+          </div>
 
           {/* Qidiruv qutisi — ikkilamchi, o'zi nima izlashini biladiganlar uchun */}
           <p className="mb-2 text-center text-xs font-medium text-gray-400">
-            {uz ? "yoki o'zingiz qidiring" : 'или найдите самостоятельно'}
+            {uz ? "yoki quyidan o'zingiz qidiring" : 'или найдите самостоятельно ниже'}
           </p>
           <div className="flex items-center gap-2 rounded-xl border border-gray-200 bg-white p-2 shadow-sm">
             <div className="flex min-w-0 flex-1 items-center gap-2 px-2">
@@ -220,12 +233,15 @@ export default function HomePage() {
       {/* ── Asosiy kontent ── */}
       <div className="mx-auto w-full max-w-6xl flex-1 px-4 py-5">
 
-        {/* Sort + natijalar soni */}
+        {/* Katalog sarlavhasi + sort */}
         <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
           <div className="flex items-center gap-2">
+            <h2 className="text-base font-bold text-gray-800">
+              {uz ? "Barcha ta'lim muassasalari" : 'Все учебные заведения'}
+            </h2>
             {!loading && (
-              <span className="text-base font-black text-gray-800">
-                {meta.total} {uz ? "ta muassasa" : "учреждений"}
+              <span className="rounded-full bg-gray-100 px-2.5 py-0.5 text-xs font-semibold text-gray-500">
+                {meta.total} {uz ? 'ta' : ''}
               </span>
             )}
             {debouncedQuery && (

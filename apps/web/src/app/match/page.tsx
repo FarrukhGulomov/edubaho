@@ -87,6 +87,14 @@ export default function MatchPage() {
   useEffect(() => {
     track('match_started', { category: 'engagement' })
     geoApi.cities().then((r) => setCities(r.data as CityOption[])).catch(() => {})
+
+    // Deep-link: bosh sahifadagi hero'da tur allaqachon tanlangan bo'lsa
+    // (?type=SCHOOL) — 1-qadamni takrorlamasdan 2-qadamdan davom etamiz
+    const preType = new URLSearchParams(window.location.search).get('type')
+    if (preType && TYPE_OPTIONS.some((o) => o.value === preType)) {
+      setType(preType)
+      setStep('goal')
+    }
   }, [])
 
   const stepIndex = STEPS.indexOf(step)
