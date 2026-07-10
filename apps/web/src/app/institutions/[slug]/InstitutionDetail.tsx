@@ -14,6 +14,7 @@ import ClaimInstitution from '@/components/institutions/ClaimInstitution'
 import WriteReview from '@/components/institutions/WriteReview'
 import GuestLeadWidget from '@/components/shared/GuestLeadWidget'
 import { useLang, t } from '@/contexts/LangContext'
+import { authHref } from '@/lib/authHref'
 import {
   trackInstitutionView, trackGateShown, trackGateCta, trackContactClick,
 } from '@/lib/analytics'
@@ -100,12 +101,12 @@ function calcDimAverages(reviews: Institution['reviews']) {
 // Sahifadagi asosiy ro'yxatdan o'tish chaqiruvi sidebar'da bitta —
 // bo'lim ichidagi eslatmalar esa e'tiborni tortmaydigan, bir xil uslubda.
 // ─────────────────────────────────────────────────────────────
-function GateHint({ lang, uz, ru }: { lang: 'uz' | 'ru'; uz: string; ru: string }) {
+function GateHint({ lang, uz, ru, next }: { lang: 'uz' | 'ru'; uz: string; ru: string; next?: string }) {
   return (
     <div className="mt-4 flex items-center gap-2 rounded-xl bg-gray-50 px-4 py-2.5 text-sm text-gray-500">
       <Lock className="h-3.5 w-3.5 shrink-0 text-gray-400" strokeWidth={2} />
       <span className="flex-1">{lang === 'ru' ? ru : uz}</span>
-      <Link href="/auth" className="shrink-0 font-semibold text-primary-600 hover:text-primary-700">
+      <Link href={authHref(next)} className="shrink-0 font-semibold text-primary-600 hover:text-primary-700">
         {lang === 'ru' ? 'Войти' : 'Kirish'}
       </Link>
     </div>
@@ -122,6 +123,7 @@ function GuestGate({
   children,
   gateType,
   institutionId,
+  next,
 }: {
   isGuest: boolean
   lang: 'uz' | 'ru'
@@ -129,6 +131,7 @@ function GuestGate({
   children: React.ReactNode
   gateType?: string
   institutionId?: string
+  next?: string
 }) {
   if (!isGuest) return <>{children}</>
 
@@ -156,7 +159,7 @@ function GuestGate({
               : "Kontaktlar, narxlar va sharhlar faqat ro'yxatdan o'tgan foydalanuvchilarga ko'rinadi"}
           </p>
           <Link
-            href="/auth"
+            href={authHref(next)}
             onClick={() => trackGateCta(gateType ?? 'gate', institutionId)}
             className="btn-primary w-full text-base py-3.5"
           >
@@ -174,7 +177,7 @@ function GuestGate({
 // ─────────────────────────────────────────────────────────────
 // Registration CTA banner — sahifa o'rtasida bitta ulkan taklif
 // ─────────────────────────────────────────────────────────────
-function RegisterBanner({ lang }: { lang: 'uz' | 'ru' }) {
+function RegisterBanner({ lang, next }: { lang: 'uz' | 'ru'; next?: string }) {
   const items: Array<[typeof Phone, string]> = lang === 'ru' ? [
     [Phone, 'Контакты: телефон, Telegram, Instagram'],
     [Wallet, 'Актуальные цены и способы оплаты'],
@@ -220,7 +223,7 @@ function RegisterBanner({ lang }: { lang: 'uz' | 'ru' }) {
           ))}
         </ul>
 
-        <Link href="/auth" className="btn-primary w-full py-3 text-base">
+        <Link href={authHref(next)} className="btn-primary w-full py-3 text-base">
           {lang === 'ru' ? 'Зарегистрироваться бесплатно →' : "Bepul ro'yxatdan o'tish →"}
         </Link>
         <p className="mt-3 text-center text-xs text-gray-400">
@@ -238,6 +241,8 @@ export default function InstitutionDetail({ inst }: { inst: Institution }) {
   const { lang } = useLang()
   const [isGuest, setIsGuest] = useState(true)
   const [authChecked, setAuthChecked] = useState(false)
+  // Login'dan keyin shu sahifaga qaytish uchun barcha gate havolalariga beriladi
+  const instPath = `/institutions/${inst.slug}`
   const viewTracked = useRef(false)
   const gatesShown = useRef<Set<string>>(new Set())
 
@@ -388,7 +393,7 @@ export default function InstitutionDetail({ inst }: { inst: Institution }) {
                   </div>
                 )}
                 {isGuest && (
-                  <Link href="/auth" className="mt-3 inline-flex items-center gap-1.5 text-sm font-semibold text-primary-600 hover:text-primary-700">
+                  <Link href={authHref(instPath)} className="mt-3 inline-flex items-center gap-1.5 text-sm font-semibold text-primary-600 hover:text-primary-700">
                     <Lock className="h-3.5 w-3.5" strokeWidth={2} />
                     {lang === 'ru' ? 'Войдите для полного доступа' : "To'liq ma'lumot uchun kiring"}
                   </Link>
@@ -487,6 +492,7 @@ export default function InstitutionDetail({ inst }: { inst: Institution }) {
                 {isGuest && (
                   <GateHint
                     lang={lang}
+                    next={instPath}
                     uz="Barcha kurslar tizimga kirgandan so'ng ko'rinadi"
                     ru="Все курсы видны после входа"
                   />
@@ -649,6 +655,7 @@ export default function InstitutionDetail({ inst }: { inst: Institution }) {
                   )}
                   <GateHint
                     lang={lang}
+                    next={instPath}
                     uz="To'liq ta'rif tizimga kirgandan so'ng ko'rinadi"
                     ru="Полное описание доступно после входа"
                   />
@@ -733,6 +740,7 @@ export default function InstitutionDetail({ inst }: { inst: Institution }) {
                 lang={lang}
                 gateType="reviews"
                 institutionId={inst.id}
+                next={instPath}
                 blurPreview={
                   inst.reviews && inst.reviews.length > 0 ? (
                     <div className="card p-6">
@@ -856,7 +864,7 @@ export default function InstitutionDetail({ inst }: { inst: Institution }) {
             />
 
             {/* Guest — Ro'yxatdan o'tish CTA (sidebar) */}
-            {isGuest && <RegisterBanner lang={lang} />}
+            {isGuest && <RegisterBanner lang={lang} next={instPath} />}
 
             {/* Hamkorlar uchun: muassasa egaligi so'rovi */}
             <ClaimInstitution institutionId={inst.id} isVerified={inst.isVerified} />
@@ -1006,7 +1014,7 @@ export default function InstitutionDetail({ inst }: { inst: Institution }) {
             {/* Guest — Sharh yozish CTA */}
             {isGuest && (
               <Link
-                href="/auth"
+                href={authHref(instPath)}
                 className="btn-secondary w-full text-base py-3.5"
               >
                 <PencilLine className="h-[18px] w-[18px]" strokeWidth={1.75} />

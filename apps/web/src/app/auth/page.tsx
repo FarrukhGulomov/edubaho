@@ -31,6 +31,16 @@ declare global {
   }
 }
 
+/**
+ * Login'dan keyin qaytish manzili (?next=/institutions/slug) —
+ * faqat ichki yo'llar qabul qilinadi (open-redirect himoyasi)
+ */
+function readNextParam(): string | null {
+  if (typeof window === 'undefined') return null
+  const n = new URLSearchParams(window.location.search).get('next')
+  return n && n.startsWith('/') && !n.startsWith('//') ? n : null
+}
+
 export default function AuthPage() {
   const { lang, setLang } = useLang()
   const [step, setStep]       = useState<Step>('phone')
@@ -39,6 +49,10 @@ export default function AuthPage() {
   const [loading, setLoading] = useState(false)
   const [error, setError]     = useState('')
   const [countdown, setCountdown] = useState(0)
+  // Foydalanuvchi qayerdan kelgan — login'dan keyin o'sha yerga qaytariladi.
+  // Telegram redirect'i URL'ni almashtirgani uchun boshidayoq saqlab olamiz.
+  const [nextUrl] = useState(readNextParam)
+  const [isNewUser, setIsNewUser] = useState(false)
   // Telegram widget haqiqatan render bo'ldimi — bo'lmasa bo'sh joy va
   // "yoki" ajratgichni ko'rsatmaymiz (sahifa buzilgandek ko'rinmasligi uchun)
   const [tgReady, setTgReady] = useState(false)
@@ -85,6 +99,7 @@ export default function AuthPage() {
         localStorage.setItem('accessToken', r.accessToken)
         localStorage.setItem('refreshToken', r.refreshToken)
         authTrack.completed(r.isNewUser ?? false)
+        setIsNewUser(r.isNewUser ?? false)
         window.history.replaceState({}, '', '/auth')
         setStep('done')
       })
@@ -95,13 +110,14 @@ export default function AuthPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
-  // Profilga o'tish
+  // Login'dan keyin yo'naltirish: kelgan sahifa > (yangi user: EduFit) > profil
   useEffect(() => {
     if (step === 'done') {
-      const timer = setTimeout(() => { window.location.href = '/profile' }, 1600)
+      const dest = nextUrl ?? (isNewUser ? '/match' : '/profile')
+      const timer = setTimeout(() => { window.location.href = dest }, 1600)
       return () => clearTimeout(timer)
     }
-  }, [step])
+  }, [step, nextUrl, isNewUser])
 
   // Tark etish kuzatuvi (unmount)
   useEffect(() => {
@@ -130,8 +146,12 @@ export default function AuthPage() {
     script.setAttribute('data-telegram-login', BOT_USERNAME)
     script.setAttribute('data-size', 'large')
     script.setAttribute('data-radius', '12')
-    // Redirect mode: Telegram /auth?id=...&hash=... ga qaytadi
-    script.setAttribute('data-auth-url', window.location.origin + '/auth')
+    // Redirect mode: Telegram /auth?id=...&hash=... ga qaytadi.
+    // next param'ni auth-url'da saqlaymiz — redirect'dan keyin ham yo'qolmasin
+    script.setAttribute(
+      'data-auth-url',
+      window.location.origin + '/auth' + (nextUrl ? `?next=${encodeURIComponent(nextUrl)}` : ''),
+    )
     script.setAttribute('data-request-access', 'write')
     script.async = true
     container.appendChild(script)
@@ -173,6 +193,7 @@ export default function AuthPage() {
               localStorage.setItem('accessToken', r.accessToken)
               localStorage.setItem('refreshToken', r.refreshToken)
               authTrack.completed(r.isNewUser ?? false)
+              setIsNewUser(r.isNewUser ?? false)
               setStep('done')
             })
             .catch((err: unknown) => {
@@ -216,7 +237,9 @@ export default function AuthPage() {
     resendIn:   { uz: 'Qayta yuborish', ru: 'Повторить через' },
     back:       { uz: '← Raqamni o\'zgartirish', ru: '← Изменить номер' },
     doneTitle:  { uz: 'Muvaffaqiyatli kirdingiz!', ru: 'Вы успешно вошли!' },
-    doneSub:    { uz: 'Profilingizga o\'tasiz...', ru: 'Переходим в профиль...' },
+    doneSub:      { uz: 'Profilingizga o\'tasiz...', ru: 'Переходим в профиль...' },
+    doneSubBack:  { uz: 'Sahifangizga qaytmoqdasiz...', ru: 'Возвращаемся на страницу...' },
+    doneSubMatch: { uz: 'Sizga mosini topamiz...', ru: 'Подберём подходящее...' },
     terms:      { uz: 'Kirish orqali siz ', ru: 'Входя, вы соглашаетесь с ' },
     termsLink:  { uz: 'foydalanish shartlari', ru: 'условиями использования' },
     termsEnd:   { uz: 'ga rozilik bildirasiz', ru: '' },
@@ -282,6 +305,7 @@ export default function AuthPage() {
       localStorage.setItem('accessToken', result.accessToken)
       localStorage.setItem('refreshToken', result.refreshToken)
       authTrack.completed(result.isNewUser ?? false)
+      setIsNewUser(result.isNewUser ?? false)
       setStep('done')
     } catch (err: unknown) {
       authTrack.otpError(1)
@@ -509,7 +533,9 @@ export default function AuthPage() {
                 <div className="mb-4 flex justify-center">
                   <CheckCircle2 className="h-14 w-14 text-emerald-500" strokeWidth={1.5} />
                 </div>
-                <p className="text-gray-600">{t(lang, ui.doneSub)}</p>
+                <p className="text-gray-600">
+                  {t(lang, nextUrl ? ui.doneSubBack : isNewUser ? ui.doneSubMatch : ui.doneSub)}
+                </p>
                 <div className="mt-4 flex justify-center">
                   <div className="h-6 w-6 animate-spin rounded-full border-2 border-primary-200 border-t-primary-600" />
                 </div>

@@ -1,7 +1,9 @@
 'use client'
 
 import { useState } from 'react'
+import { usePathname } from 'next/navigation'
 import { PencilLine, X, CheckCircle2, AlertCircle, UserCheck, School, Wallet, Leaf, Phone } from 'lucide-react'
+import { authHref } from '@/lib/authHref'
 
 interface Props {
   institutionId: string
@@ -53,6 +55,7 @@ function MiniStars({
 }
 
 export default function WriteReview({ institutionId, institutionName }: Props) {
+  const pathname = usePathname()
   const [open, setOpen] = useState(false)
   const [rating, setRating] = useState(0)
   const [hovered, setHovered] = useState(0)
@@ -120,7 +123,7 @@ export default function WriteReview({ institutionId, institutionName }: Props) {
   if (!token) {
     return (
       <a
-        href="/auth"
+        href={authHref(pathname)}
         className="flex w-full items-center justify-center gap-2 rounded-xl border border-dashed border-gray-300 py-4 text-sm font-semibold text-gray-500 transition-colors hover:border-primary-400 hover:text-primary-600"
       >
         <PencilLine className="h-4 w-4 shrink-0" strokeWidth={1.75} />

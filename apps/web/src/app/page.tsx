@@ -182,6 +182,7 @@ export default function HomePage() {
                 <button
                   type="button"
                   onClick={() => { setQuery(''); setDebouncedQuery(''); setCurrentPage(1) }}
+                  aria-label="Qidiruvni tozalash"
                   className="text-gray-400 hover:text-gray-600"
                 >
                   <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
