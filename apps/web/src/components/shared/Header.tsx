@@ -8,6 +8,7 @@ import {
   ArrowLeftRight, LogOut, User,
 } from 'lucide-react'
 import { useAuth } from '@/hooks/useAuth'
+import { authHref } from '@/lib/authHref'
 import { useLang, t } from '@/contexts/LangContext'
 import Logo from './Logo'
 
@@ -88,8 +89,9 @@ export default function Header() {
               onClick={() => setLang(lang === 'uz' ? 'ru' : 'uz')}
               className="flex items-center gap-1.5 rounded-xl border border-gray-200 bg-white px-3 py-2 text-sm font-semibold text-gray-600 transition-colors hover:border-primary-300 hover:text-primary-600"
               title={lang === 'uz' ? 'Переключить на русский' : "O'zbekchaga o'tish"}
+              aria-label={lang === 'uz' ? 'Переключить на русский' : "O'zbekchaga o'tish"}
             >
-              <span className="text-lg leading-none">{lang === 'uz' ? '🇷🇺' : '🇺🇿'}</span>
+              <span className="text-lg leading-none" aria-hidden>{lang === 'uz' ? '🇷🇺' : '🇺🇿'}</span>
             </button>
 
             {/* Auth — desktop */}
@@ -116,7 +118,7 @@ export default function Header() {
               </div>
             ) : (
               <Link
-                href="/auth"
+                href={authHref(pathname)}
                 className="hidden rounded-xl bg-primary-600 px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-primary-700 lg:flex items-center gap-2"
               >
                 <User className="h-4 w-4" strokeWidth={1.75} /> {t(lang, { uz: 'Kirish', ru: 'Войти' })}
@@ -201,7 +203,7 @@ export default function Header() {
                 </button>
               ) : (
                 <Link
-                  href="/auth"
+                  href={authHref(pathname)}
                   onClick={() => setMenuOpen(false)}
                   className="flex flex-1 items-center justify-center gap-1.5 rounded-xl bg-primary-600 py-3 text-sm font-semibold text-white hover:bg-primary-700"
                 >
@@ -276,7 +278,7 @@ export default function Header() {
             </Link>
           ) : (
             <Link
-              href="/auth"
+              href={authHref(pathname)}
               className="flex flex-1 flex-col items-center gap-0.5 px-1 py-2.5 text-primary-600 active:opacity-70"
             >
               <span className="flex h-[26px] w-[26px] items-center justify-center rounded-full bg-primary-600 text-sm font-black text-white">
@@ -290,8 +292,8 @@ export default function Header() {
         </div>
       </nav>
 
-      {/* Mobil pastki nav uchun joy — content pastda yashirib qolmasin */}
-      <div className="h-[72px] lg:hidden" aria-hidden />
+      {/* Pastki nav klirensi globals.css'dagi body padding-bottom orqali beriladi —
+          bu yerda spacer bo'lsa u header OSTIDA bo'sh joy yaratadi (DOM oqimida shu nuqtada) */}
     </>
   )
 }

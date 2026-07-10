@@ -131,7 +131,7 @@ export default function GuestLeadWidget({ triggerOnMount = true }: Props) {
             >
               {t(lang, { uz: "Xabar qoldirish", ru: 'Оставить контакт' })}
             </button>
-            <button onClick={handleClose} className="shrink-0 p-1 text-amber-400 hover:text-amber-600" aria-label="close">
+            <button onClick={handleClose} className="shrink-0 p-1 text-amber-400 hover:text-amber-600" aria-label="Yopish">
               <X className="h-5 w-5" strokeWidth={1.75} />
             </button>
           </div>
