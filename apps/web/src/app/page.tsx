@@ -4,8 +4,8 @@ import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { useState, useEffect } from 'react'
 import {
-  Search, PencilLine, BookOpen, Trophy, School, BadgeCheck, Sparkles,
-  MapPin, Users2, UserCheck, Star, ArrowLeftRight, Target, ArrowRight,
+  Search, PencilLine, BookOpen, Palette, School, BadgeCheck, Sparkles,
+  MapPin, Users2, UserCheck, Star, ArrowLeftRight, Target, ArrowRight, Lock,
 } from 'lucide-react'
 import Header from '@/components/shared/Header'
 import { RatingHint } from '@/components/shared/StarRating'
@@ -44,20 +44,23 @@ const TYPE_LABELS: Record<string, { uz: string; ru: string }> = {
 }
 
 // Hero'dagi EDULA wizard 1-qadam turlari — match wizard'dagi TYPE_OPTIONS bilan
-// bir xil bo'lishi shart (bosilganda /match?type=X 2-qadamdan davom etadi)
+// bir xil bo'lishi shart (bosilganda /match?type=X 2-qadamdan davom etadi).
+// MVP doirasida faqat O'quv markaz bilan ishlaymiz — Maktab/Bog'cha hozircha
+// disable (ko'rinadi, lekin bosilmaydi, "Tez orada" belgisi bilan).
 const HERO_MATCH_TYPES = [
-  { type: 'COURSE_CENTER', Icon: PencilLine, uz: "O'quv markaz", ru: 'Учебный центр' },
-  { type: 'SCHOOL',        Icon: School,     uz: 'Maktab',       ru: 'Школа' },
-  { type: 'LYCEUM',        Icon: Trophy,     uz: 'Litsey',       ru: 'Лицей' },
+  { type: 'COURSE_CENTER', Icon: PencilLine, uz: "O'quv markaz", ru: 'Учебный центр', disabled: false },
+  { type: 'SCHOOL',        Icon: School,     uz: 'Maktab',       ru: 'Школа',         disabled: true },
+  { type: 'KINDERGARTEN',  Icon: Palette,    uz: "Bog'cha",      ru: 'Детский сад',   disabled: true },
 ]
 
 // Tezkor kategoriya havolalari — endi filtrlashni o'zi qilmaydi, balki
-// yagona katalog sahifasiga (/search) yo'naltiradi (duplikatsiyani oldini olish)
+// yagona katalog sahifasiga (/search) yo'naltiradi (duplikatsiyani oldini olish).
+// MVP doirasida faqat O'quv markaz aktiv — qolganlari disable.
 const QUICK_CATEGORIES = [
-  { type: '',              Icon: School,     uz: 'Barchasi',        ru: 'Все' },
-  { type: 'COURSE_CENTER', Icon: PencilLine, uz: "O'quv markazlar", ru: 'Учебные центры' },
-  { type: 'SCHOOL',        Icon: BookOpen,   uz: 'Maktablar',       ru: 'Школы' },
-  { type: 'LYCEUM',        Icon: Trophy,     uz: 'Litseylar',       ru: 'Лицеи' },
+  { type: '',              Icon: School,     uz: 'Barchasi',        ru: 'Все',                disabled: false },
+  { type: 'COURSE_CENTER', Icon: PencilLine, uz: "O'quv markazlar", ru: 'Учебные центры',      disabled: false },
+  { type: 'SCHOOL',        Icon: BookOpen,   uz: 'Maktablar',       ru: 'Школы',               disabled: true },
+  { type: 'KINDERGARTEN',  Icon: Palette,    uz: "Bog'chalar",      ru: 'Детские сады',        disabled: true },
 ]
 
 function fmtNum(n: number) { return n.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ' ') }
@@ -117,21 +120,42 @@ export default function HomePage() {
               : 'Выберите тип — персональные рекомендации будут готовы за 1 минуту'}
           </p>
 
-          {/* Wizard 1-qadam: tur tanlash (bosilsa /match 2-qadamdan davom etadi) */}
+          {/* Wizard 1-qadam: tur tanlash (bosilsa /match 2-qadamdan davom etadi).
+              MVP: faqat O'quv markaz aktiv, qolganlari "Tez orada" bilan disable. */}
           <div className="mb-6 grid grid-cols-3 gap-2.5 sm:gap-4">
             {HERO_MATCH_TYPES.map(o => (
-              <Link
-                key={o.type}
-                href={`/match?type=${o.type}`}
-                className="group flex flex-col items-center gap-2.5 rounded-2xl border-2 border-gray-200 bg-white px-2 py-5 text-center shadow-sm transition-colors hover:border-primary-400 hover:bg-primary-50/40 sm:py-7"
-              >
-                <span className="flex h-12 w-12 items-center justify-center rounded-xl bg-primary-50 text-primary-600 transition-colors group-hover:bg-primary-100 sm:h-14 sm:w-14">
-                  <o.Icon className="h-6 w-6 sm:h-7 sm:w-7" strokeWidth={1.75} />
-                </span>
-                <span className="text-sm font-bold leading-tight text-gray-900 sm:text-base">
-                  {uz ? o.uz : o.ru}
-                </span>
-              </Link>
+              o.disabled ? (
+                <div
+                  key={o.type}
+                  aria-disabled="true"
+                  title={uz ? 'Tez orada' : 'Скоро'}
+                  className="relative flex cursor-not-allowed flex-col items-center gap-2.5 rounded-2xl border-2 border-gray-100 bg-gray-50 px-2 py-5 text-center opacity-60 sm:py-7"
+                >
+                  <span className="absolute right-2 top-2 flex items-center gap-1 rounded-full bg-white px-2 py-0.5 text-[10px] font-semibold text-gray-400 shadow-sm">
+                    <Lock className="h-2.5 w-2.5 shrink-0" strokeWidth={2} />
+                    {uz ? 'Tez orada' : 'Скоро'}
+                  </span>
+                  <span className="flex h-12 w-12 items-center justify-center rounded-xl bg-gray-100 text-gray-400 sm:h-14 sm:w-14">
+                    <o.Icon className="h-6 w-6 sm:h-7 sm:w-7" strokeWidth={1.75} />
+                  </span>
+                  <span className="text-sm font-bold leading-tight text-gray-400 sm:text-base">
+                    {uz ? o.uz : o.ru}
+                  </span>
+                </div>
+              ) : (
+                <Link
+                  key={o.type}
+                  href={`/match?type=${o.type}`}
+                  className="group flex flex-col items-center gap-2.5 rounded-2xl border-2 border-gray-200 bg-white px-2 py-5 text-center shadow-sm transition-colors hover:border-primary-400 hover:bg-primary-50/40 sm:py-7"
+                >
+                  <span className="flex h-12 w-12 items-center justify-center rounded-xl bg-primary-50 text-primary-600 transition-colors group-hover:bg-primary-100 sm:h-14 sm:w-14">
+                    <o.Icon className="h-6 w-6 sm:h-7 sm:w-7" strokeWidth={1.75} />
+                  </span>
+                  <span className="text-sm font-bold leading-tight text-gray-900 sm:text-base">
+                    {uz ? o.uz : o.ru}
+                  </span>
+                </Link>
+              )
             ))}
           </div>
 
@@ -156,17 +180,31 @@ export default function HomePage() {
             </button>
           </form>
 
-          {/* Tezkor kategoriyalar — to'g'ridan-to'g'ri /search'ga yo'naltiradi */}
+          {/* Tezkor kategoriyalar — to'g'ridan-to'g'ri /search'ga yo'naltiradi.
+              MVP: disable qilinganlari ko'rinadi, lekin bosilmaydi. */}
           <div className="mt-4 flex flex-nowrap justify-center gap-1.5 overflow-x-auto" style={{ scrollbarWidth: 'none' }}>
             {QUICK_CATEGORIES.map(f => (
-              <Link
-                key={f.type}
-                href={f.type ? `/search?type=${f.type}` : '/search'}
-                className="flex h-9 shrink-0 items-center gap-1.5 whitespace-nowrap rounded-xl bg-gray-50 px-3.5 text-sm font-semibold text-gray-600 transition-colors hover:bg-gray-100 hover:text-gray-900"
-              >
-                <f.Icon className="h-4 w-4 shrink-0" strokeWidth={1.75} />
-                <span>{uz ? f.uz : f.ru}</span>
-              </Link>
+              f.disabled ? (
+                <span
+                  key={f.type}
+                  aria-disabled="true"
+                  title={uz ? 'Tez orada' : 'Скоро'}
+                  className="flex h-9 shrink-0 cursor-not-allowed items-center gap-1.5 whitespace-nowrap rounded-xl bg-gray-50 px-3.5 text-sm font-semibold text-gray-300"
+                >
+                  <f.Icon className="h-4 w-4 shrink-0" strokeWidth={1.75} />
+                  <span>{uz ? f.uz : f.ru}</span>
+                  <Lock className="h-3 w-3 shrink-0" strokeWidth={2} />
+                </span>
+              ) : (
+                <Link
+                  key={f.type}
+                  href={f.type ? `/search?type=${f.type}` : '/search'}
+                  className="flex h-9 shrink-0 items-center gap-1.5 whitespace-nowrap rounded-xl bg-gray-50 px-3.5 text-sm font-semibold text-gray-600 transition-colors hover:bg-gray-100 hover:text-gray-900"
+                >
+                  <f.Icon className="h-4 w-4 shrink-0" strokeWidth={1.75} />
+                  <span>{uz ? f.uz : f.ru}</span>
+                </Link>
+              )
             ))}
           </div>
         </div>

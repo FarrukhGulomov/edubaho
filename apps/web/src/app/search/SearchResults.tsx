@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation'
 import { useState, useEffect, useRef } from 'react'
 import {
   Search, X, MapPin, Globe2, Users2, UserCheck, BadgeCheck, Star,
-  ArrowLeftRight, Check, PencilLine, School, Trophy,
+  ArrowLeftRight, Check, PencilLine, School, Palette, Lock,
 } from 'lucide-react'
 import { RatingHint } from '@/components/shared/StarRating'
 import { useCompare, useSaved } from '@/hooks/useCompare'
@@ -42,11 +42,13 @@ const TYPE_LABELS: Record<string, { uz: string; ru: string; color: string }> = {
 }
 
 // Faqat haqiqiy ma'lumoti bor turlar ko'rsatiladi — bo'sh natija bilan
-// tugaydigan "o'lik" filtrlarni chiqarmaslik uchun
+// tugaydigan "o'lik" filtrlarni chiqarmaslik uchun.
+// MVP doirasida faqat O'quv markaz aktiv — qolganlari disable (bosh
+// sahifadagi QUICK_CATEGORIES bilan bir xil siyosat).
 const TYPE_FILTERS = [
-  { type: 'COURSE_CENTER', Icon: PencilLine, uz: "O'quv markazlar", ru: 'Учебные центры' },
-  { type: 'SCHOOL',        Icon: School,     uz: 'Maktablar',       ru: 'Школы' },
-  { type: 'LYCEUM',        Icon: Trophy,     uz: 'Litseylar',       ru: 'Лицеи' },
+  { type: 'COURSE_CENTER', Icon: PencilLine, uz: "O'quv markazlar", ru: 'Учебные центры', disabled: false },
+  { type: 'SCHOOL',        Icon: School,     uz: 'Maktablar',       ru: 'Школы',          disabled: true },
+  { type: 'KINDERGARTEN',  Icon: Palette,    uz: "Bog'chalar",      ru: 'Детские сады',    disabled: true },
 ]
 
 const SORT_OPTIONS = [
@@ -178,17 +180,29 @@ export default function SearchResults({ institutions, meta, params }: Props) {
               {t(lang, ui.allTypes)}
             </Link>
             {TYPE_FILTERS.map(f => (
-              <Link
-                key={f.type}
-                href={`/search?${new URLSearchParams({ ...params, type: f.type, page: '1' }).toString()}`}
-                className={`flex h-9 shrink-0 items-center gap-1.5 whitespace-nowrap rounded-xl px-3.5 text-sm font-semibold transition-colors ${
-                  params.type === f.type
-                    ? 'bg-primary-600 text-white'
-                    : 'bg-gray-50 text-gray-600 hover:bg-gray-100 hover:text-gray-900'
-                }`}
-              >
-                <f.Icon className="h-4 w-4 shrink-0" strokeWidth={1.75} /> {lang === 'uz' ? f.uz : f.ru}
-              </Link>
+              f.disabled ? (
+                <span
+                  key={f.type}
+                  aria-disabled="true"
+                  title={lang === 'uz' ? 'Tez orada' : 'Скоро'}
+                  className="flex h-9 shrink-0 cursor-not-allowed items-center gap-1.5 whitespace-nowrap rounded-xl bg-gray-50 px-3.5 text-sm font-semibold text-gray-300"
+                >
+                  <f.Icon className="h-4 w-4 shrink-0" strokeWidth={1.75} /> {lang === 'uz' ? f.uz : f.ru}
+                  <Lock className="h-3 w-3 shrink-0" strokeWidth={2} />
+                </span>
+              ) : (
+                <Link
+                  key={f.type}
+                  href={`/search?${new URLSearchParams({ ...params, type: f.type, page: '1' }).toString()}`}
+                  className={`flex h-9 shrink-0 items-center gap-1.5 whitespace-nowrap rounded-xl px-3.5 text-sm font-semibold transition-colors ${
+                    params.type === f.type
+                      ? 'bg-primary-600 text-white'
+                      : 'bg-gray-50 text-gray-600 hover:bg-gray-100 hover:text-gray-900'
+                  }`}
+                >
+                  <f.Icon className="h-4 w-4 shrink-0" strokeWidth={1.75} /> {lang === 'uz' ? f.uz : f.ru}
+                </Link>
+              )
             ))}
           </div>
 

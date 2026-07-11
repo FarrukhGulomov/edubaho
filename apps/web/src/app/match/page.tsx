@@ -3,9 +3,9 @@
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import {
-  Target, PencilLine, School, Trophy, Sunrise, Sun, Sunset, Calendar,
+  Target, PencilLine, School, Palette, Sunrise, Sun, Sunset, Calendar,
   Clock, Wallet, Globe, MapPin, BadgeCheck, Lightbulb, AlertCircle,
-  Search, RotateCcw, Medal,
+  Search, RotateCcw, Medal, Lock,
 } from 'lucide-react'
 import Header from '@/components/shared/Header'
 import { RatingHint } from '@/components/shared/StarRating'
@@ -30,18 +30,18 @@ interface CityOption {
   region?: { nameUz: string; nameRu?: string | null } | null
 }
 
-// Faqat haqiqiy ma'lumoti bor turlar — aks holda user 5 savolga javob berib
-// bo'sh natija oladi (bosh sahifa/qidiruv filtrlari bilan bir xil siyosat)
+// MVP doirasida faqat o'quv markazlar bilan ishlaymiz — Maktab va Bog'cha
+// hozircha disabled ("Tez orada"), lekin UI'da ko'rinib turadi
 const TYPE_OPTIONS = [
-  { value: 'COURSE_CENTER', Icon: PencilLine, uz: "O'quv markaz", ru: 'Учебный центр' },
-  { value: 'SCHOOL',        Icon: School,     uz: 'Maktab',       ru: 'Школа' },
-  { value: 'LYCEUM',        Icon: Trophy,     uz: 'Litsey',       ru: 'Лицей' },
+  { value: 'COURSE_CENTER', Icon: PencilLine, uz: "O'quv markaz", ru: 'Учебный центр', disabled: false },
+  { value: 'SCHOOL',        Icon: School,     uz: 'Maktab',       ru: 'Школа',         disabled: true },
+  { value: 'KINDERGARTEN',  Icon: Palette,    uz: "Bog'cha",      ru: 'Детский сад',   disabled: true },
 ]
 
 const GOAL_SUGGESTIONS: Record<string, string[]> = {
   COURSE_CENTER: ['IELTS', 'Ingliz tili', 'Frontend', 'Python', 'Matematika', 'DTM tayyorlov'],
   SCHOOL:        ['Prezident maktabi', 'Xususiy maktab', 'Ingliz tili'],
-  LYCEUM:        ['Matematika (olimpiada)', 'Fizika', 'Kimyo'],
+  KINDERGARTEN:  ['Xususiy bog\'cha', 'Ingliz tili guruhi', 'Rivojlantiruvchi darslar'],
 }
 
 const BUDGET_OPTIONS = [
@@ -91,7 +91,7 @@ export default function MatchPage() {
     // Deep-link: bosh sahifadagi hero'da tur allaqachon tanlangan bo'lsa
     // (?type=SCHOOL) — 1-qadamni takrorlamasdan 2-qadamdan davom etamiz
     const preType = new URLSearchParams(window.location.search).get('type')
-    if (preType && TYPE_OPTIONS.some((o) => o.value === preType)) {
+    if (preType && TYPE_OPTIONS.some((o) => o.value === preType && !o.disabled)) {
       setType(preType)
       setStep('goal')
     }
@@ -188,18 +188,34 @@ export default function MatchPage() {
         {/* ── 1. Tur ── */}
         {step === 'type' && (
           <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
-            {TYPE_OPTIONS.map((o) => (
-              <button
-                key={o.value}
-                onClick={() => { haptic('light'); setType(o.value); setStep('goal') }}
-                className={`flex flex-col items-center gap-2 rounded-2xl border bg-white p-5 shadow-sm transition-colors hover:border-primary-300 ${
-                  type === o.value ? 'border-primary-500 bg-primary-50' : 'border-gray-200'
-                }`}
-              >
-                <o.Icon className="h-7 w-7 text-primary-500" strokeWidth={1.5} />
-                <span className="text-sm font-semibold text-gray-800">{uz ? o.uz : o.ru}</span>
-              </button>
-            ))}
+            {TYPE_OPTIONS.map((o) =>
+              o.disabled ? (
+                <div
+                  key={o.value}
+                  aria-disabled="true"
+                  title={uz ? 'Tez orada' : 'Скоро'}
+                  className="relative flex cursor-not-allowed flex-col items-center gap-2 rounded-2xl border border-gray-200 bg-gray-50 p-5 opacity-60"
+                >
+                  <span className="absolute right-2 top-2 flex items-center gap-1 rounded-full bg-gray-200 px-2 py-0.5 text-[10px] font-semibold text-gray-500">
+                    <Lock className="h-2.5 w-2.5 shrink-0" strokeWidth={2} />
+                    {uz ? 'Tez orada' : 'Скоро'}
+                  </span>
+                  <o.Icon className="h-7 w-7 text-gray-300" strokeWidth={1.5} />
+                  <span className="text-sm font-semibold text-gray-400">{uz ? o.uz : o.ru}</span>
+                </div>
+              ) : (
+                <button
+                  key={o.value}
+                  onClick={() => { haptic('light'); setType(o.value); setStep('goal') }}
+                  className={`flex flex-col items-center gap-2 rounded-2xl border bg-white p-5 shadow-sm transition-colors hover:border-primary-300 ${
+                    type === o.value ? 'border-primary-500 bg-primary-50' : 'border-gray-200'
+                  }`}
+                >
+                  <o.Icon className="h-7 w-7 text-primary-500" strokeWidth={1.5} />
+                  <span className="text-sm font-semibold text-gray-800">{uz ? o.uz : o.ru}</span>
+                </button>
+              )
+            )}
           </div>
         )}
 
