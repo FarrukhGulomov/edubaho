@@ -373,6 +373,175 @@ const courseCenters: SeedInstitution[] = [
     paymentMethods: ['Payme', 'Click', 'Naqd'],
     isVerified: false, avgRating: 4.3,
   },
+  // ── Qo'shimcha real markazlar (kontakt ma'lumotlari faqat ishonchli
+  //    bo'lganda kiritilgan — noto'g'ri telefon/telegram yozilmagan) ──
+  {
+    nameUz: "Astrum IT Academy",
+    nameRu: "Astrum IT Academy",
+    type: InstitutionType.COURSE_CENTER,
+    website: 'https://astrum.uz',
+    telegram: 'astrumuz',
+    address: "Toshkent, Chilonzor tumani, Muqimiy ko'chasi 166",
+    lat: 41.2856, lng: 69.2034,
+    descUz: "Astrum IT Academy — O'zbekistondagi eng yirik xalqaro darajadagi IT akademiyalardan biri. Zamonaviy kampus, amaliy loyihalarga asoslangan o'qitish va karyera markazi. Frontend, Backend, Mobile, Data va Kiberxavfsizlik yo'nalishlari.",
+    descRu: "Astrum IT Academy — одна из крупнейших IT-академий международного уровня в Узбекистане. Современный кампус, обучение на реальных проектах и карьерный центр.",
+    languages: ['uz', 'ru'],
+    programs: ['Frontend (React)', 'Backend (Java)', 'Backend (Python)', 'Backend (Node.js)', 'Flutter', 'UI/UX Design', 'Data Analytics', 'Cyber Security', 'IT English'],
+    specializations: ['Xalqaro standartdagi IT ta\'lim', 'Karyera markazi', 'Amaliy loyihalar'],
+    shifts: ['Ertalabki (09:00-13:00)', 'Tushki (13:00-17:00)', 'Kechki (17:00-21:00)'],
+    achievements: "Minglab bitiruvchilar IT kompaniyalarda ishlaydi. Xalqaro mentorlar va zamonaviy kampus. IT Park rezidenti.",
+    founded: 2021, students: 4000, teachers: 120,
+    monthlyMin: 1200000, monthlyMax: 2300000,
+    paymentMethods: ['Payme', 'Click', 'Uzcard', 'Humo', 'Naqd'],
+    isVerified: true, avgRating: 4.7,
+  },
+  {
+    nameUz: "ProWeb dasturlash maktabi",
+    nameRu: "Школа программирования ProWeb",
+    type: InstitutionType.COURSE_CENTER,
+    website: 'https://proweb.uz',
+    telegram: 'proweb_uz',
+    address: "Toshkent, Mirobod tumani, Amir Temur shoh ko'chasi 42",
+    lat: 41.3055, lng: 69.2810,
+    descUz: "ProWeb — 2016-yildan beri faoliyat yuritayotgan amaliy dasturlash maktabi. Web dasturlash, Python, dizayn va marketing kurslari. Rus va o'zbek tillarida guruhlar.",
+    descRu: "ProWeb — школа практического программирования, работает с 2016 года. Курсы веб-разработки, Python, дизайна и маркетинга. Группы на русском и узбекском языках.",
+    languages: ['uz', 'ru'],
+    programs: ['Frontend (HTML/CSS/JS)', 'Python', 'PHP/Laravel', 'JavaScript (React)', 'UI/UX Design', 'Grafik dizayn', 'SMM va marketing'],
+    specializations: ['Web dasturlash', 'Amaliy portfolio bilan bitirish'],
+    shifts: ['Ertalabki (09:00-12:00)', 'Tushki (13:00-16:00)', 'Kechki (18:00-21:00)'],
+    achievements: "8 000+ bitiruvchi. Har bir bitiruvchi portfolio bilan chiqadi.",
+    founded: 2016, students: 1500, teachers: 50,
+    monthlyMin: 800000, monthlyMax: 1600000,
+    paymentMethods: ['Payme', 'Click', 'Uzcard', 'Naqd'],
+    isVerified: true, avgRating: 4.5,
+  },
+  {
+    nameUz: "Registon o'quv markazi",
+    nameRu: "Учебный центр Registon",
+    type: InstitutionType.COURSE_CENTER,
+    website: 'https://registon.uz',
+    address: "Toshkent, Chilonzor tumani, Bunyodkor shoh ko'chasi 27",
+    lat: 41.2810, lng: 69.2050,
+    descUz: "Registon — O'zbekiston bo'ylab 40+ filialga ega yirik o'quv markazlari tarmog'i. Ingliz tili, IELTS, CEFR, matematika va Prezident maktablariga tayyorlov. Hamyonbop narx va kuchli natijalar bilan mashhur.",
+    descRu: "Registon — крупная сеть учебных центров с 40+ филиалами по Узбекистану. Английский язык, IELTS, CEFR, математика и подготовка в Президентские школы.",
+    languages: ['uz', 'ru'],
+    programs: ['General English', 'IELTS tayyorgarlik', 'CEFR tayyorgarlik', 'Multilevel', 'Matematika', 'Prezident maktabiga tayyorlov'],
+    specializations: ['IELTS/CEFR', 'Milliy imtihonlarga tayyorlov', 'Hamyonbop ta\'lim'],
+    shifts: ['Ertalabki (08:00-12:00)', 'Tushki (13:00-17:00)', 'Kechki (17:00-21:00)'],
+    achievements: "O'zbekiston bo'ylab 40+ filial. O'n minglab o'quvchilar IELTS va CEFR sertifikatlarini oldi.",
+    founded: 2017, students: 15000, teachers: 500,
+    monthlyMin: 300000, monthlyMax: 600000,
+    paymentMethods: ['Payme', 'Click', 'Uzcard', 'Humo', 'Naqd'],
+    isVerified: true, avgRating: 4.6,
+  },
+  {
+    nameUz: "Result LC — IELTS markazi",
+    nameRu: "Result LC — центр IELTS",
+    type: InstitutionType.COURSE_CENTER,
+    address: "Toshkent, Chilonzor tumani, Chilonzor ko'chasi 2",
+    lat: 41.2830, lng: 69.2110,
+    descUz: "Result LC — IELTS'ga ixtisoslashgan mashhur o'quv markazi. Yuqori band (7.0-8.5+) natijalarga yo'naltirilgan intensiv metodika. Tajribali, IELTS 8+ sertifikatli ustozlar jamoasi.",
+    descRu: "Result LC — известный учебный центр, специализирующийся на IELTS. Интенсивная методика, ориентированная на высокие баллы (7.0-8.5+).",
+    languages: ['uz', 'en'],
+    programs: ['IELTS Foundation', 'IELTS Intensive', 'IELTS Speaking/Writing praktikum', 'Mock imtihonlar', 'General English'],
+    specializations: ['IELTS 7.0+ natijalar', 'Mock imtihonlar tizimi'],
+    shifts: ['Ertalabki (08:00-12:00)', 'Tushki (13:00-17:00)', 'Kechki (17:00-21:00)'],
+    achievements: "Yuzlab o'quvchilar IELTS 7.5-8.5 natijalarga erishdi. O'zbekistondagi eng kuchli IELTS tayyorlov markazlaridan biri.",
+    founded: 2017, students: 1200, teachers: 40,
+    monthlyMin: 500000, monthlyMax: 900000,
+    paymentMethods: ['Payme', 'Click', 'Naqd'],
+    isVerified: true, avgRating: 4.8,
+  },
+  {
+    nameUz: "Everest o'quv markazi",
+    nameRu: "Учебный центр Everest",
+    type: InstitutionType.COURSE_CENTER,
+    address: "Toshkent, Yunusobod tumani, Amir Temur shoh ko'chasi 88",
+    lat: 41.3350, lng: 69.2870,
+    descUz: "Everest — ingliz tili va IELTS bo'yicha O'zbekistondagi eng taniqli o'quv markazlaridan biri. Bolalar va kattalar uchun bosqichma-bosqich dasturlar, IELTS/CEFR tayyorlov.",
+    descRu: "Everest — один из самых известных учебных центров английского языка и IELTS в Узбекистане. Поэтапные программы для детей и взрослых.",
+    languages: ['uz', 'ru'],
+    programs: ['Kids English (7-12 yosh)', 'Teens English', 'General English', 'IELTS tayyorgarlik', 'CEFR tayyorgarlik'],
+    specializations: ['Ingliz tili', 'IELTS/CEFR', 'Bolalar guruhlar'],
+    shifts: ['Ertalabki (08:00-12:00)', 'Tushki (13:00-17:00)', 'Kechki (17:00-21:00)'],
+    achievements: "Minglab bitiruvchilar IELTS 6.5+ natijalarga erishgan. Bir nechta filiallar tarmog'i.",
+    founded: 2014, students: 3000, teachers: 90,
+    monthlyMin: 400000, monthlyMax: 800000,
+    paymentMethods: ['Payme', 'Click', 'Uzcard', 'Naqd'],
+    isVerified: false, avgRating: 4.4,
+  },
+  {
+    nameUz: "MAAB Academy — Data Analytics",
+    nameRu: "MAAB Academy — Data Analytics",
+    type: InstitutionType.COURSE_CENTER,
+    website: 'https://maab.uz',
+    address: "Toshkent, Mirzo Ulug'bek tumani, Mustaqillik shoh ko'chasi 59",
+    lat: 41.3260, lng: 69.3080,
+    descUz: "MAAB Academy — ma'lumotlar tahlili (Data Analytics) bo'yicha ixtisoslashgan akademiya. Power BI, SQL, Python va Data Engineering kurslari. Microsoft hamkori bo'lgan MAAB Innovation kompaniyasi tarkibida — o'qitish real korporativ loyihalar tajribasiga asoslangan.",
+    descRu: "MAAB Academy — академия, специализирующаяся на аналитике данных. Курсы Power BI, SQL, Python и Data Engineering. Входит в состав MAAB Innovation — партнёра Microsoft.",
+    languages: ['uz', 'ru'],
+    programs: ['Data Analytics (Power BI)', 'SQL', 'Python for Data', 'Data Engineering', 'Excel Advanced'],
+    specializations: ['Business Intelligence', 'Ma\'lumotlar muhandisligi', 'Korporativ trening'],
+    shifts: ['Kechki (18:00-21:00)', 'Hafta oxiri'],
+    achievements: "Bitiruvchilar banklar, telekom va IT kompaniyalarda data-analitik bo'lib ishlaydi. Microsoft texnologiyalari bo'yicha rasmiy tajriba.",
+    founded: 2019, students: 500, teachers: 25,
+    monthlyMin: 1500000, monthlyMax: 2500000,
+    paymentMethods: ['Payme', 'Click', 'Uzcard', 'Naqd'],
+    isVerified: true, avgRating: 4.6,
+  },
+  {
+    nameUz: "CODDY bolalar dasturlash maktabi",
+    nameRu: "CODDY школа программирования для детей",
+    type: InstitutionType.COURSE_CENTER,
+    address: "Toshkent, Mirobod tumani, Afrosiyob ko'chasi 12",
+    lat: 41.2960, lng: 69.2790,
+    descUz: "CODDY — 4-16 yoshdagi bolalar uchun xalqaro dasturlash maktabi franshizasi. O'yin orqali o'rgatish metodikasi: Minecraft'da dasturlash, Scratch, Python, veb-sayt va o'yin yaratish.",
+    descRu: "CODDY — международная франшиза школы программирования для детей 4-16 лет. Обучение через игру: программирование в Minecraft, Scratch, Python, создание сайтов и игр.",
+    languages: ['uz', 'ru'],
+    programs: ['Minecraft dasturlash (6-9 yosh)', 'Scratch (7-10 yosh)', 'Python Start (10-13 yosh)', 'Game Design', 'Web sayt yaratish', 'Roblox Studio'],
+    specializations: ['Bolalar uchun IT', 'O\'yin orqali o\'rgatish'],
+    shifts: ['Tushki (14:00-17:00)', 'Kechki (17:00-19:00)', 'Hafta oxiri'],
+    founded: 2019, students: 400, teachers: 20,
+    monthlyMin: 600000, monthlyMax: 1000000,
+    paymentMethods: ['Payme', 'Click', 'Naqd'],
+    isVerified: false, avgRating: 4.3,
+  },
+  {
+    nameUz: "iTech Academy",
+    nameRu: "iTech Academy",
+    type: InstitutionType.COURSE_CENTER,
+    address: "Toshkent, Shayxontohur tumani, Zulfiyaxonim ko'chasi 12",
+    lat: 41.3180, lng: 69.2400,
+    descUz: "iTech Academy — ishga joylashish kafolati shartnomasi bilan ishlaydigan IT bootcamp. Java, Frontend va boshqa yo'nalishlarda chuqurlashtirilgan dasturlar, HR tayyorlov va intervyu praktikumlari.",
+    descRu: "iTech Academy — IT-буткемп с договором гарантии трудоустройства. Углублённые программы по Java, Frontend, подготовка к собеседованиям.",
+    languages: ['uz', 'ru'],
+    programs: ['Java Backend', 'Frontend (React)', 'QA Testing', 'Project Management', 'IT English'],
+    specializations: ['Ishga joylashish kafolati', 'Intervyu tayyorlov'],
+    shifts: ['Ertalabki (09:00-13:00)', 'Kechki (18:00-21:00)'],
+    achievements: "Bitiruvchilarning katta qismi 6 oy ichida IT kompaniyalarga ishga joylashadi.",
+    founded: 2019, students: 800, teachers: 35,
+    monthlyMin: 1500000, monthlyMax: 2500000,
+    paymentMethods: ['Payme', 'Click', 'Uzcard', 'Naqd'],
+    isVerified: false, avgRating: 4.4,
+  },
+  {
+    nameUz: "Millat Umidi Academy",
+    nameRu: "Millat Umidi Academy",
+    type: InstitutionType.COURSE_CENTER,
+    address: "Toshkent, Yashnobod tumani, Kichik halqa yo'li 60",
+    lat: 41.3010, lng: 69.3220,
+    descUz: "Millat Umidi Academy — Millat Umidi ta'lim guruhining o'quv markazi. IELTS, CEFR, SAT va xorijiy universitetlarga tayyorlov dasturlari. Xalqaro universitetlar bilan hamkorlik.",
+    descRu: "Millat Umidi Academy — учебный центр образовательной группы Millat Umidi. Подготовка к IELTS, CEFR, SAT и поступлению в зарубежные университеты.",
+    languages: ['uz', 'ru', 'en'],
+    programs: ['IELTS tayyorgarlik', 'CEFR tayyorgarlik', 'SAT tayyorgarlik', 'General English', 'Xorijga o\'qishga tayyorlov'],
+    specializations: ['Xorijiy universitetlarga tayyorlov', 'IELTS/SAT'],
+    shifts: ['Ertalabki (09:00-13:00)', 'Kechki (17:00-21:00)'],
+    achievements: "Yuzlab bitiruvchilar xorijiy universitetlarga grant asosida o'qishga kirdi.",
+    founded: 2015, students: 2000, teachers: 70,
+    monthlyMin: 600000, monthlyMax: 1200000,
+    paymentMethods: ['Payme', 'Click', 'Uzcard', 'Naqd'],
+    isVerified: false, avgRating: 4.5,
+  },
 ]
 
 // ─── TOSHKENT — MAKTABLAR (SCHOOL / LYCEUM) ──────────────────────────────────
@@ -563,6 +732,26 @@ const samarqandInstitutions: SeedInstitution[] = [
     isVerified: false, avgRating: 4.3,
   },
   {
+    nameUz: "Najot Ta'lim Samarqand filiali",
+    nameRu: "Najot Ta'lim филиал в Самарканде",
+    type: InstitutionType.COURSE_CENTER,
+    website: 'https://najottalim.uz',
+    telegram: 'najottalim',
+    address: "Samarqand, Amir Temur ko'chasi 49",
+    lat: 39.6560, lng: 66.9630,
+    descUz: "Najot Ta'lim'ning Samarqanddagi rasmiy filiali. Toshkentdagi bosh markaz bilan bir xil dastur va sifat standartlari: Frontend, Backend, Mobile yo'nalishlari.",
+    descRu: "Официальный филиал Najot Ta'lim в Самарканде. Те же программы и стандарты качества, что и в главном центре в Ташкенте.",
+    languages: ['uz', 'ru'],
+    programs: ['Python', 'Frontend (React)', 'Backend (Node.js)', 'Flutter', 'UI/UX Design'],
+    specializations: ['Frontend dasturlash', 'Backend dasturlash', 'Mobile dasturlash'],
+    shifts: ['Ertalabki (09:00-13:00)', 'Kechki (17:00-21:00)'],
+    achievements: "Samarqand viloyatida yuzlab bitiruvchilar IT sohasida ish topdi.",
+    founded: 2021, students: 800, teachers: 30,
+    monthlyMin: 700000, monthlyMax: 1400000,
+    paymentMethods: ['Payme', 'Click', 'Uzcard', 'Humo', 'Naqd'],
+    isVerified: true, avgRating: 4.6,
+  },
+  {
     nameUz: "Samarqand Ixtisoslashtirilgan Maktab-Internat",
     nameRu: "Самаркандская специализированная школа-интернат",
     type: InstitutionType.SCHOOL,
@@ -576,6 +765,27 @@ const samarqandInstitutions: SeedInstitution[] = [
     founded: 1960, students: 800, teachers: 55,
     monthlyMin: 0,
     isVerified: false, avgRating: 4.2,
+  },
+]
+
+// ─── BUXORO ───────────────────────────────────────────────────────────────────
+const buxoroInstitutions: SeedInstitution[] = [
+  {
+    nameUz: "Buxoro IT Park o'quv markazi",
+    nameRu: "Учебный центр IT Park Бухара",
+    type: InstitutionType.COURSE_CENTER,
+    address: "Buxoro, Alpomish ko'chasi 80",
+    lat: 39.7681, lng: 64.4556,
+    descUz: "IT Park'ning Buxoro viloyatidagi rasmiy o'quv markazi. Dasturlash, dizayn va raqamli ko'nikmalar bo'yicha davlat qo'llab-quvvatlovidagi kurslar.",
+    descRu: "Официальный учебный центр IT Park в Бухарской области. Курсы программирования, дизайна и цифровых навыков при государственной поддержке.",
+    languages: ['uz'],
+    programs: ['Python', 'Frontend (JavaScript)', 'Grafik dizayn', 'Digital Marketing', 'Kompyuter savodxonligi'],
+    specializations: ['IT Park rasmiy dasturi', 'Yoshlar uchun subsidiyalangan kurslar'],
+    shifts: ['Ertalabki (09:00-13:00)', 'Kechki (16:00-20:00)'],
+    founded: 2021, students: 300, teachers: 15,
+    monthlyMin: 400000, monthlyMax: 700000,
+    paymentMethods: ['Payme', 'Click', 'Naqd'],
+    isVerified: true, avgRating: 4.2,
   },
 ]
 
@@ -808,7 +1018,7 @@ async function main() {
   })
 
   // Seed ishlatmagan shaharlar — unused vars suppress
-  void nurafshonCity; void buxoroCity; void jizzaxCity; void qarshiCity
+  void nurafshonCity; void jizzaxCity; void qarshiCity
   void navoiyCity; void gulistonCity; void termizCity; void urganchCity; void nukusCity
 
   // ─── Admin va test foydalanuvchi ─────────────────────────────────────────────
@@ -831,6 +1041,7 @@ async function main() {
     'Namangan':   { cityId: namanganCity.id,  regionId: namanganRegion.id },
     'Andijon':    { cityId: andijonCity.id,   regionId: andijonRegion.id },
     "Farg'ona":   { cityId: farghonaCity.id,  regionId: farghonaRegion.id },
+    'Buxoro':     { cityId: buxoroCity.id,    regionId: buxoroRegion.id },
   }
 
   function getCityFromAddress(address: string) {
@@ -844,6 +1055,7 @@ async function main() {
     ...courseCenters,
     ...schools,
     ...samarqandInstitutions,
+    ...buxoroInstitutions,
     ...namanganInstitutions,
     ...andijonInstitutions,
     ...farghonaInstitutions,
@@ -913,14 +1125,18 @@ async function main() {
     created++
     console.log(`  ✓ ${inst.nameUz} (${slug})`)
 
-    // Har bir muassasaga 1-2 ta namunaviy sharh
+    // Har bir muassasaga 1-2 ta namunaviy sharh.
+    // Baholar slug'dan deterministik tanlanadi — barcha muassasalar bir xil
+    // 4.5 ko'rsatib turmasligi uchun (o'rtacha 4.0 / 4.5 / 5.0 oralig'ida)
     const reviewBodies = [
       "O'qituvchilar juda professional, darslar qiziqarli va amaliy. Tavsiya qilaman!",
       "Yaxshi muassasa, lekin ba'zan jadvalda o'zgarishlar bo'ladi. Umuman olganda ijobiy taassurot.",
       "Kursdan keyin ishga joylasha oldim. Sifat va narx nisbati yaxshi.",
       "O'qitish uslubi zamonaviy, mentorlar doimo yordam berishadi.",
     ]
-    const ratings = [4, 5, 4, 5]
+    const ratingPairs: [number, number][] = [[4, 5], [5, 5], [4, 4], [5, 4], [3, 5]]
+    const slugHash = [...slug].reduce((h, c) => h + c.charCodeAt(0), 0)
+    const pair = ratingPairs[slugHash % ratingPairs.length] ?? [4, 5]
 
     for (let i = 0; i < Math.min(2, reviewUsers.length); i++) {
       const reviewer = reviewUsers[i]
@@ -934,10 +1150,10 @@ async function main() {
           institutionId: result.id,
           userId:        reviewer.id,
           status:        'APPROVED',
-          overallRating: ratings[i % ratings.length] ?? 4,
+          overallRating: pair[i] ?? 4,
           teacherRating: 5,
           facilityRating: 4,
-          body:  reviewBodies[i % reviewBodies.length] ?? reviewBodies[0] ?? '',
+          body:  reviewBodies[(slugHash + i) % reviewBodies.length] ?? reviewBodies[0] ?? '',
           title: i === 0 ? "Yaxshi muassasa" : "Tavsiya etaman",
           helpfulCount: Math.floor(Math.random() * 10),
         },
