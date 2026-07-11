@@ -25,7 +25,7 @@ const envSchema = z.object({
   // ── SMS (Playmobile) — ixtiyoriy, yo'q bo'lsa OTP faqat logga chiqadi ────
   SMS_LOGIN: z.string().default(''),
   SMS_PASSWORD: z.string().default(''),
-  SMS_FROM: z.string().default('EduReyting'),
+  SMS_FROM: z.string().default('Edula'),
   SMS_BASE_URL: z.string().default('http://91.204.239.44/broker-api/send'),
 
   // ── Telegram Login Widget — ixtiyoriy, yo'q bo'lsa Telegram kirish o'chiq ─

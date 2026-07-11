@@ -60,7 +60,7 @@ export default function AdminPage() {
         <div className="mx-auto flex max-w-5xl items-center justify-between px-4 py-3">
           <div className="flex min-w-0 items-center gap-3">
             <Link href="/" className="flex shrink-0 items-center gap-1.5 whitespace-nowrap font-bold text-primary-600">
-              <GraduationCap className="h-4 w-4 shrink-0" strokeWidth={1.75} /> EDUBAHO
+              <GraduationCap className="h-4 w-4 shrink-0" strokeWidth={1.75} /> EDULA
             </Link>
             <span className="shrink-0 text-gray-300">›</span>
             <span className="truncate font-semibold text-gray-700">Admin panel</span>

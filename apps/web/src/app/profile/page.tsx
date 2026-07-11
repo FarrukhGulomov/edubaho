@@ -478,7 +478,7 @@ export default function ProfilePage() {
               { href: '/search',                 Icon: Search,        uz: 'Qidiruv',        ru: 'Поиск' },
               { href: '/search?type=IT_SCHOOL',  Icon: Laptop,        uz: 'IT maktablar',   ru: 'IT школы' },
               { href: '/search?type=UNIVERSITY', Icon: GraduationCap, uz: 'Universitetlar', ru: 'Университеты' },
-              { href: 'https://t.me/edureyting', Icon: Send,          uz: 'Telegram kanal', ru: 'Telegram канал' },
+              { href: 'https://t.me/TrustboxInc', Icon: Send,         uz: 'Telegram kanal', ru: 'Telegram канал' },
             ].map(a => (
               <Link
                 key={a.href}
@@ -510,12 +510,12 @@ export default function ProfilePage() {
             <MessageCircle className="h-4 w-4 shrink-0" strokeWidth={1.75} /> {uz ? 'Muammo bormi?' : 'Есть проблемы?'}
           </p>
           <a
-            href="https://t.me/edureyting"
+            href="https://t.me/TrustboxInc"
             target="_blank"
             rel="noopener noreferrer"
             className="mt-2 inline-flex items-center gap-1.5 text-base font-semibold text-blue-600 hover:text-blue-800"
           >
-            <Send className="h-4 w-4 shrink-0" strokeWidth={1.75} /> @edureyting {uz ? "Telegram kanaliga yozing" : '— пишите нам'}
+            <Send className="h-4 w-4 shrink-0" strokeWidth={1.75} /> @TrustboxInc {uz ? "Telegram kanaliga yozing" : '— пишите нам'}
           </a>
         </div>
 

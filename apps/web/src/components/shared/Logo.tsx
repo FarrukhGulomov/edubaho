@@ -1,5 +1,5 @@
 /**
- * EDUBAHO brend logotipi — kod orqali yasalgan SVG component.
+ * EDULA brend logotipi — kod orqali yasalgan SVG component.
  * Rasm fayli kerak emas, har qanday o'lchamda aniq ko'rinadi.
  */
 
@@ -32,7 +32,7 @@ export default function Logo({ size = 40, inverted = false }: LogoProps) {
         EDU
       </span>
 
-      {/* ── "BAH" — ko'k ── */}
+      {/* ── "LA" — ko'k ── */}
       <span
         style={{
           fontSize,
@@ -43,31 +43,7 @@ export default function Logo({ size = 40, inverted = false }: LogoProps) {
           fontFamily: 'inherit',
         }}
       >
-        BAH
-      </span>
-
-      {/* ── "O" — ko'k doira + sariq yulduz ── */}
-      <span
-        className="relative inline-flex items-center justify-center"
-        style={{ width: fontSize * 0.72, height: fontSize * 0.72, marginLeft: 1 }}
-      >
-        {/* Ko'k doira */}
-        <span
-          style={{
-            position: 'absolute',
-            inset: 0,
-            borderRadius: '50%',
-            background: inverted ? '#93c5fd' : '#1d4ed8',
-          }}
-        />
-        {/* Sariq yulduz */}
-        <svg
-          viewBox="0 0 24 24"
-          fill="#FBBF24"
-          style={{ position: 'relative', zIndex: 1, width: '60%', height: '60%' }}
-        >
-          <path d="M12 2l2.4 7.4H22l-6.2 4.5 2.4 7.3L12 17l-6.2 4.2 2.4-7.3L2 9.4h7.6z" />
-        </svg>
+        LA
       </span>
 
       {/* ── Icon: bar chart + checkmark ── */}
