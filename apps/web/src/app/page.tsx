@@ -43,7 +43,7 @@ const TYPE_LABELS: Record<string, { uz: string; ru: string }> = {
   ARTS_SCHOOL:     { uz: "San'at",        ru: 'Искусство' },
 }
 
-// Hero'dagi EduFit 1-qadam turlari — match wizard'dagi TYPE_OPTIONS bilan
+// Hero'dagi EDULA wizard 1-qadam turlari — match wizard'dagi TYPE_OPTIONS bilan
 // bir xil bo'lishi shart (bosilganda /match?type=X 2-qadamdan davom etadi)
 const HERO_MATCH_TYPES = [
   { type: 'COURSE_CENTER', Icon: PencilLine, uz: "O'quv markaz", ru: 'Учебный центр' },
@@ -99,14 +99,14 @@ export default function HomePage() {
     <div className="flex min-h-screen flex-col bg-gray-50">
       <Header />
 
-      {/* ── EduFit hero — user saytga kirganda BIRINCHI ko'radigan narsa.
+      {/* ── EDULA hero — user saytga kirganda BIRINCHI ko'radigan narsa.
              Banner emas: wizard'ning 1-qadami to'g'ridan-to'g'ri shu yerda,
              tur tanlangach /match 2-qadamdan davom etadi. ── */}
       <div className="border-b border-gray-200 bg-white px-4 py-8 sm:py-12">
         <div className="mx-auto max-w-3xl">
           <div className="mb-1.5 flex items-center justify-center gap-2 text-primary-600">
             <Target className="h-5 w-5 shrink-0" strokeWidth={2} />
-            <span className="text-sm font-bold uppercase tracking-wide">EduFit</span>
+            <span className="text-sm font-bold uppercase tracking-wide">EDULA</span>
           </div>
           <h1 className="mb-2 text-center text-2xl font-bold leading-tight text-gray-900 sm:text-4xl">
             {uz ? 'Qaysi ta\'lim muassasasi senga mos?' : 'Какое учебное заведение вам подходит?'}
@@ -330,7 +330,7 @@ export default function HomePage() {
       {/* ── Footer ── */}
       <footer className="border-t border-gray-200 bg-gray-900 px-4 py-8 text-sm text-gray-400">
         <div className="mx-auto flex max-w-6xl flex-wrap items-center justify-between gap-3">
-          <span>© {new Date().getFullYear()} EDUBAHO.uz — {uz ? "O'zbekiston ta'lim platformasi" : "Платформа образования Узбекистана"}</span>
+          <span>© {new Date().getFullYear()} Edula.uz — {uz ? "O'zbekiston ta'lim platformasi" : "Платформа образования Узбекистана"}</span>
           <div className="flex gap-4">
             <Link href="/search"  className="transition-colors hover:text-white">{uz ? "Qidiruv" : "Поиск"}</Link>
             <Link href="/compare" className="transition-colors hover:text-white">{uz ? "Solishtirish" : "Сравнение"}</Link>

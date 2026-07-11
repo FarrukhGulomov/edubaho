@@ -6,7 +6,7 @@ import { env } from '../utils/env'
  * Development rejimida OTP console'ga chiqariladi.
  */
 export async function sendSmsOtp(phone: string, otp: string): Promise<void> {
-  const message = `EduReyting.uz: Tasdiqlash kodi: ${otp}. Hech kimga bermang!`
+  const message = `Edula.uz: Tasdiqlash kodi: ${otp}. Hech kimga bermang!`
 
   if (env.NODE_ENV === 'development' || env.SMS_LOGIN === 'test') {
     // Dev rejimida SMS yuborilmaydi — console'ga chiqariladi

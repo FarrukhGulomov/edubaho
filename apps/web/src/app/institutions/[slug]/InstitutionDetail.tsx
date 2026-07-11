@@ -97,23 +97,6 @@ function calcDimAverages(reviews: Institution['reviews']) {
 }
 
 // ─────────────────────────────────────────────────────────────
-// GateHint — bo'lim ichidagi tinch, bir qatorli "kirish kerak" eslatmasi.
-// Sahifadagi asosiy ro'yxatdan o'tish chaqiruvi sidebar'da bitta —
-// bo'lim ichidagi eslatmalar esa e'tiborni tortmaydigan, bir xil uslubda.
-// ─────────────────────────────────────────────────────────────
-function GateHint({ lang, uz, ru, next }: { lang: 'uz' | 'ru'; uz: string; ru: string; next?: string }) {
-  return (
-    <div className="mt-4 flex items-center gap-2 rounded-xl bg-gray-50 px-4 py-2.5 text-sm text-gray-500">
-      <Lock className="h-3.5 w-3.5 shrink-0 text-gray-400" strokeWidth={2} />
-      <span className="flex-1">{lang === 'ru' ? ru : uz}</span>
-      <Link href={authHref(next)} className="shrink-0 font-semibold text-primary-600 hover:text-primary-700">
-        {lang === 'ru' ? 'Войти' : 'Kirish'}
-      </Link>
-    </div>
-  )
-}
-
-// ─────────────────────────────────────────────────────────────
 // Guest Gate — autentifikatsiya talab qiladigan bo'limlar uchun
 // ─────────────────────────────────────────────────────────────
 function GuestGate({
@@ -392,12 +375,6 @@ export default function InstitutionDetail({ inst }: { inst: Institution }) {
                     {cityDisplayName}
                   </div>
                 )}
-                {isGuest && (
-                  <Link href={authHref(instPath)} className="mt-3 inline-flex items-center gap-1.5 text-sm font-semibold text-primary-600 hover:text-primary-700">
-                    <Lock className="h-3.5 w-3.5" strokeWidth={2} />
-                    {lang === 'ru' ? 'Войдите для полного доступа' : "To'liq ma'lumot uchun kiring"}
-                  </Link>
-                )}
               </div>
             </div>
 
@@ -488,15 +465,6 @@ export default function InstitutionDetail({ inst }: { inst: Institution }) {
                   </div>
                 )}
 
-                {/* Mehmon uchun tinch eslatma — yagona standart uslub (GateHint) */}
-                {isGuest && (
-                  <GateHint
-                    lang={lang}
-                    next={instPath}
-                    uz="Barcha kurslar tizimga kirgandan so'ng ko'rinadi"
-                    ru="Все курсы видны после входа"
-                  />
-                )}
               </div>
             )}
 
@@ -653,12 +621,11 @@ export default function InstitutionDetail({ inst }: { inst: Institution }) {
                       <span className="text-gray-400">…</span>
                     </p>
                   )}
-                  <GateHint
-                    lang={lang}
-                    next={instPath}
-                    uz="To'liq ta'rif tizimga kirgandan so'ng ko'rinadi"
-                    ru="Полное описание доступно после входа"
-                  />
+                  {/* Faqat izoh, tugmasiz — asosiy "kirish" chaqiruvi sidebar'da bitta joyda */}
+                  <p className="mt-3 flex items-center gap-1.5 text-sm text-gray-400">
+                    <Lock className="h-3.5 w-3.5 shrink-0" strokeWidth={2} />
+                    {lang === 'ru' ? 'Полное описание доступно после входа' : "To'liq ta'rif tizimga kirgandan so'ng ko'rinadi"}
+                  </p>
                 </>
               ) : (
                 description ? (

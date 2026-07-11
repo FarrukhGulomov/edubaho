@@ -110,7 +110,7 @@ export default function AuthPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
-  // Login'dan keyin yo'naltirish: kelgan sahifa > (yangi user: EduFit) > profil
+  // Login'dan keyin yo'naltirish: kelgan sahifa > (yangi user: match wizard) > profil
   useEffect(() => {
     if (step === 'done') {
       const dest = nextUrl ?? (isNewUser ? '/match' : '/profile')

@@ -3,7 +3,7 @@ import Link from 'next/link'
 
 export const metadata: Metadata = {
   title: "Foydalanish shartlari",
-  description: "EDUBAHO.uz foydalanish shartlari va maxfiylik siyosati.",
+  description: "Edula.uz foydalanish shartlari va maxfiylik siyosati.",
 }
 
 export default function TermsPage() {
@@ -24,7 +24,7 @@ export default function TermsPage() {
           <section>
             <h2 className="mb-3 text-xl font-bold text-gray-900">1. Umumiy qoidalar</h2>
             <p className="text-gray-600 leading-relaxed">
-              EDUBAHO.uz — O&apos;zbekistondagi ta&apos;lim muassasalarini qidirish, solishtirish va baholash
+              Edula.uz — O&apos;zbekistondagi ta&apos;lim muassasalarini qidirish, solishtirish va baholash
               platformasi. Saytdan foydalanish orqali siz ushbu shartlarga rozilik bildirasiz.
             </p>
           </section>
@@ -60,7 +60,7 @@ export default function TermsPage() {
             <h2 className="mb-3 text-xl font-bold text-gray-900">5. Muassasalar ma&apos;lumotlari</h2>
             <p className="text-gray-600 leading-relaxed">
               Platformadagi muassasalar haqidagi ma&apos;lumotlar ochiq manbalar va muassasa
-              vakillari tomonidan taqdim etiladi. EDUBAHO.uz ma&apos;lumotlarning to&apos;liqligi
+              vakillari tomonidan taqdim etiladi. Edula.uz ma&apos;lumotlarning to&apos;liqligi
               uchun javobgar emas.
             </p>
           </section>
@@ -70,7 +70,7 @@ export default function TermsPage() {
             <p className="text-gray-600 leading-relaxed">
               Savollar va takliflar uchun{' '}
               <a
-                href="https://t.me/edureyting"
+                href="https://t.me/TrustboxInc"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="text-primary-600 hover:underline"

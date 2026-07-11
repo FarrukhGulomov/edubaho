@@ -1,5 +1,5 @@
 /**
- * EDUBAHO Lead Analytics
+ * EDULA Lead Analytics
  *
  * Barcha voqealar shu modul orqali yuboriladi.
  * React'siz ham ishlaydi (plain TypeScript).

@@ -17,7 +17,7 @@ export default function DashboardPage() {
       </p>
       <div className="flex w-full max-w-xs flex-col gap-3">
         <a
-          href="https://t.me/edureyting"
+          href="https://t.me/TrustboxInc"
           target="_blank"
           rel="noopener noreferrer"
           className="flex items-center justify-center gap-2 rounded-xl bg-sky-500 py-4 font-semibold text-white transition-colors hover:bg-sky-600"
