@@ -8,7 +8,7 @@ import {
   MapPin, Users2, UserCheck, Star, ArrowLeftRight, Target, ArrowRight,
 } from 'lucide-react'
 import Header from '@/components/shared/Header'
-import StarRating from '@/components/shared/StarRating'
+import { RatingHint } from '@/components/shared/StarRating'
 import { useLang, t } from '@/contexts/LangContext'
 import { useCompare, useSaved } from '@/hooks/useCompare'
 
@@ -178,7 +178,7 @@ export default function HomePage() {
         <div className="mb-4 flex items-center justify-between gap-3">
           <h2 className="flex items-center gap-2 text-lg font-bold text-gray-900">
             <Sparkles className="h-5 w-5 shrink-0 text-amber-500" strokeWidth={1.75} />
-            {uz ? 'Eng yaxshi baholangan muassasalar' : 'Учреждения с высоким рейтингом'}
+            {uz ? 'Ommabop muassasalar' : 'Популярные учреждения'}
           </h2>
           <Link href="/search" className="flex shrink-0 items-center gap-1 text-sm font-semibold text-primary-600 hover:text-primary-700">
             {uz ? 'Barchasini ko\'rish' : 'Смотреть все'}
@@ -270,13 +270,10 @@ export default function HomePage() {
                       )}
                     </div>
 
-                    {/* Reyting + narx */}
+                    {/* Narx (asosiy) + reyting (tinch, taxminiy ko'rsatkich sifatida) */}
                     <div className="mt-auto flex items-center justify-between gap-2 border-t border-gray-100 pt-3">
                       {inst.avgRating ? (
-                        <div className="flex items-center gap-1.5">
-                          <StarRating rating={inst.avgRating} size="sm" />
-                          <span className="text-xs text-gray-400">({inst.reviewCount})</span>
-                        </div>
+                        <RatingHint rating={inst.avgRating} count={inst.reviewCount} lang={lang} />
                       ) : (
                         <span className="text-xs text-gray-400">{uz ? "Sharh yo'q" : "Нет отзывов"}</span>
                       )}

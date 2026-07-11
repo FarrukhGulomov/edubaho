@@ -8,7 +8,7 @@ import {
   Search, RotateCcw, Medal,
 } from 'lucide-react'
 import Header from '@/components/shared/Header'
-import StarRating from '@/components/shared/StarRating'
+import { RatingHint } from '@/components/shared/StarRating'
 import { useLang, t } from '@/contexts/LangContext'
 import { matchApi, geoApi, type MatchItem } from '@/lib/api'
 import { track } from '@/lib/analytics'
@@ -418,10 +418,7 @@ export default function MatchPage() {
 
                         <div className="mt-1 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-gray-500">
                           {r.institution.avgRating != null && (
-                            <span className="flex items-center gap-1">
-                              <StarRating rating={r.institution.avgRating} size="sm" />
-                              ({r.institution.reviewCount} {t(lang, ui.reviews)})
-                            </span>
+                            <RatingHint rating={r.institution.avgRating} count={r.institution.reviewCount} lang={lang} />
                           )}
                           {r.institution.city && (
                             <span className="flex items-center gap-1">

@@ -8,7 +8,7 @@ import {
   ShieldCheck, ClipboardList, School, Plus, Search, Laptop, GraduationCap,
   Send, LogOut, MessageCircle, Calendar, Globe2, Palette, Dumbbell, Trophy,
 } from 'lucide-react'
-import StarRating from '@/components/shared/StarRating'
+import StarRating, { RatingHint } from '@/components/shared/StarRating'
 import Header from '@/components/shared/Header'
 import { useAuth } from '@/hooks/useAuth'
 import { useSaved, useCompare } from '@/hooks/useCompare'
@@ -369,7 +369,7 @@ export default function ProfilePage() {
                         {item.avgRating && (
                           <div className="flex items-center gap-1">
                             <span className="text-gray-300">•</span>
-                            <StarRating rating={item.avgRating} size="sm" />
+                            <RatingHint rating={item.avgRating} lang={lang} />
                           </div>
                         )}
                         {item.pricing?.monthlyMin && (

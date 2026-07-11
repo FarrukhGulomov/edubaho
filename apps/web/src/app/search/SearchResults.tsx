@@ -7,7 +7,7 @@ import {
   Search, X, MapPin, Globe2, Users2, UserCheck, BadgeCheck, Star,
   ArrowLeftRight, Check, PencilLine, School, Trophy,
 } from 'lucide-react'
-import StarRating from '@/components/shared/StarRating'
+import { RatingHint } from '@/components/shared/StarRating'
 import { useCompare, useSaved } from '@/hooks/useCompare'
 import { useLang, t } from '@/contexts/LangContext'
 import { track, trackSearch, trackSearchClick } from '@/lib/analytics'
@@ -415,13 +415,10 @@ function InstitutionCardComp({
           </div>
         )}
 
-        {/* Reyting + narx */}
+        {/* Narx (asosiy) + reyting (tinch, taxminiy ko'rsatkich sifatida) */}
         <div className="mt-auto flex items-center justify-between gap-2 border-t border-gray-100 pt-4">
           {i.avgRating ? (
-            <div className="flex items-center gap-1.5">
-              <StarRating rating={i.avgRating} size="sm" />
-              <span className="text-sm text-gray-400">({i.reviewCount})</span>
-            </div>
+            <RatingHint rating={i.avgRating} count={i.reviewCount} lang={lang} />
           ) : (
             <span className="text-sm text-gray-400">{t(lang, ui.noReview)}</span>
           )}
