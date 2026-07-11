@@ -6,7 +6,7 @@ import {
   Palette, Globe2, PencilLine, Dumbbell, Trophy, Landmark, UserCheck,
   BadgeCheck,
 } from 'lucide-react'
-import StarRating from '@/components/shared/StarRating'
+import { RatingHint } from '@/components/shared/StarRating'
 import { useLang, t } from '@/contexts/LangContext'
 
 interface CompareInstitution {
@@ -161,7 +161,7 @@ export default function CompareContent({ institutions }: { institutions: Compare
               )}
               {inst.avgRating && (
                 <div className="mt-2 flex justify-center">
-                  <StarRating rating={inst.avgRating} size="sm" />
+                  <RatingHint rating={inst.avgRating} lang={lang} />
                 </div>
               )}
             </Link>
@@ -173,23 +173,7 @@ export default function CompareContent({ institutions }: { institutions: Compare
       <div className="overflow-x-auto rounded-2xl border border-gray-200 shadow-sm">
         <table className="w-full border-collapse text-sm">
           <tbody>
-            <SectionHeader labelKey="rating" Icon={Star} />
-            <Row
-              labelKey="avgRating"
-              highlight
-              values={institutions.map((i) =>
-                i.avgRating
-                  ? `${'★'.repeat(Math.round(i.avgRating))}${'☆'.repeat(5 - Math.round(i.avgRating))} ${i.avgRating.toFixed(1)}`
-                  : null
-              )}
-            />
-            <Row
-              labelKey="reviews"
-              values={institutions.map((i) =>
-                `${i.reviewCount} ${t(lang, ui.reviewsUnit)}`
-              )}
-            />
-
+            {/* Narx — solishtirishda ASOSIY parametr (reyting emas) */}
             <SectionHeader labelKey="price" Icon={Wallet} />
             <Row
               labelKey="priceMin"
@@ -233,6 +217,23 @@ export default function CompareContent({ institutions }: { institutions: Compare
                 i.details?.languages?.length
                   ? i.details.languages.join(', ').toUpperCase()
                   : null
+              )}
+            />
+
+            {/* Reyting — jadvalning pastki qismida, ataylab highlight'siz:
+                baholar foydalanuvchilar tomonidan qo'yilgan taxminiy
+                ko'rsatkich, asosiy solishtirish parametri emas */}
+            <SectionHeader labelKey="rating" Icon={Star} />
+            <Row
+              labelKey="avgRating"
+              values={institutions.map((i) =>
+                i.avgRating ? `${i.avgRating.toFixed(1)} / 5` : null
+              )}
+            />
+            <Row
+              labelKey="reviews"
+              values={institutions.map((i) =>
+                `${i.reviewCount} ${t(lang, ui.reviewsUnit)}`
               )}
             />
 

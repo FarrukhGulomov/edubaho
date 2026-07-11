@@ -8,7 +8,7 @@ import {
   PencilLine, Wallet, Info, BarChart3, MessageCircle, Phone, Send,
   Instagram, Globe, Clock, ThumbsUp, Star,
 } from 'lucide-react'
-import StarRating from '@/components/shared/StarRating'
+import StarRating, { RatingHint } from '@/components/shared/StarRating'
 import InstActions from '@/components/institutions/InstActions'
 import ClaimInstitution from '@/components/institutions/ClaimInstitution'
 import WriteReview from '@/components/institutions/WriteReview'
@@ -369,34 +369,30 @@ export default function InstitutionDetail({ inst }: { inst: Institution }) {
                 {lang === 'uz' && inst.nameRu && inst.nameRu !== inst.nameUz && (
                   <p className="mt-0.5 text-sm text-gray-400">{inst.nameRu}</p>
                 )}
-                {cityDisplayName && (
-                  <div className="mt-2 flex items-center gap-1.5 text-sm text-gray-500">
-                    <MapPin className="h-4 w-4 shrink-0" strokeWidth={1.75} />
-                    {cityDisplayName}
-                  </div>
-                )}
+                <div className="mt-2 flex flex-wrap items-center gap-x-4 gap-y-1">
+                  {cityDisplayName && (
+                    <span className="flex items-center gap-1.5 text-sm text-gray-500">
+                      <MapPin className="h-4 w-4 shrink-0" strokeWidth={1.75} />
+                      {cityDisplayName}
+                    </span>
+                  )}
+                  {/* Reyting — ataylab TINCH ko'rsatiladi: baholar foydalanuvchilar
+                      tomonidan qo'yilgan taxminiy ko'rsatkich, asosiy parametr emas.
+                      Batafsil ma'lumot sahifaning pastidagi sharhlar bo'limida. */}
+                  {inst.avgRating && inst.reviewCount > 0 && (
+                    <button
+                      onClick={() => {
+                        if (isGuest) document.getElementById('auth-gate-reviews')?.scrollIntoView({ behavior: 'smooth' })
+                        else document.getElementById('reviews')?.scrollIntoView({ behavior: 'smooth' })
+                      }}
+                      className="transition-colors hover:text-gray-600"
+                    >
+                      <RatingHint rating={inst.avgRating} count={inst.reviewCount} lang={lang} />
+                    </button>
+                  )}
+                </div>
               </div>
             </div>
-
-            {/* Reyting bloki */}
-            {inst.avgRating && inst.reviewCount > 0 ? (
-              <button
-                onClick={() => {
-                  if (isGuest) document.getElementById('auth-gate-reviews')?.scrollIntoView({ behavior: 'smooth' })
-                  else document.getElementById('reviews')?.scrollIntoView({ behavior: 'smooth' })
-                }}
-                className="flex shrink-0 flex-col items-center rounded-2xl border border-gray-200 bg-gray-50 px-6 py-4 text-center transition-colors hover:border-primary-200 hover:bg-primary-50"
-              >
-                <span className="text-4xl font-bold text-gray-900">{inst.avgRating.toFixed(1)}</span>
-                <StarRating rating={inst.avgRating} size="lg" showValue={false} />
-                <span className="mt-1 text-sm text-gray-500">{inst.reviewCount} {t(lang, ui.reviews)}</span>
-              </button>
-            ) : (
-              <div className="flex shrink-0 flex-col items-center gap-1.5 rounded-2xl border border-gray-200 bg-gray-50 px-6 py-4 text-center">
-                <MessageCircle className="h-6 w-6 text-gray-300" strokeWidth={1.5} />
-                <span className="text-sm text-gray-500">{t(lang, ui.noReviews)}</span>
-              </div>
-            )}
           </div>
         </div>
       </div>
@@ -643,10 +639,16 @@ export default function InstitutionDetail({ inst }: { inst: Institution }) {
             {/* Rating breakdown — faqat auth bo'lganda */}
             {!isGuest && totalReviews > 0 && (
               <div className="card p-6">
-                <h2 className="mb-5 font-semibold text-gray-900 text-lg flex items-center gap-3">
+                <h2 className="mb-1 font-semibold text-gray-900 text-lg flex items-center gap-3">
                   <span className="icon-chip"><BarChart3 className="h-[18px] w-[18px]" strokeWidth={1.75} /></span>
                   {t(lang, ui.ratingTitle)}
                 </h2>
+                {/* Halollik izohi: baholar sub'ektiv, taxminiy ko'rsatkich */}
+                <p className="mb-5 ml-12 text-xs text-gray-400">
+                  {lang === 'ru'
+                    ? 'Оценки поставлены пользователями и являются приблизительным показателем'
+                    : "Baholar foydalanuvchilar tomonidan qo'yilgan — taxminiy ko'rsatkich"}
+                </p>
                 <div className="space-y-2.5">
                   {[5, 4, 3, 2, 1].map(star => {
                     const count = ratingBreakdown[star] ?? 0
