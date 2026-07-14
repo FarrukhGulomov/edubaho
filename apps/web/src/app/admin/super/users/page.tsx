@@ -166,13 +166,13 @@ export default function SuperAdminUsersPage() {
   }
 
   if (loading || !user) return (
-    <div className="flex min-h-screen items-center justify-center">
+    <div className="flex min-h-dvh items-center justify-center bg-canvas">
       <div className="h-10 w-10 animate-spin rounded-full border-4 border-primary-200 border-t-primary-600" />
     </div>
   )
 
   if (user.role !== 'SUPER_ADMIN') return (
-    <div className="flex min-h-screen items-center justify-center bg-gray-50 text-center px-4">
+    <div className="flex min-h-dvh items-center justify-center bg-canvas text-center px-4">
       <div>
         <div className="mb-4 flex justify-center">
           <Ban className="h-12 w-12 text-gray-300" strokeWidth={1.5} />
@@ -184,7 +184,7 @@ export default function SuperAdminUsersPage() {
   )
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-dvh bg-canvas">
       {/* Header */}
       <header className="sticky top-0 z-10 border-b border-gray-200 bg-white shadow-sm">
         <div className="mx-auto flex max-w-7xl items-center justify-between gap-3 px-4 py-3">
@@ -282,7 +282,7 @@ export default function SuperAdminUsersPage() {
               <div className="overflow-x-auto">
                 <table className="w-full text-sm">
                   <thead>
-                    <tr className="border-b border-gray-100 bg-gray-50">
+                    <tr className="border-b border-gray-100 bg-canvas">
                       <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-gray-500">Foydalanuvchi</th>
                       <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-gray-500">Telefon</th>
                       <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-gray-500">Rol</th>
@@ -299,7 +299,7 @@ export default function SuperAdminUsersPage() {
                       const isSuperAdmin = u.role === 'SUPER_ADMIN'
                       const isLoading = actionId === u.id
                       return (
-                        <tr key={u.id} className={`transition-colors hover:bg-gray-50 ${!u.isActive ? 'opacity-60' : ''}`}>
+                        <tr key={u.id} className={`transition-colors hover:bg-canvas ${!u.isActive ? 'opacity-60' : ''}`}>
                           <td className="px-4 py-3">
                             <div className="flex items-center gap-2">
                               <div className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-sm font-bold ${
@@ -394,14 +394,14 @@ export default function SuperAdminUsersPage() {
                   <button
                     disabled={page <= 1}
                     onClick={() => { const p = page - 1; setPage(p); fetchUsers(q, roleFilter, activeFilter, p) }}
-                    className="rounded-xl border border-gray-200 px-4 py-2 text-sm font-semibold text-gray-700 hover:bg-gray-50 disabled:opacity-40 transition-colors"
+                    className="rounded-xl border border-gray-200 px-4 py-2 text-sm font-semibold text-gray-700 hover:bg-canvas disabled:opacity-40 transition-colors"
                   >
                     ← Oldingi
                   </button>
                   <button
                     disabled={page >= meta.totalPages}
                     onClick={() => { const p = page + 1; setPage(p); fetchUsers(q, roleFilter, activeFilter, p) }}
-                    className="rounded-xl border border-gray-200 px-4 py-2 text-sm font-semibold text-gray-700 hover:bg-gray-50 disabled:opacity-40 transition-colors"
+                    className="rounded-xl border border-gray-200 px-4 py-2 text-sm font-semibold text-gray-700 hover:bg-canvas disabled:opacity-40 transition-colors"
                   >
                     Keyingi →
                   </button>
@@ -429,7 +429,7 @@ export default function SuperAdminUsersPage() {
             <div className="flex gap-3">
               <button
                 onClick={() => setDeleteTarget(null)}
-                className="flex-1 rounded-xl border border-gray-300 py-3 font-semibold text-gray-700 hover:bg-gray-50 transition-colors"
+                className="flex-1 rounded-xl border border-gray-300 py-3 font-semibold text-gray-700 hover:bg-canvas transition-colors"
               >
                 Bekor qilish
               </button>

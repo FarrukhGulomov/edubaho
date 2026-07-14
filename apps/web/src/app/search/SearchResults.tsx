@@ -4,10 +4,11 @@ import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { useState, useEffect, useRef } from 'react'
 import {
-  Search, X, MapPin, Globe2, Users2, UserCheck, BadgeCheck, Star,
-  ArrowLeftRight, Check, PencilLine, School, Palette, Lock,
+  Search, X, MapPin, Users, Star, CheckCircle2,
+  Bookmark, Scale, Building2, PencilLine, BookOpen,
+  Laptop, Globe, GraduationCap, Palette, ChevronDown,
 } from 'lucide-react'
-import { RatingHint } from '@/components/shared/StarRating'
+import StarRating from '@/components/shared/StarRating'
 import { useCompare, useSaved } from '@/hooks/useCompare'
 import { useLang, t } from '@/contexts/LangContext'
 import { track, trackSearch, trackSearchClick } from '@/lib/analytics'
@@ -25,37 +26,34 @@ interface City   { id: string; nameUz: string; nameRu: string }
 interface Region { id: string; nameUz: string; nameRu: string; institutionCount: number }
 
 function formatNum(n: number) {
-  return n.toString().replace(/\B(?=(\d{3})+(?!\d))/g, '\u00a0')
+  return n.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ' ')
 }
 function formatUzs(n: number) { return `${formatNum(n)} so'm` }
 
-const TYPE_LABELS: Record<string, { uz: string; ru: string; color: string }> = {
-  SCHOOL:          { uz: 'Maktab',        ru: 'Школа',        color: 'bg-green-50 text-green-700' },
-  LYCEUM:          { uz: 'Litsey',        ru: 'Лицей',        color: 'bg-teal-50 text-teal-700' },
-  COURSE_CENTER:   { uz: "O'quv markaz",  ru: 'Учебный центр', color: 'bg-blue-50 text-blue-700' },
-  LANGUAGE_CENTER: { uz: 'Til markazi',   ru: 'Языковой',     color: 'bg-cyan-50 text-cyan-700' },
-  IT_SCHOOL:       { uz: 'IT maktab',     ru: 'IT школа',     color: 'bg-purple-50 text-purple-700' },
-  UNIVERSITY:      { uz: 'Universitet',   ru: 'Университет',  color: 'bg-amber-50 text-amber-700' },
-  KINDERGARTEN:    { uz: "Bog'cha",       ru: 'Детсад',       color: 'bg-pink-50 text-pink-700' },
-  SPORTS_SCHOOL:   { uz: 'Sport maktabi', ru: 'Спортшкола',   color: 'bg-orange-50 text-orange-700' },
-  ARTS_SCHOOL:     { uz: "San'at",        ru: 'Школа искусств', color: 'bg-rose-50 text-rose-700' },
+const TYPE_META: Record<string, { uz: string; ru: string; icon: React.ElementType }> = {
+  SCHOOL:          { uz: 'Maktab',        ru: 'Школа',          icon: BookOpen },
+  LYCEUM:          { uz: 'Litsey',        ru: 'Лицей',          icon: BookOpen },
+  COURSE_CENTER:   { uz: "O'quv markaz",  ru: 'Учебный центр',  icon: PencilLine },
+  LANGUAGE_CENTER: { uz: 'Til markazi',   ru: 'Языковой',       icon: Globe },
+  IT_SCHOOL:       { uz: 'IT maktab',     ru: 'IT школа',       icon: Laptop },
+  UNIVERSITY:      { uz: 'Universitet',   ru: 'Университет',    icon: GraduationCap },
+  KINDERGARTEN:    { uz: "Bog'cha",       ru: 'Детсад',         icon: Palette },
+  SPORTS_SCHOOL:   { uz: 'Sport maktabi', ru: 'Спортшкола',     icon: Building2 },
+  ARTS_SCHOOL:     { uz: "San'at",        ru: 'Школа искусств', icon: Building2 },
 }
 
-// Faqat haqiqiy ma'lumoti bor turlar ko'rsatiladi — bo'sh natija bilan
-// tugaydigan "o'lik" filtrlarni chiqarmaslik uchun.
-// MVP doirasida faqat O'quv markaz aktiv — qolganlari disable (bosh
-// sahifadagi QUICK_CATEGORIES bilan bir xil siyosat).
 const TYPE_FILTERS = [
-  { type: 'COURSE_CENTER', Icon: PencilLine, uz: "O'quv markazlar", ru: 'Учебные центры', disabled: false },
-  { type: 'SCHOOL',        Icon: School,     uz: 'Maktablar',       ru: 'Школы',          disabled: true },
-  { type: 'KINDERGARTEN',  Icon: Palette,    uz: "Bog'chalar",      ru: 'Детские сады',    disabled: true },
+  { type: 'COURSE_CENTER',   icon: PencilLine, uz: "O'quv markazlar", ru: 'Учебные центры', active: true },
+  { type: 'SCHOOL',          icon: BookOpen,   uz: 'Maktablar',        ru: 'Школы',          active: true },
+  { type: 'IT_SCHOOL',       icon: Laptop,     uz: 'IT',               ru: 'IT',             active: false },
+  { type: 'LANGUAGE_CENTER', icon: Globe,      uz: 'Til markazi',      ru: 'Языковой',       active: false },
 ]
 
 const SORT_OPTIONS = [
-  { value: 'rating',     uz: "Yuqori reyting", ru: 'Высокий рейтинг' },
+  { value: 'rating',     uz: 'Yuqori reyting', ru: 'Высокий рейтинг' },
   { value: 'newest',     uz: 'Yangi',           ru: 'Новые' },
   { value: 'price_asc',  uz: 'Arzon',           ru: 'Дешевле' },
-  { value: 'price_desc', uz: 'Qimmat',          ru: 'Дороже' },
+  { value: 'price_desc', uz: 'Qimmat',           ru: 'Дороже' },
 ]
 
 export default function SearchResults({ institutions, meta, params }: Props) {
@@ -66,7 +64,6 @@ export default function SearchResults({ institutions, meta, params }: Props) {
   const [regions, setRegions] = useState<Region[]>([])
   const { toggle, isSelected } = useCompare()
   const { toggleSave, isSaved } = useSaved()
-  // Oxirgi track qilingan so'rov — ikki marta yubormaslik uchun
   const lastTrackedQuery = useRef<string | undefined>(undefined)
 
   useEffect(() => {
@@ -77,14 +74,11 @@ export default function SearchResults({ institutions, meta, params }: Props) {
       .then(r => r.json()).then(d => setRegions(d.data ?? [])).catch(() => {})
   }, [])
 
-  // Qidiruv so'rovi o'zgarganda yoki natijalar yuklanganda bir marta track qilamiz
   useEffect(() => {
     const currentQuery = params.q ?? ''
     if (lastTrackedQuery.current !== currentQuery) {
       lastTrackedQuery.current = currentQuery
-      if (currentQuery) {
-        trackSearch(currentQuery, meta.total)
-      }
+      if (currentQuery) trackSearch(currentQuery, meta.total)
     }
   }, [params.q, meta.total])
 
@@ -101,7 +95,6 @@ export default function SearchResults({ institutions, meta, params }: Props) {
     if (val) p.set(key, val); else p.delete(key)
     p.delete('page')
     router.push(`/search?${p.toString()}`)
-    // Filter o'zgarishlarini kuzatamiz
     if (['type', 'regionId', 'cityId', 'sortBy'].includes(key)) {
       track('search_filter', {
         category: 'search',
@@ -111,7 +104,7 @@ export default function SearchResults({ institutions, meta, params }: Props) {
   }
 
   const ui = {
-    placeholder: { uz: "Muassasa nomi... (masalan: Najot, PDP)", ru: 'Название учреждения... (напр: Najot, PDP)' },
+    placeholder: { uz: "Muassasa nomi... (masalan: Najot, PDP)", ru: 'Название учреждения...' },
     searchBtn:   { uz: 'Qidirish', ru: 'Найти' },
     allTypes:    { uz: 'Barchasi', ru: 'Все' },
     results:     { uz: 'ta natija', ru: 'результатов' },
@@ -119,44 +112,48 @@ export default function SearchResults({ institutions, meta, params }: Props) {
     emptyTitle:  { uz: 'Hech narsa topilmadi', ru: 'Ничего не найдено' },
     emptySub:    { uz: "Filtrlarni o'zgartiring yoki boshqa so'z kiriting", ru: 'Измените фильтры или введите другое слово' },
     noReview:    { uz: "Sharh yo'q", ru: 'Нет отзывов' },
-    verified:    { uz: 'Tasdiqlangan', ru: 'Подтверждено' },
+    verified:    { uz: 'Tasdiqlangan', ru: 'Подтв.' },
     save:        { uz: 'Saqlash', ru: 'Сохранить' },
     saved:       { uz: 'Saqlandi', ru: 'Сохранено' },
     compare:     { uz: 'Solishtir', ru: 'Сравнить' },
     compared:    { uz: 'Tanlandi', ru: 'Выбрано' },
-    sortLabel:   { uz: 'Saralash', ru: 'Сортировка' },
     allCities:   { uz: 'Barcha shaharlar', ru: 'Все города' },
     allRegions:  { uz: 'Barcha viloyatlar', ru: 'Все регионы' },
-    students:    { uz: "o'quvchi", ru: 'учеников' },
-    teachers:    { uz: "o'qituvchi", ru: 'преподавателей' },
+    comingSoon:  { uz: 'Tez kunda', ru: 'Скоро' },
   }
 
-  // Active labels
   const activeCity   = params.cityId   ? cities.find(c => c.id === params.cityId)    : null
   const activeRegion = params.regionId ? regions.find(r => r.id === params.regionId) : null
 
   return (
-    <main className="min-h-screen bg-gray-50">
-      {/* ── Qidiruv satri ─── */}
-      <div className="sticky top-[65px] z-30 border-b border-gray-200 bg-white/97 backdrop-blur px-4 py-3 shadow-sm">
+    <main className="min-h-dvh bg-canvas">
+      {/* ── Sticky search bar ─── */}
+      <div className="glass sticky top-[64px] z-30 border-b border-line px-4 py-3 shadow-card">
         <div className="mx-auto max-w-6xl">
           <form onSubmit={handleSearch} className="flex gap-2">
-            <div className="flex min-w-0 flex-1 items-center gap-3 rounded-xl border border-gray-200 bg-white px-4 focus-within:border-primary-400 transition-colors">
-              <Search className="h-5 w-5 shrink-0 text-gray-400" strokeWidth={1.75} />
+            <div className="flex flex-1 items-center gap-3 rounded-xl border border-line-2 bg-surface px-4 transition-all focus-within:border-primary-500 focus-within:ring-2 focus-within:ring-primary-500/20">
+              <Search className="h-4 w-4 shrink-0 text-faint" aria-hidden />
               <input
                 type="text"
                 value={q}
                 onChange={e => setQ(e.target.value)}
                 placeholder={t(lang, ui.placeholder)}
-                className="min-w-0 flex-1 bg-transparent py-3 text-base text-gray-900 outline-none placeholder:text-gray-400"
+                className="flex-1 bg-transparent py-3 text-base text-ink outline-none placeholder:text-faint"
+                aria-label={t(lang, ui.searchBtn)}
               />
               {q && (
-                <button type="button" onClick={() => setQ('')} aria-label="Qidiruvni tozalash" className="shrink-0 p-1 text-gray-400 hover:text-gray-600">
-                  <X className="h-5 w-5" strokeWidth={1.75} />
+                <button
+                  type="button"
+                  onClick={() => setQ('')}
+                  className="rounded p-1 text-faint transition-colors hover:text-ink"
+                  style={{ minHeight: 0, minWidth: 0 }}
+                  aria-label="Tozalash"
+                >
+                  <X className="h-4 w-4" aria-hidden />
                 </button>
               )}
             </div>
-            <button type="submit" className="btn-primary shrink-0 whitespace-nowrap px-5">
+            <button type="submit" className="btn-primary shrink-0">
               {t(lang, ui.searchBtn)}
             </button>
           </form>
@@ -164,141 +161,151 @@ export default function SearchResults({ institutions, meta, params }: Props) {
       </div>
 
       <div className="mx-auto max-w-6xl px-4 py-6">
-        {/* ── Filters row ─── */}
+        {/* ── Filters ─── */}
         <div className="mb-5 flex flex-wrap items-center gap-2">
           {/* Type chips */}
           <div className="flex flex-wrap gap-1.5">
-            {/* Bosh sahifadagi kategoriya tablar bilan bir xil standart shakl */}
             <Link
               href={`/search?${(() => { const p = new URLSearchParams(params); p.delete('type'); p.delete('page'); return p.toString() })()}`}
-              className={`flex h-9 shrink-0 items-center whitespace-nowrap rounded-xl px-3.5 text-sm font-semibold transition-colors ${
+              className={`rounded-full border px-3 py-1 text-xs font-semibold transition-all ${
                 !params.type
-                  ? 'bg-primary-600 text-white'
-                  : 'bg-gray-50 text-gray-600 hover:bg-gray-100 hover:text-gray-900'
+                  ? 'border-primary-600 bg-primary-600 text-white'
+                  : 'border-line-2 bg-surface text-mute hover:border-line-2 hover:text-ink'
               }`}
             >
               {t(lang, ui.allTypes)}
             </Link>
-            {TYPE_FILTERS.map(f => (
-              f.disabled ? (
-                <span
-                  key={f.type}
-                  aria-disabled="true"
-                  title={lang === 'uz' ? 'Tez orada' : 'Скоро'}
-                  className="flex h-9 shrink-0 cursor-not-allowed items-center gap-1.5 whitespace-nowrap rounded-xl bg-gray-50 px-3.5 text-sm font-semibold text-gray-300"
-                >
-                  <f.Icon className="h-4 w-4 shrink-0" strokeWidth={1.75} /> {lang === 'uz' ? f.uz : f.ru}
-                  <Lock className="h-3 w-3 shrink-0" strokeWidth={2} />
-                </span>
-              ) : (
-                <Link
-                  key={f.type}
-                  href={`/search?${new URLSearchParams({ ...params, type: f.type, page: '1' }).toString()}`}
-                  className={`flex h-9 shrink-0 items-center gap-1.5 whitespace-nowrap rounded-xl px-3.5 text-sm font-semibold transition-colors ${
-                    params.type === f.type
-                      ? 'bg-primary-600 text-white'
-                      : 'bg-gray-50 text-gray-600 hover:bg-gray-100 hover:text-gray-900'
-                  }`}
-                >
-                  <f.Icon className="h-4 w-4 shrink-0" strokeWidth={1.75} /> {lang === 'uz' ? f.uz : f.ru}
-                </Link>
-              )
+            {TYPE_FILTERS.map(f => f.active ? (
+              <Link
+                key={f.type}
+                href={`/search?${new URLSearchParams({ ...params, type: f.type, page: '1' }).toString()}`}
+                className={`flex items-center gap-1.5 rounded-full border px-3 py-1 text-xs font-semibold transition-all ${
+                  params.type === f.type
+                    ? 'border-primary-600 bg-primary-600 text-white'
+                    : 'border-line-2 bg-surface text-mute hover:text-ink'
+                }`}
+              >
+                <f.icon className="h-3.5 w-3.5" aria-hidden />
+                {lang === 'uz' ? f.uz : f.ru}
+              </Link>
+            ) : (
+              <span
+                key={f.type}
+                title={t(lang, ui.comingSoon)}
+                className="flex cursor-not-allowed select-none items-center gap-1.5 rounded-full border border-dashed border-line px-3 py-1 text-xs text-faint"
+              >
+                <f.icon className="h-3.5 w-3.5" aria-hidden />
+                {lang === 'uz' ? f.uz : f.ru}
+              </span>
             ))}
           </div>
 
-          {/* Spacer */}
           <div className="flex-1" />
 
           {/* Region filter */}
           {regions.length > 0 && (
-            <select
-              value={params.regionId ?? ''}
-              onChange={e => setParam('regionId', e.target.value)}
-              className="rounded-xl border border-gray-200 bg-white px-3 py-2 text-xs font-medium text-gray-700 shadow-sm outline-none focus:border-primary-400 cursor-pointer"
-            >
-              <option value="">{t(lang, ui.allRegions)}</option>
-              {regions.map(r => (
-                <option key={r.id} value={r.id}>
-                  {lang === 'ru'
-                    ? r.nameRu.replace('Республика ', '')
-                    : r.nameUz.replace(' viloyati', ' vil.').replace(" Respublikasi", '')}
-                  {r.institutionCount > 0 ? ` (${r.institutionCount})` : ''}
-                </option>
-              ))}
-            </select>
+            <div className="relative">
+              <select
+                value={params.regionId ?? ''}
+                onChange={e => setParam('regionId', e.target.value)}
+                className="cursor-pointer appearance-none rounded-lg border border-line-2 bg-surface py-2 pl-3 pr-7 text-xs font-medium text-ink outline-none focus:border-primary-500 focus:ring-2 focus:ring-primary-500/20"
+              >
+                <option value="">{t(lang, ui.allRegions)}</option>
+                {regions.map(r => (
+                  <option key={r.id} value={r.id}>
+                    {lang === 'ru'
+                      ? r.nameRu.replace('Республика ', '')
+                      : r.nameUz.replace(' viloyati', ' vil.').replace(" Respublikasi", '')}
+                    {r.institutionCount > 0 ? ` (${r.institutionCount})` : ''}
+                  </option>
+                ))}
+              </select>
+              <ChevronDown className="pointer-events-none absolute right-2 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-faint" aria-hidden />
+            </div>
           )}
 
           {/* City filter */}
           {cities.length > 0 && (
-            <select
-              value={params.cityId ?? ''}
-              onChange={e => setParam('cityId', e.target.value)}
-              className="rounded-xl border border-gray-200 bg-white px-3 py-2 text-xs font-medium text-gray-700 shadow-sm outline-none focus:border-primary-400 cursor-pointer"
-            >
-              <option value="">{t(lang, ui.allCities)}</option>
-              {cities.map(c => (
-                <option key={c.id} value={c.id}>
-                  {lang === 'ru' ? c.nameRu : c.nameUz}
-                </option>
-              ))}
-            </select>
+            <div className="relative">
+              <select
+                value={params.cityId ?? ''}
+                onChange={e => setParam('cityId', e.target.value)}
+                className="cursor-pointer appearance-none rounded-lg border border-line-2 bg-surface py-2 pl-3 pr-7 text-xs font-medium text-ink outline-none focus:border-primary-500 focus:ring-2 focus:ring-primary-500/20"
+              >
+                <option value="">{t(lang, ui.allCities)}</option>
+                {cities.map(c => (
+                  <option key={c.id} value={c.id}>
+                    {lang === 'ru' ? c.nameRu : c.nameUz}
+                  </option>
+                ))}
+              </select>
+              <ChevronDown className="pointer-events-none absolute right-2 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-faint" aria-hidden />
+            </div>
           )}
 
           {/* Sort */}
-          <select
-            value={params.sortBy ?? 'rating'}
-            onChange={e => setParam('sortBy', e.target.value)}
-            className="rounded-xl border border-gray-200 bg-white px-3 py-2 text-xs font-medium text-gray-700 shadow-sm outline-none focus:border-primary-400 cursor-pointer"
-          >
-            {SORT_OPTIONS.map(opt => (
-              <option key={opt.value} value={opt.value}>
-                {lang === 'uz' ? opt.uz : opt.ru}
-              </option>
-            ))}
-          </select>
+          <div className="relative">
+            <select
+              value={params.sortBy ?? 'rating'}
+              onChange={e => setParam('sortBy', e.target.value)}
+              className="cursor-pointer appearance-none rounded-lg border border-line-2 bg-surface py-2 pl-3 pr-7 text-xs font-medium text-ink outline-none focus:border-primary-500 focus:ring-2 focus:ring-primary-500/20"
+            >
+              {SORT_OPTIONS.map(opt => (
+                <option key={opt.value} value={opt.value}>
+                  {lang === 'uz' ? opt.uz : opt.ru}
+                </option>
+              ))}
+            </select>
+            <ChevronDown className="pointer-events-none absolute right-2 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-faint" aria-hidden />
+          </div>
         </div>
 
-
-        {/* ── Title + active filters ─── */}
+        {/* ── Header + active filter badges ─── */}
         <div className="mb-5 flex flex-wrap items-center gap-2">
-          <h1 className="text-lg font-black text-gray-900">
+          <h1 className="text-base font-semibold text-ink">
             {params.q ? `"${params.q}"` : t(lang, ui.allInst)}
           </h1>
-          <span className="rounded-full bg-gray-100 px-2.5 py-0.5 text-xs font-semibold text-gray-500">
-            {meta.total} {t(lang, ui.results)}
-          </span>
-          {/* Active region badge */}
+          <span className="badge-sm bg-surface-2 text-faint tabular-nums">{meta.total} {t(lang, ui.results)}</span>
           {activeRegion && (
-            <span className="flex shrink-0 items-center gap-1.5 whitespace-nowrap rounded-full bg-blue-50 px-3 py-1 text-xs font-semibold text-blue-700">
-              <Globe2 className="h-3.5 w-3.5 shrink-0" strokeWidth={1.75} />
+            <span className="flex items-center gap-1 rounded-full bg-primary-50 px-2.5 py-1 text-xs font-medium text-primary-700 dark:bg-primary-500/10 dark:text-primary-300">
+              <MapPin className="h-3 w-3" aria-hidden />
               {lang === 'ru'
                 ? activeRegion.nameRu.replace('Республика ', '')
                 : activeRegion.nameUz.replace(' viloyati', '').replace(' Respublikasi', '')}
-              <button onClick={() => setParam('regionId', '')} aria-label="Viloyat filtrini olib tashlash" className="ml-0.5 text-blue-500 hover:text-blue-700">
-                <X className="h-3 w-3" strokeWidth={2.5} />
+              <button
+                onClick={() => setParam('regionId', '')}
+                className="ml-0.5 text-primary-400 hover:text-primary-700"
+                style={{ minHeight: 0, minWidth: 0 }}
+                aria-label="Filtrni olib tashlash"
+              >
+                <X className="h-3 w-3" aria-hidden />
               </button>
             </span>
           )}
-          {/* Active city badge */}
           {activeCity && (
-            <span className="flex shrink-0 items-center gap-1.5 whitespace-nowrap rounded-full bg-primary-50 px-3 py-1 text-xs font-semibold text-primary-700">
-              <MapPin className="h-3.5 w-3.5 shrink-0" strokeWidth={1.75} />
+            <span className="flex items-center gap-1 rounded-full bg-primary-50 px-2.5 py-1 text-xs font-medium text-primary-700 dark:bg-primary-500/10 dark:text-primary-300">
+              <MapPin className="h-3 w-3" aria-hidden />
               {lang === 'ru' ? activeCity.nameRu : activeCity.nameUz}
-              <button onClick={() => setParam('cityId', '')} aria-label="Shahar filtrini olib tashlash" className="ml-0.5 text-primary-500 hover:text-primary-700">
-                <X className="h-3 w-3" strokeWidth={2.5} />
+              <button
+                onClick={() => setParam('cityId', '')}
+                className="ml-0.5 text-primary-400 hover:text-primary-700"
+                style={{ minHeight: 0, minWidth: 0 }}
+                aria-label="Filtrni olib tashlash"
+              >
+                <X className="h-3 w-3" aria-hidden />
               </button>
             </span>
           )}
         </div>
 
-        {/* ── Results ─── */}
+        {/* ── Results grid ─── */}
         {institutions.length === 0 ? (
           <div className="flex flex-col items-center py-24 text-center">
-            <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-2xl bg-gray-100">
-              <Search className="h-7 w-7 text-gray-300" strokeWidth={1.5} />
+            <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-2xl bg-surface-2">
+              <Search className="h-8 w-8 text-faint" aria-hidden />
             </div>
-            <p className="mb-2 text-xl font-bold text-gray-800">{t(lang, ui.emptyTitle)}</p>
-            <p className="mb-6 text-sm text-gray-500">{t(lang, ui.emptySub)}</p>
+            <p className="mb-1 text-base font-semibold text-ink">{t(lang, ui.emptyTitle)}</p>
+            <p className="mb-6 text-sm text-mute">{t(lang, ui.emptySub)}</p>
             <Link href="/search" className="btn-secondary text-sm">
               {t(lang, { uz: 'Barcha muassasalar', ru: 'Все учреждения' })}
             </Link>
@@ -324,16 +331,18 @@ export default function SearchResults({ institutions, meta, params }: Props) {
 
         {/* ── Pagination ─── */}
         {meta.totalPages > 1 && (
-          <div className="mt-8 flex justify-center gap-1.5">
+          <div className="mt-10 flex flex-wrap justify-center gap-1.5">
             {Array.from({ length: Math.min(meta.totalPages, 7) }, (_, i) => i + 1).map(p => (
               <Link
                 key={p}
                 href={`/search?${new URLSearchParams({ ...params, page: String(p) }).toString()}`}
-                className={`flex h-9 w-9 items-center justify-center rounded-xl border text-sm font-semibold transition-colors ${
+                className={`flex h-9 w-9 items-center justify-center rounded-lg border text-sm font-medium tabular-nums transition-all ${
                   String(meta.page) === String(p)
                     ? 'border-primary-600 bg-primary-600 text-white'
-                    : 'border-gray-200 bg-white text-gray-700 hover:border-primary-300 hover:text-primary-600'
+                    : 'border-line-2 bg-surface text-mute hover:border-primary-400 hover:text-primary-600 dark:hover:text-primary-400'
                 }`}
+                aria-label={`${p}-sahifa`}
+                aria-current={String(meta.page) === String(p) ? 'page' : undefined}
               >
                 {p}
               </Link>
@@ -366,106 +375,107 @@ function InstitutionCardComp({
   isSaved: boolean
   ui: Record<string, { uz: string; ru: string }>
 }) {
-  const typeInfo = TYPE_LABELS[i.type]
+  const m    = TYPE_META[i.type]
   const name = lang === 'ru' && i.nameRu ? i.nameRu : i.nameUz
+  const Icon = m?.icon ?? Building2
 
   return (
-    <div className="group card flex flex-col">
+    <div className="card group flex flex-col overflow-hidden">
       <Link
         href={`/institutions/${i.slug}`}
-        className="flex flex-1 flex-col p-6"
+        className="flex flex-1 flex-col p-5"
         onClick={() => trackSearchClick(i.id, position, query)}
       >
-        {/* Tur + tasdiqlangan — bosh sahifa kartasi bilan bir xil ixcham badge'lar */}
-        <div className="mb-2 flex flex-wrap items-center gap-1.5">
-          <span className="badge-sm bg-primary-50 text-primary-700">
-            {typeInfo ? t(lang, typeInfo) : i.type}
+        {/* Type + verified */}
+        <div className="mb-3 flex items-center justify-between gap-2">
+          <span className="badge-sm bg-surface-2 text-mute">
+            <Icon className="h-3.5 w-3.5" aria-hidden />
+            {m ? t(lang, m) : i.type}
           </span>
           {i.isVerified && (
-            <span className="flex items-center gap-1 rounded-full bg-emerald-50 px-2 py-0.5 text-[11px] font-semibold text-emerald-700">
-              <BadgeCheck className="h-3 w-3 shrink-0" strokeWidth={2} /> {t(lang, ui.verified)}
+            <span className="verified-badge">
+              <CheckCircle2 className="h-3 w-3" aria-hidden />
+              {t(lang, ui.verified)}
             </span>
           )}
         </div>
 
-        {/* Nom */}
-        <h2 className="mb-1.5 text-base font-black text-gray-900 group-hover:text-primary-700 transition-colors line-clamp-2 leading-snug">
+        <h2 className="mb-2 line-clamp-2 text-base font-semibold leading-snug text-ink transition-colors group-hover:text-primary-600 dark:group-hover:text-primary-400">
           {name}
         </h2>
 
-        {/* Shahar + statistika — bitta ixcham qator (rangli pill'lar o'rniga) */}
-        <div className="mb-3 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-gray-500">
-          {(i.city?.nameUz ?? i.address) && (
-            <span className="flex items-center gap-1">
-              <MapPin className="h-3.5 w-3.5 shrink-0 text-gray-400" strokeWidth={1.75} />
-              {lang === 'ru' && i.city?.nameRu ? i.city.nameRu : (i.city?.nameUz ?? i.address)}
-            </span>
-          )}
-          {i.details?.studentCount && (
-            <span className="flex items-center gap-1 font-semibold text-primary-600">
-              <Users2 className="h-3.5 w-3.5 shrink-0" strokeWidth={2} /> {formatNum(i.details.studentCount)}+
-            </span>
-          )}
-          {i.details?.teacherCount && (
-            <span className="flex items-center gap-1 font-semibold">
-              <UserCheck className="h-3.5 w-3.5 shrink-0" strokeWidth={2} /> {i.details.teacherCount}
-            </span>
-          )}
-        </div>
+        {(i.city?.nameUz ?? i.address) && (
+          <div className="mb-2 flex items-center gap-1.5 text-sm text-mute">
+            <MapPin className="h-3.5 w-3.5 shrink-0" aria-hidden />
+            {lang === 'ru' && i.city?.nameRu ? i.city.nameRu : (i.city?.nameUz ?? i.address)}
+          </div>
+        )}
 
-        {/* Yo'nalishlar */}
-        {(i.details?.programs?.length ?? 0) > 0 && (
-          <div className="mb-3 flex flex-wrap gap-1.5">
-            {i.details!.programs!.slice(0, 3).map(prog => (
-              <span key={prog} className="rounded-lg bg-gray-100 px-2.5 py-1 text-sm font-medium text-gray-600">
-                {prog}
-              </span>
-            ))}
-            {i.details!.programs!.length > 3 && (
-              <span className="rounded-lg bg-gray-100 px-2.5 py-1 text-sm font-medium text-gray-400">
-                +{i.details!.programs!.length - 3} ta
+        {(i.details?.studentCount || i.details?.teacherCount) && (
+          <div className="mb-2 flex flex-wrap gap-1.5">
+            {i.details?.studentCount && (
+              <span className="flex items-center gap-1 text-xs text-mute">
+                <Users className="h-3.5 w-3.5 shrink-0" aria-hidden />
+                {formatNum(i.details.studentCount)}+ {lang === 'uz' ? "o'q." : 'уч.'}
               </span>
             )}
           </div>
         )}
 
-        {/* Narx (asosiy) + reyting (tinch, taxminiy ko'rsatkich sifatida) */}
-        <div className="mt-auto flex items-center justify-between gap-2 border-t border-gray-100 pt-4">
+        {(i.details?.programs?.length ?? 0) > 0 && (
+          <div className="mb-2 flex flex-wrap gap-1.5">
+            {i.details!.programs!.slice(0, 3).map(prog => (
+              <span key={prog} className="badge-sm bg-surface-2 text-mute">{prog}</span>
+            ))}
+            {i.details!.programs!.length > 3 && (
+              <span className="badge-sm bg-surface-2 text-faint">+{i.details!.programs!.length - 3}</span>
+            )}
+          </div>
+        )}
+
+        <div className="mt-auto flex items-center justify-between gap-2 border-t border-line pt-3">
           {i.avgRating ? (
-            <RatingHint rating={i.avgRating} count={i.reviewCount} lang={lang} />
+            <div className="flex items-center gap-1.5">
+              <StarRating rating={i.avgRating} size="sm" />
+              <span className="text-sm font-semibold tabular-nums text-ink">{i.avgRating.toFixed(1)}</span>
+              <span className="text-xs tabular-nums text-faint">({i.reviewCount})</span>
+            </div>
           ) : (
-            <span className="text-sm text-gray-400">{t(lang, ui.noReview)}</span>
+            <span className="flex items-center gap-1.5 text-xs text-faint">
+              <Star className="h-3.5 w-3.5" aria-hidden />
+              {t(lang, ui.noReview)}
+            </span>
           )}
           {i.pricing?.monthlyMin && (
-            <span className="price-badge shrink-0 whitespace-nowrap text-sm">
-              {formatUzs(i.pricing.monthlyMin)}
-            </span>
+            <span className="price-badge">{formatUzs(i.pricing.monthlyMin)}</span>
           )}
         </div>
       </Link>
 
-      {/* Amallar */}
-      <div className="flex divide-x divide-gray-100 border-t border-gray-100">
+      {/* Actions */}
+      <div className="flex divide-x divide-line border-t border-line">
         <button
           onClick={onSave}
-          className={`flex flex-1 items-center justify-center gap-1.5 whitespace-nowrap rounded-bl-2xl py-3 text-sm font-semibold transition-colors ${
+          aria-pressed={isSaved}
+          className={`flex flex-1 items-center justify-center gap-1.5 py-3 text-xs font-semibold transition-colors ${
             isSaved
-              ? 'bg-amber-50 text-amber-600 hover:bg-amber-100'
-              : 'text-gray-500 hover:bg-gray-50 hover:text-gray-800'
+              ? 'text-amber-600 hover:bg-amber-50 dark:text-amber-400 dark:hover:bg-amber-500/10'
+              : 'text-mute hover:bg-surface-2 hover:text-ink'
           }`}
         >
-          <Star className="h-4 w-4 shrink-0" fill={isSaved ? 'currentColor' : 'none'} strokeWidth={2} />
+          <Bookmark className="h-3.5 w-3.5" fill={isSaved ? 'currentColor' : 'none'} aria-hidden />
           {isSaved ? t(lang, ui.saved) : t(lang, ui.save)}
         </button>
         <button
           onClick={onCompare}
-          className={`flex flex-1 items-center justify-center gap-1.5 whitespace-nowrap rounded-br-2xl py-3 text-sm font-semibold transition-colors ${
+          aria-pressed={isCompared}
+          className={`flex flex-1 items-center justify-center gap-1.5 py-3 text-xs font-semibold transition-colors ${
             isCompared
-              ? 'bg-primary-50 text-primary-700 hover:bg-primary-100'
-              : 'text-gray-500 hover:bg-gray-50 hover:text-gray-800'
+              ? 'text-primary-600 hover:bg-primary-50 dark:text-primary-400 dark:hover:bg-primary-500/10'
+              : 'text-mute hover:bg-surface-2 hover:text-ink'
           }`}
         >
-          {isCompared ? <Check className="h-4 w-4 shrink-0" strokeWidth={2.5} /> : <ArrowLeftRight className="h-4 w-4 shrink-0" strokeWidth={2} />}
+          <Scale className="h-3.5 w-3.5" aria-hidden />
           {isCompared ? t(lang, ui.compared) : t(lang, ui.compare)}
         </button>
       </div>

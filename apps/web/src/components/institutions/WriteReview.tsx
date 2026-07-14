@@ -1,43 +1,34 @@
 'use client'
 
 import { useState } from 'react'
-import { usePathname } from 'next/navigation'
-import { PencilLine, X, CheckCircle2, AlertCircle, UserCheck, School, Wallet, Leaf, Phone } from 'lucide-react'
-import { authHref } from '@/lib/authHref'
+import { Star, PencilLine, X, CheckCircle2, AlertCircle } from 'lucide-react'
 
 interface Props {
   institutionId: string
   institutionName: string
 }
 
-const STARS = [1, 2, 3, 4, 5]
+const STARS = [1, 2, 3, 4, 5] as const
 
 const RATING_LABELS: Record<number, string> = {
   1: 'Juda yomon', 2: 'Yomon', 3: "O'rtacha", 4: 'Yaxshi', 5: 'Ajoyib!',
 }
 
-// Batafsil baholash mezonlari — foydalanuvchi tanlagan 5 ta asosiy mezon
 const DIMENSIONS = [
-  { key: 'teacherRating',    Icon: UserCheck, label: "O'qituvchilar",   hint: 'Tajriba, tushuntirish uslubi' },
-  { key: 'facilityRating',   Icon: School,    label: 'Sharoit',         hint: 'Sinfxona, jihozlar, qulay' },
-  { key: 'valueRating',      Icon: Wallet,    label: 'Narx/Sifat',      hint: "To'lov oilaga mos kelishi" },
-  { key: 'atmosphereRating', Icon: Leaf,      label: 'Muhit',           hint: 'Xavfsizlik, intizom, atmosfera' },
-  { key: 'serviceRating',    Icon: Phone,     label: "Aloqa va nazorat", hint: "Ota-onaga feedback berilishi" },
+  { key: 'teacherRating',    label: "O'qituvchilar",    hint: 'Tajriba, tushuntirish uslubi' },
+  { key: 'facilityRating',   label: 'Sharoit',           hint: 'Sinfxona, jihozlar' },
+  { key: 'valueRating',      label: 'Narx/Sifat',        hint: "To'lov oilaga mos kelishi" },
+  { key: 'atmosphereRating', label: 'Muhit',             hint: 'Xavfsizlik, intizom' },
+  { key: 'serviceRating',    label: 'Aloqa',             hint: "Ota-onaga feedback" },
 ] as const
 
 type DimensionKey = typeof DIMENSIONS[number]['key']
 
-function MiniStars({
-  value,
-  onChange,
-}: {
-  value: number
-  onChange: (v: number) => void
-}) {
+function MiniStarPicker({ value, onChange }: { value: number; onChange: (v: number) => void }) {
   const [hovered, setHovered] = useState(0)
   const active = hovered || value
   return (
-    <div className="flex gap-0.5">
+    <div className="flex gap-0.5" role="group">
       {STARS.map((s) => (
         <button
           key={s}
@@ -45,9 +36,17 @@ function MiniStars({
           onClick={() => onChange(value === s ? 0 : s)}
           onMouseEnter={() => setHovered(s)}
           onMouseLeave={() => setHovered(0)}
-          className={`text-xl transition-transform hover:scale-110 ${s <= active ? 'text-yellow-400' : 'text-gray-200'}`}
+          className="rounded p-0.5 transition-transform hover:scale-110 active:scale-95"
+          style={{ minHeight: 32, minWidth: 32 }}
+          aria-label={`${s} yulduz`}
+          aria-pressed={value === s}
         >
-          ★
+          <Star
+            className={`h-5 w-5 transition-colors ${s <= active ? 'text-amber-400' : 'text-line-2'}`}
+            fill={s <= active ? 'currentColor' : 'none'}
+            strokeWidth={s <= active ? 0 : 1.5}
+            aria-hidden
+          />
         </button>
       ))}
     </div>
@@ -55,7 +54,6 @@ function MiniStars({
 }
 
 export default function WriteReview({ institutionId, institutionName }: Props) {
-  const pathname = usePathname()
   const [open, setOpen] = useState(false)
   const [rating, setRating] = useState(0)
   const [hovered, setHovered] = useState(0)
@@ -72,7 +70,7 @@ export default function WriteReview({ institutionId, institutionName }: Props) {
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
     if (!token) { setError("Sharh yozish uchun tizimga kiring"); return }
-    if (rating === 0) { setError("Iltimos, umumiy baho bering (yulduzchalardan birini tanlang)"); return }
+    if (rating === 0) { setError("Iltimos, umumiy baho bering"); return }
     if (body.trim().length < 2) { setError("Sharh kamida 2 ta belgidan iborat bo'lishi kerak"); return }
 
     setLoading(true)
@@ -82,13 +80,15 @@ export default function WriteReview({ institutionId, institutionName }: Props) {
         `${process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:3001/api/v1'}/reviews`,
         {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}`, 'ngrok-skip-browser-warning': '1' },
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${token}`,
+            'ngrok-skip-browser-warning': '1',
+          },
           body: JSON.stringify({
             institutionId,
             overallRating: rating,
-            ...Object.fromEntries(
-              Object.entries(dims).filter(([, v]) => v && v > 0)
-            ),
+            ...Object.fromEntries(Object.entries(dims).filter(([, v]) => v && v > 0)),
             title: title.trim() || undefined,
             body: body.trim(),
             isAnonymous,
@@ -108,57 +108,45 @@ export default function WriteReview({ institutionId, institutionName }: Props) {
   }
 
   function reset() {
-    setOpen(false)
-    setRating(0)
-    setHovered(0)
-    setDims({})
-    setTitle('')
-    setBody('')
-    setIsAnonymous(false)
-    setError('')
-    setDone(false)
+    setOpen(false); setRating(0); setHovered(0); setDims({})
+    setTitle(''); setBody(''); setIsAnonymous(false); setError(''); setDone(false)
   }
 
-  // Not logged in
   if (!token) {
     return (
       <a
-        href={authHref(pathname)}
-        className="flex w-full items-center justify-center gap-2 rounded-xl border border-dashed border-gray-300 py-4 text-sm font-semibold text-gray-500 transition-colors hover:border-primary-400 hover:text-primary-600"
+        href="/auth"
+        className="flex w-full items-center justify-center gap-2 rounded-xl border border-dashed border-line-2 py-3.5 text-sm font-medium text-mute transition-colors hover:border-primary-400 hover:text-primary-600 dark:hover:text-primary-400"
       >
-        <PencilLine className="h-4 w-4 shrink-0" strokeWidth={1.75} />
+        <PencilLine className="h-4 w-4" aria-hidden />
         Sharh yozish uchun kiring
       </a>
     )
   }
 
-  // Button to open
   if (!open) {
     return (
       <button
         onClick={() => setOpen(true)}
-        className="flex w-full items-center justify-center gap-2 rounded-xl bg-primary-600 py-4 font-semibold text-white shadow-sm transition-colors hover:bg-primary-700"
+        className="flex w-full items-center justify-center gap-2 rounded-xl bg-primary-600 py-3.5 text-sm font-semibold text-white transition-colors hover:bg-primary-700 active:scale-[0.98]"
       >
-        <PencilLine className="h-4 w-4 shrink-0" strokeWidth={1.75} />
+        <PencilLine className="h-4 w-4" aria-hidden />
         Sharh yozish
       </button>
     )
   }
 
-  // Done state
   if (done) {
     return (
-      <div className="rounded-2xl border border-emerald-200 bg-emerald-50 p-6 text-center">
-        <div className="mb-3 flex justify-center">
-          <CheckCircle2 className="h-12 w-12 text-emerald-500" strokeWidth={1.5} />
-        </div>
-        <h3 className="mb-2 text-lg font-bold text-emerald-800">Rahmat!</h3>
-        <p className="mb-4 text-sm text-emerald-700">
-          Sharhingiz moderatsiyadan o&apos;tgach nashr etiladi (odatda 1-2 soat ichida)
+      <div className="rounded-xl border border-accent-200 bg-accent-50 p-6 text-center dark:border-accent-500/25 dark:bg-accent-500/10">
+        <CheckCircle2 className="mx-auto mb-3 h-10 w-10 text-accent-600 dark:text-accent-400" aria-hidden />
+        <h3 className="mb-1 text-base font-semibold text-ink">Rahmat!</h3>
+        <p className="mb-4 text-sm text-mute">
+          Sharhingiz moderatsiyadan o&apos;tgach nashr etiladi (1–2 soat ichida)
         </p>
         <button
           onClick={reset}
-          className="rounded-xl bg-emerald-600 px-6 py-2.5 font-semibold text-white transition-colors hover:bg-emerald-700"
+          className="rounded-lg bg-accent-600 px-5 py-2 text-sm font-semibold text-white transition-colors hover:bg-accent-700"
         >
           Yopish
         </button>
@@ -169,25 +157,29 @@ export default function WriteReview({ institutionId, institutionName }: Props) {
   const activeRating = hovered || rating
 
   return (
-    <div className="rounded-2xl border border-primary-200 bg-white p-5 shadow-sm">
-      <div className="mb-4 flex items-center justify-between">
-        <h3 className="flex items-center gap-2 font-bold text-gray-900">
-          <PencilLine className="h-4 w-4 shrink-0 text-primary-500" strokeWidth={1.75} /> Sharh yozish
-        </h3>
-        <button onClick={reset} className="flex h-8 w-8 items-center justify-center rounded-lg border border-gray-200 text-gray-400 transition-colors hover:bg-gray-50 hover:text-gray-600">
-          <X className="h-4 w-4" strokeWidth={1.75} />
+    <div className="rounded-xl border border-line bg-surface p-5">
+      {/* Header */}
+      <div className="mb-5 flex items-center justify-between">
+        <h3 className="text-base font-semibold text-ink">Sharh yozish</h3>
+        <button
+          onClick={reset}
+          className="flex h-8 w-8 items-center justify-center rounded-lg text-faint transition-colors hover:bg-surface-2 hover:text-ink"
+          style={{ minHeight: 0, minWidth: 0 }}
+          aria-label="Yopish"
+        >
+          <X className="h-4 w-4" aria-hidden />
         </button>
       </div>
 
-      <form onSubmit={handleSubmit} className="space-y-5">
+      <form onSubmit={handleSubmit} className="space-y-4">
 
         {/* Umumiy baho */}
         <div>
-          <p className="mb-2 text-sm font-semibold text-gray-700">
-            Umumiy baho <span className="text-red-500">*</span>
+          <p className="mb-2 text-sm font-medium text-ink">
+            Umumiy baho <span className="text-red-500" aria-hidden>*</span>
           </p>
-          <div className="flex items-center gap-2">
-            <div className="flex gap-1">
+          <div className="flex items-center gap-3">
+            <div className="flex gap-0.5" role="group" aria-label="Umumiy baho">
               {STARS.map((s) => (
                 <button
                   key={s}
@@ -195,38 +187,42 @@ export default function WriteReview({ institutionId, institutionName }: Props) {
                   onClick={() => setRating(s)}
                   onMouseEnter={() => setHovered(s)}
                   onMouseLeave={() => setHovered(0)}
-                  className={`text-3xl transition-transform hover:scale-110 ${s <= activeRating ? 'text-yellow-400' : 'text-gray-200'}`}
+                  className="rounded p-0.5 transition-transform hover:scale-110 active:scale-95"
+                  style={{ minHeight: 44, minWidth: 36 }}
+                  aria-label={`${s} yulduz`}
+                  aria-pressed={rating === s}
                 >
-                  ★
+                  <Star
+                    className={`h-7 w-7 transition-colors ${s <= activeRating ? 'text-amber-400' : 'text-line-2'}`}
+                    fill={s <= activeRating ? 'currentColor' : 'none'}
+                    strokeWidth={s <= activeRating ? 0 : 1.5}
+                    aria-hidden
+                  />
                 </button>
               ))}
             </div>
             {activeRating > 0 && (
-              <span className="text-sm font-semibold text-gray-600">{RATING_LABELS[activeRating]}</span>
+              <span className="text-sm font-medium text-mute">{RATING_LABELS[activeRating]}</span>
             )}
           </div>
         </div>
 
-        {/* Batafsil mezonlar bo'yicha baho */}
-        <div className="rounded-xl border border-gray-100 bg-gray-50 p-4">
-          <p className="mb-3 text-xs font-semibold uppercase tracking-wide text-gray-400">
-            Mezonlar bo&apos;yicha baho <span className="normal-case font-normal text-gray-400">(ixtiyoriy)</span>
+        {/* Batafsil mezonlar */}
+        <div className="rounded-lg border border-line bg-surface-2 p-4">
+          <p className="mb-3 text-xs font-semibold uppercase tracking-wider text-faint">
+            Batafsil baho <span className="font-normal normal-case text-faint">(ixtiyoriy)</span>
           </p>
           <div className="space-y-3">
-            {DIMENSIONS.map(({ key, Icon, label, hint }) => (
-              <div key={key} className="flex items-center gap-3">
-                <Icon className="h-4 w-4 shrink-0 text-gray-400" strokeWidth={1.75} />
-                <div className="min-w-[110px] shrink-0">
-                  <span className="text-sm font-semibold text-gray-700">{label}</span>
-                  <p className="text-xs text-gray-400 leading-tight">{hint}</p>
+            {DIMENSIONS.map(({ key, label, hint }) => (
+              <div key={key} className="flex items-center justify-between gap-3">
+                <div className="min-w-0 flex-1">
+                  <p className="text-sm font-medium text-ink">{label}</p>
+                  <p className="text-xs text-faint leading-tight">{hint}</p>
                 </div>
-                <MiniStars
+                <MiniStarPicker
                   value={dims[key] ?? 0}
                   onChange={(v) => setDims((prev) => ({ ...prev, [key]: v }))}
                 />
-                {(dims[key] ?? 0) > 0 && (
-                  <span className="text-xs font-bold text-yellow-600">{dims[key]}/5</span>
-                )}
               </div>
             ))}
           </div>
@@ -234,74 +230,82 @@ export default function WriteReview({ institutionId, institutionName }: Props) {
 
         {/* Sarlavha */}
         <div>
-          <label className="mb-1 block text-sm font-semibold text-gray-700">
-            Sarlavha <span className="text-gray-400 font-normal">(ixtiyoriy)</span>
+          <label htmlFor="review-title" className="mb-1.5 block text-sm font-medium text-ink">
+            Sarlavha <span className="font-normal text-faint">(ixtiyoriy)</span>
           </label>
           <input
+            id="review-title"
             type="text"
             value={title}
             onChange={(e) => setTitle(e.target.value)}
             placeholder="Masalan: Ajoyib o'qituvchilar!"
             maxLength={100}
-            className="w-full rounded-xl border border-gray-200 px-4 py-2.5 text-gray-900 outline-none focus:border-primary-400 transition-colors"
+            className="input"
           />
         </div>
 
         {/* Sharh matni */}
         <div>
-          <label className="mb-1 block text-sm font-semibold text-gray-700">
-            Sharh matni <span className="text-red-500">*</span>
+          <label htmlFor="review-body" className="mb-1.5 block text-sm font-medium text-ink">
+            Sharh matni <span className="text-red-500" aria-hidden>*</span>
           </label>
           <textarea
+            id="review-body"
             value={body}
             onChange={(e) => setBody(e.target.value)}
-            placeholder={`${institutionName} haqida nima deyish mumkin? O'qituvchilar, narx, muhit...`}
+            placeholder={`${institutionName} haqida nima deyish mumkin?`}
             required
             minLength={2}
             maxLength={2000}
             rows={4}
-            className="w-full resize-none rounded-xl border border-gray-200 px-4 py-2.5 text-gray-900 outline-none focus:border-primary-400 transition-colors"
+            className="input resize-none"
           />
-          <p className={`mt-1 text-right text-xs ${body.length > 1800 ? 'text-orange-500 font-medium' : 'text-gray-400'}`}>
+          <p className={`mt-1 text-right text-xs tabular-nums ${body.length > 1800 ? 'font-medium text-red-500' : 'text-faint'}`}>
             {body.length}/2000
           </p>
         </div>
 
-        {/* Anonim sharh */}
-        <label className="flex cursor-pointer items-center gap-3 rounded-xl border border-gray-200 px-4 py-3 hover:bg-gray-50">
-          <div
-            className={`relative h-6 w-11 rounded-full transition-colors ${isAnonymous ? 'bg-primary-600' : 'bg-gray-200'}`}
+        {/* Anonim toggle */}
+        <label className="flex cursor-pointer items-center gap-3 rounded-lg border border-line bg-surface-2 px-4 py-3 transition-colors hover:border-line-2">
+          <button
+            type="button"
+            role="switch"
+            aria-checked={isAnonymous}
             onClick={() => setIsAnonymous((v) => !v)}
+            className={`relative h-5 w-9 rounded-full transition-colors focus-visible:ring-2 focus-visible:ring-primary-500 ${isAnonymous ? 'bg-primary-600' : 'bg-line-2'}`}
+            style={{ minHeight: 0, minWidth: 0 }}
           >
-            <div className={`absolute top-0.5 h-5 w-5 rounded-full bg-white shadow transition-transform ${isAnonymous ? 'translate-x-5' : 'translate-x-0.5'}`} />
-          </div>
+            <span className={`absolute top-0.5 left-0.5 h-4 w-4 rounded-full bg-white shadow-card transition-transform ${isAnonymous ? 'translate-x-4' : 'translate-x-0'}`} />
+          </button>
           <div>
-            <p className="text-sm font-semibold text-gray-700">Anonim sharh</p>
-            <p className="text-xs text-gray-400">Ismingiz ko&apos;rinmaydi</p>
+            <p className="text-sm font-medium text-ink">Anonim sharh</p>
+            <p className="text-xs text-faint">Ismingiz ko&apos;rinmaydi</p>
           </div>
         </label>
 
+        {/* Error */}
         {error && (
-          <div className="flex items-start gap-2 rounded-xl bg-red-50 px-4 py-3 text-sm text-red-600">
-            <AlertCircle className="mt-0.5 h-4 w-4 shrink-0" strokeWidth={2} />
+          <div role="alert" className="flex items-start gap-2 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-600 dark:border-red-500/25 dark:bg-red-500/10 dark:text-red-400">
+            <AlertCircle className="mt-0.5 h-4 w-4 shrink-0" aria-hidden />
             <span>{error}</span>
           </div>
         )}
 
-        <div className="flex gap-3">
+        {/* Buttons */}
+        <div className="flex gap-2">
           <button
             type="submit"
             disabled={loading || rating === 0 || body.trim().length < 2}
-            className="flex-1 rounded-xl bg-primary-600 py-3 font-semibold text-white transition-colors hover:bg-primary-700 disabled:opacity-50"
+            className="flex-1 rounded-xl bg-primary-600 py-3 text-sm font-semibold text-white transition-colors hover:bg-primary-700 active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-50"
           >
-            {loading ? 'Yuborilmoqda...' : 'Sharh yuborish →'}
+            {loading ? 'Yuborilmoqda...' : 'Sharh yuborish'}
           </button>
           <button
             type="button"
             onClick={reset}
-            className="rounded-xl border border-gray-200 px-4 py-3 font-medium text-gray-600 transition-colors hover:bg-gray-50"
+            className="rounded-xl border border-line-2 px-4 py-3 text-sm font-medium text-mute transition-colors hover:bg-surface-2 hover:text-ink"
           >
-            ← Bekor
+            Bekor
           </button>
         </div>
       </form>

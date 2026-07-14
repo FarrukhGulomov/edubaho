@@ -2,33 +2,29 @@
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
-import {
-  ClipboardList, Phone, Info, Wallet, AlertCircle, BookOpen, Target,
-  Clock, Trophy, ChevronLeft, ChevronRight, CheckCircle2,
-} from 'lucide-react'
 
 const API = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:3001/api/v1'
 
 const INSTITUTION_TYPES = [
-  { value: 'IT_SCHOOL',       label: 'IT maktab' },
-  { value: 'UNIVERSITY',      label: 'Universitet' },
-  { value: 'SCHOOL',          label: 'Maktab' },
-  { value: 'KINDERGARTEN',    label: "Bog'cha" },
-  { value: 'LANGUAGE_CENTER', label: 'Til markazi' },
-  { value: 'COURSE_CENTER',   label: 'Kurs markazi' },
-  { value: 'SPORTS_SCHOOL',   label: 'Sport maktabi' },
-  { value: 'LYCEUM',          label: 'Litsey' },
-  { value: 'COLLEGE',         label: 'Kollej' },
-  { value: 'TUTORING',        label: 'Repetitor' },
-  { value: 'ARTS_SCHOOL',     label: "San'at maktabi" },
+  { value: 'IT_SCHOOL',       label: '💻 IT maktab' },
+  { value: 'UNIVERSITY',      label: '🎓 Universitet' },
+  { value: 'SCHOOL',          label: '📚 Maktab' },
+  { value: 'KINDERGARTEN',    label: "🎨 Bog'cha" },
+  { value: 'LANGUAGE_CENTER', label: '🌐 Til markazi' },
+  { value: 'COURSE_CENTER',   label: '✏️ Kurs markazi' },
+  { value: 'SPORTS_SCHOOL',   label: '⚽ Sport maktabi' },
+  { value: 'LYCEUM',          label: '🏫 Litsey' },
+  { value: 'COLLEGE',         label: '🏛️ Kollej' },
+  { value: 'TUTORING',        label: '👨‍🏫 Repetitor' },
+  { value: 'ARTS_SCHOOL',     label: "🎭 San'at maktabi" },
 ]
 
 const STATUSES = [
-  { value: 'PENDING',   label: 'Kutilmoqda' },
-  { value: 'ACTIVE',    label: 'Faol' },
-  { value: 'PREMIUM',   label: 'Premium' },
-  { value: 'SUSPENDED', label: 'To\'xtatilgan' },
-  { value: 'INACTIVE',  label: 'Nofaol' },
+  { value: 'PENDING',   label: '⏳ Kutilmoqda' },
+  { value: 'ACTIVE',    label: '✅ Faol' },
+  { value: 'PREMIUM',   label: '⭐ Premium' },
+  { value: 'SUSPENDED', label: '🚫 To\'xtatilgan' },
+  { value: 'INACTIVE',  label: '❌ Nofaol' },
 ]
 
 const PAYMENT_METHODS = ['Payme', 'Click', 'Uzcard', 'Humo', 'Naqd']
@@ -75,10 +71,10 @@ const EMPTY: InstitutionFormData = {
 }
 
 const TABS = [
-  { id: 'main',    label: 'Asosiy',   Icon: ClipboardList },
-  { id: 'contact', label: 'Aloqa',    Icon: Phone },
-  { id: 'details', label: 'Batafsil', Icon: Info },
-  { id: 'pricing', label: 'Narx',     Icon: Wallet },
+  { id: 'main',    label: '📋 Asosiy' },
+  { id: 'contact', label: '📞 Aloqa' },
+  { id: 'details', label: 'ℹ️ Batafsil' },
+  { id: 'pricing', label: '💰 Narx' },
 ]
 
 interface Props {
@@ -173,7 +169,7 @@ export default function InstitutionForm({ initialData, institutionId, mode }: Pr
       const data = await res.json()
       if (!res.ok) throw new Error(data.error ?? 'Xatolik')
 
-      setSuccess(mode === 'create' ? 'Muassasa yaratildi!' : 'Muassasa yangilandi!')
+      setSuccess(mode === 'create' ? '✅ Muassasa yaratildi!' : '✅ Muassasa yangilandi!')
       if (mode === 'create') {
         setTimeout(() => router.push('/admin/institutions'), 1200)
       }
@@ -193,13 +189,13 @@ export default function InstitutionForm({ initialData, institutionId, mode }: Pr
             key={t.id}
             type="button"
             onClick={() => setTab(t.id)}
-            className={`flex flex-1 items-center justify-center gap-1.5 whitespace-nowrap rounded-xl py-2.5 text-sm font-semibold transition-colors ${
+            className={`flex-1 rounded-xl py-2.5 text-sm font-bold transition-all active:scale-95 ${
               tab === t.id
-                ? 'bg-white shadow-sm text-primary-700'
+                ? 'bg-white shadow-md text-primary-700'
                 : 'text-gray-500 hover:text-gray-800'
             }`}
           >
-            <t.Icon className="h-4 w-4 shrink-0" strokeWidth={1.75} /> {t.label}
+            {t.label}
           </button>
         ))}
       </div>
@@ -252,7 +248,7 @@ export default function InstitutionForm({ initialData, institutionId, mode }: Pr
               <button
                 type="button"
                 onClick={() => set('slug', generateSlug(form.nameUz))}
-                className="rounded-xl border border-gray-200 bg-white px-3 py-2.5 text-sm font-semibold text-gray-600 hover:bg-gray-50 hover:border-gray-300 whitespace-nowrap transition-colors"
+                className="rounded-xl border-2 border-gray-200 bg-white px-3 py-2.5 text-sm font-bold text-gray-600 hover:bg-canvas hover:border-gray-300 whitespace-nowrap transition-all active:scale-95"
               >
                 Auto
               </button>
@@ -291,7 +287,7 @@ export default function InstitutionForm({ initialData, institutionId, mode }: Pr
             </div>
           </div>
 
-          <label className="flex cursor-pointer items-center gap-3 rounded-xl border border-gray-200 px-4 py-3 hover:bg-gray-50">
+          <label className="flex cursor-pointer items-center gap-3 rounded-xl border border-gray-200 px-4 py-3 hover:bg-canvas">
             <div
               onClick={() => set('isVerified', !form.isVerified)}
               className={`relative h-6 w-11 rounded-full transition-colors ${form.isVerified ? 'bg-green-500' : 'bg-gray-200'}`}
@@ -299,9 +295,7 @@ export default function InstitutionForm({ initialData, institutionId, mode }: Pr
               <div className={`absolute top-0.5 h-5 w-5 rounded-full bg-white shadow transition-transform ${form.isVerified ? 'translate-x-5' : 'translate-x-0.5'}`} />
             </div>
             <div>
-              <p className="flex items-center gap-1.5 text-sm font-semibold text-gray-700">
-                <CheckCircle2 className="h-4 w-4 shrink-0 text-emerald-500" strokeWidth={1.75} /> Tasdiqlangan muassasa
-              </p>
+              <p className="text-sm font-semibold text-gray-700">✓ Tasdiqlangan muassasa</p>
               <p className="text-xs text-gray-400">Qidiruv natijalarida "Tasdiqlangan" badge ko'rsatiladi</p>
             </div>
           </label>
@@ -339,7 +333,7 @@ export default function InstitutionForm({ initialData, institutionId, mode }: Pr
             <div>
               <label className="mb-1 block text-sm font-semibold text-gray-700">Telegram</label>
               <div className="flex">
-                <span className="flex items-center rounded-l-xl border border-r-0 border-gray-300 bg-gray-50 px-3 text-sm text-gray-500">@</span>
+                <span className="flex items-center rounded-l-xl border border-r-0 border-gray-300 bg-canvas px-3 text-sm text-gray-500">@</span>
                 <input type="text" value={form.telegram} onChange={(e) => set('telegram', e.target.value.replace('@', ''))}
                   placeholder="najottalim" className={INPUT_CLS + ' rounded-l-none'} />
               </div>
@@ -347,7 +341,7 @@ export default function InstitutionForm({ initialData, institutionId, mode }: Pr
             <div>
               <label className="mb-1 block text-sm font-semibold text-gray-700">Instagram</label>
               <div className="flex">
-                <span className="flex items-center rounded-l-xl border border-r-0 border-gray-300 bg-gray-50 px-3 text-sm text-gray-500">@</span>
+                <span className="flex items-center rounded-l-xl border border-r-0 border-gray-300 bg-canvas px-3 text-sm text-gray-500">@</span>
                 <input type="text" value={form.instagram} onChange={(e) => set('instagram', e.target.value.replace('@', ''))}
                   placeholder="najottalim" className={INPUT_CLS + ' rounded-l-none'} />
               </div>
@@ -409,7 +403,7 @@ export default function InstitutionForm({ initialData, institutionId, mode }: Pr
                   key={lang}
                   type="button"
                   onClick={() => toggleArray('languages', lang)}
-                  className={`rounded-xl px-4 py-2 text-sm font-semibold transition-colors border ${
+                  className={`rounded-xl px-4 py-2 text-sm font-bold transition-all active:scale-95 border-2 ${
                     form.languages.includes(lang)
                       ? 'border-primary-500 bg-primary-600 text-white shadow-sm'
                       : 'border-gray-200 bg-white text-gray-700 hover:border-primary-300 hover:text-primary-700'
@@ -423,12 +417,12 @@ export default function InstitutionForm({ initialData, institutionId, mode }: Pr
 
           {/* O'quv markaz uchun qo'shimcha */}
           <div className="border-t border-gray-100 pt-4">
-            <p className="mb-3 text-xs font-semibold uppercase tracking-wide text-gray-400">O'quv markaz / Maktab uchun</p>
+            <p className="mb-3 text-xs font-bold uppercase tracking-wide text-gray-400">O'quv markaz / Maktab uchun</p>
 
             <div className="space-y-4">
               <div>
-                <label className="mb-1 flex items-center gap-1.5 text-sm font-semibold text-gray-700">
-                  <BookOpen className="h-4 w-4 shrink-0 text-gray-400" strokeWidth={1.75} /> O'qitiladigan fanlar
+                <label className="mb-1 block text-sm font-semibold text-gray-700">
+                  📚 O'qitiladigan fanlar
                   <span className="ml-1 text-xs font-normal text-gray-400">(vergul bilan ajrating)</span>
                 </label>
                 <input
@@ -448,8 +442,8 @@ export default function InstitutionForm({ initialData, institutionId, mode }: Pr
               </div>
 
               <div>
-                <label className="mb-1 flex items-center gap-1.5 text-sm font-semibold text-gray-700">
-                  <Target className="h-4 w-4 shrink-0 text-gray-400" strokeWidth={1.75} /> Ixtisosliklar
+                <label className="mb-1 block text-sm font-semibold text-gray-700">
+                  🎯 Ixtisosliklar
                   <span className="ml-1 text-xs font-normal text-gray-400">(vergul bilan ajrating)</span>
                 </label>
                 <input
@@ -462,16 +456,14 @@ export default function InstitutionForm({ initialData, institutionId, mode }: Pr
               </div>
 
               <div>
-                <label className="mb-2 flex items-center gap-1.5 text-sm font-semibold text-gray-700">
-                  <Clock className="h-4 w-4 shrink-0 text-gray-400" strokeWidth={1.75} /> Dars vaqtlari (smenalar)
-                </label>
+                <label className="mb-2 block text-sm font-semibold text-gray-700">🕐 Dars vaqtlari (smenalar)</label>
                 <div className="flex flex-wrap gap-2">
                   {SHIFTS.map((shift) => (
                     <button
                       key={shift}
                       type="button"
                       onClick={() => toggleArray('shifts', shift)}
-                      className={`rounded-xl px-4 py-2 text-sm font-semibold transition-colors border ${
+                      className={`rounded-xl px-4 py-2 text-sm font-bold transition-all active:scale-95 border-2 ${
                         form.shifts.includes(shift)
                           ? 'border-sky-500 bg-sky-600 text-white shadow-sm'
                           : 'border-gray-200 bg-white text-gray-700 hover:border-sky-300 hover:text-sky-700'
@@ -484,8 +476,8 @@ export default function InstitutionForm({ initialData, institutionId, mode }: Pr
               </div>
 
               <div>
-                <label className="mb-1 flex items-center gap-1.5 text-sm font-semibold text-gray-700">
-                  <Trophy className="h-4 w-4 shrink-0 text-gray-400" strokeWidth={1.75} /> Muvaffaqiyatlar
+                <label className="mb-1 block text-sm font-semibold text-gray-700">
+                  🏆 Muvaffaqiyatlar
                   <span className="ml-1 text-xs font-normal text-gray-400">(qancha o'quvchi OTMga kirdi va h.k.)</span>
                 </label>
                 <textarea
@@ -521,9 +513,8 @@ export default function InstitutionForm({ initialData, institutionId, mode }: Pr
             </div>
           </div>
           {form.monthlyMin && (
-            <p className="flex items-center gap-1.5 text-sm font-medium text-primary-700">
-              <Wallet className="h-4 w-4 shrink-0" strokeWidth={1.75} />
-              {Number(form.monthlyMin).toLocaleString('uz-UZ').replace(/,/g,' ')} so'm
+            <p className="text-sm text-primary-700 font-medium">
+              💰 {Number(form.monthlyMin).toLocaleString('uz-UZ').replace(/,/g,' ')} so'm
               {form.monthlyMax && ` — ${Number(form.monthlyMax).toLocaleString('uz-UZ').replace(/,/g,' ')} so'm`}
               /oyiga
             </p>
@@ -536,7 +527,7 @@ export default function InstitutionForm({ initialData, institutionId, mode }: Pr
                   key={pm}
                   type="button"
                   onClick={() => toggleArray('paymentMethods', pm)}
-                  className={`rounded-xl px-4 py-2 text-sm font-semibold transition-colors border ${
+                  className={`rounded-xl px-4 py-2 text-sm font-bold transition-all active:scale-95 border-2 ${
                     form.paymentMethods.includes(pm)
                       ? 'border-primary-500 bg-primary-600 text-white shadow-sm'
                       : 'border-gray-200 bg-white text-gray-700 hover:border-primary-300 hover:text-primary-700'
@@ -553,11 +544,11 @@ export default function InstitutionForm({ initialData, institutionId, mode }: Pr
       {/* Error / success */}
       {error && (
         <div className="mt-4 flex items-start gap-2 rounded-xl bg-red-50 px-4 py-3 text-sm text-red-700">
-          <AlertCircle className="mt-0.5 h-4 w-4 shrink-0" strokeWidth={2} /> {error}
+          <span>⚠️</span> {error}
         </div>
       )}
       {success && (
-        <div className="mt-4 rounded-xl bg-emerald-50 px-4 py-3 text-sm font-semibold text-emerald-700">
+        <div className="mt-4 rounded-xl bg-green-50 px-4 py-3 text-sm font-semibold text-green-700">
           {success}
         </div>
       )}
@@ -570,18 +561,18 @@ export default function InstitutionForm({ initialData, institutionId, mode }: Pr
             <button
               type="button"
               onClick={() => setTab(TABS[TABS.findIndex((t) => t.id === tab) - 1].id)}
-              className="flex items-center gap-1.5 whitespace-nowrap rounded-xl border border-gray-200 bg-white px-4 py-2.5 text-sm font-semibold text-gray-600 transition-colors hover:border-gray-300 hover:bg-gray-50"
+              className="flex items-center gap-1.5 rounded-xl border-2 border-gray-200 bg-white px-4 py-2.5 text-sm font-bold text-gray-600 hover:bg-canvas hover:border-gray-300 transition-all active:scale-95"
             >
-              <ChevronLeft className="h-4 w-4 shrink-0" strokeWidth={1.75} /> Oldingi
+              ← Oldingi
             </button>
           )}
           {TABS.findIndex((t) => t.id === tab) < TABS.length - 1 && (
             <button
               type="button"
               onClick={() => setTab(TABS[TABS.findIndex((t) => t.id === tab) + 1].id)}
-              className="flex items-center gap-1.5 whitespace-nowrap rounded-xl border border-gray-200 bg-white px-4 py-2.5 text-sm font-semibold text-gray-600 transition-colors hover:border-gray-300 hover:bg-gray-50"
+              className="flex items-center gap-1.5 rounded-xl border-2 border-gray-200 bg-white px-4 py-2.5 text-sm font-bold text-gray-600 hover:bg-canvas hover:border-gray-300 transition-all active:scale-95"
             >
-              Keyingi <ChevronRight className="h-4 w-4 shrink-0" strokeWidth={1.75} />
+              Keyingi →
             </button>
           )}
         </div>
@@ -589,15 +580,13 @@ export default function InstitutionForm({ initialData, institutionId, mode }: Pr
         <button
           type="submit"
           disabled={loading}
-          className="flex items-center gap-2 whitespace-nowrap rounded-xl bg-primary-600 px-8 py-3 text-base font-semibold text-white transition-colors hover:bg-primary-700 disabled:opacity-50"
+          className="flex items-center gap-2 rounded-2xl bg-gradient-to-r from-primary-600 to-primary-500 px-8 py-3 text-base font-bold text-white shadow-md hover:shadow-lg hover:opacity-90 disabled:opacity-50 transition-all active:scale-95"
         >
-          {loading
-            ? 'Saqlanmoqda...'
-            : <><CheckCircle2 className="h-4 w-4 shrink-0" strokeWidth={1.75} /> {mode === 'create' ? 'Muassasa yaratish' : 'Saqlash'}</>}
+          {loading ? '⏳ Saqlanmoqda...' : mode === 'create' ? '✅ Muassasa yaratish' : '✅ Saqlash'}
         </button>
       </div>
     </form>
   )
 }
 
-const INPUT_CLS = 'w-full rounded-xl border border-gray-200 px-4 py-2.5 text-gray-900 outline-none focus:border-primary-400 text-sm transition-colors'
+const INPUT_CLS = 'w-full rounded-xl border-2 border-gray-200 px-4 py-2.5 text-gray-900 outline-none focus:border-primary-400 focus:ring-2 focus:ring-primary-100 text-sm transition-colors'
