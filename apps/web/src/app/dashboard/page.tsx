@@ -6,12 +6,12 @@ export const metadata: Metadata = { title: 'Dashboard' }
 
 export default function DashboardPage() {
   return (
-    <div className="flex min-h-screen flex-col items-center justify-center bg-canvas px-4 text-center">
-      <div className="mb-6 flex h-20 w-20 items-center justify-center rounded-2xl bg-surface-2">
-        <Construction className="h-10 w-10 text-faint" strokeWidth={1.5} />
+    <div className="flex min-h-screen flex-col items-center justify-center bg-gray-50 px-4 text-center">
+      <div className="mb-6 flex h-20 w-20 items-center justify-center rounded-2xl bg-gray-100">
+        <Construction className="h-10 w-10 text-gray-300" strokeWidth={1.5} />
       </div>
-      <h1 className="mb-3 text-2xl font-bold text-ink">Dashboard tez orada!</h1>
-      <p className="mb-8 max-w-sm leading-relaxed text-mute">
+      <h1 className="mb-3 text-2xl font-bold text-gray-900">Dashboard tez orada!</h1>
+      <p className="mb-8 max-w-sm leading-relaxed text-gray-500">
         Muassasa egasi paneliga kirish uchun tasdiqlanish kerak.
         Biz siz bilan bog&apos;lanamiz.
       </p>
@@ -26,7 +26,7 @@ export default function DashboardPage() {
         </a>
         <Link
           href="/"
-          className="rounded-xl border border-line-2 py-4 font-semibold text-ink transition-colors hover:bg-surface-2"
+          className="rounded-xl border border-gray-300 py-4 font-semibold text-gray-700 transition-colors hover:bg-gray-100"
         >
           Bosh sahifaga qaytish
         </Link>

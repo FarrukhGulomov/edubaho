@@ -157,17 +157,17 @@ export default function MatchPage() {
   }
 
   return (
-    <div className="min-h-screen bg-canvas">
+    <div className="min-h-screen bg-gray-50">
       <Header />
 
       <main className="mx-auto max-w-2xl px-4 py-8">
         {/* Sarlavha */}
         <div className="mb-6 text-center">
-          <h1 className="flex items-center justify-center gap-2 text-2xl font-bold text-ink sm:text-3xl">
+          <h1 className="flex items-center justify-center gap-2 text-2xl font-bold text-gray-900 sm:text-3xl">
             <Target className="h-7 w-7 shrink-0 text-primary-600 sm:h-8 sm:w-8" strokeWidth={1.75} /> {t(lang, ui.title)}
           </h1>
           {step !== 'results' && (
-            <p className="mt-2 text-sm text-mute">{t(lang, ui.subtitle)}</p>
+            <p className="mt-2 text-sm text-gray-500">{t(lang, ui.subtitle)}</p>
           )}
         </div>
 
@@ -178,7 +178,7 @@ export default function MatchPage() {
               <div
                 key={s}
                 className={`h-1.5 flex-1 rounded-full transition-colors ${
-                  i <= stepIndex ? 'bg-primary-600' : 'bg-line'
+                  i <= stepIndex ? 'bg-primary-600' : 'bg-gray-200'
                 }`}
               />
             ))}
@@ -194,25 +194,25 @@ export default function MatchPage() {
                   key={o.value}
                   aria-disabled="true"
                   title={uz ? 'Tez orada' : 'Скоро'}
-                  className="relative flex cursor-not-allowed flex-col items-center gap-2 rounded-2xl border border-line bg-surface-2 p-5 opacity-60"
+                  className="relative flex cursor-not-allowed flex-col items-center gap-2 rounded-2xl border border-gray-200 bg-gray-50 p-5 opacity-60"
                 >
-                  <span className="absolute right-2 top-2 flex items-center gap-1 rounded-full bg-line px-2 py-0.5 text-[10px] font-semibold text-mute">
+                  <span className="absolute right-2 top-2 flex items-center gap-1 rounded-full bg-gray-200 px-2 py-0.5 text-[10px] font-semibold text-gray-500">
                     <Lock className="h-2.5 w-2.5 shrink-0" strokeWidth={2} />
                     {uz ? 'Tez orada' : 'Скоро'}
                   </span>
-                  <o.Icon className="h-7 w-7 text-faint" strokeWidth={1.5} />
-                  <span className="text-sm font-semibold text-faint">{uz ? o.uz : o.ru}</span>
+                  <o.Icon className="h-7 w-7 text-gray-300" strokeWidth={1.5} />
+                  <span className="text-sm font-semibold text-gray-400">{uz ? o.uz : o.ru}</span>
                 </div>
               ) : (
                 <button
                   key={o.value}
                   onClick={() => { haptic('light'); setType(o.value); setStep('goal') }}
-                  className={`flex flex-col items-center gap-2 rounded-2xl border bg-surface p-5 shadow-card transition-colors hover:border-primary-300 ${
-                    type === o.value ? 'border-primary-500 bg-primary-50 dark:bg-primary-500/10' : 'border-line'
+                  className={`flex flex-col items-center gap-2 rounded-2xl border bg-white p-5 shadow-sm transition-colors hover:border-primary-300 ${
+                    type === o.value ? 'border-primary-500 bg-primary-50' : 'border-gray-200'
                   }`}
                 >
                   <o.Icon className="h-7 w-7 text-primary-500" strokeWidth={1.5} />
-                  <span className="text-sm font-semibold text-ink">{uz ? o.uz : o.ru}</span>
+                  <span className="text-sm font-semibold text-gray-800">{uz ? o.uz : o.ru}</span>
                 </button>
               )
             )}
@@ -222,7 +222,7 @@ export default function MatchPage() {
         {/* ── 2. Maqsad ── */}
         {step === 'goal' && (
           <div className="space-y-4">
-            <h2 className="text-lg font-bold text-ink">{t(lang, ui.qGoal)}</h2>
+            <h2 className="text-lg font-bold text-gray-900">{t(lang, ui.qGoal)}</h2>
             <input
               type="text"
               value={goal}
@@ -240,7 +240,7 @@ export default function MatchPage() {
                     className={`rounded-full border px-4 py-1.5 text-sm font-semibold transition-colors ${
                       goal === g
                         ? 'border-primary-500 bg-primary-600 text-white'
-                        : 'border-line-2 bg-surface text-mute hover:border-primary-400'
+                        : 'border-gray-300 bg-white text-gray-600 hover:border-primary-400'
                     }`}
                   >
                     {g}
@@ -260,11 +260,11 @@ export default function MatchPage() {
         {/* ── 3. Shahar ── */}
         {step === 'city' && (
           <div className="space-y-4">
-            <h2 className="text-lg font-bold text-ink">{t(lang, ui.qCity)}</h2>
-            <div className="max-h-72 space-y-1.5 overflow-y-auto rounded-2xl border border-line bg-surface p-2">
+            <h2 className="text-lg font-bold text-gray-900">{t(lang, ui.qCity)}</h2>
+            <div className="max-h-72 space-y-1.5 overflow-y-auto rounded-2xl border border-gray-200 bg-white p-2">
               <button
                 onClick={() => { setCityId(''); setStep('budget') }}
-                className="flex w-full items-center gap-2 rounded-xl px-4 py-2.5 text-left text-sm font-semibold text-mute hover:bg-primary-50 dark:hover:bg-primary-500/10"
+                className="flex w-full items-center gap-2 rounded-xl px-4 py-2.5 text-left text-sm font-semibold text-gray-600 hover:bg-primary-50"
               >
                 <Globe className="h-4 w-4 shrink-0" strokeWidth={1.75} /> {t(lang, ui.anyCity)}
               </button>
@@ -273,13 +273,13 @@ export default function MatchPage() {
                   key={c.id}
                   onClick={() => { setCityId(c.id); setStep('budget') }}
                   className={`flex w-full items-center gap-2 rounded-xl px-4 py-2.5 text-left text-sm font-semibold transition-colors ${
-                    cityId === c.id ? 'bg-primary-100 text-primary-700 dark:bg-primary-500/20 dark:text-primary-300' : 'text-ink hover:bg-primary-50 dark:hover:bg-primary-500/10'
+                    cityId === c.id ? 'bg-primary-100 text-primary-700' : 'text-gray-800 hover:bg-primary-50'
                   }`}
                 >
                   <MapPin className="h-4 w-4 shrink-0" strokeWidth={1.75} />
                   {uz ? c.nameUz : (c.nameRu ?? c.nameUz)}
                   {c.region && (
-                    <span className="text-xs font-normal text-faint">
+                    <span className="text-xs font-normal text-gray-400">
                       {uz ? c.region.nameUz : (c.region.nameRu ?? c.region.nameUz)}
                     </span>
                   )}
@@ -293,14 +293,14 @@ export default function MatchPage() {
         {/* ── 4. Byudjet ── */}
         {step === 'budget' && (
           <div className="space-y-4">
-            <h2 className="text-lg font-bold text-ink">{t(lang, ui.qBudget)}</h2>
+            <h2 className="text-lg font-bold text-gray-900">{t(lang, ui.qBudget)}</h2>
             <div className="space-y-2">
               {BUDGET_OPTIONS.map((b) => (
                 <button
                   key={b.value}
                   onClick={() => { setBudget(b.value || null); setStep('time') }}
-                  className={`flex w-full items-center gap-2.5 rounded-xl border bg-surface px-5 py-3.5 text-left font-semibold shadow-card transition-colors hover:border-primary-300 ${
-                    budget === (b.value || null) ? 'border-primary-500 bg-primary-50 dark:bg-primary-500/10' : 'border-line'
+                  className={`flex w-full items-center gap-2.5 rounded-xl border bg-white px-5 py-3.5 text-left font-semibold shadow-sm transition-colors hover:border-primary-300 ${
+                    budget === (b.value || null) ? 'border-primary-500 bg-primary-50' : 'border-gray-200'
                   }`}
                 >
                   <Wallet className="h-4 w-4 shrink-0 text-primary-500" strokeWidth={1.75} /> {uz ? b.uz : b.ru}
@@ -314,7 +314,7 @@ export default function MatchPage() {
         {/* ── 5. Vaqt + yosh ── */}
         {step === 'time' && (
           <div className="space-y-5">
-            <h2 className="text-lg font-bold text-ink">{t(lang, ui.qTime)}</h2>
+            <h2 className="text-lg font-bold text-gray-900">{t(lang, ui.qTime)}</h2>
             <div className="grid grid-cols-2 gap-2.5">
               {SHIFT_OPTIONS.map((s) => {
                 // '' qiymati "Farqi yo'q" degani — 'any' sifatida saqlanadi
@@ -323,8 +323,8 @@ export default function MatchPage() {
                   <button
                     key={val}
                     onClick={() => setShift(val)}
-                    className={`flex items-center gap-2.5 rounded-xl border bg-surface px-4 py-3 font-semibold shadow-card transition-colors hover:border-primary-300 ${
-                      shift === val ? 'border-primary-500 bg-primary-50 dark:bg-primary-500/10' : 'border-line'
+                    className={`flex items-center gap-2.5 rounded-xl border bg-white px-4 py-3 font-semibold shadow-sm transition-colors hover:border-primary-300 ${
+                      shift === val ? 'border-primary-500 bg-primary-50' : 'border-gray-200'
                     }`}
                   >
                     <s.Icon className="h-5 w-5 shrink-0 text-primary-500" strokeWidth={1.75} />
@@ -335,7 +335,7 @@ export default function MatchPage() {
             </div>
 
             <div>
-              <label className="mb-1.5 block text-sm font-semibold text-mute">{t(lang, ui.qAge)}</label>
+              <label className="mb-1.5 block text-sm font-semibold text-gray-600">{t(lang, ui.qAge)}</label>
               <input
                 type="number"
                 min={1}
@@ -348,7 +348,7 @@ export default function MatchPage() {
             </div>
 
             <div className="flex items-center justify-between">
-              <button onClick={goBack} className="text-sm font-semibold text-mute hover:text-ink">
+              <button onClick={goBack} className="text-sm font-semibold text-gray-500 hover:text-gray-700">
                 {t(lang, ui.back)}
               </button>
               <button
@@ -367,14 +367,14 @@ export default function MatchPage() {
             {loading && (
               <div className="flex flex-col items-center gap-3 py-16">
                 <div className="h-10 w-10 animate-spin rounded-full border-3 border-primary-200 border-t-primary-600" />
-                <p className="text-sm font-semibold text-mute">
+                <p className="text-sm font-semibold text-gray-500">
                   {uz ? 'Moslik hisoblanmoqda...' : 'Рассчитываем совпадение...'}
                 </p>
               </div>
             )}
 
             {error && (
-              <div className="flex items-start gap-2 rounded-xl bg-red-50 px-5 py-4 text-sm text-red-700 dark:bg-red-500/10 dark:text-red-300">
+              <div className="flex items-start gap-2 rounded-xl bg-red-50 px-5 py-4 text-sm text-red-700">
                 <AlertCircle className="mt-0.5 h-4 w-4 shrink-0" strokeWidth={2} /> {error}
               </div>
             )}
@@ -382,7 +382,7 @@ export default function MatchPage() {
             {!loading && !error && (
               <>
                 <div className="flex items-center justify-between">
-                  <h2 className="text-lg font-bold text-ink">{t(lang, ui.results)}</h2>
+                  <h2 className="text-lg font-bold text-gray-900">{t(lang, ui.results)}</h2>
                   <button
                     onClick={() => { setStep('type'); setResults([]) }}
                     className="flex items-center gap-1.5 text-sm font-semibold text-primary-600 hover:underline"
@@ -392,11 +392,11 @@ export default function MatchPage() {
                 </div>
 
                 {results.length === 0 && (
-                  <div className="rounded-2xl border border-line bg-surface p-10 text-center">
+                  <div className="rounded-2xl border border-gray-200 bg-white p-10 text-center">
                     <div className="mb-3 flex justify-center">
-                      <Search className="h-10 w-10 text-faint" strokeWidth={1.5} />
+                      <Search className="h-10 w-10 text-gray-300" strokeWidth={1.5} />
                     </div>
-                    <p className="text-mute">{t(lang, ui.empty)}</p>
+                    <p className="text-gray-500">{t(lang, ui.empty)}</p>
                   </div>
                 )}
 
@@ -405,7 +405,7 @@ export default function MatchPage() {
                     <div className="flex items-start gap-4 p-5">
                       {/* Moslik foizi */}
                       <div className={`flex h-16 w-16 shrink-0 flex-col items-center justify-center rounded-2xl font-bold text-white ${
-                        r.match.score >= 80 ? 'bg-emerald-500' : r.match.score >= 60 ? 'bg-amber-500' : 'bg-faint'
+                        r.match.score >= 80 ? 'bg-emerald-500' : r.match.score >= 60 ? 'bg-amber-500' : 'bg-gray-400'
                       }`}>
                         <span className="text-xl leading-none">{r.match.score}%</span>
                         <span className="mt-0.5 text-[9px] font-semibold opacity-80">{t(lang, ui.matchPct)}</span>
@@ -425,14 +425,14 @@ export default function MatchPage() {
                               institutionId: r.institution.id,
                               properties: { score: r.match.score, position: idx + 1 },
                             })}
-                            className="truncate font-semibold text-ink hover:text-primary-600"
+                            className="truncate font-semibold text-gray-900 hover:text-primary-600"
                           >
                             {uz ? r.institution.nameUz : (r.institution.nameRu ?? r.institution.nameUz)}
                           </Link>
                           {r.institution.isVerified && <BadgeCheck className="h-4 w-4 shrink-0 text-primary-500" strokeWidth={2} />}
                         </div>
 
-                        <div className="mt-1 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-mute">
+                        <div className="mt-1 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-gray-500">
                           {r.institution.avgRating != null && (
                             <RatingHint rating={r.institution.avgRating} count={r.institution.reviewCount} lang={lang} />
                           )}
@@ -444,7 +444,7 @@ export default function MatchPage() {
                           )}
                           {/* Narx — byudjet so'ralgani uchun natijada ham ko'rsatamiz */}
                           {r.institution.pricing?.monthlyMin && (
-                            <span className="flex items-center gap-1 font-semibold text-emerald-600 dark:text-emerald-400">
+                            <span className="flex items-center gap-1 font-semibold text-emerald-600">
                               <Wallet className="h-3.5 w-3.5 shrink-0" strokeWidth={1.75} />
                               {fmtUzs(r.institution.pricing.monthlyMin)}{uz ? '/oy' : '/мес'}
                             </span>
@@ -454,7 +454,7 @@ export default function MatchPage() {
                         {/* Top sabablar */}
                         <div className="mt-2.5 flex flex-wrap gap-1.5">
                           {(uz ? r.match.topReasonsUz : r.match.topReasonsRu).map((reason) => (
-                            <span key={reason} className="flex items-center gap-1 rounded-full bg-emerald-50 px-2.5 py-1 text-[11px] font-semibold text-emerald-700 dark:bg-emerald-500/10 dark:text-emerald-300">
+                            <span key={reason} className="flex items-center gap-1 rounded-full bg-emerald-50 px-2.5 py-1 text-[11px] font-semibold text-emerald-700">
                               <BadgeCheck className="h-3 w-3 shrink-0" strokeWidth={2} /> {reason}
                             </span>
                           ))}
@@ -463,11 +463,11 @@ export default function MatchPage() {
                     </div>
 
                     {/* Breakdown (nega bu tavsiya) + aniq CTA */}
-                    <div className="border-t border-line px-5 py-2.5">
+                    <div className="border-t border-gray-100 px-5 py-2.5">
                       <div className="flex items-center justify-between gap-3">
                         <button
                           onClick={() => setExpanded(expanded === r.institution.id ? null : r.institution.id)}
-                          className="flex items-center gap-1.5 text-xs font-semibold text-faint hover:text-primary-600"
+                          className="flex items-center gap-1.5 text-xs font-semibold text-gray-400 hover:text-primary-600"
                         >
                           {expanded === r.institution.id
                             ? t(lang, ui.hide)
@@ -481,7 +481,7 @@ export default function MatchPage() {
                             institutionId: r.institution.id,
                             properties: { score: r.match.score, position: idx + 1 },
                           })}
-                          className="flex shrink-0 items-center gap-1 whitespace-nowrap rounded-lg bg-primary-50 px-3 py-1.5 text-xs font-bold text-primary-700 transition-colors hover:bg-primary-100 dark:bg-primary-500/10 dark:text-primary-300 dark:hover:bg-primary-500/20"
+                          className="flex shrink-0 items-center gap-1 whitespace-nowrap rounded-lg bg-primary-50 px-3 py-1.5 text-xs font-bold text-primary-700 transition-colors hover:bg-primary-100"
                         >
                           {uz ? "Ko'rish" : 'Смотреть'} →
                         </Link>
@@ -491,10 +491,10 @@ export default function MatchPage() {
                         <div className="mt-3 space-y-2 pb-2">
                           {r.match.components.map((c) => (
                             <div key={c.key} className="flex items-center gap-3">
-                              <span className="w-36 shrink-0 text-xs font-semibold text-mute">
+                              <span className="w-36 shrink-0 text-xs font-semibold text-gray-600">
                                 {uz ? c.labelUz : c.labelRu}
                               </span>
-                              <div className="h-2 flex-1 overflow-hidden rounded-full bg-surface-2">
+                              <div className="h-2 flex-1 overflow-hidden rounded-full bg-gray-100">
                                 <div
                                   className={`h-full rounded-full ${
                                     c.score >= 70 ? 'bg-emerald-400' : c.score >= 45 ? 'bg-amber-400' : 'bg-red-300'
@@ -502,12 +502,12 @@ export default function MatchPage() {
                                   style={{ width: `${c.score}%` }}
                                 />
                               </div>
-                              <span className="w-40 shrink-0 truncate text-right text-[11px] text-faint">
+                              <span className="w-40 shrink-0 truncate text-right text-[11px] text-gray-400">
                                 {uz ? c.reasonUz : c.reasonRu}
                               </span>
                             </div>
                           ))}
-                          <p className="pt-1 text-right text-[10px] text-faint">
+                          <p className="pt-1 text-right text-[10px] text-gray-300">
                             {t(lang, ui.confidence)}: {r.match.confidence}%
                           </p>
                         </div>
@@ -532,7 +532,7 @@ function WizardNav({ onBack, onNext, nextLabel, backLabel }: {
 }) {
   return (
     <div className="flex items-center justify-between pt-2">
-      <button onClick={onBack} className="text-sm font-semibold text-mute hover:text-ink">
+      <button onClick={onBack} className="text-sm font-semibold text-gray-500 hover:text-gray-700">
         {backLabel ?? '← Orqaga'}
       </button>
       {onNext && (
