@@ -1,4 +1,4 @@
-[Siz EduReyting.uz loyihasida ishlayapsiz.
+ [Siz EduReyting.uz loyihasida ishlayapsiz.
 
 Har qanday kod yozishdan OLDIN quyidagi fayllarni o'qing:
 
