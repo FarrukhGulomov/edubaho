@@ -84,22 +84,22 @@ export default function ClaimInstitution({ institutionId, isVerified }: Props) {
 
   if (success) {
     return (
-      <div className="rounded-2xl border border-emerald-200 bg-emerald-50 p-5">
+      <div className="rounded-2xl border border-emerald-200 bg-emerald-50 p-5 dark:border-emerald-500/25 dark:bg-emerald-500/10">
         <div className="flex items-start gap-3">
           <CheckCircle2 className="h-6 w-6 shrink-0 text-emerald-500" strokeWidth={1.75} />
-          <p className="text-sm font-semibold text-emerald-800">{success}</p>
+          <p className="text-sm font-semibold text-emerald-800 dark:text-emerald-300">{success}</p>
         </div>
       </div>
     )
   }
 
   return (
-    <div className="rounded-2xl border border-dashed border-primary-200 bg-primary-50/50 p-5">
-      <h3 className="mb-1.5 flex items-center gap-2 font-bold text-gray-900">
+    <div className="rounded-2xl border border-dashed border-primary-200 bg-primary-50/50 p-5 dark:border-primary-500/30 dark:bg-primary-500/5">
+      <h3 className="mb-1.5 flex items-center gap-2 font-bold text-ink">
         <Building2 className="h-5 w-5 shrink-0 text-primary-500" strokeWidth={1.75} />
         {t(lang, ui.title)}
       </h3>
-      <p className="mb-3 text-sm text-gray-600">{t(lang, ui.desc)}</p>
+      <p className="mb-3 text-sm text-mute">{t(lang, ui.desc)}</p>
 
       {!open ? (
         <button
@@ -108,7 +108,7 @@ export default function ClaimInstitution({ institutionId, isVerified }: Props) {
             if (!token) { router.push('/auth'); return }
             setOpen(true)
           }}
-          className="w-full rounded-xl border border-primary-500 bg-white py-2.5 text-sm font-semibold text-primary-600 transition-colors hover:bg-primary-600 hover:text-white"
+          className="w-full rounded-xl border border-primary-500 bg-surface py-2.5 text-sm font-semibold text-primary-600 transition-colors hover:bg-primary-600 hover:text-white dark:text-primary-400 dark:hover:text-white"
         >
           {t(lang, ui.cta)}
         </button>
@@ -120,7 +120,7 @@ export default function ClaimInstitution({ institutionId, isVerified }: Props) {
             onChange={(e) => setPosition(e.target.value)}
             placeholder={t(lang, ui.position)}
             maxLength={100}
-            className="w-full rounded-xl border border-gray-300 bg-white px-3.5 py-2.5 text-sm text-gray-900 outline-none placeholder:text-gray-400 focus:border-primary-500"
+            className="w-full rounded-xl border border-line-2 bg-surface px-3.5 py-2.5 text-sm text-ink outline-none placeholder:text-faint focus:border-primary-500"
           />
           <input
             type="tel"
@@ -128,7 +128,7 @@ export default function ClaimInstitution({ institutionId, isVerified }: Props) {
             onChange={(e) => setPhone(e.target.value)}
             placeholder={t(lang, ui.phone) + ' (+998...)'}
             maxLength={20}
-            className="w-full rounded-xl border border-gray-300 bg-white px-3.5 py-2.5 text-sm text-gray-900 outline-none placeholder:text-gray-400 focus:border-primary-500"
+            className="w-full rounded-xl border border-line-2 bg-surface px-3.5 py-2.5 text-sm text-ink outline-none placeholder:text-faint focus:border-primary-500"
           />
           <textarea
             value={note}
@@ -136,11 +136,11 @@ export default function ClaimInstitution({ institutionId, isVerified }: Props) {
             placeholder={t(lang, ui.note)}
             maxLength={1000}
             rows={2}
-            className="w-full rounded-xl border border-gray-300 bg-white px-3.5 py-2.5 text-sm text-gray-900 outline-none placeholder:text-gray-400 focus:border-primary-500"
+            className="w-full rounded-xl border border-line-2 bg-surface px-3.5 py-2.5 text-sm text-ink outline-none placeholder:text-faint focus:border-primary-500"
           />
 
           {error && (
-            <p className="flex items-center gap-1.5 rounded-xl bg-red-50 px-3 py-2 text-xs text-red-700">
+            <p className="flex items-center gap-1.5 rounded-xl bg-red-50 px-3 py-2 text-xs text-red-700 dark:bg-red-500/10 dark:text-red-300">
               <AlertCircle className="h-3.5 w-3.5 shrink-0" strokeWidth={2} /> {error}
             </p>
           )}
@@ -156,7 +156,7 @@ export default function ClaimInstitution({ institutionId, isVerified }: Props) {
             <button
               type="button"
               onClick={() => { setOpen(false); setError('') }}
-              className="rounded-xl border border-gray-300 bg-white px-4 py-2.5 text-sm font-semibold text-gray-600 hover:bg-gray-50"
+              className="rounded-xl border border-line-2 bg-surface px-4 py-2.5 text-sm font-semibold text-mute hover:bg-surface-2"
             >
               {t(lang, ui.cancel)}
             </button>
@@ -164,7 +164,7 @@ export default function ClaimInstitution({ institutionId, isVerified }: Props) {
         </form>
       )}
 
-      <p className="mt-2.5 text-center text-[11px] text-gray-400">
+      <p className="mt-2.5 text-center text-[11px] text-faint">
         {t(lang, ui.loginFirst)}
       </p>
     </div>
