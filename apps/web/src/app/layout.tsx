@@ -1,9 +1,10 @@
 import type { Metadata, Viewport } from 'next'
+import Script from 'next/script'
 import { Inter } from 'next/font/google'
 import './globals.css'
 import CompareBar from '@/components/compare/CompareBar'
+import TelegramProvider from '@/components/shared/TelegramProvider'
 import { LangProvider } from '@/contexts/LangContext'
-import { ThemeProvider } from '@/contexts/ThemeContext'
 
 const inter = Inter({
   subsets: ['latin', 'cyrillic'],
@@ -15,16 +16,15 @@ export const viewport: Viewport = {
   width: 'device-width',
   initialScale: 1,
   maximumScale: 5,
-  themeColor: [
-    { media: '(prefers-color-scheme: light)', color: '#0369a1' },
-    { media: '(prefers-color-scheme: dark)', color: '#090d14' },
-  ],
+  themeColor: '#0369a1',
+  // Telegram Mini App va iPhone notch: kontent xavfsiz zonagacha cho'zilsin
+  viewportFit: 'cover',
 }
 
 export const metadata: Metadata = {
   title: {
-    default: "EDUBAHO.uz — O'zbekistondagi eng yaxshi ta'lim muassasalari",
-    template: "%s | EDUBAHO.uz",
+    default: "Edula.uz — O'zbekistondagi eng yaxshi ta'lim muassasalari",
+    template: "%s | Edula.uz",
   },
   description:
     "O'zbekistondagi maktablar, universitetlar, kurslar va bog'chalarni qidiring, solishtiring va baholang.",
@@ -42,8 +42,8 @@ export const metadata: Metadata = {
     type: 'website',
     locale: 'uz_UZ',
     alternateLocale: 'ru_RU',
-    siteName: 'EDUBAHO.uz',
-    url: process.env.NEXT_PUBLIC_SITE_URL ?? 'https://edureyting.uz',
+    siteName: 'Edula.uz',
+    url: process.env.NEXT_PUBLIC_SITE_URL ?? 'https://edula.uz',
   },
   robots: {
     index: true,
@@ -51,33 +51,22 @@ export const metadata: Metadata = {
   },
 }
 
-/** FOUC oldini olish: sahifa chizilishidan OLDIN saqlangan mavzuni qo'llash */
-const themeInitScript = `
-try {
-  var t = localStorage.getItem('edu_theme');
-  if (t === 'dark' || (!t && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
-    document.documentElement.classList.add('dark');
-  }
-} catch (e) {}
-`
-
 export default function RootLayout({
   children,
 }: {
   children: React.ReactNode
 }) {
   return (
-    <html lang="uz" className={inter.variable} suppressHydrationWarning>
-      <head>
-        <script dangerouslySetInnerHTML={{ __html: themeInitScript }} />
-      </head>
-      <body className="min-h-screen bg-canvas">
-        <ThemeProvider>
-          <LangProvider>
+    <html lang="uz" className={inter.variable}>
+      <body className="min-h-screen bg-gray-50">
+        {/* Telegram Mini App SDK — TWA ichida window.Telegram.WebApp beradi */}
+        <Script src="https://telegram.org/js/telegram-web-app.js" strategy="beforeInteractive" />
+        <LangProvider>
+          <TelegramProvider>
             {children}
             <CompareBar />
-          </LangProvider>
-        </ThemeProvider>
+          </TelegramProvider>
+        </LangProvider>
       </body>
     </html>
   )

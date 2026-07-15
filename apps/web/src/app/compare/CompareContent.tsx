@@ -1,9 +1,12 @@
 'use client'
 
 import Link from 'next/link'
-import { ArrowLeft, CheckCircle2, Phone, MessageCircle, MapPin, Star } from 'lucide-react'
-import StarRating from '@/components/shared/StarRating'
-import TypeIcon from '@/components/shared/TypeIcon'
+import {
+  ArrowLeft, Star, Wallet, Info, Phone, Laptop, GraduationCap, School,
+  Palette, Globe2, PencilLine, Dumbbell, Trophy, Landmark, UserCheck,
+  BadgeCheck,
+} from 'lucide-react'
+import { RatingHint } from '@/components/shared/StarRating'
 import { useLang, t } from '@/contexts/LangContext'
 
 interface CompareInstitution {
@@ -31,7 +34,7 @@ interface CompareInstitution {
   }
 }
 
-function formatUzs(amount?: number): string | null {
+function formatUzs(amount?: number) {
   if (!amount) return null
   return `${amount.toLocaleString('uz-UZ').replace(/,/g, ' ')} so'm`
 }
@@ -41,283 +44,205 @@ const TYPE_LABELS: Record<string, { uz: string; ru: string }> = {
   SCHOOL:          { uz: 'Maktab',          ru: 'Школа' },
   LYCEUM:          { uz: 'Litsey',          ru: 'Лицей' },
   COLLEGE:         { uz: 'Kollej',          ru: 'Колледж' },
-  UNIVERSITY:      { uz: 'Universitet',     ru: 'Университет' },
-  COURSE_CENTER:   { uz: 'Kurs markazi',    ru: 'Учебный центр' },
-  LANGUAGE_CENTER: { uz: 'Til markazi',     ru: 'Языковой центр' },
-  IT_SCHOOL:       { uz: 'IT maktab',       ru: 'IT школа' },
-  TUTORING:        { uz: 'Repetitor',       ru: 'Репетитор' },
-  SPORTS_SCHOOL:   { uz: 'Sport maktabi',   ru: 'Спортшкола' },
-  ARTS_SCHOOL:     { uz: "San'at maktabi",  ru: 'Школа искусств' },
+  UNIVERSITY:      { uz: 'Universitet',    ru: 'Университет' },
+  COURSE_CENTER:   { uz: 'Kurs markazi',   ru: 'Учебный центр' },
+  LANGUAGE_CENTER: { uz: 'Til markazi',    ru: 'Языковой центр' },
+  IT_SCHOOL:       { uz: 'IT maktab',      ru: 'IT школа' },
+  TUTORING:        { uz: 'Repetitor',      ru: 'Репетитор' },
+  SPORTS_SCHOOL:   { uz: 'Sport maktabi',  ru: 'Спортшкола' },
+  ARTS_SCHOOL:     { uz: "San'at maktabi", ru: 'Школа искусств' },
 }
 
-const ui = {
-  title:       { uz: 'Muassasalarni solishtirish', ru: 'Сравнение учреждений' },
-  back:        { uz: 'Qidiruvga qaytish',          ru: 'Вернуться к поиску' },
-  rating:      { uz: 'Reyting va sharhlar',        ru: 'Рейтинг и отзывы' },
-  avgRating:   { uz: 'Umumiy reyting',             ru: 'Общий рейтинг' },
-  reviews:     { uz: 'Sharhlar soni',              ru: 'Кол-во отзывов' },
-  price:       { uz: 'Narxlar',                    ru: 'Цены' },
-  priceMin:    { uz: 'Oylik (min)',                ru: 'В месяц (мин)' },
-  priceMax:    { uz: 'Oylik (max)',                ru: 'В месяц (макс)' },
-  payment:     { uz: "To'lov usullari",            ru: 'Способы оплаты' },
-  info:        { uz: "Ma'lumotlar",                ru: 'Информация' },
-  founded:     { uz: 'Tashkil etilgan',            ru: 'Год основания' },
-  students:    { uz: "O'quvchilar",                ru: 'Учеников' },
-  teachers:    { uz: "O'qituvchilar",              ru: 'Преподавателей' },
-  languages:   { uz: "O'qitish tillari",           ru: 'Языки обучения' },
-  contact:     { uz: 'Aloqa',                      ru: 'Контакты' },
-  phone:       { uz: 'Telefon',                    ru: 'Телефон' },
-  telegram:    { uz: 'Telegram',                   ru: 'Telegram' },
-  address:     { uz: 'Manzil',                     ru: 'Адрес' },
-  verified:    { uz: 'Tasdiqlangan',               ru: 'Подтверждено' },
-  reviewsUnit: { uz: 'ta sharh',                   ru: 'отзывов' },
-  viewBtn:     { uz: "Batafsil ko'rish",           ru: 'Подробнее' },
-  noData:      { uz: "Ma'lumot yo'q",              ru: 'Нет данных' },
+const TYPE_ICONS: Record<string, typeof School> = {
+  IT_SCHOOL: Laptop, UNIVERSITY: GraduationCap, SCHOOL: School, KINDERGARTEN: Palette,
+  LANGUAGE_CENTER: Globe2, COURSE_CENTER: PencilLine, SPORTS_SCHOOL: Dumbbell, LYCEUM: Trophy,
+  COLLEGE: Landmark, TUTORING: UserCheck, ARTS_SCHOOL: Palette,
 }
 
 export default function CompareContent({ institutions }: { institutions: CompareInstitution[] }) {
   const { lang } = useLang()
   const cols = institutions.length
 
-  function Cell({ val }: { val: string | null | undefined }) {
-    if (!val) return <span className="text-faint">—</span>
-    return <span>{val}</span>
+  const ui = {
+    title:      { uz: 'Muassasalarni solishtirish', ru: 'Сравнение учреждений' },
+    back:       { uz: 'Qidiruvga qaytish',          ru: 'Вернуться к поиску' },
+    rating:     { uz: 'Reyting va sharhlar',        ru: 'Рейтинг и отзывы' },
+    avgRating:  { uz: 'Umumiy reyting',             ru: 'Общий рейтинг' },
+    reviews:    { uz: 'Sharhlar soni',              ru: 'Кол-во отзывов' },
+    price:      { uz: 'Narxlar',                    ru: 'Цены' },
+    priceMin:   { uz: 'Oylik narx (min)',           ru: 'Ежемес. цена (мин)' },
+    priceMax:   { uz: 'Oylik narx (max)',           ru: 'Ежемес. цена (макс)' },
+    payment:    { uz: "To'lov usullari",            ru: 'Способы оплаты' },
+    info:       { uz: "Ma'lumotlar",                ru: 'Информация' },
+    founded:    { uz: 'Tashkil etilgan',            ru: 'Год основания' },
+    students:   { uz: "O'quvchilar",                ru: 'Учеников' },
+    teachers:   { uz: "O'qituvchilar",              ru: 'Преподавателей' },
+    languages:  { uz: "O'qitish tillari",           ru: 'Языки обучения' },
+    contact:    { uz: 'Aloqa',                      ru: 'Контакты' },
+    phone:      { uz: 'Telefon',                    ru: 'Телефон' },
+    telegram:   { uz: 'Telegram',                   ru: 'Telegram' },
+    address:    { uz: 'Manzil',                     ru: 'Адрес' },
+    verified:   { uz: 'Tasdiqlangan',               ru: 'Подтверждено' },
+    reviewsUnit:{ uz: 'ta',                         ru: '' },
+    viewBtn:    { uz: 'Ko\'proq ko\'rish →',        ru: 'Подробнее →' },
   }
 
-  function SectionHeader({ labelKey }: { labelKey: keyof typeof ui }) {
-    return (
-      <tr>
-        <td
-          colSpan={cols + 1}
-          className="border-t border-line bg-surface-2 px-4 py-2.5 text-xs font-semibold uppercase tracking-wide text-mute"
-        >
-          {t(lang, ui[labelKey] as { uz: string; ru: string })}
-        </td>
-      </tr>
-    )
-  }
-
-  function Row({ labelKey, values, accent }: {
+  function Row({ labelKey, values, highlight }: {
     labelKey: keyof typeof ui
     values: (string | null | undefined)[]
-    accent?: boolean
+    highlight?: boolean
   }) {
     return (
-      <tr className={accent ? 'bg-primary-50/30 dark:bg-primary-900/10' : ''}>
-        <td className="border-t border-line px-4 py-3 text-sm font-medium text-mute">
+      <tr className={highlight ? 'bg-primary-50/40' : 'hover:bg-gray-50'}>
+        <td className="border border-gray-200 px-4 py-3 font-medium text-gray-600 bg-gray-50/80 text-sm whitespace-nowrap w-40">
           {t(lang, ui[labelKey] as { uz: string; ru: string })}
         </td>
         {values.map((val, i) => (
-          <td key={i} className="border-t border-l border-line px-4 py-3 text-center text-sm text-ink">
-            <Cell val={val} />
+          <td key={i} className="border border-gray-200 px-4 py-3 text-center text-sm text-gray-800">
+            {val ?? <span className="text-gray-300">—</span>}
           </td>
         ))}
       </tr>
     )
   }
 
+  function SectionHeader({ labelKey, Icon }: { labelKey: keyof typeof ui; Icon: typeof Star }) {
+    return (
+      <tr className="bg-primary-600">
+        <td className="border border-primary-500 px-4 py-2.5 text-sm font-semibold text-white" colSpan={cols + 1}>
+          <span className="flex items-center gap-2 whitespace-nowrap">
+            <Icon className="h-4 w-4 shrink-0" strokeWidth={1.75} />
+            {t(lang, ui[labelKey] as { uz: string; ru: string })}
+          </span>
+        </td>
+      </tr>
+    )
+  }
+
   return (
     <main className="mx-auto max-w-5xl px-4 py-8 pb-24">
-      {/* Back */}
-      <Link
-        href="/search"
-        className="mb-6 inline-flex items-center gap-1.5 text-sm font-medium text-mute transition-colors hover:text-ink"
-      >
-        <ArrowLeft className="h-4 w-4" aria-hidden />
-        {t(lang, ui.back)}
-      </Link>
+      <div className="mb-6 flex items-center gap-1.5 text-sm text-gray-500">
+        <Link href="/search" className="flex items-center gap-1.5 hover:text-primary-600">
+          <ArrowLeft className="h-4 w-4 shrink-0" strokeWidth={1.75} /> {t(lang, ui.back)}
+        </Link>
+      </div>
 
-      <h1 className="mb-6 text-2xl font-bold text-ink">
+      <h1 className="mb-8 text-2xl font-bold text-gray-900">
         {t(lang, ui.title)}
-        <span className="ml-2 text-base font-normal tabular-nums text-faint">({cols})</span>
+        <span className="ml-2 text-base font-normal text-gray-400">({cols} ta)</span>
       </h1>
 
       {/* Institution header cards */}
       <div
-        className="mb-6 grid gap-4"
+        className="grid gap-4 mb-6"
         style={{ gridTemplateColumns: `repeat(${cols}, 1fr)` }}
       >
         {institutions.map((inst) => {
           const typeLabel = TYPE_LABELS[inst.type]
           const name = lang === 'ru' && inst.nameRu ? inst.nameRu : inst.nameUz
+          const TypeIcon = TYPE_ICONS[inst.type] ?? School
           return (
             <Link
               key={inst.id}
               href={`/institutions/${inst.slug}`}
-              className="card flex flex-col items-center p-5 text-center transition-shadow hover:shadow-card-hover"
+              className="card rounded-2xl p-5 text-center hover:border-primary-300"
             >
-              <div className="mb-3 flex h-12 w-12 items-center justify-center rounded-2xl bg-primary-50 dark:bg-primary-900/30">
-                <TypeIcon type={inst.type} className="h-6 w-6 text-primary-600 dark:text-primary-400" />
+              <div className="mb-2 flex justify-center">
+                <TypeIcon className="h-9 w-9 text-primary-300" strokeWidth={1.5} />
               </div>
-              <h2 className="mb-1 line-clamp-2 text-sm font-bold leading-tight text-ink">{name}</h2>
-              <span className="mb-2 text-xs text-faint">
+              <h2 className="mb-1 line-clamp-2 font-semibold leading-tight text-gray-900">{name}</h2>
+              <span className="text-xs text-gray-400">
                 {typeLabel ? t(lang, typeLabel) : inst.type}
               </span>
               {inst.isVerified && (
-                <div className="mb-2 flex items-center gap-1 text-xs font-semibold text-accent-600 dark:text-accent-400">
-                  <CheckCircle2 className="h-3 w-3" aria-hidden />
-                  {t(lang, ui.verified)}
+                <div className="mt-2 flex items-center justify-center gap-1 text-xs font-semibold text-emerald-600">
+                  <BadgeCheck className="h-3.5 w-3.5 shrink-0" strokeWidth={2} /> {t(lang, ui.verified)}
                 </div>
               )}
-              {inst.avgRating ? (
-                <StarRating rating={inst.avgRating} size="sm" />
-              ) : null}
+              {inst.avgRating && (
+                <div className="mt-2 flex justify-center">
+                  <RatingHint rating={inst.avgRating} lang={lang} />
+                </div>
+              )}
             </Link>
           )
         })}
       </div>
 
       {/* Comparison table */}
-      <div className="card overflow-hidden p-0">
-        <div className="overflow-x-auto">
-          <table className="w-full border-collapse">
-            {/* Sticky name row */}
-            <thead>
-              <tr>
-                <th className="border-b border-line bg-surface px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-faint" />
-                {institutions.map((inst) => {
-                  const name = lang === 'ru' && inst.nameRu ? inst.nameRu : inst.nameUz
-                  return (
-                    <th
-                      key={inst.id}
-                      className="border-b border-l border-line bg-surface px-4 py-3 text-center text-sm font-semibold text-ink"
-                    >
-                      {name}
-                    </th>
-                  )
-                })}
-              </tr>
-            </thead>
-            <tbody>
-              {/* Rating */}
-              <SectionHeader labelKey="rating" />
-              <Row
-                labelKey="avgRating"
-                accent
-                values={institutions.map((i) =>
-                  i.avgRating ? `${i.avgRating.toFixed(1)} / 5` : null
-                )}
-              />
-              <tr>
-                <td className="border-t border-line px-4 py-3 text-sm font-medium text-mute">
-                  {t(lang, ui.reviews)}
-                </td>
-                {institutions.map((inst) => (
-                  <td key={inst.id} className="border-t border-l border-line px-4 py-3 text-center">
-                    <div className="flex flex-col items-center gap-1">
-                      <StarRating rating={inst.avgRating ?? 0} size="sm" />
-                      <span className="tabular-nums text-xs text-mute">
-                        {inst.reviewCount} {t(lang, ui.reviewsUnit)}
-                      </span>
-                    </div>
-                  </td>
-                ))}
-              </tr>
+      <div className="overflow-x-auto rounded-2xl border border-gray-200 shadow-sm">
+        <table className="w-full border-collapse text-sm">
+          <tbody>
+            {/* Narx — solishtirishda ASOSIY parametr (reyting emas) */}
+            <SectionHeader labelKey="price" Icon={Wallet} />
+            <Row
+              labelKey="priceMin"
+              highlight
+              values={institutions.map((i) => formatUzs(i.pricing?.monthlyMin))}
+            />
+            <Row
+              labelKey="priceMax"
+              values={institutions.map((i) => formatUzs(i.pricing?.monthlyMax))}
+            />
+            <Row
+              labelKey="payment"
+              values={institutions.map((i) => i.pricing?.paymentMethods?.join(', ') ?? null)}
+            />
 
-              {/* Price */}
-              <SectionHeader labelKey="price" />
-              <Row
-                labelKey="priceMin"
-                accent
-                values={institutions.map((i) => formatUzs(i.pricing?.monthlyMin))}
-              />
-              <Row
-                labelKey="priceMax"
-                values={institutions.map((i) => formatUzs(i.pricing?.monthlyMax))}
-              />
-              <Row
-                labelKey="payment"
-                values={institutions.map((i) => i.pricing?.paymentMethods?.join(', ') ?? null)}
-              />
+            <SectionHeader labelKey="info" Icon={Info} />
+            <Row
+              labelKey="founded"
+              values={institutions.map((i) => i.details?.foundedYear ? String(i.details.foundedYear) : null)}
+            />
+            <Row
+              labelKey="students"
+              highlight
+              values={institutions.map((i) =>
+                i.details?.studentCount
+                  ? `${i.details.studentCount.toLocaleString()} ${t(lang, ui.reviewsUnit)}`
+                  : null
+              )}
+            />
+            <Row
+              labelKey="teachers"
+              values={institutions.map((i) =>
+                i.details?.teacherCount
+                  ? `${i.details.teacherCount} ${t(lang, ui.reviewsUnit)}`
+                  : null
+              )}
+            />
+            <Row
+              labelKey="languages"
+              values={institutions.map((i) =>
+                i.details?.languages?.length
+                  ? i.details.languages.join(', ').toUpperCase()
+                  : null
+              )}
+            />
 
-              {/* Info */}
-              <SectionHeader labelKey="info" />
-              <Row
-                labelKey="founded"
-                values={institutions.map((i) => i.details?.foundedYear ? String(i.details.foundedYear) : null)}
-              />
-              <Row
-                labelKey="students"
-                accent
-                values={institutions.map((i) =>
-                  i.details?.studentCount
-                    ? i.details.studentCount.toLocaleString('uz-UZ')
-                    : null
-                )}
-              />
-              <Row
-                labelKey="teachers"
-                values={institutions.map((i) =>
-                  i.details?.teacherCount ? String(i.details.teacherCount) : null
-                )}
-              />
-              <Row
-                labelKey="languages"
-                values={institutions.map((i) =>
-                  i.details?.languages?.length
-                    ? i.details.languages.join(', ').toUpperCase()
-                    : null
-                )}
-              />
+            {/* Reyting — jadvalning pastki qismida, ataylab highlight'siz:
+                baholar foydalanuvchilar tomonidan qo'yilgan taxminiy
+                ko'rsatkich, asosiy solishtirish parametri emas */}
+            <SectionHeader labelKey="rating" Icon={Star} />
+            <Row
+              labelKey="avgRating"
+              values={institutions.map((i) =>
+                i.avgRating ? `${i.avgRating.toFixed(1)} / 5` : null
+              )}
+            />
+            <Row
+              labelKey="reviews"
+              values={institutions.map((i) =>
+                `${i.reviewCount} ${t(lang, ui.reviewsUnit)}`
+              )}
+            />
 
-              {/* Contact */}
-              <SectionHeader labelKey="contact" />
-              <tr>
-                <td className="border-t border-line px-4 py-3 text-sm font-medium text-mute">
-                  {t(lang, ui.phone)}
-                </td>
-                {institutions.map((inst) => (
-                  <td key={inst.id} className="border-t border-l border-line px-4 py-3 text-center text-sm">
-                    {inst.phone ? (
-                      <a
-                        href={`tel:${inst.phone}`}
-                        className="inline-flex items-center gap-1.5 font-medium text-primary-600 hover:text-primary-700 dark:text-primary-400"
-                      >
-                        <Phone className="h-3.5 w-3.5" aria-hidden />
-                        {inst.phone}
-                      </a>
-                    ) : <span className="text-faint">—</span>}
-                  </td>
-                ))}
-              </tr>
-              <tr>
-                <td className="border-t border-line bg-primary-50/30 px-4 py-3 text-sm font-medium text-mute dark:bg-primary-900/10">
-                  {t(lang, ui.telegram)}
-                </td>
-                {institutions.map((inst) => (
-                  <td key={inst.id} className="border-t border-l border-line bg-primary-50/30 px-4 py-3 text-center text-sm dark:bg-primary-900/10">
-                    {inst.telegram ? (
-                      <a
-                        href={`https://t.me/${inst.telegram}`}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="inline-flex items-center gap-1.5 font-medium text-primary-600 hover:text-primary-700 dark:text-primary-400"
-                      >
-                        <MessageCircle className="h-3.5 w-3.5" aria-hidden />
-                        @{inst.telegram}
-                      </a>
-                    ) : <span className="text-faint">—</span>}
-                  </td>
-                ))}
-              </tr>
-              <tr>
-                <td className="border-t border-line px-4 py-3 text-sm font-medium text-mute">
-                  {t(lang, ui.address)}
-                </td>
-                {institutions.map((inst) => (
-                  <td key={inst.id} className="border-t border-l border-line px-4 py-3 text-center text-sm text-ink">
-                    {inst.address ? (
-                      <span className="inline-flex items-start gap-1.5">
-                        <MapPin className="mt-0.5 h-3.5 w-3.5 shrink-0 text-mute" aria-hidden />
-                        {inst.address}
-                      </span>
-                    ) : <span className="text-faint">—</span>}
-                  </td>
-                ))}
-              </tr>
-            </tbody>
-          </table>
-        </div>
+            <SectionHeader labelKey="contact" Icon={Phone} />
+            <Row labelKey="phone"    values={institutions.map((i) => i.phone    ?? null)} />
+            <Row labelKey="telegram" values={institutions.map((i) => i.telegram ? `@${i.telegram}` : null)} />
+            <Row labelKey="address"  values={institutions.map((i) => i.address  ?? null)} />
+          </tbody>
+        </table>
       </div>
 
       {/* CTA buttons */}
@@ -331,10 +256,9 @@ export default function CompareContent({ institutions }: { institutions: Compare
             <Link
               key={inst.id}
               href={`/institutions/${inst.slug}`}
-              className="btn-primary flex items-center justify-center gap-2"
+              className="block rounded-2xl bg-primary-600 py-3 text-center font-bold text-white hover:bg-primary-700 transition-colors"
             >
-              <Star className="h-4 w-4" aria-hidden />
-              <span className="truncate">{name}</span>
+              {name} →
             </Link>
           )
         })}

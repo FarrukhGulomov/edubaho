@@ -3,31 +3,8 @@
 @tailwind utilities;
 
 @layer base {
-  /* ── Semantik design tokenlar ─────────────────────────────────
-     Yorug' rejim: sovuq neytral (slate) palitra */
   :root {
     --font-inter: 'Inter', system-ui, sans-serif;
-
-    --canvas:    248 250 252;  /* sahifa foni */
-    --surface:   255 255 255;  /* kartochka foni */
-    --surface-2: 241 245 249;  /* nozik to'ldirish */
-    --line:      226 232 240;  /* chegara */
-    --line-2:    203 213 225;  /* kuchli chegara */
-    --ink:       15 23 42;     /* asosiy matn */
-    --mute:      71 85 105;    /* ikkilamchi matn */
-    --faint:     148 163 184;  /* uchlamchi matn */
-  }
-
-  /* Qorong'u rejim: grafit, ko'kimtir tus */
-  .dark {
-    --canvas:    9 13 20;
-    --surface:   15 20 30;
-    --surface-2: 25 32 45;
-    --line:      35 44 60;
-    --line-2:    55 66 86;
-    --ink:       237 241 247;
-    --mute:      154 166 184;
-    --faint:     100 112 132;
   }
 
   html {
@@ -42,60 +19,60 @@
   }
 
   body {
-    @apply bg-canvas text-ink antialiased;
+    @apply bg-slate-50 text-gray-900 antialiased;
     font-family: var(--font-inter);
     line-height: 1.6;
-    font-feature-settings: 'cv02', 'cv03', 'cv04', 'cv11';
-    transition: background-color .25s ease, color .25s ease;
+  }
+
+  /* Mobil pastki tab-bar (Header'dagi fixed nav) kontentni yashirmasligi uchun
+     klirens — sahifa PASTIDA, header ostida emas (eski spacer bug o'rniga) */
+  @media (max-width: 1023px) {
+    body {
+      padding-bottom: calc(72px + env(safe-area-inset-bottom, 0px));
+    }
   }
 
   ::selection {
-    background: rgb(2 132 199 / 0.2);
+    background: #bae6fd;
+    color: #0c4a6e;
   }
 
   ::-webkit-scrollbar { width: 6px; height: 6px; }
   ::-webkit-scrollbar-track { background: transparent; }
-  ::-webkit-scrollbar-thumb { background: rgb(var(--line-2)); border-radius: 6px; }
-  ::-webkit-scrollbar-thumb:hover { background: rgb(var(--faint)); }
+  ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 6px; }
+  ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
 
   *:focus-visible {
-    outline: 2px solid #0284c7;
-    outline-offset: 2px;
-    border-radius: 6px;
+    outline: 3px solid #0284c7;
+    outline-offset: 3px;
+    border-radius: 8px;
   }
-  .dark *:focus-visible { outline-color: #38bdf8; }
 
   p, li { @apply leading-relaxed; }
 
-  /* Katta touch targets — tugmalar uchun */
-  button { min-height: 44px; min-width: 44px; }
+  /* Katta touch targets — barcha foydalanuvchilar uchun qulay */
+  button, a {
+    min-height: 44px;
+    min-width: 44px;
+  }
 
   h1 { @apply text-2xl font-bold tracking-tight sm:text-3xl md:text-4xl; }
-  h2 { @apply text-xl font-bold tracking-tight sm:text-2xl; }
-  h3 { @apply text-lg font-semibold tracking-tight; }
-
-  /* Harakat kamaytirilgan rejim — animatsiyalarni o'chirish */
-  @media (prefers-reduced-motion: reduce) {
-    *, *::before, *::after {
-      animation-duration: 0.01ms !important;
-      animation-iteration-count: 1 !important;
-      transition-duration: 0.01ms !important;
-      scroll-behavior: auto !important;
-    }
-  }
+  h2 { @apply text-xl font-bold tracking-tight sm:text-2xl md:text-3xl; }
+  h3 { @apply text-lg font-semibold sm:text-xl; }
 }
 
 @layer components {
 
   /* ─── Kartochka ─────────────────────────────────────────────── */
+  /* Minimalistik: kichikroq radius, yengil soya, harakatsiz hover — shovqinsiz */
   .card {
-    @apply rounded-2xl border border-line bg-surface shadow-card
-           transition-all duration-200
-           hover:border-line-2 hover:shadow-card-hover;
+    @apply rounded-2xl border border-gray-200 bg-white shadow-sm
+           transition-colors duration-150
+           hover:border-primary-200;
   }
 
   .card-flat {
-    @apply rounded-2xl border border-line bg-surface;
+    @apply rounded-2xl border border-gray-100 bg-white;
   }
 
   /* ─── Tugmalar ──────────────────────────────────────────────── */
@@ -103,34 +80,26 @@
     @apply inline-flex items-center justify-center gap-2
            rounded-xl bg-primary-600 px-5 py-3
            text-base font-semibold text-white
-           transition-all duration-150
+           transition-colors duration-150
            hover:bg-primary-700
-           active:scale-[0.98]
+           active:bg-primary-800
            disabled:opacity-50 disabled:cursor-not-allowed;
   }
 
   .btn-secondary {
     @apply inline-flex items-center justify-center gap-2
-           rounded-xl border border-line-2 bg-surface px-5 py-3
-           text-base font-semibold text-ink
-           transition-all duration-150
-           hover:border-primary-400 hover:text-primary-600 dark:hover:text-primary-400
-           active:scale-[0.98];
-  }
-
-  .btn-ghost {
-    @apply inline-flex items-center justify-center gap-2
-           rounded-xl px-4 py-2.5
-           text-sm font-medium text-mute
+           rounded-xl border border-gray-300 bg-white px-5 py-3
+           text-base font-semibold text-gray-700
            transition-colors duration-150
-           hover:bg-surface-2 hover:text-ink;
+           hover:border-primary-300 hover:text-primary-700 hover:bg-primary-50
+           active:bg-primary-100;
   }
 
   .btn-sm {
     @apply inline-flex items-center justify-center gap-1.5
-           rounded-lg px-4 py-2.5
+           rounded-lg px-3.5 py-2
            text-sm font-semibold
-           transition-all duration-150 active:scale-[0.98];
+           transition-colors duration-150;
   }
 
   /* ─── Badge ─────────────────────────────────────────────────── */
@@ -139,15 +108,20 @@
   }
 
   .badge-sm {
-    @apply inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-xs font-medium;
+    @apply inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-xs font-medium;
+  }
+
+  /* ─── Icon chip — bo'lim sarlavhalari uchun bir xil andoza ───── */
+  .icon-chip {
+    @apply flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-primary-50 text-primary-600;
   }
 
   /* ─── Input ─────────────────────────────────────────────────── */
   .input {
-    @apply w-full rounded-xl border border-line-2 bg-surface px-4 py-3
-           text-base text-ink outline-none
-           transition-all placeholder:text-faint
-           focus:border-primary-500 focus:ring-2 focus:ring-primary-500/20;
+    @apply w-full rounded-xl border border-gray-300 bg-white px-4 py-3
+           text-base text-gray-900 outline-none
+           transition-colors placeholder:text-gray-400
+           focus:border-primary-400 focus:ring-2 focus:ring-primary-100;
   }
 
   /* ─── Section ───────────────────────────────────────────────── */
@@ -155,20 +129,14 @@
 
   /* ─── Narx badge ─────────────────────────────────────────────── */
   .price-badge {
-    @apply inline-flex items-center gap-1 rounded-full
-           bg-accent-50 dark:bg-accent-500/10
-           border border-accent-200 dark:border-accent-500/25
-           px-3 py-1 text-sm font-semibold tabular-nums
-           text-accent-700 dark:text-accent-300;
+    @apply inline-flex items-center gap-1 rounded-full bg-emerald-50
+           border border-emerald-200 px-3 py-1 text-sm font-semibold text-emerald-700;
   }
 
   /* ─── Tasdiqlangan badge ─────────────────────────────────────── */
   .verified-badge {
-    @apply inline-flex items-center gap-1 rounded-full
-           bg-accent-50 dark:bg-accent-500/10
-           border border-accent-200 dark:border-accent-500/25
-           px-2.5 py-0.5 text-xs font-semibold
-           text-accent-700 dark:text-accent-300;
+    @apply inline-flex items-center gap-1 rounded-full bg-emerald-50
+           border border-emerald-200 px-2.5 py-1 text-xs font-semibold text-emerald-700;
   }
 
   /* ─── Gradient text ──────────────────────────────────────────── */
@@ -178,15 +146,15 @@
 
   /* ─── Section header ─────────────────────────────────────────── */
   .section-title {
-    @apply text-xl font-bold tracking-tight text-ink sm:text-2xl;
+    @apply text-xl font-bold text-gray-900 sm:text-2xl;
   }
   .section-sub {
-    @apply mt-2 text-base text-mute leading-relaxed;
+    @apply mt-2 text-base text-gray-500 leading-relaxed;
   }
 
   /* ─── Info row ──────────────────────────────────────────────── */
   .info-row {
-    @apply flex items-center gap-2 text-base text-mute;
+    @apply flex items-center gap-2 text-base text-gray-600;
   }
 }
 
@@ -195,11 +163,10 @@
     transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
   }
 
-  /* Header uchun shisha effekti — ikkala rejimda */
   .glass {
-    backdrop-filter: blur(12px);
-    -webkit-backdrop-filter: blur(12px);
-    background: rgb(var(--surface) / 0.85);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    background: rgba(255, 255, 255, 0.92);
   }
 
   @keyframes shimmer {
@@ -207,32 +174,56 @@
     100% { background-position: 200% 0; }
   }
   .shimmer {
-    background: linear-gradient(90deg,
-      rgb(var(--surface-2)) 25%,
-      rgb(var(--line)) 50%,
-      rgb(var(--surface-2)) 75%);
+    background: linear-gradient(90deg, #f1f5f9 25%, #e2e8f0 50%, #f1f5f9 75%);
     background-size: 200% 100%;
     animation: shimmer 1.5s infinite;
   }
 
   @keyframes slideUp {
-    from { transform: translateY(16px); opacity: 0; }
+    from { transform: translateY(20px); opacity: 0; }
     to   { transform: translateY(0);    opacity: 1; }
   }
-  .animate-slide-up { animation: slideUp 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
+  .animate-slide-up { animation: slideUp 0.3s cubic-bezier(0.4, 0, 0.2, 1) forwards; }
 
   @keyframes slideDown {
-    from { transform: translateY(-6px); opacity: 0; }
-    to   { transform: translateY(0);    opacity: 1; }
+    from { transform: translateY(-10px); opacity: 0; }
+    to   { transform: translateY(0);     opacity: 1; }
   }
-  .animate-slide-down { animation: slideDown 0.2s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
+  .animate-slide-down { animation: slideDown 0.25s ease forwards; }
 
   @keyframes fadeIn {
     from { opacity: 0; }
     to   { opacity: 1; }
   }
-  .animate-fade-in { animation: fadeIn 0.25s ease forwards; }
+  .animate-fade-in { animation: fadeIn 0.3s ease forwards; }
+
+  @keyframes float {
+    0%, 100% { transform: translateY(0) rotate(0deg); }
+    50% { transform: translateY(-18px) rotate(4deg); }
+  }
+  .animate-float       { animation: float  7s ease-in-out infinite; }
+  .animate-float-slow  { animation: float 10s ease-in-out infinite; }
+  .animate-float-delay { animation: float  7s ease-in-out 2.5s infinite; }
+  .animate-float-delay2{ animation: float  9s ease-in-out 4.5s infinite; }
+
+  @keyframes gradientShift {
+    0%, 100% { background-position: 0% 50%; }
+    50%       { background-position: 100% 50%; }
+  }
+  .animate-gradient {
+    background-size: 200% 200%;
+    animation: gradientShift 6s ease infinite;
+  }
+
+  @keyframes countUp {
+    from { opacity: 0; transform: translateY(16px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+  .animate-count-up { animation: countUp 0.5s ease forwards; }
 
   /* Mobil pastki satr uchun joy (bottom nav) */
   .pb-safe { padding-bottom: env(safe-area-inset-bottom, 16px); }
+
+  /* Telegram Mini App: status-bar/notch orqasiga yashiringan kontentni himoya qilish */
+  .pt-safe { padding-top: env(safe-area-inset-top, 0px); }
 }
