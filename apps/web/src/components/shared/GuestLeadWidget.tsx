@@ -12,7 +12,7 @@
  */
 
 import { useState, useEffect } from 'react'
-import { MessageCircle, Phone, Mail, X, CheckCircle2 } from 'lucide-react'
+import { MessageCircle, X, Smartphone, Mail, CheckCircle2 } from 'lucide-react'
 import { track } from '@/lib/analytics'
 import { useLang, t } from '@/contexts/LangContext'
 
@@ -110,94 +110,82 @@ export default function GuestLeadWidget({ triggerOnMount = true }: Props) {
     btn:        { uz: 'Maslahat olish', ru: 'Получить консультацию' },
     sending:    { uz: 'Yuborilmoqda...', ru: 'Отправляется...' },
     done:       { uz: "Rahmat! Tez orada bog'lanamiz.", ru: 'Спасибо! Скоро свяжемся с вами.' },
+    orEmail:    { uz: 'yoki email bilan', ru: 'или через email' },
+    orPhone:    { uz: 'yoki telefon bilan', ru: 'или по телефону' },
   }
 
   return (
     <div className="fixed bottom-0 left-0 right-0 z-50 animate-slide-up">
       {!expanded ? (
         /* ── Compact bar ── */
-        <div className="glass flex items-center justify-between gap-3 border-t border-line px-4 py-3 shadow-pop">
-          <div className="flex items-center gap-2.5 text-sm font-medium text-ink">
-            <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-primary-50 text-primary-600 dark:bg-primary-500/15 dark:text-primary-400">
-              <MessageCircle className="h-4 w-4" aria-hidden />
-            </span>
-            <span className="hidden sm:inline">{t(lang, ui.bar)}</span>
-            <span className="sm:hidden">{t(lang, { uz: 'Bepul maslahat oling!', ru: 'Бесплатная консультация!' })}</span>
+        <div className="flex items-center justify-between gap-3 border-t border-amber-200 bg-amber-50 px-4 py-3 shadow-lg">
+          <div className="flex min-w-0 flex-1 items-center gap-2 text-sm font-semibold text-amber-800">
+            <MessageCircle className="h-5 w-5 shrink-0" strokeWidth={1.75} />
+            <span className="hidden truncate sm:inline">{t(lang, ui.bar)}</span>
+            <span className="truncate sm:hidden">{t(lang, { uz: 'Bepul maslahat oling!', ru: 'Бесплатная консультация!' })}</span>
           </div>
-          <div className="flex shrink-0 items-center gap-1.5">
+          <div className="flex shrink-0 items-center gap-2">
             <button
               onClick={() => setExpanded(true)}
-              className="rounded-lg bg-primary-600 px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-primary-700"
+              className="whitespace-nowrap rounded-xl bg-amber-500 px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-amber-600"
             >
-              {t(lang, { uz: 'Xabar qoldirish', ru: 'Оставить контакт' })}
+              {t(lang, { uz: "Xabar qoldirish", ru: 'Оставить контакт' })}
             </button>
-            <button
-              onClick={handleClose}
-              className="flex h-9 w-9 items-center justify-center rounded-lg text-faint transition-colors hover:bg-surface-2 hover:text-ink"
-              aria-label="Yopish"
-            >
-              <X className="h-4 w-4" aria-hidden />
+            <button onClick={handleClose} className="shrink-0 p-1 text-amber-400 hover:text-amber-600" aria-label="Yopish">
+              <X className="h-5 w-5" strokeWidth={1.75} />
             </button>
           </div>
         </div>
       ) : (
         /* ── Expanded form ── */
-        <div className="border-t border-line bg-surface px-4 py-5 shadow-pop">
+        <div className="border-t border-gray-200 bg-white px-4 py-5 shadow-2xl">
           <div className="mx-auto max-w-sm">
             {sent ? (
-              <p className="flex items-center justify-center gap-2 py-2 text-center text-base font-medium text-accent-700 dark:text-accent-300">
-                <CheckCircle2 className="h-5 w-5" aria-hidden />
-                {t(lang, ui.done)}
+              <p className="flex items-center justify-center gap-2 py-2 text-center text-base font-semibold text-emerald-700">
+                <CheckCircle2 className="h-5 w-5 shrink-0" strokeWidth={1.75} /> {t(lang, ui.done)}
               </p>
             ) : (
               <>
-                <div className="mb-3 flex items-start justify-between">
-                  <div>
-                    <h3 className="text-base font-semibold text-ink">{t(lang, ui.title)}</h3>
-                    <p className="mt-0.5 text-xs text-mute">{t(lang, ui.subtitle)}</p>
+                <div className="mb-3 flex items-start justify-between gap-3">
+                  <div className="min-w-0">
+                    <h3 className="font-bold text-gray-900">{t(lang, ui.title)}</h3>
+                    <p className="mt-0.5 text-xs text-gray-500">{t(lang, ui.subtitle)}</p>
                   </div>
-                  <button
-                    onClick={handleClose}
-                    className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg text-faint transition-colors hover:bg-surface-2 hover:text-ink"
-                    aria-label="Yopish"
-                  >
-                    <X className="h-4 w-4" aria-hidden />
+                  <button onClick={handleClose} className="shrink-0 p-1 text-gray-400 hover:text-gray-600">
+                    <X className="h-5 w-5" strokeWidth={1.75} />
                   </button>
                 </div>
 
                 {/* Telefon / Email toggle */}
-                <div className="mb-3 flex rounded-lg border border-line bg-surface-2 p-1">
-                  {([
-                    { key: 'phone' as const, icon: Phone, label: { uz: 'Telefon', ru: 'Телефон' } },
-                    { key: 'email' as const, icon: Mail,  label: { uz: 'Email',   ru: 'Email' } },
-                  ]).map(opt => (
-                    <button
-                      key={opt.key}
-                      type="button"
-                      onClick={() => setMode(opt.key)}
-                      className={`flex flex-1 items-center justify-center gap-1.5 rounded-md py-1.5 text-xs font-semibold transition-all ${
-                        mode === opt.key
-                          ? 'bg-surface text-ink shadow-card'
-                          : 'text-faint hover:text-mute'
-                      }`}
-                      style={{ minHeight: 32 }}
-                      aria-pressed={mode === opt.key}
-                    >
-                      <opt.icon className="h-3.5 w-3.5" aria-hidden />
-                      {t(lang, opt.label)}
-                    </button>
-                  ))}
+                <div className="mb-3 flex rounded-xl border border-gray-200 bg-gray-50 p-1">
+                  <button
+                    type="button"
+                    onClick={() => setMode('phone')}
+                    className={`flex flex-1 items-center justify-center gap-1 whitespace-nowrap rounded-lg py-1.5 text-xs font-semibold transition-colors ${
+                      mode === 'phone' ? 'bg-white text-amber-700 shadow-sm' : 'text-gray-400 hover:text-gray-600'
+                    }`}
+                  >
+                    <Smartphone className="h-3.5 w-3.5 shrink-0" strokeWidth={1.75} /> {t(lang, { uz: 'Telefon', ru: 'Телефон' })}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setMode('email')}
+                    className={`flex flex-1 items-center justify-center gap-1 whitespace-nowrap rounded-lg py-1.5 text-xs font-semibold transition-colors ${
+                      mode === 'email' ? 'bg-white text-blue-700 shadow-sm' : 'text-gray-400 hover:text-gray-600'
+                    }`}
+                  >
+                    <Mail className="h-3.5 w-3.5 shrink-0" strokeWidth={1.75} /> Email
+                  </button>
                 </div>
 
                 <form onSubmit={handleSubmit} className="flex gap-2">
                   <div className="flex-1">
                     {mode === 'phone' ? (
                       <>
-                        <label htmlFor="lead-phone" className="mb-1 block text-xs font-medium text-mute">
+                        <label className="mb-1 block text-xs font-semibold text-gray-600">
                           {t(lang, ui.phoneLabel)}
                         </label>
                         <input
-                          id="lead-phone"
                           type="tel"
                           value={phone}
                           onChange={e => {
@@ -206,21 +194,20 @@ export default function GuestLeadWidget({ triggerOnMount = true }: Props) {
                             setPhone(val)
                           }}
                           placeholder="+998 90 123 45 67"
-                          className="w-full rounded-lg border border-line-2 bg-surface px-3 py-2.5 text-sm text-ink outline-none transition-all placeholder:text-faint focus:border-primary-500 focus:ring-2 focus:ring-primary-500/20"
+                          className="w-full rounded-xl border border-gray-300 px-3 py-2.5 text-sm text-gray-900 outline-none focus:border-amber-400 focus:ring-2 focus:ring-amber-100"
                         />
                       </>
                     ) : (
                       <>
-                        <label htmlFor="lead-email" className="mb-1 block text-xs font-medium text-mute">
+                        <label className="mb-1 block text-xs font-semibold text-gray-600">
                           {t(lang, ui.emailLabel)}
                         </label>
                         <input
-                          id="lead-email"
                           type="email"
                           value={email}
                           onChange={e => setEmail(e.target.value)}
                           placeholder="example@gmail.com"
-                          className="w-full rounded-lg border border-line-2 bg-surface px-3 py-2.5 text-sm text-ink outline-none transition-all placeholder:text-faint focus:border-primary-500 focus:ring-2 focus:ring-primary-500/20"
+                          className="w-full rounded-xl border border-gray-300 px-3 py-2.5 text-sm text-gray-900 outline-none focus:border-blue-400 focus:ring-2 focus:ring-blue-100"
                         />
                       </>
                     )}
@@ -228,7 +215,11 @@ export default function GuestLeadWidget({ triggerOnMount = true }: Props) {
                   <button
                     type="submit"
                     disabled={loading || !canSubmit}
-                    className="self-end rounded-lg bg-primary-600 px-4 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-primary-700 disabled:opacity-50"
+                    className={`self-end whitespace-nowrap rounded-xl px-4 py-2.5 text-sm font-semibold text-white disabled:opacity-50 transition-colors ${
+                      mode === 'phone'
+                        ? 'bg-amber-500 hover:bg-amber-600'
+                        : 'bg-blue-500 hover:bg-blue-600'
+                    }`}
                   >
                     {loading ? t(lang, ui.sending) : t(lang, ui.btn)}
                   </button>

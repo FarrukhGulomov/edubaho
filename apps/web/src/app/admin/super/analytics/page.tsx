@@ -2,6 +2,13 @@
 
 import Link from 'next/link'
 import { useEffect, useState, useCallback } from 'react'
+import {
+  GraduationCap, RefreshCw, BarChart3, Filter, Target, Zap, Lock,
+  MousePointerClick, LogIn, Smartphone, Send, XCircle, CheckCircle2,
+  LogOut, Phone, PencilLine, MessageSquare, Search, SlidersHorizontal,
+  Wallet, ArrowLeftRight, Clock, Trophy, UserPlus, Users2, User, Flame,
+  Snowflake, Mail, School, X,
+} from 'lucide-react'
 import { useAuth } from '@/hooks/useAuth'
 import { useRouter } from 'next/navigation'
 
@@ -78,45 +85,55 @@ function timeSince(d?: string) {
 }
 
 const EVENT_LABELS: Record<string, string> = {
-  institution_view:    '👁 Ko\'rildi',
-  gate_shown:          '🔐 Gate ko\'rindi',
-  gate_cta_click:      '🖱 CTA bosildi',
-  auth_started:        '🚪 Auth boshlandi',
-  auth_phone_entered:  '📱 Tel. kiritdi',
-  auth_otp_sent:       '📨 OTP yuborildi',
-  auth_otp_error:      '❌ OTP xato',
-  auth_completed:      '✅ Ro\'yxatdan o\'tdi',
-  auth_abandoned:      '🏃 Tark etdi',
-  contact_click:       '📞 Kontakt bosildi',
-  review_started:      '✍ Sharh boshladi',
-  review_submitted:    '💬 Sharh yubordi',
-  search_query:        '🔍 Qidiruv',
-  search_filter:       '🗂 Filter qo\'llandi',
-  search_result_click: '🖱 Natijaga bosdi',
-  page_view:           '📄 Sahifa',
-  filter_applied:      '🔧 Filter',
-  price_viewed:        '💰 Narx ko\'rdi',
-  compare_opened:      '⇄ Solishtirdi',
+  institution_view:    'Ko\'rildi',
+  gate_shown:          'Gate ko\'rindi',
+  gate_cta_click:      'CTA bosildi',
+  auth_started:        'Auth boshlandi',
+  auth_phone_entered:  'Tel. kiritdi',
+  auth_otp_sent:       'OTP yuborildi',
+  auth_otp_error:      'OTP xato',
+  auth_completed:      'Ro\'yxatdan o\'tdi',
+  auth_abandoned:      'Tark etdi',
+  contact_click:       'Kontakt bosildi',
+  review_started:      'Sharh boshladi',
+  review_submitted:    'Sharh yubordi',
+  search_query:        'Qidiruv',
+  search_filter:       'Filter qo\'llandi',
+  search_result_click: 'Natijaga bosdi',
+  page_view:           'Sahifa',
+  filter_applied:      'Filter',
+  price_viewed:        'Narx ko\'rdi',
+  compare_opened:      'Solishtirdi',
+}
+
+const EVENT_ICONS: Record<string, typeof Zap> = {
+  institution_view: School, gate_shown: Lock, gate_cta_click: MousePointerClick,
+  auth_started: LogIn, auth_phone_entered: Smartphone, auth_otp_sent: Send,
+  auth_otp_error: XCircle, auth_completed: CheckCircle2, auth_abandoned: LogOut,
+  contact_click: Phone, review_started: PencilLine, review_submitted: MessageSquare,
+  search_query: Search, search_filter: SlidersHorizontal, search_result_click: MousePointerClick,
+  page_view: Filter, filter_applied: SlidersHorizontal, price_viewed: Wallet,
+  compare_opened: ArrowLeftRight,
 }
 
 const FUNNEL_LABELS: Record<string, string> = {
-  institution_view:    '👁 Muassasa ko\'rildi',
-  gate_shown:          '🔐 Gate ko\'rindi',
-  gate_cta_click:      '🖱 CTA bosildi',
-  auth_started:        '🚪 Auth sahifasi ochildi',
-  auth_phone_entered:  '📱 Telefon kiritildi',
-  auth_otp_sent:       '📨 OTP yuborildi',
-  auth_completed:      '✅ Ro\'yxatdan o\'tdi',
+  institution_view:    'Muassasa ko\'rildi',
+  gate_shown:          'Gate ko\'rindi',
+  gate_cta_click:      'CTA bosildi',
+  auth_started:        'Auth sahifasi ochildi',
+  auth_phone_entered:  'Telefon kiritildi',
+  auth_otp_sent:       'OTP yuborildi',
+  auth_completed:      'Ro\'yxatdan o\'tdi',
 }
 
 // ─── Komponentlar ─────────────────────────────────────────────
 
-function StatCard({ icon, label, value, sub, color = 'blue' }: {
-  icon: string; label: string; value: string | number; sub?: string; color?: string
+function StatCard({ Icon, label, value, sub, color = 'blue' }: {
+  Icon: typeof Zap; label: string; value: string | number; sub?: string; color?: string
 }) {
   const colors: Record<string, string> = {
     blue:   'bg-blue-50 text-blue-700 border-blue-100',
-    green:  'bg-green-50 text-green-700 border-green-100',
+    green:  'bg-emerald-50 text-emerald-700 border-emerald-100',
     purple: 'bg-purple-50 text-purple-700 border-purple-100',
     orange: 'bg-orange-50 text-orange-700 border-orange-100',
     red:    'bg-red-50 text-red-700 border-red-100',
@@ -124,10 +141,10 @@ function StatCard({ icon, label, value, sub, color = 'blue' }: {
   return (
     <div className={`rounded-2xl border p-5 ${colors[color] ?? colors['blue']}`}>
       <div className="flex items-center gap-3 mb-2">
-        <span className="text-2xl">{icon}</span>
+        <Icon className="h-5 w-5 shrink-0" strokeWidth={1.75} />
         <p className="text-xs font-semibold opacity-70">{label}</p>
       </div>
-      <p className="text-3xl font-black">{value.toLocaleString()}</p>
+      <p className="text-3xl font-bold">{value.toLocaleString()}</p>
       {sub && <p className="mt-1 text-xs opacity-60">{sub}</p>}
     </div>
   )
@@ -232,7 +249,7 @@ export default function AnalyticsPage() {
   }
 
   if (loading || !user) return (
-    <div className="flex min-h-dvh items-center justify-center bg-canvas">
+    <div className="flex min-h-screen items-center justify-center">
       <div className="h-10 w-10 animate-spin rounded-full border-4 border-primary-200 border-t-primary-600" />
     </div>
   )
@@ -242,26 +259,28 @@ export default function AnalyticsPage() {
     return null
   }
 
-  const TABS: { id: Tab; label: string; icon: string }[] = [
-    { id: 'summary', label: 'Umumiy',     icon: '📊' },
-    { id: 'funnel',  label: 'Funnel',     icon: '🔻' },
-    { id: 'leads',   label: 'Lidlar',     icon: '🎯' },
-    { id: 'stream',  label: 'Oqim',       icon: '⚡' },
+  const TABS: { id: Tab; label: string; Icon: typeof Zap }[] = [
+    { id: 'summary', label: 'Umumiy',     Icon: BarChart3 },
+    { id: 'funnel',  label: 'Funnel',     Icon: Filter },
+    { id: 'leads',   label: 'Lidlar',     Icon: Target },
+    { id: 'stream',  label: 'Oqim',       Icon: Zap },
   ]
 
   return (
-    <div className="min-h-dvh bg-canvas">
+    <div className="min-h-screen bg-gray-50">
       {/* Header */}
       <header className="sticky top-0 z-10 border-b border-gray-200 bg-white shadow-sm">
-        <div className="mx-auto flex max-w-7xl items-center justify-between px-4 py-3">
-          <div className="flex items-center gap-2 text-sm">
-            <Link href="/" className="font-bold text-primary-600">🎓 EDUBAHO</Link>
-            <span className="text-gray-300">›</span>
-            <Link href="/admin/super" className="text-gray-500 hover:text-gray-700">Super Admin</Link>
-            <span className="text-gray-300">›</span>
-            <span className="font-semibold text-gray-700">Analytics</span>
+        <div className="mx-auto flex max-w-7xl items-center justify-between gap-3 px-4 py-3">
+          <div className="flex min-w-0 items-center gap-2 overflow-hidden text-sm">
+            <Link href="/" className="flex shrink-0 items-center gap-1.5 whitespace-nowrap font-bold text-primary-600">
+              <GraduationCap className="h-4 w-4 shrink-0" strokeWidth={1.75} /> EDULA
+            </Link>
+            <span className="shrink-0 text-gray-300">›</span>
+            <Link href="/admin/super" className="shrink-0 whitespace-nowrap text-gray-500 hover:text-gray-700">Super Admin</Link>
+            <span className="shrink-0 text-gray-300">›</span>
+            <span className="truncate font-semibold text-gray-700">Analytics</span>
           </div>
-          <div className="flex items-center gap-2">
+          <div className="flex shrink-0 items-center gap-2">
             {/* Kunlar filtr */}
             <select
               value={days}
@@ -276,9 +295,9 @@ export default function AnalyticsPage() {
             <button
               onClick={() => loadData(tab, days)}
               disabled={fetching}
-              className="rounded-lg border border-gray-200 px-3 py-1.5 text-sm font-semibold text-gray-600 hover:bg-canvas disabled:opacity-50"
+              className="flex items-center gap-1.5 whitespace-nowrap rounded-lg border border-gray-200 px-3 py-1.5 text-sm font-semibold text-gray-600 hover:bg-gray-50 disabled:opacity-50"
             >
-              {fetching ? '...' : '↻ Yangilash'}
+              <RefreshCw className={`h-3.5 w-3.5 shrink-0 ${fetching ? 'animate-spin' : ''}`} strokeWidth={1.75} /> Yangilash
             </button>
           </div>
         </div>
@@ -293,23 +312,25 @@ export default function AnalyticsPage() {
 
       <main className="mx-auto max-w-7xl px-4 py-6">
         <div className="mb-6">
-          <h1 className="text-2xl font-black text-gray-900">📊 Lead Analytics</h1>
+          <h1 className="flex items-center gap-2 text-2xl font-bold text-gray-900">
+            <BarChart3 className="h-6 w-6 shrink-0 text-emerald-600" strokeWidth={1.75} /> Lead Analytics
+          </h1>
           <p className="text-sm text-gray-500 mt-1">Foydalanuvchi xatti-harakati va lid konversiyasi</p>
         </div>
 
         {/* Tabs */}
-        <div className="mb-6 flex gap-1 rounded-2xl border border-gray-200 bg-white p-1 shadow-sm w-fit">
+        <div className="mb-6 flex w-fit gap-1 rounded-2xl border border-gray-200 bg-white p-1 shadow-sm">
           {TABS.map(t => (
             <button
               key={t.id}
               onClick={() => setTab(t.id)}
-              className={`flex items-center gap-2 rounded-xl px-4 py-2 text-sm font-semibold transition-all ${
+              className={`flex items-center gap-2 whitespace-nowrap rounded-xl px-4 py-2 text-sm font-semibold transition-colors ${
                 tab === t.id
-                  ? 'bg-primary-600 text-white shadow-sm'
-                  : 'text-gray-600 hover:bg-canvas'
+                  ? 'bg-primary-600 text-white'
+                  : 'text-gray-600 hover:bg-gray-50'
               }`}
             >
-              {t.icon} {t.label}
+              <t.Icon className="h-4 w-4 shrink-0" strokeWidth={1.75} /> {t.label}
             </button>
           ))}
         </div>
@@ -325,29 +346,37 @@ export default function AnalyticsPage() {
           <div className="space-y-6">
             {/* Stat kartochkalar */}
             <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-              <StatCard icon="⚡" label="Jami voqealar"    value={summary.totals.totalEvents}      color="blue"   />
-              <StatCard icon="👤" label="Noyob sessiyalar" value={summary.totals.uniqueSessions}    color="purple" />
-              <StatCard icon="👥" label="Auth foydalanuvchilar" value={summary.totals.uniqueUsers} color="green"  />
-              <StatCard icon="✅" label="Yangi ro'yxatlar" value={summary.totals.newRegistrations}  color="orange" />
+              <StatCard Icon={Zap}      label="Jami voqealar"    value={summary.totals.totalEvents}      color="blue"   />
+              <StatCard Icon={User}     label="Noyob sessiyalar" value={summary.totals.uniqueSessions}    color="purple" />
+              <StatCard Icon={Users2}   label="Auth foydalanuvchilar" value={summary.totals.uniqueUsers} color="green"  />
+              <StatCard Icon={UserPlus} label="Yangi ro'yxatlar" value={summary.totals.newRegistrations}  color="orange" />
             </div>
 
             {/* Konversiya funnel (mini) */}
             <div className="rounded-2xl border border-gray-200 bg-white p-6 shadow-sm">
-              <h2 className="mb-5 text-lg font-black text-gray-900">🔻 Konversiya ko'rsatkichlari</h2>
+              <h2 className="mb-5 flex items-center gap-2 text-lg font-bold text-gray-900">
+                <Filter className="h-5 w-5 shrink-0 text-primary-600" strokeWidth={1.75} /> Konversiya ko'rsatkichlari
+              </h2>
               <div className="grid gap-4 sm:grid-cols-3">
                 <div className="rounded-xl bg-orange-50 border border-orange-100 p-4 text-center">
-                  <p className="text-3xl font-black text-orange-700">{summary.funnel.gateShown}</p>
-                  <p className="text-sm text-orange-600 mt-1">🔐 Gate ko'rindi</p>
+                  <p className="text-3xl font-bold text-orange-700">{summary.funnel.gateShown}</p>
+                  <p className="mt-1 flex items-center justify-center gap-1 text-sm text-orange-600">
+                    <Lock className="h-3.5 w-3.5 shrink-0" strokeWidth={1.75} /> Gate ko'rindi
+                  </p>
                 </div>
                 <div className="rounded-xl bg-blue-50 border border-blue-100 p-4 text-center">
-                  <p className="text-3xl font-black text-blue-700">{summary.funnel.gateCta}</p>
-                  <p className="text-sm text-blue-600 mt-1">🖱 CTA bosildi</p>
+                  <p className="text-3xl font-bold text-blue-700">{summary.funnel.gateCta}</p>
+                  <p className="mt-1 flex items-center justify-center gap-1 text-sm text-blue-600">
+                    <MousePointerClick className="h-3.5 w-3.5 shrink-0" strokeWidth={1.75} /> CTA bosildi
+                  </p>
                   <p className="text-xs text-blue-400 mt-0.5">Gate'dan: {summary.funnel.gateToAuth}%</p>
                 </div>
-                <div className="rounded-xl bg-green-50 border border-green-100 p-4 text-center">
-                  <p className="text-3xl font-black text-green-700">{summary.funnel.authDone}</p>
-                  <p className="text-sm text-green-600 mt-1">✅ Ro'yxatdan o'tdi</p>
-                  <p className="text-xs text-green-400 mt-0.5">CTA'dan: {summary.funnel.ctaToReg}%</p>
+                <div className="rounded-xl bg-emerald-50 border border-emerald-100 p-4 text-center">
+                  <p className="text-3xl font-bold text-emerald-700">{summary.funnel.authDone}</p>
+                  <p className="mt-1 flex items-center justify-center gap-1 text-sm text-emerald-600">
+                    <CheckCircle2 className="h-3.5 w-3.5 shrink-0" strokeWidth={1.75} /> Ro'yxatdan o'tdi
+                  </p>
+                  <p className="text-xs text-emerald-400 mt-0.5">CTA'dan: {summary.funnel.ctaToReg}%</p>
                 </div>
               </div>
             </div>
@@ -355,7 +384,9 @@ export default function AnalyticsPage() {
             <div className="grid gap-6 lg:grid-cols-2">
               {/* Soatlik faollik */}
               <div className="rounded-2xl border border-gray-200 bg-white p-6 shadow-sm">
-                <h2 className="mb-4 text-base font-black text-gray-900">⏰ Soatlik faollik (24s)</h2>
+                <h2 className="mb-4 flex items-center gap-2 text-base font-bold text-gray-900">
+                  <Clock className="h-4 w-4 shrink-0 text-gray-400" strokeWidth={1.75} /> Soatlik faollik (24s)
+                </h2>
                 <HourlyChart data={summary.hourlyActivity} />
                 <div className="mt-2 flex justify-between text-xs text-gray-400">
                   <span>00:00</span>
@@ -366,7 +397,9 @@ export default function AnalyticsPage() {
 
               {/* Top voqealar */}
               <div className="rounded-2xl border border-gray-200 bg-white p-6 shadow-sm">
-                <h2 className="mb-4 text-base font-black text-gray-900">🏆 Top voqealar</h2>
+                <h2 className="mb-4 flex items-center gap-2 text-base font-bold text-gray-900">
+                  <Trophy className="h-4 w-4 shrink-0 text-amber-500" strokeWidth={1.75} /> Top voqealar
+                </h2>
                 <div className="space-y-2">
                   {summary.topEvents.map((e, i) => {
                     const max = summary.topEvents[0]?.count ?? 1
@@ -378,7 +411,7 @@ export default function AnalyticsPage() {
                             <span className="text-xs font-semibold text-gray-700 truncate">
                               {EVENT_LABELS[e.event] ?? e.event}
                             </span>
-                            <span className="text-xs font-black text-gray-900 ml-2 shrink-0">{e.count}</span>
+                            <span className="text-xs font-bold text-gray-900 ml-2 shrink-0">{e.count}</span>
                           </div>
                           <div className="h-1.5 rounded-full bg-gray-100 overflow-hidden">
                             <div
@@ -399,7 +432,9 @@ export default function AnalyticsPage() {
         {/* ── FUNNEL tab ── */}
         {!fetching && tab === 'funnel' && funnel.length > 0 && (
           <div className="rounded-2xl border border-gray-200 bg-white p-6 shadow-sm">
-            <h2 className="mb-6 text-lg font-black text-gray-900">🔻 Konversiya funnel</h2>
+            <h2 className="mb-6 flex items-center gap-2 text-lg font-bold text-gray-900">
+              <Filter className="h-5 w-5 shrink-0 text-primary-600" strokeWidth={1.75} /> Konversiya funnel
+            </h2>
             <div className="space-y-3">
               {funnel.map((step, i) => {
                 const maxSessions = funnel[0]?.sessions ?? 1
@@ -411,7 +446,7 @@ export default function AnalyticsPage() {
                         {FUNNEL_LABELS[step.event] ?? step.event}
                       </span>
                       <div className="flex items-center gap-3 text-sm">
-                        <span className="font-black text-gray-900">{step.sessions.toLocaleString()} sessiya</span>
+                        <span className="font-bold text-gray-900">{step.sessions.toLocaleString()} sessiya</span>
                         {i > 0 && (
                           <span className={`rounded-full px-2 py-0.5 text-xs font-bold ${
                             step.convRate >= 60 ? 'bg-green-100 text-green-700' :
@@ -452,21 +487,27 @@ export default function AnalyticsPage() {
           <div className="space-y-4">
             {/* Summary cards */}
             <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
-              <div className="rounded-2xl bg-canvas border border-gray-200 p-4 text-center">
-                <p className="text-2xl font-black text-gray-900">{leads.summary.total}</p>
+              <div className="rounded-2xl bg-gray-50 border border-gray-200 p-4 text-center">
+                <p className="text-2xl font-bold text-gray-900">{leads.summary.total}</p>
                 <p className="text-xs text-gray-500 mt-0.5">Jami lidlar</p>
               </div>
-              <div className="rounded-2xl bg-green-50 border border-green-100 p-4 text-center">
-                <p className="text-2xl font-black text-green-700">{leads.summary.converted}</p>
-                <p className="text-xs text-green-600 mt-0.5">✅ Konvertlangan</p>
+              <div className="rounded-2xl bg-emerald-50 border border-emerald-100 p-4 text-center">
+                <p className="text-2xl font-bold text-emerald-700">{leads.summary.converted}</p>
+                <p className="mt-0.5 flex items-center justify-center gap-1 text-xs text-emerald-600">
+                  <CheckCircle2 className="h-3 w-3 shrink-0" strokeWidth={1.75} /> Konvertlangan
+                </p>
               </div>
               <div className="rounded-2xl bg-orange-50 border border-orange-100 p-4 text-center">
-                <p className="text-2xl font-black text-orange-700">{leads.summary.warm}</p>
-                <p className="text-xs text-orange-600 mt-0.5">🔥 Issiq</p>
+                <p className="text-2xl font-bold text-orange-700">{leads.summary.warm}</p>
+                <p className="mt-0.5 flex items-center justify-center gap-1 text-xs text-orange-600">
+                  <Flame className="h-3 w-3 shrink-0" strokeWidth={1.75} /> Issiq
+                </p>
               </div>
               <div className="rounded-2xl bg-blue-50 border border-blue-100 p-4 text-center">
-                <p className="text-2xl font-black text-blue-700">{leads.summary.cold}</p>
-                <p className="text-xs text-blue-600 mt-0.5">❄️ Sovuq</p>
+                <p className="text-2xl font-bold text-blue-700">{leads.summary.cold}</p>
+                <p className="mt-0.5 flex items-center justify-center gap-1 text-xs text-blue-600">
+                  <Snowflake className="h-3 w-3 shrink-0" strokeWidth={1.75} /> Sovuq
+                </p>
               </div>
             </div>
 
@@ -475,7 +516,7 @@ export default function AnalyticsPage() {
               <div className="overflow-x-auto">
                 <table className="w-full text-sm">
                   <thead>
-                    <tr className="border-b border-gray-100 bg-canvas">
+                    <tr className="border-b border-gray-100 bg-gray-50">
                       <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-gray-500">Kontakt</th>
                       <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-gray-500">Status</th>
                       <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-gray-500">Score</th>
@@ -487,37 +528,37 @@ export default function AnalyticsPage() {
                   </thead>
                   <tbody className="divide-y divide-gray-100">
                     {leads.data.map(lead => (
-                      <tr key={lead.sessionId} className="hover:bg-canvas transition-colors">
+                      <tr key={lead.sessionId} className="hover:bg-gray-50 transition-colors">
                         {/* Kontakt ustuni */}
                         <td className="px-4 py-3 min-w-[180px]">
                           {lead.user ? (
                             <div>
-                              <p className="text-sm font-bold text-gray-900">
-                                📱 {lead.user.phone}
+                              <p className="flex items-center gap-1.5 text-sm font-bold text-gray-900">
+                                <Smartphone className="h-3.5 w-3.5 shrink-0 text-gray-400" strokeWidth={1.75} /> {lead.user.phone}
                               </p>
                               {lead.user.name && (
                                 <p className="text-xs text-gray-500">{lead.user.name}</p>
                               )}
-                              <span className="mt-0.5 inline-block rounded-full bg-green-100 px-1.5 py-0.5 text-[10px] font-semibold text-green-700">
-                                ✅ Ro&apos;yxatdan o&apos;tgan
+                              <span className="mt-0.5 inline-flex items-center gap-1 rounded-full bg-emerald-50 px-1.5 py-0.5 text-[10px] font-semibold text-emerald-700">
+                                <CheckCircle2 className="h-2.5 w-2.5 shrink-0" strokeWidth={2} /> Ro&apos;yxatdan o&apos;tgan
                               </span>
                             </div>
                           ) : lead.capturedPhone ? (
                             <div>
-                              <p className="text-sm font-bold text-gray-900">
-                                📱 {lead.capturedPhone}
+                              <p className="flex items-center gap-1.5 text-sm font-bold text-gray-900">
+                                <Smartphone className="h-3.5 w-3.5 shrink-0 text-gray-400" strokeWidth={1.75} /> {lead.capturedPhone}
                               </p>
-                              <span className="mt-0.5 inline-block rounded-full bg-amber-100 px-1.5 py-0.5 text-[10px] font-semibold text-amber-700">
-                                🎯 Qoldirilgan
+                              <span className="mt-0.5 inline-flex items-center gap-1 rounded-full bg-amber-50 px-1.5 py-0.5 text-[10px] font-semibold text-amber-700">
+                                <Target className="h-2.5 w-2.5 shrink-0" strokeWidth={1.75} /> Qoldirilgan
                               </span>
                             </div>
                           ) : lead.capturedEmail ? (
                             <div>
-                              <p className="text-sm font-bold text-gray-900">
-                                ✉️ {lead.capturedEmail}
+                              <p className="flex items-center gap-1.5 text-sm font-bold text-gray-900">
+                                <Mail className="h-3.5 w-3.5 shrink-0 text-gray-400" strokeWidth={1.75} /> {lead.capturedEmail}
                               </p>
-                              <span className="mt-0.5 inline-block rounded-full bg-blue-100 px-1.5 py-0.5 text-[10px] font-semibold text-blue-700">
-                                📧 Email
+                              <span className="mt-0.5 inline-flex items-center gap-1 rounded-full bg-blue-50 px-1.5 py-0.5 text-[10px] font-semibold text-blue-700">
+                                <Mail className="h-2.5 w-2.5 shrink-0" strokeWidth={1.75} /> Email
                               </span>
                             </div>
                           ) : (
@@ -530,13 +571,16 @@ export default function AnalyticsPage() {
                           )}
                         </td>
                         <td className="px-4 py-3">
-                          <span className={`rounded-full px-2.5 py-1 text-xs font-bold ${
-                            lead.status === 'converted' ? 'bg-green-100 text-green-700' :
-                            lead.status === 'warm'      ? 'bg-orange-100 text-orange-700' :
-                            'bg-blue-100 text-blue-600'
+                          <span className={`inline-flex items-center gap-1 whitespace-nowrap rounded-full px-2.5 py-1 text-xs font-bold ${
+                            lead.status === 'converted' ? 'bg-emerald-50 text-emerald-700' :
+                            lead.status === 'warm'      ? 'bg-orange-50 text-orange-700' :
+                            'bg-blue-50 text-blue-600'
                           }`}>
-                            {lead.status === 'converted' ? '✅ Konvertlangan' :
-                             lead.status === 'warm'      ? '🔥 Issiq' : '❄️ Sovuq'}
+                            {lead.status === 'converted'
+                              ? <><CheckCircle2 className="h-3 w-3 shrink-0" strokeWidth={1.75} /> Konvertlangan</>
+                              : lead.status === 'warm'
+                                ? <><Flame className="h-3 w-3 shrink-0" strokeWidth={1.75} /> Issiq</>
+                                : <><Snowflake className="h-3 w-3 shrink-0" strokeWidth={1.75} /> Sovuq</>}
                           </span>
                         </td>
                         <td className="px-4 py-3">
@@ -550,7 +594,7 @@ export default function AnalyticsPage() {
                                 style={{ width: `${Math.min((lead.score / 20) * 100, 100)}%` }}
                               />
                             </div>
-                            <span className="text-xs font-black text-gray-700">{lead.score}</span>
+                            <span className="text-xs font-bold text-gray-700">{lead.score}</span>
                           </div>
                         </td>
                         {/* Qidiruv so'rovlari */}
@@ -572,7 +616,7 @@ export default function AnalyticsPage() {
                         <td className="px-4 py-3">
                           <button
                             onClick={() => loadSession(lead.sessionId)}
-                            className="rounded-lg border border-gray-200 px-2.5 py-1 text-xs font-semibold text-gray-600 hover:bg-canvas transition-colors"
+                            className="rounded-lg border border-gray-200 px-2.5 py-1 text-xs font-semibold text-gray-600 hover:bg-gray-50 transition-colors"
                           >
                             Tarix →
                           </button>
@@ -593,9 +637,9 @@ export default function AnalyticsPage() {
               <p className="text-sm text-gray-500">Oxirgi 100 ta voqea — real vaqt</p>
               <button
                 onClick={() => loadData('stream', days)}
-                className="rounded-lg border border-gray-200 px-3 py-1.5 text-xs font-semibold text-gray-600 hover:bg-canvas"
+                className="flex items-center gap-1.5 whitespace-nowrap rounded-lg border border-gray-200 px-3 py-1.5 text-xs font-semibold text-gray-600 hover:bg-gray-50"
               >
-                ↻ Yangilash
+                <RefreshCw className="h-3.5 w-3.5 shrink-0" strokeWidth={1.75} /> Yangilash
               </button>
             </div>
             <div className="overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-sm divide-y divide-gray-50">
@@ -604,14 +648,12 @@ export default function AnalyticsPage() {
                 properties: Record<string, unknown>; page?: string;
                 createdAt: string; institution?: { nameUz: string; slug: string };
                 user?: { phone: string; name?: string };
-              }[]).map((e) => (
-                <div key={e.id} className="flex items-start gap-3 px-4 py-3 hover:bg-canvas">
-                  <span className="text-lg shrink-0 mt-0.5">
-                    {e.event.startsWith('auth') ? '🔑' :
-                     e.event.startsWith('gate') ? '🔐' :
-                     e.event.startsWith('contact') ? '📞' :
-                     e.event.startsWith('search') ? '🔍' :
-                     e.event.startsWith('institution') ? '🏫' : '⚡'}
+              }[]).map((e) => {
+                const StreamIcon = EVENT_ICONS[e.event] ?? Zap
+                return (
+                <div key={e.id} className="flex items-start gap-3 px-4 py-3 hover:bg-gray-50">
+                  <span className="shrink-0 mt-0.5 text-gray-400">
+                    <StreamIcon className="h-4 w-4" strokeWidth={1.75} />
                   </span>
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2 flex-wrap">
@@ -634,11 +676,11 @@ export default function AnalyticsPage() {
                       )}
                       {/* Autentifikatsiya qilingan user */}
                       {e.user ? (
-                        <span className="text-xs bg-green-50 text-green-700 border border-green-200 rounded-full px-2 py-0.5 font-medium">
-                          👤 {e.user.name ? `${e.user.name} (${e.user.phone})` : e.user.phone}
+                        <span className="flex items-center gap-1 whitespace-nowrap rounded-full border border-emerald-200 bg-emerald-50 px-2 py-0.5 text-xs font-medium text-emerald-700">
+                          <User className="h-3 w-3 shrink-0" strokeWidth={1.75} /> {e.user.name ? `${e.user.name} (${e.user.phone})` : e.user.phone}
                         </span>
                       ) : (
-                        <span className="text-xs bg-canvas text-gray-400 rounded-full px-2 py-0.5">mehmon</span>
+                        <span className="text-xs bg-gray-50 text-gray-400 rounded-full px-2 py-0.5">mehmon</span>
                       )}
                     </div>
                     <div className="flex items-center gap-3 mt-0.5">
@@ -659,10 +701,13 @@ export default function AnalyticsPage() {
                   </div>
                   <span className="text-xs text-gray-400 shrink-0 mt-0.5">{fmt(e.createdAt)}</span>
                 </div>
-              ))}
+                )
+              })}
               {stream.length === 0 && (
                 <div className="py-12 text-center text-gray-400">
-                  <p className="text-3xl mb-2">⚡</p>
+                  <div className="mb-2 flex justify-center">
+                    <Zap className="h-8 w-8 text-gray-300" strokeWidth={1.5} />
+                  </div>
                   <p>Hozircha voqealar yo'q</p>
                 </div>
               )}
@@ -673,11 +718,11 @@ export default function AnalyticsPage() {
 
       {/* Session detail modal */}
       {selectedSession && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm px-4">
-          <div className="w-full max-w-2xl max-h-[85vh] overflow-hidden rounded-3xl bg-white shadow-2xl flex flex-col">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 px-4">
+          <div className="w-full max-w-2xl max-h-[85vh] overflow-hidden rounded-2xl bg-white shadow-2xl flex flex-col">
             <div className="flex items-center justify-between border-b border-gray-100 px-6 py-4">
               <div>
-                <h2 className="text-lg font-black text-gray-900">Sessiya tarixi</h2>
+                <h2 className="text-lg font-bold text-gray-900">Sessiya tarixi</h2>
                 {/* Sessiyadan user yoki mehmon kontaktini ko'rsatamiz */}
                 {(() => {
                   type SE = { user?: { phone: string; name?: string }; properties?: Record<string, unknown>; event?: string }
@@ -687,18 +732,18 @@ export default function AnalyticsPage() {
                     ['lead_capture', 'lead_capture_email'].includes(String(e.properties?.contactType ?? ''))
                   )
                   if (authUser) return (
-                    <p className="mt-1 text-sm font-semibold text-green-700">
-                      📱 {authUser.phone}{authUser.name ? ` — ${authUser.name}` : ''}
+                    <p className="mt-1 flex items-center gap-1.5 text-sm font-semibold text-emerald-700">
+                      <Smartphone className="h-3.5 w-3.5 shrink-0" strokeWidth={1.75} /> {authUser.phone}{authUser.name ? ` — ${authUser.name}` : ''}
                     </p>
                   )
                   if (captureEvt?.properties?.phone) return (
-                    <p className="mt-1 text-sm font-semibold text-amber-700">
-                      📱 {String(captureEvt.properties.phone)} <span className="text-xs text-amber-500">(qoldirilgan)</span>
+                    <p className="mt-1 flex items-center gap-1.5 text-sm font-semibold text-amber-700">
+                      <Smartphone className="h-3.5 w-3.5 shrink-0" strokeWidth={1.75} /> {String(captureEvt.properties.phone)} <span className="text-xs text-amber-500">(qoldirilgan)</span>
                     </p>
                   )
                   if (captureEvt?.properties?.email) return (
-                    <p className="mt-1 text-sm font-semibold text-blue-700">
-                      ✉️ {String(captureEvt.properties.email)}
+                    <p className="mt-1 flex items-center gap-1.5 text-sm font-semibold text-blue-700">
+                      <Mail className="h-3.5 w-3.5 shrink-0" strokeWidth={1.75} /> {String(captureEvt.properties.email)}
                     </p>
                   )
                   return <p className="text-xs text-gray-400 font-mono mt-0.5">{selectedSession}</p>
@@ -706,9 +751,9 @@ export default function AnalyticsPage() {
               </div>
               <button
                 onClick={() => { setSelectedSession(null); setSessionEvents([]) }}
-                className="flex items-center gap-1.5 rounded-xl border-2 border-gray-200 bg-white px-4 py-2 text-sm font-bold text-gray-600 hover:bg-canvas hover:border-gray-300 transition-all active:scale-95"
+                className="flex items-center gap-1.5 rounded-xl border border-gray-200 bg-white px-4 py-2 text-sm font-semibold text-gray-600 transition-colors hover:border-gray-300 hover:bg-gray-50"
               >
-                ✕ Yopish
+                <X className="h-4 w-4 shrink-0" strokeWidth={1.75} /> Yopish
               </button>
             </div>
             <div className="overflow-y-auto flex-1 divide-y divide-gray-50">

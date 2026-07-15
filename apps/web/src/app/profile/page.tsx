@@ -4,12 +4,11 @@ import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import {
-  Bookmark, Scale, PencilLine, ShieldCheck, LogOut, Edit2, Check,
-  AlertCircle, CheckCircle2, Search, Laptop, GraduationCap, ArrowRight,
-  Send, MessageCircle, User, Calendar, Star,
+  Pencil, Phone, CheckCircle2, AlertCircle, Star, ArrowLeftRight, PencilLine,
+  ShieldCheck, ClipboardList, School, Plus, Search, Laptop, GraduationCap,
+  Send, LogOut, MessageCircle, Calendar, Globe2, Palette, Dumbbell, Trophy,
 } from 'lucide-react'
-import StarRating from '@/components/shared/StarRating'
-import TypeIcon from '@/components/shared/TypeIcon'
+import StarRating, { RatingHint } from '@/components/shared/StarRating'
 import Header from '@/components/shared/Header'
 import { useAuth } from '@/hooks/useAuth'
 import { useSaved, useCompare } from '@/hooks/useCompare'
@@ -25,25 +24,30 @@ interface MyReview {
   institution?: { nameUz: string; nameRu?: string; slug: string; type: string }
 }
 
+const TYPE_ICONS: Record<string, typeof School> = {
+  IT_SCHOOL: Laptop, UNIVERSITY: GraduationCap, SCHOOL: School, KINDERGARTEN: Palette,
+  LANGUAGE_CENTER: Globe2, COURSE_CENTER: PencilLine, SPORTS_SCHOOL: Dumbbell, LYCEUM: Trophy,
+}
+
 const TYPE_LABELS: Record<string, { uz: string; ru: string }> = {
   KINDERGARTEN:    { uz: "Bog'cha",      ru: 'Детский сад' },
   SCHOOL:          { uz: 'Maktab',       ru: 'Школа' },
   LYCEUM:          { uz: 'Litsey',       ru: 'Лицей' },
   COLLEGE:         { uz: 'Kollej',       ru: 'Колледж' },
-  UNIVERSITY:      { uz: 'Universitet',  ru: 'Университет' },
-  COURSE_CENTER:   { uz: 'Kurs',         ru: 'Учебный центр' },
-  LANGUAGE_CENTER: { uz: 'Til markazi',  ru: 'Языковой' },
-  IT_SCHOOL:       { uz: 'IT maktab',    ru: 'IT школа' },
-  TUTORING:        { uz: 'Repetitor',    ru: 'Репетитор' },
-  SPORTS_SCHOOL:   { uz: 'Sport',        ru: 'Спорт' },
-  ARTS_SCHOOL:     { uz: "San'at",       ru: 'Искусство' },
+  UNIVERSITY:      { uz: 'Universitet', ru: 'Университет' },
+  COURSE_CENTER:   { uz: 'Kurs',        ru: 'Учебный центр' },
+  LANGUAGE_CENTER: { uz: 'Til markazi', ru: 'Языковой' },
+  IT_SCHOOL:       { uz: 'IT maktab',   ru: 'IT школа' },
+  TUTORING:        { uz: 'Repetitor',   ru: 'Репетитор' },
+  SPORTS_SCHOOL:   { uz: 'Sport',       ru: 'Спорт' },
+  ARTS_SCHOOL:     { uz: "San'at",      ru: 'Искусство' },
 }
 
-const STATUS_CONFIG: Record<string, { cls: string; label: { uz: string; ru: string } }> = {
-  PENDING:  { cls: 'bg-amber-50  text-amber-700  dark:bg-amber-500/10  dark:text-amber-400',  label: { uz: "Ko'rib chiqilmoqda", ru: 'На проверке' } },
-  APPROVED: { cls: 'bg-accent-50 text-accent-700 dark:bg-accent-500/10 dark:text-accent-400', label: { uz: 'Tasdiqlangan',       ru: 'Одобрено' } },
-  REJECTED: { cls: 'bg-surface-2 text-mute',                                                  label: { uz: 'Rad etilgan',        ru: 'Отклонено' } },
-  FLAGGED:  { cls: 'bg-red-50    text-red-700    dark:bg-red-500/10    dark:text-red-400',    label: { uz: 'Shikoyat',           ru: 'Жалоба' } },
+const STATUS_STYLE: Record<string, { bg: string; label: { uz: string; ru: string } }> = {
+  PENDING:  { bg: 'bg-amber-50 text-amber-700',  label: { uz: "Ko'rib chiqilmoqda", ru: 'На проверке' } },
+  APPROVED: { bg: 'bg-emerald-50 text-emerald-700', label: { uz: 'Tasdiqlangan',    ru: 'Одобрено' } },
+  REJECTED: { bg: 'bg-gray-100 text-gray-600',   label: { uz: 'Rad etilgan',        ru: 'Отклонено' } },
+  FLAGGED:  { bg: 'bg-red-50 text-red-700',      label: { uz: 'Shikoyat',           ru: 'Жалоба' } },
 }
 
 function fmtUzs(n?: number) {
@@ -116,10 +120,13 @@ export default function ProfilePage() {
   }
 
   if (loading) return (
-    <div className="flex min-h-dvh flex-col bg-canvas">
+    <div className="flex min-h-screen flex-col bg-gray-50">
       <Header />
       <div className="flex flex-1 items-center justify-center">
-        <div className="h-8 w-8 animate-spin rounded-full border-2 border-line-2 border-t-primary-600" />
+        <div className="text-center">
+          <div className="mx-auto mb-5 h-14 w-14 animate-spin rounded-full border-4 border-primary-200 border-t-primary-600" />
+          <p className="text-lg text-gray-500">{uz ? 'Yuklanmoqda...' : 'Загрузка...'}</p>
+        </div>
       </div>
     </div>
   )
@@ -127,59 +134,46 @@ export default function ProfilePage() {
   if (!user) return null
 
   const initials = user.name
-    ? user.name.split(' ').map((n: string) => n[0]).join('').toUpperCase().slice(0, 2)
+    ? user.name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2)
     : (user.phone ?? '').slice(-2)
 
   const isAdmin = ['ADMIN', 'SUPER_ADMIN', 'MODERATOR'].includes(user.role)
 
-  const quickLinks = [
-    { href: '/search',                 Icon: Search,        uz: 'Qidiruv',         ru: 'Поиск' },
-    { href: '/search?type=IT_SCHOOL',  Icon: Laptop,        uz: 'IT maktablar',    ru: 'IT школы' },
-    { href: '/search?type=UNIVERSITY', Icon: GraduationCap, uz: 'Universitetlar',  ru: 'Университeтlar' },
-    { href: 'https://t.me/edureyting', Icon: Send,          uz: 'Telegram kanal',  ru: 'Telegram канал' },
-  ]
-
-  const adminLinks = [
-    { href: '/admin/reviews',          uz: 'Sharhlar',         ru: 'Отзывы' },
-    { href: '/admin/institutions',     uz: 'Muassasalar',      ru: 'Учреждения' },
-    { href: '/admin/institutions/new', uz: "Yangi qo'shish",   ru: 'Добавить' },
-    { href: '/admin',                  uz: 'Bosh panel',       ru: 'Главная' },
-  ]
-
   return (
-    <div className="min-h-dvh bg-canvas">
+    <div className="min-h-screen bg-gray-50">
       <Header />
 
-      <main className="mx-auto max-w-2xl space-y-4 px-4 py-8">
+      <main className="mx-auto max-w-2xl px-4 py-8 space-y-5">
 
-        {/* Profile card */}
-        <div className="card overflow-hidden p-0">
-          <div className="h-20 bg-gradient-to-r from-primary-700 to-primary-500" />
+        {/* ══ Avatar + ism bloki ══════════════════════════════════ */}
+        <div className="overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-sm">
+          {/* Rangli banner */}
+          <div className="h-20 bg-primary-600" />
+
           <div className="px-6 pb-6">
+            {/* Avatar */}
             <div className="-mt-10 mb-4 flex items-end justify-between">
-              <div className="flex h-20 w-20 items-center justify-center rounded-2xl bg-gradient-to-br from-primary-500 to-primary-700 text-2xl font-black text-white shadow-pop ring-4 ring-surface">
+              <div className="flex h-20 w-20 items-center justify-center rounded-2xl bg-primary-600 text-2xl font-bold text-white ring-4 ring-white">
                 {initials}
               </div>
               {!editing && (
                 <button
                   onClick={() => setEditing(true)}
-                  className="btn-secondary btn-sm"
-                  aria-label={uz ? 'Profilni tahrirlash' : 'Редактировать профиль'}
+                  className="flex items-center gap-2 rounded-xl border border-gray-200 px-4 py-2.5 text-base font-semibold text-gray-600 transition-colors hover:border-primary-300 hover:text-primary-600"
                 >
-                  <Edit2 className="h-3.5 w-3.5" aria-hidden />
-                  {uz ? 'Tahrirlash' : 'Изменить'}
+                  <Pencil className="h-4 w-4 shrink-0" strokeWidth={1.75} /> {uz ? 'Tahrirlash' : 'Изменить'}
                 </button>
               )}
             </div>
 
+            {/* Ism tahrirlash */}
             {editing ? (
               <form onSubmit={handleSaveName} className="mb-4 space-y-3">
                 <div>
-                  <label htmlFor="profile-name" className="mb-1.5 block text-sm font-medium text-ink">
+                  <label className="mb-2 block text-base font-bold text-gray-700">
                     {uz ? 'Ism va familiya' : 'Имя и фамилия'}
                   </label>
                   <input
-                    id="profile-name"
                     type="text"
                     value={name}
                     onChange={e => setName(e.target.value)}
@@ -189,13 +183,16 @@ export default function ProfilePage() {
                   />
                 </div>
                 {saveErr && (
-                  <div role="alert" className="flex items-center gap-2 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-600 dark:border-red-500/25 dark:bg-red-500/10 dark:text-red-400">
-                    <AlertCircle className="h-4 w-4 shrink-0" aria-hidden />
-                    {saveErr}
+                  <div className="flex items-start gap-2 rounded-xl bg-red-50 px-4 py-3 text-base text-red-700">
+                    <AlertCircle className="mt-0.5 h-4 w-4 shrink-0" strokeWidth={2} /> {saveErr}
                   </div>
                 )}
-                <div className="flex gap-2">
-                  <button type="submit" disabled={saving || !name.trim()} className="btn-primary flex-1">
+                <div className="flex gap-3">
+                  <button
+                    type="submit"
+                    disabled={saving || !name.trim()}
+                    className="btn-primary flex-1"
+                  >
                     {saving ? (uz ? 'Saqlanmoqda...' : 'Сохранение...') : (uz ? 'Saqlash' : 'Сохранить')}
                   </button>
                   <button
@@ -209,166 +206,185 @@ export default function ProfilePage() {
               </form>
             ) : (
               <div>
-                <h1 className="text-xl font-bold text-ink">
-                  {user.name ?? <span className="italic text-faint">{uz ? 'Ism kiritilmagan' : 'Имя не указано'}</span>}
+                <h1 className="text-2xl font-bold text-gray-900">
+                  {user.name ?? <span className="text-gray-400 italic">{uz ? 'Ism kiritilmagan' : 'Имя не указано'}</span>}
                 </h1>
-                <p className="mt-0.5 flex items-center gap-1.5 text-sm text-mute">
-                  <User className="h-3.5 w-3.5" aria-hidden />
-                  {user.phone}
+                <p className="mt-1 flex items-center gap-1.5 text-base text-gray-500">
+                  <Phone className="h-4 w-4 shrink-0" strokeWidth={1.75} /> {user.phone}
                 </p>
               </div>
             )}
 
+            {/* Saqlash muvaffaqiyatli xabari */}
             {saveOk && (
-              <div className="mt-3 flex items-center gap-2 rounded-lg bg-accent-50 px-4 py-3 text-sm font-medium text-accent-700 dark:bg-accent-500/10 dark:text-accent-400">
-                <CheckCircle2 className="h-4 w-4" aria-hidden />
-                {uz ? 'Ism muvaffaqiyatli saqlandi!' : 'Имя успешно сохранено!'}
+              <div className="mt-4 flex items-center gap-2 rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-base font-semibold text-emerald-700">
+                <CheckCircle2 className="h-4 w-4 shrink-0" strokeWidth={2} /> {uz ? 'Ism muvaffaqiyatli saqlandi!' : 'Имя успешно сохранено!'}
               </div>
             )}
 
-            {/* Stats */}
-            <dl className="mt-5 grid grid-cols-3 gap-3">
+            {/* Statistika */}
+            <div className="mt-5 grid grid-cols-3 gap-3">
               {[
-                { Icon: Bookmark, value: saved.length,       label: { uz: 'Saqlangan',     ru: 'Сохранено' } },
-                { Icon: Scale,    value: compareItems.length, label: { uz: 'Solishtirish',  ru: 'Сравнение' } },
-                { Icon: PencilLine, value: reviews.length,   label: { uz: 'Sharhlar',      ru: 'Отзывов' } },
+                { value: saved.length,         Icon: Star,           label: { uz: 'Saqlangan',    ru: 'Сохранено' } },
+                { value: compareItems.length,  Icon: ArrowLeftRight, label: { uz: 'Solishtirish', ru: 'Сравнение' } },
+                { value: reviews.length,       Icon: PencilLine,     label: { uz: 'Sharhlar',     ru: 'Отзывов' } },
               ].map(s => (
-                <div key={s.label.uz} className="flex flex-col items-center gap-1 rounded-xl bg-canvas px-3 py-3 text-center">
-                  <s.Icon className="h-4 w-4 text-mute" aria-hidden />
-                  <span className="text-xl font-bold tabular-nums text-primary-600">{s.value}</span>
-                  <span className="text-xs text-faint">{uz ? s.label.uz : s.label.ru}</span>
+                <div key={s.label.uz} className="flex flex-col items-center gap-1 rounded-xl bg-gray-50 py-3 text-center">
+                  <s.Icon className="h-5 w-5 text-primary-500" strokeWidth={1.75} />
+                  <span className="text-xl font-bold text-primary-600 sm:text-2xl">{s.value}</span>
+                  <span className="text-xs font-semibold text-gray-500 sm:text-sm">{uz ? s.label.uz : s.label.ru}</span>
                 </div>
               ))}
-            </dl>
+            </div>
           </div>
         </div>
 
-        {/* Admin panel */}
+        {/* ══ Admin panel — faqat adminlar uchun ═════════════════ */}
         {isAdmin && (
-          <div className="card border-red-200 bg-red-50/50 p-6 dark:border-red-500/20 dark:bg-red-500/5">
-            <div className="mb-4 flex items-center gap-3">
-              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-red-600">
-                <ShieldCheck className="h-5 w-5 text-white" aria-hidden />
-              </div>
-              <div className="flex-1">
-                <h2 className="text-sm font-bold text-red-900 dark:text-red-300">
+          <div className="rounded-2xl border border-red-200 bg-red-50 p-6">
+            <div className="mb-5 flex items-center gap-4">
+              <span className="icon-chip h-14 w-14 shrink-0 bg-red-600 text-white">
+                <ShieldCheck className="h-6 w-6" strokeWidth={1.75} />
+              </span>
+              <div>
+                <h2 className="text-xl font-bold text-red-900">
                   {uz ? 'Admin paneli' : 'Панель администратора'}
                 </h2>
-                <p className="text-xs text-red-600 dark:text-red-400">{user.role}</p>
+                <p className="text-base text-red-700">
+                  {uz ? 'Sharhlar va muassasalarni boshqaring' : 'Управление отзывами и учреждениями'}
+                </p>
               </div>
+              <span className="ml-auto shrink-0 whitespace-nowrap rounded-xl bg-red-600 px-3 py-1.5 text-sm font-semibold text-white">
+                {user.role}
+              </span>
             </div>
-            <div className="mb-3 grid grid-cols-2 gap-2">
-              {adminLinks.map(link => (
+            <div className="mb-4 grid grid-cols-2 gap-3">
+              {[
+                { href: '/admin/reviews',          Icon: ClipboardList, uz: 'Sharhlar',        ru: 'Отзывы' },
+                { href: '/admin/institutions',     Icon: School,        uz: 'Muassasalar',     ru: 'Учреждения' },
+                { href: '/admin/institutions/new', Icon: Plus,          uz: "Yangi qo'shish", ru: 'Добавить' },
+                { href: '/admin',                  Icon: ShieldCheck,   uz: 'Bosh panel',      ru: 'Главная' },
+              ].map(link => (
                 <Link
                   key={link.href}
                   href={link.href}
-                  className="flex items-center gap-2 rounded-lg bg-white/60 px-3 py-2.5 text-sm font-medium text-red-800 transition-colors hover:bg-white/80 dark:bg-red-500/10 dark:text-red-300 dark:hover:bg-red-500/20"
+                  className="flex items-center gap-3 whitespace-nowrap rounded-xl bg-white/70 px-4 py-3.5 text-base font-semibold text-red-800 transition-colors hover:bg-white"
                 >
-                  <ArrowRight className="h-3.5 w-3.5" aria-hidden />
+                  <link.Icon className="h-5 w-5 shrink-0" strokeWidth={1.75} />
                   {uz ? link.uz : link.ru}
                 </Link>
               ))}
             </div>
-            <Link href="/admin" className="block w-full rounded-lg bg-red-600 py-3 text-center text-sm font-semibold text-white transition-colors hover:bg-red-700">
-              {uz ? 'Admin panelni ochish' : 'Открыть панель администратора'}
+            <Link
+              href="/admin"
+              className="block w-full rounded-xl bg-red-600 py-4 text-center text-base font-semibold text-white transition-colors hover:bg-red-700"
+            >
+              {uz ? 'Admin panelni ochish →' : 'Открыть панель администратора →'}
             </Link>
           </div>
         )}
 
-        {/* Compare list */}
+        {/* ══ Solishtirish ro'yxati ════════════════════════════════ */}
         {compareItems.length >= 2 && (
-          <div className="card p-5">
-            <div className="mb-3 flex items-center justify-between">
-              <h2 className="flex items-center gap-2 text-sm font-bold text-ink">
-                <Scale className="h-4 w-4 text-primary-600" aria-hidden />
-                {uz ? "Solishtirish ro'yxati" : 'Список сравнения'}
+          <div className="rounded-2xl border border-primary-200 bg-primary-50 p-6">
+            <div className="mb-4 flex items-center justify-between">
+              <h2 className="flex items-center gap-2 text-xl font-bold text-primary-900">
+                <ArrowLeftRight className="h-5 w-5 shrink-0" strokeWidth={1.75} /> {uz ? "Solishtirish ro'yxati" : 'Список сравнения'}
               </h2>
-              <span className="badge tabular-nums">{compareItems.length}</span>
+              <span className="shrink-0 whitespace-nowrap rounded-full bg-primary-600 px-3 py-1.5 text-sm font-semibold text-white">
+                {compareItems.length} ta
+              </span>
             </div>
-            <div className="mb-3 space-y-1.5">
-              {compareItems.map(item => (
-                <div key={item.id} className="flex items-center gap-2.5 rounded-lg bg-canvas px-3 py-2">
-                  <TypeIcon type={item.type} className="h-4 w-4 shrink-0 text-mute" />
-                  <span className="line-clamp-1 text-sm font-medium text-ink">{item.nameUz}</span>
-                </div>
-              ))}
+            <div className="mb-4 space-y-2.5">
+              {compareItems.map(item => {
+                const TypeIcon = TYPE_ICONS[item.type] ?? School
+                return (
+                  <div key={item.id} className="flex items-center gap-3 rounded-xl bg-white/70 px-4 py-3">
+                    <TypeIcon className="h-5 w-5 shrink-0 text-primary-500" strokeWidth={1.75} />
+                    <span className="line-clamp-1 text-base font-semibold text-primary-800">{item.nameUz}</span>
+                  </div>
+                )
+              })}
             </div>
             <Link
               href={`/compare?ids=${compareItems.map(i => i.id).join(',')}`}
-              className="btn-primary w-full"
+              className="block w-full rounded-xl bg-primary-600 py-4 text-center text-base font-semibold text-white transition-colors hover:bg-primary-700"
             >
-              <Scale className="h-4 w-4" aria-hidden />
-              {uz ? "Solishtirishni ko'rish" : 'Смотреть сравнение'}
+              {uz ? "Solishtirishni ko'rish →" : 'Смотреть сравнение →'}
             </Link>
           </div>
         )}
 
-        {/* Saved */}
-        <div className="card overflow-hidden p-0">
-          <div className="flex items-center justify-between border-b border-line px-5 py-4">
-            <h2 className="flex items-center gap-2 text-sm font-bold text-ink">
-              <Bookmark className="h-4 w-4 text-amber-500" aria-hidden />
-              {uz ? 'Saqlangan muassasalar' : 'Сохранённые учреждения'}
+        {/* ══ Saqlangan muassasalar ═══════════════════════════════ */}
+        <div className="overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-sm">
+          <div className="flex items-center justify-between border-b border-gray-100 px-6 py-4">
+            <h2 className="flex items-center gap-2 text-xl font-bold text-gray-900">
+              <Star className="h-5 w-5 shrink-0 text-amber-500" strokeWidth={1.75} /> {uz ? 'Saqlangan muassasalar' : 'Сохранённые учреждения'}
             </h2>
-            {saved.length > 0 && <span className="badge tabular-nums">{saved.length}</span>}
+            {saved.length > 0 && (
+              <span className="shrink-0 whitespace-nowrap rounded-full bg-amber-50 px-3 py-1.5 text-sm font-semibold text-amber-700">
+                {saved.length} ta
+              </span>
+            )}
           </div>
 
           {saved.length === 0 ? (
-            <div className="px-6 py-10 text-center">
-              <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-2xl bg-amber-50 dark:bg-amber-500/10">
-                <Bookmark className="h-7 w-7 text-amber-400" aria-hidden />
+            <div className="px-6 py-12 text-center">
+              <div className="mx-auto mb-5 flex h-16 w-16 items-center justify-center rounded-2xl bg-amber-50">
+                <Star className="h-7 w-7 text-amber-400" strokeWidth={1.5} />
               </div>
-              <h3 className="mb-1 text-sm font-bold text-ink">
+              <h3 className="mb-2 text-xl font-bold text-gray-800">
                 {uz ? "Hali saqlangan muassasa yo'q" : 'Нет сохранённых учреждений'}
               </h3>
-              <p className="mb-5 text-xs leading-relaxed text-mute">
-                {uz ? "Qidiruv sahifasida muassasa kartochkasidagi belgini bosing" : 'Нажмите на закладку на карточке учреждения'}
+              <p className="mb-6 text-base leading-relaxed text-gray-500">
+                {uz
+                  ? "Qidiruv sahifasida muassasa kartochkasidagi Saqlash tugmasini bosing"
+                  : 'Нажмите «Сохранить» на карточке учреждения на странице поиска'}
               </p>
-              <Link href="/search" className="btn-secondary btn-sm">
-                <Search className="h-3.5 w-3.5" aria-hidden />
-                {uz ? "Muassasalarni ko'rish" : 'Смотреть учреждения'}
+              <Link href="/search" className="btn-primary inline-flex items-center gap-2">
+                <Search className="h-4 w-4 shrink-0" strokeWidth={1.75} /> {uz ? "Muassasalarni ko'rish" : 'Смотреть учреждения'}
               </Link>
             </div>
           ) : (
-            <div className="divide-y divide-line">
+            <div className="divide-y divide-gray-100">
               {saved.map(item => {
                 const typeLabel = TYPE_LABELS[item.type]
+                const TypeIcon = TYPE_ICONS[item.type] ?? School
                 return (
-                  <div key={item.id} className="flex items-center gap-3 px-5 py-3.5 transition-colors hover:bg-surface-2">
-                    <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-canvas">
-                      <TypeIcon type={item.type} className="h-5 w-5 text-mute" />
-                    </div>
-                    <div className="flex-1 min-w-0">
+                  <div key={item.id} className="flex items-center gap-4 px-6 py-4 transition-colors hover:bg-gray-50">
+                    <span className="icon-chip h-14 w-14 shrink-0">
+                      <TypeIcon className="h-6 w-6" strokeWidth={1.5} />
+                    </span>
+                    <div className="min-w-0 flex-1">
                       <Link
                         href={`/institutions/${item.slug}`}
-                        className="block text-sm font-semibold text-ink transition-colors hover:text-primary-600 line-clamp-1"
+                        className="block line-clamp-1 text-lg font-semibold text-gray-900 transition-colors hover:text-primary-600"
                       >
                         {item.nameUz}
                       </Link>
-                      <div className="mt-0.5 flex flex-wrap items-center gap-2">
-                        <span className="text-xs text-faint">
+                      <div className="mt-1 flex flex-wrap items-center gap-2">
+                        <span className="text-sm text-gray-500">
                           {typeLabel ? t(lang, typeLabel) : item.type}
                         </span>
-                        {item.avgRating ? (
-                          <>
-                            <span className="text-line-2">·</span>
-                            <div className="flex items-center gap-1">
-                              <StarRating rating={item.avgRating} size="sm" />
-                              <span className="tabular-nums text-xs font-semibold text-mute">{item.avgRating.toFixed(1)}</span>
-                            </div>
-                          </>
-                        ) : null}
-                        {item.pricing?.monthlyMin ? (
-                          <span className="price-badge text-xs">{fmtUzs(item.pricing.monthlyMin)}</span>
-                        ) : null}
+                        {item.avgRating && (
+                          <div className="flex items-center gap-1">
+                            <span className="text-gray-300">•</span>
+                            <RatingHint rating={item.avgRating} lang={lang} />
+                          </div>
+                        )}
+                        {item.pricing?.monthlyMin && (
+                          <span className="rounded-lg bg-emerald-50 px-2.5 py-1 text-sm font-semibold text-emerald-700">
+                            {fmtUzs(item.pricing.monthlyMin)}
+                          </span>
+                        )}
                       </div>
                     </div>
                     <button
                       onClick={() => toggleSave(item)}
-                      aria-label={uz ? "Saqlangandan olib tashlash" : 'Убрать из сохранённых'}
-                      className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl text-amber-500 transition-colors hover:bg-amber-50 dark:hover:bg-amber-500/10"
+                      title={uz ? "Saqlangandan olib tashlash" : 'Убрать из сохранённых'}
+                      className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl text-amber-500 transition-colors hover:bg-amber-50"
                     >
-                      <Bookmark className="h-4 w-4 fill-current" aria-hidden />
+                      <Star className="h-5 w-5" fill="currentColor" strokeWidth={2} />
                     </button>
                   </div>
                 )
@@ -377,64 +393,72 @@ export default function ProfilePage() {
           )}
         </div>
 
-        {/* My reviews */}
-        <div className="card overflow-hidden p-0">
-          <div className="flex items-center justify-between border-b border-line px-5 py-4">
-            <h2 className="flex items-center gap-2 text-sm font-bold text-ink">
-              <PencilLine className="h-4 w-4 text-primary-600" aria-hidden />
-              {uz ? 'Mening sharhlarim' : 'Мои отзывы'}
+        {/* ══ Mening sharhlarim ═══════════════════════════════════ */}
+        <div className="overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-sm">
+          <div className="flex items-center justify-between border-b border-gray-100 px-6 py-4">
+            <h2 className="flex items-center gap-2 text-xl font-bold text-gray-900">
+              <PencilLine className="h-5 w-5 shrink-0 text-primary-500" strokeWidth={1.75} /> {uz ? 'Mening sharhlarim' : 'Мои отзывы'}
             </h2>
-            {reviews.length > 0 && <span className="badge tabular-nums">{reviews.length}</span>}
+            {reviews.length > 0 && (
+              <span className="shrink-0 whitespace-nowrap rounded-full bg-primary-50 px-3 py-1.5 text-sm font-semibold text-primary-700">
+                {reviews.length} ta
+              </span>
+            )}
           </div>
 
           {revLoading ? (
-            <div className="flex justify-center py-10">
-              <div className="h-6 w-6 animate-spin rounded-full border-2 border-line-2 border-t-primary-600" />
+            <div className="py-12 text-center">
+              <div className="mx-auto h-10 w-10 animate-spin rounded-full border-4 border-primary-200 border-t-primary-600" />
             </div>
           ) : reviews.length === 0 ? (
-            <div className="px-6 py-10 text-center">
-              <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-2xl bg-primary-50 dark:bg-primary-500/10">
-                <PencilLine className="h-7 w-7 text-primary-400" aria-hidden />
+            <div className="px-6 py-12 text-center">
+              <div className="mx-auto mb-5 flex h-16 w-16 items-center justify-center rounded-2xl bg-blue-50">
+                <PencilLine className="h-7 w-7 text-blue-400" strokeWidth={1.5} />
               </div>
-              <h3 className="mb-1 text-sm font-bold text-ink">
+              <h3 className="mb-2 text-xl font-bold text-gray-800">
                 {uz ? 'Hali sharh yozmadingiz' : 'Вы ещё не писали отзывов'}
               </h3>
-              <p className="mb-5 text-xs leading-relaxed text-mute">
-                {uz ? "Muassasa sahifasiga kirib boshqalarga yordam bering" : 'Зайдите на страницу учреждения и помогите другим'}
+              <p className="mb-6 text-base leading-relaxed text-gray-500">
+                {uz
+                  ? "Muassasa sahifasiga kirib boshqalarga yordam bering"
+                  : 'Зайдите на страницу учреждения и помогите другим'}
               </p>
-              <Link href="/search" className="btn-secondary btn-sm">
-                <Search className="h-3.5 w-3.5" aria-hidden />
-                {uz ? "Muassasa topish" : 'Найти учреждение'}
+              <Link href="/search" className="btn-primary inline-flex items-center gap-2">
+                <Search className="h-4 w-4 shrink-0" strokeWidth={1.75} /> {uz ? "Muassasa topish" : 'Найти учреждение'}
               </Link>
             </div>
           ) : (
-            <div className="divide-y divide-line">
+            <div className="divide-y divide-gray-100">
               {reviews.map(review => {
-                const st = STATUS_CONFIG[review.status]
+                const st = STATUS_STYLE[review.status]
                 const instName = lang === 'ru' && review.institution?.nameRu
                   ? review.institution.nameRu
                   : review.institution?.nameUz
                 return (
-                  <div key={review.id} className="px-5 py-4">
-                    <div className="mb-2 flex items-start justify-between gap-3">
+                  <div key={review.id} className="px-6 py-5">
+                    <div className="mb-3 flex items-start justify-between gap-3">
                       {review.institution && (
                         <Link
                           href={`/institutions/${review.institution.slug}`}
-                          className="flex items-center gap-1.5 text-sm font-semibold text-ink transition-colors hover:text-primary-600 line-clamp-1"
+                          className="line-clamp-1 text-lg font-semibold text-gray-900 transition-colors hover:text-primary-600"
                         >
-                          <TypeIcon type={review.institution.type} className="h-3.5 w-3.5 shrink-0 text-mute" />
                           {instName}
                         </Link>
                       )}
-                      <span className={`shrink-0 rounded-full px-2.5 py-1 text-xs font-semibold ${st?.cls ?? 'bg-surface-2 text-mute'}`}>
+                      <span className={`shrink-0 whitespace-nowrap rounded-full px-3 py-1.5 text-sm font-semibold ${st?.bg ?? 'bg-gray-100 text-gray-600'}`}>
                         {st ? t(lang, st.label) : review.status}
                       </span>
                     </div>
-                    <StarRating rating={review.overallRating} size="sm" />
-                    {review.title && <p className="mt-1.5 text-sm font-semibold text-ink">{review.title}</p>}
-                    <p className="mt-1 line-clamp-2 text-sm leading-relaxed text-mute">{review.body}</p>
-                    <p className="mt-2 flex items-center gap-1 text-xs text-faint">
-                      <Calendar className="h-3 w-3" aria-hidden />
+                    <div className="mb-2 flex items-center gap-1">
+                      <StarRating rating={review.overallRating} size="sm" showValue={false} />
+                      <span className="ml-1 text-base font-semibold text-gray-700">{review.overallRating}/5</span>
+                    </div>
+                    {review.title && (
+                      <p className="mb-1 text-base font-semibold text-gray-800">{review.title}</p>
+                    )}
+                    <p className="line-clamp-2 text-base leading-relaxed text-gray-600">{review.body}</p>
+                    <p className="mt-2 flex items-center gap-1.5 text-sm text-gray-400">
+                      <Calendar className="h-3.5 w-3.5 shrink-0" strokeWidth={1.75} />
                       {new Date(review.createdAt).toLocaleDateString(uz ? 'uz-UZ' : 'ru-RU')}
                     </p>
                   </div>
@@ -444,49 +468,54 @@ export default function ProfilePage() {
           )}
         </div>
 
-        {/* Quick actions */}
-        <div className="card p-5">
-          <h2 className="mb-4 text-sm font-bold text-ink">
+        {/* ══ Tezkor harakatlar ═══════════════════════════════════ */}
+        <div className="rounded-2xl border border-gray-200 bg-white p-6 shadow-sm">
+          <h2 className="mb-5 text-xl font-bold text-gray-900">
             {uz ? 'Tezkor harakatlar' : 'Быстрые действия'}
           </h2>
-          <div className="grid grid-cols-2 gap-2">
-            {quickLinks.map(a => (
+          <div className="grid grid-cols-2 gap-3">
+            {[
+              { href: '/search',                 Icon: Search,        uz: 'Qidiruv',        ru: 'Поиск' },
+              { href: '/search?type=IT_SCHOOL',  Icon: Laptop,        uz: 'IT maktablar',   ru: 'IT школы' },
+              { href: '/search?type=UNIVERSITY', Icon: GraduationCap, uz: 'Universitetlar', ru: 'Университеты' },
+              { href: 'https://t.me/TrustboxInc', Icon: Send,         uz: 'Telegram kanal', ru: 'Telegram канал' },
+            ].map(a => (
               <Link
                 key={a.href}
                 href={a.href}
                 target={a.href.startsWith('http') ? '_blank' : undefined}
                 rel={a.href.startsWith('http') ? 'noopener noreferrer' : undefined}
-                className="flex items-center gap-2.5 rounded-xl border border-line bg-canvas px-4 py-3 text-sm font-medium text-ink transition-all hover:border-primary-300 hover:bg-primary-50 hover:text-primary-700 dark:hover:bg-primary-900/20"
+                className="flex flex-col items-center gap-2.5 rounded-xl border border-gray-200 px-3 py-5 text-center transition-colors hover:border-primary-200 hover:bg-primary-50"
               >
-                <a.Icon className="h-4 w-4 shrink-0 text-mute" aria-hidden />
-                {uz ? a.uz : a.ru}
+                <a.Icon className="h-7 w-7 text-primary-500" strokeWidth={1.5} />
+                <span className="text-base font-semibold leading-tight text-gray-700">
+                  {uz ? a.uz : a.ru}
+                </span>
               </Link>
             ))}
           </div>
         </div>
 
-        {/* Logout */}
+        {/* ══ Tizimdan chiqish ════════════════════════════════════ */}
         <button
           onClick={logout}
-          className="btn-ghost w-full border border-line text-red-600 hover:border-red-200 hover:bg-red-50 dark:hover:bg-red-500/10"
+          className="flex w-full items-center justify-center gap-2 rounded-2xl border border-red-200 bg-white py-4 text-lg font-semibold text-red-600 shadow-sm transition-colors hover:border-red-300 hover:bg-red-50"
         >
-          <LogOut className="h-4 w-4" aria-hidden />
-          {uz ? 'Tizimdan chiqish' : 'Выйти из системы'}
+          <LogOut className="h-5 w-5 shrink-0" strokeWidth={1.75} /> {uz ? 'Tizimdan chiqish' : 'Выйти из системы'}
         </button>
 
-        {/* Help */}
-        <div className="rounded-xl border border-primary-100 bg-primary-50/50 p-4 text-center dark:border-primary-500/20 dark:bg-primary-500/5">
-          <p className="text-xs font-medium text-primary-700 dark:text-primary-400">
-            {uz ? 'Muammo bormi?' : 'Есть проблемы?'}
+        {/* ══ Yordam ══════════════════════════════════════════════ */}
+        <div className="rounded-2xl border border-blue-100 bg-blue-50 p-5 text-center">
+          <p className="flex items-center justify-center gap-1.5 text-base font-semibold text-blue-800">
+            <MessageCircle className="h-4 w-4 shrink-0" strokeWidth={1.75} /> {uz ? 'Muammo bormi?' : 'Есть проблемы?'}
           </p>
           <a
-            href="https://t.me/edureyting"
+            href="https://t.me/TrustboxInc"
             target="_blank"
             rel="noopener noreferrer"
-            className="mt-1 inline-flex items-center gap-1.5 text-sm font-semibold text-primary-600 transition-colors hover:text-primary-700 dark:text-primary-400"
+            className="mt-2 inline-flex items-center gap-1.5 text-base font-semibold text-blue-600 hover:text-blue-800"
           >
-            <MessageCircle className="h-3.5 w-3.5" aria-hidden />
-            @edureyting
+            <Send className="h-4 w-4 shrink-0" strokeWidth={1.75} /> @TrustboxInc {uz ? "Telegram kanaliga yozing" : '— пишите нам'}
           </a>
         </div>
 

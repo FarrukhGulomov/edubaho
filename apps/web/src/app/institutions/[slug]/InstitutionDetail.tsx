@@ -3,23 +3,25 @@
 import Link from 'next/link'
 import { useEffect, useRef, useState } from 'react'
 import {
-  ChevronRight, CheckCircle2, Star, Phone, MessageCircle,
-  Globe, MapPin, Calendar, Users, GraduationCap, BookOpen,
-  ThumbsUp, PencilLine, Lock, Trophy, Clock, Target, BarChart2,
+  ChevronRight, MapPin, BadgeCheck, Sparkles, Lock, BookOpen, Trophy,
+  Users2, GraduationCap, Palette, Laptop, Globe2, UserCheck, Dumbbell,
+  PencilLine, Wallet, Info, BarChart3, MessageCircle, Phone, Send,
+  Instagram, Globe, Clock, ThumbsUp, Star,
 } from 'lucide-react'
-import StarRating from '@/components/shared/StarRating'
-import TypeIcon from '@/components/shared/TypeIcon'
+import StarRating, { RatingHint } from '@/components/shared/StarRating'
 import InstActions from '@/components/institutions/InstActions'
+import ClaimInstitution from '@/components/institutions/ClaimInstitution'
 import WriteReview from '@/components/institutions/WriteReview'
 import GuestLeadWidget from '@/components/shared/GuestLeadWidget'
 import { useLang, t } from '@/contexts/LangContext'
+import { authHref } from '@/lib/authHref'
 import {
   trackInstitutionView, trackGateShown, trackGateCta, trackContactClick,
 } from '@/lib/analytics'
 import type { Institution } from './page'
 
 function formatNum(n: number) {
-  return n.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ' ')
+  return n.toString().replace(/\B(?=(\d{3})+(?!\d))/g, '\u00a0')
 }
 function formatUzs(n: number) { return `${formatNum(n)} so'm` }
 
@@ -28,13 +30,35 @@ const TYPE_LABELS: Record<string, { uz: string; ru: string }> = {
   SCHOOL:          { uz: 'Maktab',          ru: 'Школа' },
   LYCEUM:          { uz: 'Litsey',          ru: 'Лицей' },
   COLLEGE:         { uz: 'Kollej',          ru: 'Колледж' },
-  UNIVERSITY:      { uz: 'Universitet',     ru: 'Университет' },
-  COURSE_CENTER:   { uz: "O'quv markaz",    ru: 'Учебный центр' },
-  LANGUAGE_CENTER: { uz: 'Til markazi',     ru: 'Языковой центр' },
-  IT_SCHOOL:       { uz: 'IT maktab',       ru: 'IT школа' },
-  TUTORING:        { uz: 'Repetitor',       ru: 'Репетитор' },
-  SPORTS_SCHOOL:   { uz: 'Sport maktabi',   ru: 'Спортшкола' },
-  ARTS_SCHOOL:     { uz: "San'at maktabi",  ru: 'Школа искусств' },
+  UNIVERSITY:      { uz: 'Universitet',    ru: 'Университет' },
+  COURSE_CENTER:   { uz: "O'quv markaz",   ru: 'Учебный центр' },
+  LANGUAGE_CENTER: { uz: 'Til markazi',    ru: 'Языковой центр' },
+  IT_SCHOOL:       { uz: 'IT maktab',      ru: 'IT школа' },
+  TUTORING:        { uz: 'Repetitor',      ru: 'Репетитор' },
+  SPORTS_SCHOOL:   { uz: 'Sport maktabi',  ru: 'Спортшкола' },
+  ARTS_SCHOOL:     { uz: "San'at maktabi", ru: 'Школа искусств' },
+}
+
+// O'qitish tili kodlari → tushunarli nom (xom "UZ"/"RU" ko'rsatmaslik uchun)
+const LANGUAGE_NAMES: Record<string, { uz: string; ru: string }> = {
+  UZ: { uz: "O'zbek tili",  ru: 'Узбекский' },
+  RU: { uz: 'Rus tili',     ru: 'Русский' },
+  EN: { uz: 'Ingliz tili',  ru: 'Английский' },
+}
+
+// Muassasa turi bo'yicha ikonka (lucide) — bitta izchil aksent rangda
+const TYPE_ICONS: Record<string, typeof BookOpen> = {
+  KINDERGARTEN:    Palette,
+  SCHOOL:          BookOpen,
+  LYCEUM:          Trophy,
+  COLLEGE:         GraduationCap,
+  UNIVERSITY:      GraduationCap,
+  COURSE_CENTER:   PencilLine,
+  LANGUAGE_CENTER: Globe2,
+  IT_SCHOOL:       Laptop,
+  TUTORING:        UserCheck,
+  SPORTS_SCHOOL:   Dumbbell,
+  ARTS_SCHOOL:     Palette,
 }
 
 function calcRatingBreakdown(reviews: Institution['reviews']) {
@@ -44,12 +68,13 @@ function calcRatingBreakdown(reviews: Institution['reviews']) {
   return counts
 }
 
+// Mezonlar bo'yicha o'rtacha baholar
 const DIM_DEFS = [
-  { key: 'teacherRating',    Icon: GraduationCap, label: { uz: "O'qituvchilar", ru: 'Учителя' } },
-  { key: 'facilityRating',   Icon: BookOpen,      label: { uz: 'Sharoit',        ru: 'Условия' } },
-  { key: 'valueRating',      Icon: Star,          label: { uz: 'Narx/Sifat',     ru: 'Цена/Качество' } },
-  { key: 'atmosphereRating', Icon: Users,         label: { uz: 'Muhit',          ru: 'Атмосфера' } },
-  { key: 'serviceRating',    Icon: Phone,         label: { uz: 'Aloqa',          ru: 'Сервис' } },
+  { key: 'teacherRating',    Icon: UserCheck,     label: "O'qituvchilar" },
+  { key: 'facilityRating',   Icon: BookOpen,      label: 'Sharoit' },
+  { key: 'valueRating',      Icon: Wallet,        label: 'Narx/Sifat' },
+  { key: 'atmosphereRating', Icon: Sparkles,      label: 'Muhit' },
+  { key: 'serviceRating',    Icon: Phone,         label: 'Aloqa' },
 ] as const
 
 type ReviewDimKey = 'teacherRating' | 'facilityRating' | 'valueRating' | 'atmosphereRating' | 'serviceRating'
@@ -71,8 +96,17 @@ function calcDimAverages(reviews: Institution['reviews']) {
   return Object.keys(result).length > 0 ? result : null
 }
 
+// ─────────────────────────────────────────────────────────────
+// Guest Gate — autentifikatsiya talab qiladigan bo'limlar uchun
+// ─────────────────────────────────────────────────────────────
 function GuestGate({
-  isGuest, lang, blurPreview, children, gateType, institutionId,
+  isGuest,
+  lang,
+  blurPreview,
+  children,
+  gateType,
+  institutionId,
+  next,
 }: {
   isGuest: boolean
   lang: 'uz' | 'ru'
@@ -80,36 +114,41 @@ function GuestGate({
   children: React.ReactNode
   gateType?: string
   institutionId?: string
+  next?: string
 }) {
   if (!isGuest) return <>{children}</>
+
   return (
-    <div className="relative overflow-hidden rounded-2xl" data-gate-type={gateType}>
+    <div className="relative rounded-2xl overflow-hidden" data-gate-type={gateType}>
+      {/* Blurred preview content */}
       {blurPreview && (
-        <div className="pointer-events-none select-none opacity-60 saturate-50 blur-[3px]">
+        <div className="pointer-events-none select-none blur-[3px] opacity-60 saturate-50">
           {blurPreview}
         </div>
       )}
-      <div className={`${blurPreview ? 'absolute inset-0' : ''} flex items-center justify-center bg-surface/80 backdrop-blur-sm`}>
-        <div className="mx-4 w-full max-w-sm rounded-2xl border border-line bg-surface p-6 text-center shadow-pop">
-          <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-2xl bg-primary-50 dark:bg-primary-900/30">
-            <Lock className="h-7 w-7 text-primary-600 dark:text-primary-400" aria-hidden />
+
+      {/* Overlay */}
+      <div className={`${blurPreview ? 'absolute inset-0' : ''} flex items-center justify-center bg-white/80 backdrop-blur-sm`}>
+        <div className="mx-4 w-full max-w-sm rounded-2xl border border-gray-200 bg-white p-7 text-center shadow-lg">
+          <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-xl bg-primary-50 text-primary-600">
+            <Lock className="h-6 w-6" strokeWidth={1.75} />
           </div>
-          <h3 className="mb-2 text-base font-bold text-ink">
+          <h3 className="mb-2 text-xl font-bold text-gray-900">
             {lang === 'ru' ? 'Войдите для просмотра' : "Ko'rish uchun kiring"}
           </h3>
-          <p className="mb-5 text-sm leading-relaxed text-mute">
+          <p className="mb-5 text-base text-gray-500 leading-relaxed">
             {lang === 'ru'
               ? 'Контакты, цены и отзывы доступны только зарегистрированным пользователям'
               : "Kontaktlar, narxlar va sharhlar faqat ro'yxatdan o'tgan foydalanuvchilarga ko'rinadi"}
           </p>
           <Link
-            href="/auth"
+            href={authHref(next)}
             onClick={() => trackGateCta(gateType ?? 'gate', institutionId)}
-            className="btn-primary w-full"
+            className="btn-primary w-full text-base py-3.5"
           >
             {lang === 'ru' ? 'Зарегистрироваться / Войти' : "Ro'yxatdan o'tish / Kirish"}
           </Link>
-          <p className="mt-3 text-xs text-faint">
+          <p className="mt-3 text-sm text-gray-400">
             {lang === 'ru' ? 'Бесплатно · Только номер телефона' : "Bepul · Faqat telefon raqam"}
           </p>
         </div>
@@ -118,70 +157,86 @@ function GuestGate({
   )
 }
 
-function RegisterBanner({ lang }: { lang: 'uz' | 'ru' }) {
-  const benefits = lang === 'ru' ? [
-    [Phone,        'Контакты: телефон, Telegram, Instagram'],
-    [Star,         'Актуальные цены и способы оплаты'],
-    [MessageCircle,'Все отзывы родителей и учеников'],
-    [PencilLine,   'Оставить свой отзыв'],
-    [BookOpen,     'Сохранять и сравнивать учреждения'],
-  ] as const : [
-    [Phone,        'Kontaktlar: telefon, Telegram, Instagram'],
-    [Star,         "Narxlar va to'lov usullari"],
-    [MessageCircle,"Ota-onalar va o'quvchilarning barcha sharhlari"],
-    [PencilLine,   "O'z sharhingizni yozish"],
-    [BookOpen,     'Muassasalarni saqlash va solishtirish'],
-  ] as const
+// ─────────────────────────────────────────────────────────────
+// Registration CTA banner — sahifa o'rtasida bitta ulkan taklif
+// ─────────────────────────────────────────────────────────────
+function RegisterBanner({ lang, next }: { lang: 'uz' | 'ru'; next?: string }) {
+  const items: Array<[typeof Phone, string]> = lang === 'ru' ? [
+    [Phone, 'Контакты: телефон, Telegram, Instagram'],
+    [Wallet, 'Актуальные цены и способы оплаты'],
+    [MessageCircle, 'Все отзывы родителей и учеников'],
+    [PencilLine, 'Оставить свой отзыв'],
+    [BadgeCheck, 'Сохранять и сравнивать учреждения'],
+  ] : [
+    [Phone, 'Kontaktlar: telefon, Telegram, Instagram'],
+    [Wallet, "Narxlar va to'lov usullari"],
+    [MessageCircle, "Ota-onalar va o'quvchilarning barcha sharhlari"],
+    [PencilLine, "O'z sharhingizni yozish"],
+    [BadgeCheck, 'Muassasalarni saqlash va solishtirish'],
+  ]
 
   return (
-    <div className="card p-5">
-      <div className="mb-4 flex items-center gap-3">
-        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-primary-600">
-          <GraduationCap className="h-5 w-5 text-white" aria-hidden />
+    <div className="overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-sm">
+      {/* Sarlavha */}
+      <div className="flex items-center gap-3 border-b border-gray-100 px-6 py-4">
+        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-primary-50 text-primary-600">
+          <Lock className="h-5 w-5" strokeWidth={1.75} />
         </div>
-        <div>
-          <p className="text-xs font-bold uppercase tracking-widest text-primary-600">EDUBAHO.uz</p>
-          <p className="text-xs text-faint">{lang === 'ru' ? "Ta'lim platformasi" : "Ta'lim platformasi"}</p>
-        </div>
+        <h3 className="font-semibold text-gray-900 leading-tight">
+          {lang === 'ru' ? 'Войдите для полного доступа' : "To'liq kirish uchun tizimga kiring"}
+        </h3>
       </div>
-      <h3 className="mb-1 text-base font-bold text-ink">
-        {lang === 'ru' ? 'Хотите знать больше?' : "Ko'proq bilmoqchimisiz?"}
-      </h3>
-      <p className="mb-4 text-xs leading-relaxed text-mute">
-        {lang === 'ru'
-          ? 'Зарегистрируйтесь бесплатно — контакты, цены, отзывы'
-          : "Bepul ro'yxatdan o'ting — kontaktlar, narxlar, sharhlar"}
-      </p>
-      <ul className="mb-5 space-y-2">
-        {benefits.map(([Icon, text]) => (
-          <li key={text} className="flex items-center gap-2.5 text-xs text-mute">
-            <Icon className="h-3.5 w-3.5 shrink-0 text-primary-500" aria-hidden />
-            {text}
-          </li>
-        ))}
-      </ul>
-      <Link href="/auth" className="btn-primary w-full">
-        {lang === 'ru' ? 'Зарегистрироваться бесплатно' : "Bepul ro'yxatdan o'tish"}
-      </Link>
-      <p className="mt-3 text-center text-xs text-faint">
-        {lang === 'ru' ? 'Только номер телефона · SMS-код' : 'Faqat telefon raqam · SMS-kod'}
-      </p>
+
+      {/* Body */}
+      <div className="px-6 pb-6 pt-5">
+        <p className="mb-4 text-sm text-gray-500 leading-relaxed">
+          {lang === 'ru'
+            ? 'Зарегистрируйтесь бесплатно — контакты, цены и все отзывы'
+            : "Bepul ro'yxatdan o'ting — kontaktlar, narxlar va barcha sharhlar"}
+        </p>
+
+        <ul className="mb-5 space-y-2.5">
+          {items.map(([Icon, text]) => (
+            <li key={text} className="flex items-center gap-2.5 text-sm text-gray-700">
+              <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-primary-50 text-primary-600">
+                <Icon className="h-3.5 w-3.5" strokeWidth={2} />
+              </span>
+              {text}
+            </li>
+          ))}
+        </ul>
+
+        <Link href={authHref(next)} className="btn-primary w-full py-3 text-base">
+          {lang === 'ru' ? 'Зарегистрироваться бесплатно →' : "Bepul ro'yxatdan o'tish →"}
+        </Link>
+        <p className="mt-3 text-center text-xs text-gray-400">
+          {lang === 'ru' ? 'Только номер телефона · SMS-код · Бесплатно' : 'Faqat telefon raqam · SMS-kod · Bepul'}
+        </p>
+      </div>
     </div>
   )
 }
 
+// ─────────────────────────────────────────────────────────────
+// Asosiy komponent
+// ─────────────────────────────────────────────────────────────
 export default function InstitutionDetail({ inst }: { inst: Institution }) {
   const { lang } = useLang()
   const [isGuest, setIsGuest] = useState(true)
   const [authChecked, setAuthChecked] = useState(false)
+  // Login'dan keyin shu sahifaga qaytish uchun barcha gate havolalariga beriladi
+  const instPath = `/institutions/${inst.slug}`
   const viewTracked = useRef(false)
   const gatesShown = useRef<Set<string>>(new Set())
 
+  // Client-side auth tekshiruvi + sahifa view tracking
   useEffect(() => {
     const token = localStorage.getItem('accessToken')
     const guest = !token
     setIsGuest(guest)
     setAuthChecked(true)
+
+    // Muassasa ko'rildi
     if (!viewTracked.current) {
       viewTracked.current = true
       trackInstitutionView(inst.id, {
@@ -192,6 +247,7 @@ export default function InstitutionDetail({ inst }: { inst: Institution }) {
     }
   }, [inst.id, inst.type, inst.avgRating])
 
+  // Gate ko'rinishini kuzatish (intersection observer)
   const gateObserver = useRef<IntersectionObserver | null>(null)
   useEffect(() => {
     if (!authChecked || !isGuest) return
@@ -206,14 +262,20 @@ export default function InstitutionDetail({ inst }: { inst: Institution }) {
         }
       }
     }, { threshold: 0.3 })
+
+    // Gate elementlarini observe qilamiz
     document.querySelectorAll('[data-gate-type]').forEach(el => {
       gateObserver.current?.observe(el)
     })
     return () => gateObserver.current?.disconnect()
   }, [authChecked, isGuest, inst.id])
 
-  const typeLabel = TYPE_LABELS[inst.type]
-  const displayName = lang === 'ru' && inst.nameRu ? inst.nameRu : inst.nameUz
+  const typeLabel      = TYPE_LABELS[inst.type]
+  const TypeIcon       = TYPE_ICONS[inst.type] ?? BookOpen
+  const displayName    = lang === 'ru' && inst.nameRu ? inst.nameRu : inst.nameUz
+  const cityDisplayName = inst.city
+    ? (lang === 'ru' && inst.city.nameRu ? inst.city.nameRu : inst.city.nameUz)
+    : null
   const description = lang === 'ru' && inst.details?.descriptionRu
     ? inst.details.descriptionRu
     : inst.details?.descriptionUz
@@ -221,8 +283,6 @@ export default function InstitutionDetail({ inst }: { inst: Institution }) {
   const ratingBreakdown = calcRatingBreakdown(inst.reviews)
   const dimAverages = calcDimAverages(inst.reviews)
   const totalReviews = inst.reviews?.length ?? 0
-  const isCourseOrSchool = ['COURSE_CENTER', 'SCHOOL', 'IT_SCHOOL', 'LANGUAGE_CENTER'].includes(inst.type)
-
   const ui = {
     breadHome:       { uz: 'Bosh sahifa',              ru: 'Главная' },
     breadSearch:     { uz: 'Qidiruv',                  ru: 'Поиск' },
@@ -255,310 +315,377 @@ export default function InstitutionDetail({ inst }: { inst: Institution }) {
     programs:        { uz: "O'qitiladigan fanlar",     ru: 'Преподаваемые предметы' },
     specializations: { uz: 'Ixtisosliklar',            ru: 'Специализации' },
     achievements:    { uz: 'Muvaffaqiyatlar',          ru: 'Достижения' },
-    shifts:          { uz: 'Dars vaqtlari',            ru: 'Расписание' },
+    shifts:          { uz: 'Dars vaqtlari',            ru: 'Расpisanie' },
+    previewDesc:     { uz: 'To\'liq ma\'lumot uchun tizimga kiring', ru: 'Войдите для полной информации' },
   }
 
+  // Auth tekshiruvi tugamaguncha skeleton ko'rsatmaymiz (flash oldini olish)
   if (!authChecked) return null
 
   return (
-    <main className="min-h-dvh bg-canvas">
-      {/* Breadcrumb */}
-      <div className="border-b border-line bg-surface px-4 py-3">
-        <nav aria-label="breadcrumb" className="mx-auto flex max-w-5xl items-center gap-1.5 text-xs text-mute">
-          <Link href="/" className="font-medium transition-colors hover:text-ink">{t(lang, ui.breadHome)}</Link>
-          <ChevronRight className="h-3 w-3" aria-hidden />
-          <Link href="/search" className="font-medium transition-colors hover:text-ink">{t(lang, ui.breadSearch)}</Link>
-          <ChevronRight className="h-3 w-3" aria-hidden />
-          <span className="max-w-48 truncate font-semibold text-ink" aria-current="page">{displayName}</span>
-        </nav>
+    <main className="min-h-screen bg-gray-50">
+      {/* ── Toza, minimalistik hero — gradient/dekor yo'q ─── */}
+      <div className="border-b border-gray-200 bg-white">
+        <div className="mx-auto max-w-5xl px-4">
+          {/* Breadcrumb */}
+          <nav className="flex items-center gap-1 py-4 text-sm text-gray-500">
+            <Link href="/" className="shrink-0 whitespace-nowrap rounded-md px-1 py-0.5 hover:text-gray-900 transition-colors">{t(lang, ui.breadHome)}</Link>
+            <ChevronRight className="h-3.5 w-3.5 shrink-0 text-gray-300" />
+            <Link href="/search" className="shrink-0 whitespace-nowrap rounded-md px-1 py-0.5 hover:text-gray-900 transition-colors">{t(lang, ui.breadSearch)}</Link>
+            <ChevronRight className="h-3.5 w-3.5 shrink-0 text-gray-300" />
+            <span className="min-w-0 flex-1 truncate font-medium text-gray-900">{displayName}</span>
+          </nav>
+
+          {/* Muassasa ma'lumotlari */}
+          <div className="flex flex-col gap-5 pb-6 sm:flex-row sm:items-start sm:justify-between">
+            <div className="flex min-w-0 gap-4">
+              {/* Tur ikonasi */}
+              <div className="flex h-16 w-16 shrink-0 items-center justify-center rounded-2xl bg-primary-50 text-primary-600">
+                <TypeIcon className="h-8 w-8" strokeWidth={1.6} />
+              </div>
+
+              {/* Nom va teglar */}
+              <div className="min-w-0">
+                <div className="mb-2 flex flex-wrap items-center gap-1.5">
+                  <span className="inline-flex items-center rounded-full bg-gray-100 px-2.5 py-1 text-xs font-medium text-gray-600">
+                    {typeLabel ? t(lang, typeLabel) : inst.type}
+                  </span>
+                  {inst.isVerified && (
+                    <span className="inline-flex items-center gap-1 rounded-full bg-emerald-50 px-2.5 py-1 text-xs font-semibold text-emerald-700">
+                      <BadgeCheck className="h-3.5 w-3.5" strokeWidth={2} />
+                      {t(lang, ui.verified)}
+                    </span>
+                  )}
+                  {inst.subscription?.plan === 'PREMIUM' && (
+                    <span className="inline-flex items-center gap-1 rounded-full bg-amber-50 px-2.5 py-1 text-xs font-semibold text-amber-700">
+                      <Sparkles className="h-3.5 w-3.5" strokeWidth={2} />
+                      {t(lang, ui.premium)}
+                    </span>
+                  )}
+                </div>
+
+                <h1 className="text-2xl font-bold leading-tight text-gray-900 sm:text-3xl">{displayName}</h1>
+                {/* Ruscha nom faqat farq qilsa ko'rsatiladi — bir xil nomni ikki marta chiqarmaymiz */}
+                {lang === 'uz' && inst.nameRu && inst.nameRu !== inst.nameUz && (
+                  <p className="mt-0.5 text-sm text-gray-400">{inst.nameRu}</p>
+                )}
+                <div className="mt-2 flex flex-wrap items-center gap-x-4 gap-y-1">
+                  {cityDisplayName && (
+                    <span className="flex items-center gap-1.5 text-sm text-gray-500">
+                      <MapPin className="h-4 w-4 shrink-0" strokeWidth={1.75} />
+                      {cityDisplayName}
+                    </span>
+                  )}
+                  {/* Reyting — ataylab TINCH ko'rsatiladi: baholar foydalanuvchilar
+                      tomonidan qo'yilgan taxminiy ko'rsatkich, asosiy parametr emas.
+                      Batafsil ma'lumot sahifaning pastidagi sharhlar bo'limida. */}
+                  {inst.avgRating && inst.reviewCount > 0 && (
+                    <button
+                      onClick={() => {
+                        if (isGuest) document.getElementById('auth-gate-reviews')?.scrollIntoView({ behavior: 'smooth' })
+                        else document.getElementById('reviews')?.scrollIntoView({ behavior: 'smooth' })
+                      }}
+                      className="transition-colors hover:text-gray-600"
+                    >
+                      <RatingHint rating={inst.avgRating} count={inst.reviewCount} lang={lang} />
+                    </button>
+                  )}
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
 
       <div className="mx-auto max-w-5xl px-4 py-6">
         <div className="grid gap-5 lg:grid-cols-3">
 
-          {/* Left column */}
-          <div className="space-y-4 lg:col-span-2">
+          {/* ── Left column ─── */}
+          <div className="lg:col-span-2 space-y-4">
 
-            {/* Header card */}
-            <div className="card p-6">
-              <div className="mb-4 flex flex-wrap items-center gap-2">
-                <div className="flex items-center gap-1.5 rounded-full bg-primary-50 px-3 py-1 dark:bg-primary-900/30">
-                  <TypeIcon type={inst.type} className="h-3.5 w-3.5 text-primary-600 dark:text-primary-400" />
-                  <span className="text-xs font-semibold text-primary-700 dark:text-primary-300">
-                    {typeLabel ? t(lang, typeLabel) : inst.type}
-                  </span>
-                </div>
-                {inst.isVerified && (
-                  <div className="verified-badge">
-                    <CheckCircle2 className="h-3.5 w-3.5" aria-hidden />
-                    {t(lang, ui.verified)}
-                  </div>
-                )}
-                {inst.subscription?.plan === 'PREMIUM' && (
-                  <span className="badge bg-amber-50 text-amber-700 dark:bg-amber-500/10 dark:text-amber-400">
-                    <Star className="h-3 w-3" aria-hidden />
-                    {t(lang, ui.premium)}
-                  </span>
-                )}
-                {isGuest && (
-                  <Link
-                    href="/auth"
-                    className="flex items-center gap-1.5 rounded-full border border-orange-200 bg-orange-50 px-3 py-1 text-xs font-semibold text-orange-600 transition-colors hover:bg-orange-100 dark:border-orange-500/25 dark:bg-orange-500/10 dark:text-orange-400"
-                  >
-                    <Lock className="h-3 w-3" aria-hidden />
-                    {lang === 'ru' ? 'Войдите для полного доступа' : "To'liq ma'lumot uchun kiring"}
-                  </Link>
-                )}
-              </div>
+            {/* ════════════════════════════════════════
+                1. YO'NALISHLAR — Programs & Specializations
+                ════════════════════════════════════════ */}
+            {((inst.details?.programs?.length ?? 0) > 0 ||
+              (inst.details?.specializations?.length ?? 0) > 0) && (
+              <div className="card p-6">
+                <h2 className="mb-4 flex items-center gap-3 text-lg font-semibold text-gray-900">
+                  <span className="icon-chip"><BookOpen className="h-[18px] w-[18px]" strokeWidth={1.75} /></span>
+                  {lang === 'ru' ? 'Направления и курсы' : "Yo'nalishlar va kurslar"}
+                </h2>
 
-              <h1 className="mb-1.5 text-2xl font-bold leading-tight text-ink sm:text-3xl">{displayName}</h1>
-              {lang === 'uz' && inst.nameRu && (
-                <p className="mb-4 text-sm text-faint">{inst.nameRu}</p>
-              )}
-
-              {inst.avgRating && inst.reviewCount > 0 && (
-                <div className="mt-4 flex items-center gap-4">
-                  <span className="text-4xl font-bold tabular-nums text-ink">{inst.avgRating.toFixed(1)}</span>
-                  <div>
-                    <StarRating rating={inst.avgRating} size="lg" />
-                    <button
-                      onClick={() => {
-                        const id = isGuest ? 'auth-gate-reviews' : 'reviews'
-                        document.getElementById(id)?.scrollIntoView({ behavior: 'smooth' })
-                      }}
-                      className="mt-1 block text-sm text-mute transition-colors hover:text-primary-600"
-                    >
-                      {inst.reviewCount} {t(lang, ui.reviews)}
-                    </button>
-                  </div>
-                </div>
-              )}
-            </div>
-
-            {/* Quick stats */}
-            {(() => {
-              const stats = [
-                inst.details?.foundedYear && {
-                  Icon: Calendar, label: t(lang, ui.founded),
-                  value: String(inst.details.foundedYear),
-                  cls: 'text-blue-600 bg-blue-50 dark:bg-blue-500/10',
-                },
-                inst.details?.studentCount && {
-                  Icon: Users, label: t(lang, ui.students),
-                  value: `${formatNum(inst.details.studentCount)}+`,
-                  cls: 'text-cyan-600 bg-cyan-50 dark:bg-cyan-500/10',
-                },
-                inst.details?.teacherCount && {
-                  Icon: GraduationCap, label: t(lang, ui.teachers),
-                  value: String(inst.details.teacherCount),
-                  cls: 'text-violet-600 bg-violet-50 dark:bg-violet-500/10',
-                },
-                (inst.details?.languages?.length ?? 0) > 0 && {
-                  Icon: Globe, label: t(lang, ui.languages),
-                  value: (inst.details!.languages ?? []).join(', ').toUpperCase(),
-                  cls: 'text-teal-600 bg-teal-50 dark:bg-teal-500/10',
-                },
-                inst.pricing?.monthlyMin && {
-                  Icon: Star, label: t(lang, ui.perMonth),
-                  value: isGuest
-                    ? `${formatUzs(inst.pricing.monthlyMin)} ${lang === 'ru' ? 'от' : 'dan'}`
-                    : formatUzs(inst.pricing.monthlyMin),
-                  cls: 'text-accent-600 bg-accent-50 dark:bg-accent-500/10',
-                },
-              ].filter(Boolean) as { Icon: React.ComponentType<{ className?: string }>; label: string; value: string; cls: string }[]
-
-              if (stats.length === 0) return null
-              return (
-                <div className="grid grid-cols-2 gap-2.5 sm:grid-cols-3">
-                  {stats.map(stat => (
-                    <div key={stat.label} className={`flex items-center gap-3 rounded-xl p-4 ${stat.cls}`}>
-                      <stat.Icon className="h-5 w-5 shrink-0 opacity-70" aria-hidden />
-                      <div className="min-w-0">
-                        <p className="text-xs opacity-60">{stat.label}</p>
-                        <p className="truncate text-sm font-bold">{stat.value}</p>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              )
-            })()}
-
-            {/* About */}
-            <div className="card p-6">
-              <h2 className="section-title mb-4">
-                <BookOpen className="h-4 w-4" aria-hidden />
-                {t(lang, ui.about)}
-              </h2>
-              {isGuest ? (
-                <>
-                  {description && (
-                    <p className="text-sm leading-relaxed text-mute">
-                      {description.slice(0, 120)}
-                      <span className="text-faint">…</span>
-                    </p>
-                  )}
-                  <div className="mt-4 flex items-center gap-3 rounded-xl border border-orange-100 bg-orange-50/60 px-4 py-3.5 dark:border-orange-500/20 dark:bg-orange-500/5">
-                    <Lock className="h-4 w-4 shrink-0 text-orange-500" aria-hidden />
-                    <p className="flex-1 text-sm text-orange-700 dark:text-orange-400">
-                      {lang === 'ru'
-                        ? 'Полное описание доступно после входа'
-                        : "To'liq ta'rif tizimga kirgandan so'ng ko'rinadi"}
-                    </p>
-                    <Link href="/auth" className="shrink-0 rounded-lg bg-orange-500 px-3 py-2 text-xs font-semibold text-white transition-colors hover:bg-orange-600">
-                      {lang === 'ru' ? 'Войти' : 'Kirish'}
-                    </Link>
-                  </div>
-                </>
-              ) : (
-                <>
-                  {description ? (
-                    <p className="whitespace-pre-line text-sm leading-relaxed text-mute">{description}</p>
-                  ) : (
-                    <p className="text-sm italic text-faint">{t(lang, ui.noDescription)}</p>
-                  )}
-                  {inst.details && (
-                    inst.details.foundedYear || inst.details.studentCount ||
-                    inst.details.teacherCount || (inst.details.languages?.length ?? 0) > 0
-                  ) && (
-                    <dl className="mt-5 grid grid-cols-2 gap-2.5 border-t border-line pt-5">
-                      {inst.details.foundedYear && (
-                        <div className="rounded-xl bg-canvas px-4 py-3">
-                          <dt className="text-xs text-faint">{t(lang, ui.founded)}</dt>
-                          <dd className="mt-0.5 font-bold text-ink">{inst.details.foundedYear}</dd>
-                        </div>
-                      )}
-                      {inst.details.studentCount && (
-                        <div className="rounded-xl bg-canvas px-4 py-3">
-                          <dt className="text-xs text-faint">{t(lang, ui.students)}</dt>
-                          <dd className="mt-0.5 font-bold text-ink">{formatNum(inst.details.studentCount)}+</dd>
-                        </div>
-                      )}
-                      {inst.details.teacherCount && (
-                        <div className="rounded-xl bg-canvas px-4 py-3">
-                          <dt className="text-xs text-faint">{t(lang, ui.teachers)}</dt>
-                          <dd className="mt-0.5 font-bold text-ink">{inst.details.teacherCount}</dd>
-                        </div>
-                      )}
-                      {(inst.details.languages?.length ?? 0) > 0 && (
-                        <div className="col-span-2 rounded-xl bg-canvas px-4 py-3 sm:col-span-1">
-                          <dt className="mb-2 text-xs text-faint">{t(lang, ui.languages)}</dt>
-                          <dd className="flex flex-wrap gap-1.5">
-                            {(inst.details.languages ?? []).map(l => (
-                              <span key={l} className="rounded-lg bg-primary-100 px-2.5 py-0.5 text-xs font-bold text-primary-700 dark:bg-primary-500/20 dark:text-primary-300">
-                                {l.toUpperCase()}
-                              </span>
-                            ))}
-                          </dd>
-                        </div>
-                      )}
-                    </dl>
-                  )}
-                </>
-              )}
-            </div>
-
-            {/* Course-specific sections */}
-            {!isGuest && isCourseOrSchool && (
-              <>
                 {(inst.details?.programs?.length ?? 0) > 0 && (
-                  <div className="card p-6">
-                    <h2 className="section-title mb-4">
-                      <BookOpen className="h-4 w-4" aria-hidden />
-                      {t(lang, ui.programs)}
-                    </h2>
+                  <>
+                    {(inst.details?.specializations?.length ?? 0) > 0 && (
+                      <p className="mb-2 text-xs font-bold uppercase tracking-wider text-gray-400">
+                        {t(lang, ui.programs)}
+                      </p>
+                    )}
                     <div className="flex flex-wrap gap-2">
                       {(inst.details!.programs ?? []).map(prog => (
-                        <span key={prog} className="rounded-xl border border-primary-100 bg-primary-50 px-3 py-1.5 text-sm font-medium text-primary-700 dark:border-primary-500/25 dark:bg-primary-500/10 dark:text-primary-300">
+                        <span key={prog} className="rounded-lg border border-primary-100 bg-primary-50 px-3 py-1.5 text-sm font-medium text-primary-700">
                           {prog}
                         </span>
                       ))}
                     </div>
-                  </div>
+                  </>
                 )}
+
                 {(inst.details?.specializations?.length ?? 0) > 0 && (
-                  <div className="card p-6">
-                    <h2 className="section-title mb-4">
-                      <Target className="h-4 w-4" aria-hidden />
+                  <>
+                    <p className="mb-2 mt-4 text-xs font-semibold uppercase tracking-wider text-gray-400">
                       {t(lang, ui.specializations)}
-                    </h2>
+                    </p>
                     <div className="flex flex-wrap gap-2">
                       {(inst.details!.specializations ?? []).map(spec => (
-                        <span key={spec} className="rounded-xl border border-orange-100 bg-orange-50 px-3 py-1.5 text-sm font-medium text-orange-700 dark:border-orange-500/25 dark:bg-orange-500/10 dark:text-orange-300">
+                        <span key={spec} className="rounded-lg border border-orange-100 bg-orange-50 px-3 py-1.5 text-sm font-medium text-orange-700">
                           {spec}
                         </span>
                       ))}
                     </div>
+                  </>
+                )}
+
+                {/* O'qitish tillari */}
+                {(inst.details?.languages?.length ?? 0) > 0 && (
+                  <div className="mt-4 flex flex-wrap items-center gap-2 border-t border-gray-100 pt-4">
+                    <span className="text-xs font-semibold text-gray-500">
+                      {t(lang, ui.languages)}:
+                    </span>
+                    {(inst.details!.languages ?? []).map(l => (
+                      <span key={l} className="rounded-md bg-teal-50 px-2 py-0.5 text-xs font-bold text-teal-700">
+                        {/* Xom kod (UZ/RU/EN) o'rniga tushunarli nom */}
+                        {LANGUAGE_NAMES[l.toUpperCase()]?.[lang] ?? l.toUpperCase()}
+                      </span>
+                    ))}
                   </div>
                 )}
+
+              </div>
+            )}
+
+            {/* ════════════════════════════════════════
+                2. NATIJA KO'RSATKICHLARI — Achievements
+                ════════════════════════════════════════ */}
+            {inst.details?.achievements && (
+              <div className="card p-6">
+                <h2 className="mb-1 flex items-center gap-3 text-lg font-semibold text-gray-900">
+                  <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-emerald-50 text-emerald-600">
+                    <Trophy className="h-[18px] w-[18px]" strokeWidth={1.75} />
+                  </span>
+                  {t(lang, ui.achievements)}
+                </h2>
+                <p className="mb-3 ml-12 text-sm text-gray-400">
+                  {lang === 'ru' ? 'Результаты и достижения учеников' : "O'quvchilar natijalari va yutuqlari"}
+                </p>
+                <p className="whitespace-pre-line text-base leading-relaxed text-gray-700">
+                  {inst.details.achievements}
+                </p>
+              </div>
+            )}
+
+            {/* ════════════════════════════════════════
+                3. O'QITUVCHILAR SIFATI
+                ════════════════════════════════════════ */}
+            {(inst.details?.teacherCount || (inst.details?.shifts?.length ?? 0) > 0) && (
+              <div className="card p-6">
+                <h2 className="mb-4 flex items-center gap-3 text-lg font-semibold text-gray-900">
+                  <span className="icon-chip"><UserCheck className="h-[18px] w-[18px]" strokeWidth={1.75} /></span>
+                  {lang === 'ru' ? "Качество преподавания" : "O'qituvchilar sifati"}
+                </h2>
+                <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                  {inst.details?.teacherCount && (
+                    <div className="flex items-center gap-3 rounded-xl bg-gray-50 p-4">
+                      <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-white text-gray-500 shadow-sm">
+                        <UserCheck className="h-5 w-5" strokeWidth={1.75} />
+                      </span>
+                      <div>
+                        <p className="text-xs text-gray-500 font-medium">{t(lang, ui.teachers)}</p>
+                        <p className="text-xl font-bold text-gray-900">{inst.details.teacherCount}</p>
+                      </div>
+                    </div>
+                  )}
+                  {inst.details?.foundedYear && (
+                    <div className="flex items-center gap-3 rounded-xl bg-gray-50 p-4">
+                      <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-white text-gray-500 shadow-sm">
+                        <Info className="h-5 w-5" strokeWidth={1.75} />
+                      </span>
+                      <div>
+                        <p className="text-xs text-gray-500 font-medium">{t(lang, ui.founded)}</p>
+                        <p className="text-xl font-bold text-gray-900">{inst.details.foundedYear}</p>
+                      </div>
+                    </div>
+                  )}
+                </div>
+                {/* Dars vaqtlari */}
                 {(inst.details?.shifts?.length ?? 0) > 0 && (
-                  <div className="card p-6">
-                    <h2 className="section-title mb-4">
-                      <Clock className="h-4 w-4" aria-hidden />
+                  <div className="mt-4">
+                    <p className="mb-2 text-xs font-semibold uppercase tracking-wider text-gray-400">
                       {t(lang, ui.shifts)}
-                    </h2>
+                    </p>
                     <div className="flex flex-wrap gap-2">
                       {(inst.details!.shifts ?? []).map(shift => (
-                        <span key={shift} className="flex items-center gap-1.5 rounded-xl border border-sky-100 bg-sky-50 px-3 py-1.5 text-sm font-medium text-sky-700 dark:border-sky-500/25 dark:bg-sky-500/10 dark:text-sky-300">
-                          <Clock className="h-3.5 w-3.5" aria-hidden />
+                        <span key={shift} className="flex items-center gap-1.5 rounded-lg border border-gray-200 bg-white px-3 py-1.5 text-sm font-medium text-gray-700">
+                          <Clock className="h-3.5 w-3.5 text-gray-400" strokeWidth={2} />
                           {shift}
                         </span>
                       ))}
                     </div>
                   </div>
                 )}
-                {inst.details?.achievements && (
-                  <div className="card border-accent-200 bg-accent-50/30 p-6 dark:border-accent-500/20 dark:bg-accent-500/5">
-                    <h2 className="section-title mb-3 text-accent-700 dark:text-accent-400">
-                      <Trophy className="h-4 w-4" aria-hidden />
-                      {t(lang, ui.achievements)}
-                    </h2>
-                    <p className="whitespace-pre-line text-sm leading-relaxed text-mute">{inst.details.achievements}</p>
-                  </div>
-                )}
-              </>
+              </div>
             )}
 
-            {/* Rating breakdown */}
+            {/* ════════════════════════════════════════
+                4. O'QUVCHILAR SONI
+                ════════════════════════════════════════ */}
+            {inst.details?.studentCount && (
+              <div className="card p-6">
+                <h2 className="mb-4 flex items-center gap-3 text-lg font-semibold text-gray-900">
+                  <span className="icon-chip"><Users2 className="h-[18px] w-[18px]" strokeWidth={1.75} /></span>
+                  {t(lang, ui.students)}
+                </h2>
+                <div className="flex items-end gap-2">
+                  <span className="text-4xl font-bold text-gray-900">
+                    {formatNum(inst.details.studentCount)}+
+                  </span>
+                  <span className="mb-1 text-base text-gray-500">
+                    {lang === 'ru' ? 'учеников обучается' : "o'quvchi tahsil olmoqda"}
+                  </span>
+                </div>
+              </div>
+            )}
+
+            {/* Narx — faqat sidebar'da ko'rsatiladi (takrorlanmaslik uchun) */}
+
+            {/* ════════════════════════════════════════
+                6. JOYLASHUV VA FORMAT
+                ════════════════════════════════════════ */}
+            {(inst.address || inst.phone || inst.phone2 || inst.website) && (
+              <div className="card p-6">
+                <h2 className="mb-4 flex items-center gap-3 text-lg font-semibold text-gray-900">
+                  <span className="icon-chip"><MapPin className="h-[18px] w-[18px]" strokeWidth={1.75} /></span>
+                  {lang === 'ru' ? 'Расположение и формат' : "Joylashuv va format"}
+                </h2>
+
+                <div className="space-y-3">
+                  {inst.address && (
+                    <div className="flex items-start gap-3 rounded-xl bg-gray-50 px-4 py-3.5">
+                      <MapPin className="mt-0.5 h-4 w-4 shrink-0 text-gray-400" strokeWidth={1.75} />
+                      <div>
+                        <p className="text-xs text-gray-400 font-semibold mb-1">{t(lang, ui.address)}</p>
+                        <p className="text-base font-medium text-gray-800 leading-snug">{inst.address}</p>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Format ko'rsatkichlari */}
+                  <div className="flex flex-wrap gap-2">
+                    {inst.type === 'IT_SCHOOL' || inst.type === 'LANGUAGE_CENTER' || inst.type === 'COURSE_CENTER' ? (
+                      <>
+                        <span className="flex items-center gap-1.5 rounded-lg border border-gray-200 bg-white px-3 py-1.5 text-sm font-medium text-gray-700">
+                          <BookOpen className="h-3.5 w-3.5 text-gray-400" strokeWidth={2} /> {lang === 'ru' ? 'Офлайн' : 'Offline'}
+                        </span>
+                        <span className="flex items-center gap-1.5 rounded-lg border border-primary-100 bg-primary-50 px-3 py-1.5 text-sm font-medium text-primary-700">
+                          <Laptop className="h-3.5 w-3.5" strokeWidth={2} /> {lang === 'ru' ? 'Онлайн' : 'Online'}
+                        </span>
+                      </>
+                    ) : (
+                      <span className="flex items-center gap-1.5 rounded-lg border border-gray-200 bg-white px-3 py-1.5 text-sm font-medium text-gray-700">
+                        <BookOpen className="h-3.5 w-3.5 text-gray-400" strokeWidth={2} /> {lang === 'ru' ? 'Очное обучение' : "Offline ta'lim"}
+                      </span>
+                    )}
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* ════════════════════════════════════════
+                7. MUASSASA HAQIDA — About
+                ════════════════════════════════════════ */}
+            <div className="card p-6">
+              <h2 className="mb-4 flex items-center gap-3 text-lg font-semibold text-gray-900">
+                <span className="icon-chip"><Info className="h-[18px] w-[18px]" strokeWidth={1.75} /></span>
+                {t(lang, ui.about)}
+              </h2>
+
+              {isGuest ? (
+                <>
+                  {description && (
+                    <p className="text-base leading-relaxed text-gray-700">
+                      {description.slice(0, 160)}
+                      <span className="text-gray-400">…</span>
+                    </p>
+                  )}
+                  {/* Faqat izoh, tugmasiz — asosiy "kirish" chaqiruvi sidebar'da bitta joyda */}
+                  <p className="mt-3 flex items-center gap-1.5 text-sm text-gray-400">
+                    <Lock className="h-3.5 w-3.5 shrink-0" strokeWidth={2} />
+                    {lang === 'ru' ? 'Полное описание доступно после входа' : "To'liq ta'rif tizimga kirgandan so'ng ko'rinadi"}
+                  </p>
+                </>
+              ) : (
+                description ? (
+                  <p className="whitespace-pre-line text-base leading-relaxed text-gray-700">{description}</p>
+                ) : (
+                  <p className="italic text-base text-gray-400">{t(lang, ui.noDescription)}</p>
+                )
+              )}
+            </div>
+
+            {/* ════════════════════════════════════════
+                8. REYTING — Rating breakdown
+                ════════════════════════════════════════ */}
+
+            {/* Rating breakdown — faqat auth bo'lganda */}
             {!isGuest && totalReviews > 0 && (
               <div className="card p-6">
-                <h2 className="section-title mb-5">
-                  <BarChart2 className="h-4 w-4" aria-hidden />
+                <h2 className="mb-1 font-semibold text-gray-900 text-lg flex items-center gap-3">
+                  <span className="icon-chip"><BarChart3 className="h-[18px] w-[18px]" strokeWidth={1.75} /></span>
                   {t(lang, ui.ratingTitle)}
                 </h2>
+                {/* Halollik izohi: baholar sub'ektiv, taxminiy ko'rsatkich */}
+                <p className="mb-5 ml-12 text-xs text-gray-400">
+                  {lang === 'ru'
+                    ? 'Оценки поставлены пользователями и являются приблизительным показателем'
+                    : "Baholar foydalanuvchilar tomonidan qo'yilgan — taxminiy ko'rsatkich"}
+                </p>
                 <div className="space-y-2.5">
                   {[5, 4, 3, 2, 1].map(star => {
                     const count = ratingBreakdown[star] ?? 0
                     const pct = totalReviews > 0 ? Math.round((count / totalReviews) * 100) : 0
                     return (
                       <div key={star} className="flex items-center gap-3">
-                        <span className="w-4 shrink-0 text-right text-xs font-bold tabular-nums text-mute">{star}</span>
-                        <Star className="h-3.5 w-3.5 shrink-0 fill-amber-400 text-amber-400" aria-hidden />
-                        <div className="flex-1 overflow-hidden rounded-full bg-line h-2">
+                        <span className="w-3 text-sm font-semibold text-gray-600 text-right shrink-0">{star}</span>
+                        <Star className="h-4 w-4 shrink-0 fill-amber-400 text-amber-400" strokeWidth={0} />
+                        <div className="flex-1 rounded-full bg-gray-100 h-2 overflow-hidden">
                           <div className="h-full rounded-full bg-amber-400 transition-all" style={{ width: `${pct}%` }} />
                         </div>
-                        <span className="w-6 shrink-0 text-right text-xs tabular-nums text-faint">{count}</span>
+                        <span className="w-7 text-sm text-gray-500 text-right shrink-0">{count}</span>
                       </div>
                     )
                   })}
                 </div>
 
+                {/* Mezonlar bo'yicha o'rtacha baholar */}
                 {dimAverages && (
-                  <div className="mt-5 border-t border-line pt-5">
-                    <p className="mb-3 text-xs font-semibold uppercase tracking-wide text-faint">
-                      {lang === 'ru' ? 'По критериям' : "Mezonlar bo'yicha"}
-                    </p>
+                  <div className="mt-5 border-t border-gray-100 pt-5">
+                    <p className="mb-3 text-xs font-semibold uppercase tracking-wide text-gray-400">Mezonlar bo&apos;yicha</p>
                     <div className="space-y-2.5">
                       {DIM_DEFS.map(({ key, Icon, label }) => {
                         const avg = dimAverages[key]
                         if (!avg) return null
+                        const pct = (avg / 5) * 100
                         return (
                           <div key={key} className="flex items-center gap-2.5">
-                            <Icon className="h-3.5 w-3.5 shrink-0 text-faint" aria-hidden />
-                            <span className="w-28 shrink-0 text-xs text-mute">{t(lang, label)}</span>
-                            <div className="flex-1 overflow-hidden rounded-full bg-line h-1.5">
-                              <div className="h-full rounded-full bg-primary-500 transition-all" style={{ width: `${(avg / 5) * 100}%` }} />
+                            <Icon className="h-4 w-4 shrink-0 text-gray-400" strokeWidth={1.75} />
+                            <span className="w-28 text-sm font-medium text-gray-600 shrink-0">{label}</span>
+                            <div className="flex-1 rounded-full bg-gray-100 h-2 overflow-hidden">
+                              <div
+                                className="h-full rounded-full bg-primary-500 transition-all"
+                                style={{ width: `${pct}%` }}
+                              />
                             </div>
-                            <span className="w-7 shrink-0 text-right text-xs font-bold tabular-nums text-primary-600 dark:text-primary-400">{avg}</span>
+                            <span className="w-8 text-sm font-semibold text-primary-600 text-right shrink-0">{avg}</span>
                           </div>
                         )
                       })}
@@ -568,38 +695,41 @@ export default function InstitutionDetail({ inst }: { inst: Institution }) {
               </div>
             )}
 
-            {/* Write review */}
+            {/* Write review — faqat auth bo'lganda */}
             {!isGuest && (
               <div id="write-review">
                 <WriteReview institutionId={inst.id} institutionName={displayName} />
               </div>
             )}
 
-            {/* Reviews with gate */}
+            {/* Reviews — GATE bilan */}
             <div id="auth-gate-reviews">
               <GuestGate
                 isGuest={isGuest}
                 lang={lang}
                 gateType="reviews"
                 institutionId={inst.id}
+                next={instPath}
                 blurPreview={
                   inst.reviews && inst.reviews.length > 0 ? (
                     <div className="card p-6">
-                      <h2 className="section-title mb-5">
-                        <MessageCircle className="h-4 w-4" aria-hidden />
+                      <h2 className="mb-5 text-lg font-semibold text-gray-900 flex items-center gap-3">
+                        <span className="icon-chip"><MessageCircle className="h-[18px] w-[18px]" strokeWidth={1.75} /></span>
                         {t(lang, ui.reviewsTitle)}
-                        <span className="badge ml-1 tabular-nums">{inst.reviewCount}</span>
+                        <span className="ml-1 rounded-full bg-primary-100 px-2.5 py-0.5 text-sm font-semibold text-primary-700">
+                          {inst.reviewCount}
+                        </span>
                       </h2>
-                      <div className="space-y-3">
+                      <div className="space-y-4">
                         {inst.reviews.slice(0, 2).map(review => (
-                          <div key={review.id} className="rounded-xl border border-line bg-canvas p-4">
-                            <div className="mb-2 flex items-center gap-2.5">
-                              <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-primary-400 to-primary-600 text-sm font-bold text-white">
+                          <div key={review.id} className="rounded-xl border border-gray-100 bg-gray-50 p-5">
+                            <div className="mb-3 flex items-center gap-3">
+                              <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-primary-600 text-base font-semibold text-white">
                                 {review.isAnonymous ? '?' : (review.user?.name?.[0]?.toUpperCase() ?? '?')}
                               </div>
                               <StarRating rating={review.overallRating} size="sm" />
                             </div>
-                            <p className="line-clamp-2 text-sm leading-relaxed text-mute">{review.body}</p>
+                            <p className="text-base text-gray-600 leading-relaxed line-clamp-2">{review.body}</p>
                           </div>
                         ))}
                       </div>
@@ -607,69 +737,83 @@ export default function InstitutionDetail({ inst }: { inst: Institution }) {
                   ) : undefined
                 }
               >
+                {/* Auth bo'lganda ko'rinadigan to'liq sharhlar */}
                 <div id="reviews" className="card p-6">
-                  <h2 className="section-title mb-5">
-                    <MessageCircle className="h-4 w-4" aria-hidden />
+                  <h2 className="mb-5 text-lg font-semibold text-gray-900 flex items-center gap-3">
+                    <span className="icon-chip"><MessageCircle className="h-[18px] w-[18px]" strokeWidth={1.75} /></span>
                     {t(lang, ui.reviewsTitle)}
                     {inst.reviewCount > 0 && (
-                      <span className="badge ml-1 tabular-nums">{inst.reviewCount}</span>
+                      <span className="ml-1 rounded-full bg-primary-100 px-2.5 py-0.5 text-sm font-semibold text-primary-700">
+                        {inst.reviewCount}
+                      </span>
                     )}
                   </h2>
                   {inst.reviews && inst.reviews.length > 0 ? (
-                    <div className="space-y-3">
-                      {inst.reviews.map(review => (
-                        <article key={review.id} className="rounded-xl border border-line bg-canvas p-4">
-                          <div className="mb-3 flex items-start justify-between gap-2">
-                            <div className="flex items-center gap-2.5">
-                              <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-primary-400 to-primary-600 text-sm font-bold text-white">
-                                {review.isAnonymous ? '?' : (review.user?.name?.[0]?.toUpperCase() ?? '?')}
-                              </div>
-                              <div>
-                                <span className="block text-sm font-semibold text-ink">
-                                  {review.isAnonymous ? t(lang, ui.anon) : (review.user?.name ?? t(lang, ui.user))}
-                                </span>
-                                <StarRating rating={review.overallRating} size="sm" />
-                              </div>
-                            </div>
-                            {review.createdAt && (
-                              <time className="shrink-0 text-xs text-faint">
-                                {new Date(review.createdAt).toLocaleDateString(lang === 'ru' ? 'ru-RU' : 'uz-UZ')}
-                              </time>
-                            )}
-                          </div>
-                          {review.title && <p className="mb-1.5 text-sm font-semibold text-ink">{review.title}</p>}
-                          <p className="text-sm leading-relaxed text-mute">{review.body}</p>
-                          {DIM_DEFS.some(({ key }) => (review[key] ?? 0) > 0) && (
-                            <div className="mt-3 flex flex-wrap gap-1.5">
-                              {DIM_DEFS.map(({ key, Icon, label }) => {
-                                const v = review[key]
-                                if (!v) return null
-                                return (
-                                  <span key={key} className="inline-flex items-center gap-1 rounded-full border border-line bg-surface px-2 py-0.5 text-xs text-mute">
-                                    <Icon className="h-3 w-3" aria-hidden />
-                                    {t(lang, label)}
-                                    <span className="font-semibold text-amber-500">{'★'.repeat(v)}</span>
+                    <div className="space-y-4">
+                      {inst.reviews.map(review => {
+                        const initials = review.isAnonymous
+                          ? '?'
+                          : (review.user?.name?.[0]?.toUpperCase() ?? '?')
+                        return (
+                          <div key={review.id} className="overflow-hidden rounded-xl border border-gray-100 bg-white">
+                            {/* Review header */}
+                            <div className="flex items-center justify-between gap-3 border-b border-gray-100 bg-gray-50/80 px-5 py-3">
+                              <div className="flex items-center gap-3">
+                                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-primary-600 text-sm font-semibold text-white">
+                                  {initials}
+                                </div>
+                                <div>
+                                  <span className="block text-sm font-semibold text-gray-800">
+                                    {review.isAnonymous ? t(lang, ui.anon) : (review.user?.name ?? t(lang, ui.user))}
                                   </span>
-                                )
-                              })}
+                                  <StarRating rating={review.overallRating} size="sm" />
+                                </div>
+                              </div>
+                              {review.createdAt && (
+                                <span className="shrink-0 rounded-md bg-white px-2 py-0.5 text-xs text-gray-400 border border-gray-100">
+                                  {new Date(review.createdAt).toLocaleDateString(lang === 'ru' ? 'ru-RU' : 'uz-UZ')}
+                                </span>
+                              )}
                             </div>
-                          )}
-                          {review.helpfulCount > 0 && (
-                            <p className="mt-2 flex items-center gap-1 text-xs text-faint">
-                              <ThumbsUp className="h-3 w-3" aria-hidden />
-                              {review.helpfulCount} {t(lang, ui.helpful)}
-                            </p>
-                          )}
-                        </article>
-                      ))}
+                            {/* Review body */}
+                            <div className="px-5 py-4">
+                              {review.title && (
+                                <p className="mb-1.5 text-base font-semibold text-gray-800">{review.title}</p>
+                              )}
+                              <p className="text-base leading-relaxed text-gray-600">{review.body}</p>
+                              {DIM_DEFS.some(({ key }) => (review[key] ?? 0) > 0) && (
+                                <div className="mt-3 flex flex-wrap gap-1.5">
+                                  {DIM_DEFS.map(({ key, Icon, label }) => {
+                                    const v = review[key]
+                                    if (!v) return null
+                                    return (
+                                      <span key={key} className="inline-flex items-center gap-1 rounded-full border border-primary-100 bg-primary-50 px-2.5 py-1 text-xs font-semibold text-primary-700">
+                                        <Icon className="h-3 w-3" strokeWidth={2} />
+                                        <span>{label}</span>
+                                        <span className="text-amber-500">{'★'.repeat(v)}</span>
+                                      </span>
+                                    )
+                                  })}
+                                </div>
+                              )}
+                              {review.helpfulCount > 0 && (
+                                <p className="mt-3 flex items-center gap-1 text-xs text-gray-400">
+                                  <ThumbsUp className="h-3.5 w-3.5" strokeWidth={2} />
+                                  {review.helpfulCount} {t(lang, ui.helpful)}
+                                </p>
+                              )}
+                            </div>
+                          </div>
+                        )
+                      })}
                     </div>
                   ) : (
-                    <div className="py-10 text-center">
-                      <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-2xl bg-canvas">
-                        <MessageCircle className="h-7 w-7 text-faint" aria-hidden />
+                    <div className="py-12 text-center">
+                      <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-2xl bg-gray-100 text-gray-300">
+                        <MessageCircle className="h-7 w-7" strokeWidth={1.5} />
                       </div>
-                      <p className="text-sm font-semibold text-ink">{t(lang, ui.noReviews)}</p>
-                      <p className="mt-1 text-xs text-faint">{t(lang, ui.beFirst)}</p>
+                      <p className="text-lg font-semibold text-gray-600">{t(lang, ui.noReviews)}</p>
+                      <p className="mt-1 text-base text-gray-400">{t(lang, ui.beFirst)}</p>
                     </div>
                   )}
                 </div>
@@ -677,8 +821,10 @@ export default function InstitutionDetail({ inst }: { inst: Institution }) {
             </div>
           </div>
 
-          {/* Sidebar */}
+          {/* ── Right column (sidebar) ─── */}
           <div className="space-y-4">
+
+            {/* Save / Compare — hammaga, lekin action auth kerak */}
             <InstActions
               institution={{
                 id: inst.id, slug: inst.slug, nameUz: inst.nameUz,
@@ -686,31 +832,37 @@ export default function InstitutionDetail({ inst }: { inst: Institution }) {
               }}
             />
 
-            {isGuest && <RegisterBanner lang={lang} />}
+            {/* Guest — Ro'yxatdan o'tish CTA (sidebar) */}
+            {isGuest && <RegisterBanner lang={lang} next={instPath} />}
 
-            {/* Price card — authenticated */}
+            {/* Hamkorlar uchun: muassasa egaligi so'rovi */}
+            <ClaimInstitution institutionId={inst.id} isVerified={inst.isVerified} />
+
+            {/* Price card — faqat auth bo'lganda */}
             {!isGuest && inst.pricing?.monthlyMin && (
               <div className="card p-5">
-                <h3 className="section-title mb-4">
-                  <Star className="h-4 w-4" aria-hidden />
+                <h3 className="mb-4 font-semibold text-gray-900 text-base flex items-center gap-3">
+                  <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-emerald-50 text-emerald-600">
+                    <Wallet className="h-[18px] w-[18px]" strokeWidth={1.75} />
+                  </span>
                   {t(lang, ui.priceTitle)}
                 </h3>
-                <div className="rounded-xl bg-accent-50 p-4 dark:bg-accent-500/10">
-                  <p className="text-xs font-medium text-accent-600 dark:text-accent-400">{t(lang, ui.priceFrom)}</p>
-                  <p className="mt-1 text-2xl font-bold tabular-nums text-accent-700 dark:text-accent-300">
+                <div className="rounded-xl bg-emerald-50 p-4">
+                  <p className="text-sm text-emerald-600 font-medium mb-1">{t(lang, ui.priceFrom)}</p>
+                  <p className="text-2xl font-bold text-emerald-700 leading-none">
                     {formatUzs(inst.pricing.monthlyMin)}
                   </p>
                   {inst.pricing.monthlyMax && inst.pricing.monthlyMax !== inst.pricing.monthlyMin && (
-                    <p className="mt-1 text-sm text-accent-600 dark:text-accent-400">— {formatUzs(inst.pricing.monthlyMax)}</p>
+                    <p className="mt-1.5 text-sm text-emerald-600">— {formatUzs(inst.pricing.monthlyMax)}</p>
                   )}
-                  <p className="mt-0.5 text-xs text-accent-500">/ {t(lang, ui.perMonth)}</p>
+                  <p className="mt-1 text-xs text-emerald-500">/ {t(lang, ui.perMonth)}</p>
                 </div>
                 {(inst.pricing.paymentMethods?.length ?? 0) > 0 && (
-                  <div className="mt-3">
-                    <p className="mb-2 text-xs font-medium text-faint">{t(lang, ui.payment)}</p>
+                  <div className="mt-4">
+                    <p className="mb-2 text-xs font-semibold text-gray-500">{t(lang, ui.payment)}</p>
                     <div className="flex flex-wrap gap-1.5">
                       {(inst.pricing.paymentMethods ?? []).map((m: string) => (
-                        <span key={m} className="rounded-lg bg-canvas px-2.5 py-1 text-xs font-medium text-mute">{m}</span>
+                        <span key={m} className="rounded-md bg-gray-100 px-2.5 py-1 text-xs font-semibold text-gray-600">{m}</span>
                       ))}
                     </div>
                   </div>
@@ -718,30 +870,34 @@ export default function InstitutionDetail({ inst }: { inst: Institution }) {
               </div>
             )}
 
-            {/* Guest price hint */}
+            {/* Guest — narx hint */}
             {isGuest && inst.pricing?.monthlyMin && (
-              <div className="card border-accent-100 bg-accent-50/30 p-5 dark:border-accent-500/20 dark:bg-accent-500/5">
-                <div className="mb-3 flex items-center gap-3">
-                  <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-accent-100 dark:bg-accent-500/20">
-                    <Star className="h-4 w-4 text-accent-600 dark:text-accent-400" aria-hidden />
-                  </div>
+              <div className="rounded-2xl border border-emerald-100 bg-emerald-50 p-5">
+                <div className="flex items-center gap-3 mb-4">
+                  <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-white text-emerald-600">
+                    <Wallet className="h-5 w-5" strokeWidth={1.75} />
+                  </span>
                   <div>
-                    <p className="text-xs text-accent-600 dark:text-accent-400">{t(lang, ui.priceFrom)}</p>
-                    <p className="text-lg font-bold tabular-nums text-accent-700 dark:text-accent-300">{formatUzs(inst.pricing.monthlyMin)}</p>
+                    <p className="text-sm text-emerald-600 font-medium">{t(lang, ui.priceFrom)}</p>
+                    <p className="text-2xl font-bold text-emerald-700">{formatUzs(inst.pricing.monthlyMin)}</p>
                   </div>
                 </div>
-                <div className="flex items-center gap-2 rounded-lg bg-surface/70 px-3 py-2.5 text-xs text-mute">
-                  <Lock className="h-3.5 w-3.5 shrink-0" aria-hidden />
-                  {lang === 'ru' ? 'Все детали после входа' : "Batafsil ma'lumot kirgandan so'ng"}
+                <div className="rounded-xl bg-white/70 px-4 py-3 text-sm text-emerald-700 font-medium flex items-center gap-2">
+                  <Lock className="h-4 w-4 shrink-0" strokeWidth={1.75} />
+                  <span>
+                    {lang === 'ru'
+                      ? 'Все детали после входа'
+                      : "Batafsil ma'lumot kirgandan so'ng"}
+                  </span>
                 </div>
               </div>
             )}
 
-            {/* Contact card — authenticated */}
+            {/* Contact card — faqat auth bo'lganda */}
             {!isGuest && (
               <div className="card p-5">
-                <h3 className="section-title mb-4">
-                  <Phone className="h-4 w-4" aria-hidden />
+                <h3 className="mb-4 font-semibold text-gray-900 text-base flex items-center gap-3">
+                  <span className="icon-chip"><Phone className="h-[18px] w-[18px]" strokeWidth={1.75} /></span>
                   {t(lang, ui.contactTitle)}
                 </h3>
                 <div className="space-y-2">
@@ -749,12 +905,12 @@ export default function InstitutionDetail({ inst }: { inst: Institution }) {
                     <a
                       href={`tel:${inst.phone}`}
                       onClick={() => trackContactClick('phone', inst.id)}
-                      className="flex items-center gap-3 rounded-xl bg-accent-600 px-4 py-3.5 font-medium text-white shadow-sm transition-all hover:bg-accent-700 hover:shadow-card active:scale-95"
+                      className="flex items-center gap-3 rounded-xl bg-emerald-600 px-4 py-3.5 font-semibold text-white transition-colors hover:bg-emerald-700"
                     >
-                      <Phone className="h-4 w-4 shrink-0" aria-hidden />
+                      <Phone className="h-5 w-5 shrink-0" strokeWidth={1.75} />
                       <div className="min-w-0">
                         <div className="text-sm font-semibold">{t(lang, ui.call)}</div>
-                        <div className="truncate text-xs opacity-80">{inst.phone}</div>
+                        <div className="text-sm font-normal opacity-90 truncate">{inst.phone}</div>
                       </div>
                     </a>
                   )}
@@ -763,12 +919,12 @@ export default function InstitutionDetail({ inst }: { inst: Institution }) {
                       href={`https://t.me/${inst.telegram.replace('@', '')}`}
                       target="_blank" rel="noopener noreferrer"
                       onClick={() => trackContactClick('telegram', inst.id)}
-                      className="flex items-center gap-3 rounded-xl bg-sky-500 px-4 py-3.5 font-medium text-white shadow-sm transition-all hover:bg-sky-600 hover:shadow-card active:scale-95"
+                      className="flex items-center gap-3 rounded-xl bg-sky-500 px-4 py-3.5 font-semibold text-white transition-colors hover:bg-sky-600"
                     >
-                      <MessageCircle className="h-4 w-4 shrink-0" aria-hidden />
+                      <Send className="h-5 w-5 shrink-0" strokeWidth={1.75} />
                       <div className="min-w-0">
                         <div className="text-sm font-semibold">Telegram</div>
-                        <div className="truncate text-xs opacity-80">@{inst.telegram.replace('@', '')}</div>
+                        <div className="text-sm font-normal opacity-90 truncate">@{inst.telegram.replace('@', '')}</div>
                       </div>
                     </a>
                   )}
@@ -777,12 +933,12 @@ export default function InstitutionDetail({ inst }: { inst: Institution }) {
                       href={`https://instagram.com/${inst.instagram.replace('@', '')}`}
                       target="_blank" rel="noopener noreferrer"
                       onClick={() => trackContactClick('instagram', inst.id)}
-                      className="flex items-center gap-3 rounded-xl bg-gradient-to-r from-pink-500 to-orange-400 px-4 py-3.5 font-medium text-white shadow-sm transition-all hover:opacity-90 hover:shadow-card active:scale-95"
+                      className="flex items-center gap-3 rounded-xl bg-pink-600 px-4 py-3.5 font-semibold text-white transition-colors hover:bg-pink-700"
                     >
-                      <Globe className="h-4 w-4 shrink-0" aria-hidden />
+                      <Instagram className="h-5 w-5 shrink-0" strokeWidth={1.75} />
                       <div className="min-w-0">
                         <div className="text-sm font-semibold">Instagram</div>
-                        <div className="truncate text-xs opacity-80">@{inst.instagram.replace('@', '')}</div>
+                        <div className="text-sm font-normal opacity-90 truncate">@{inst.instagram.replace('@', '')}</div>
                       </div>
                     </a>
                   )}
@@ -791,21 +947,21 @@ export default function InstitutionDetail({ inst }: { inst: Institution }) {
                       href={inst.website.startsWith('http') ? inst.website : `https://${inst.website}`}
                       target="_blank" rel="noopener noreferrer"
                       onClick={() => trackContactClick('website', inst.id)}
-                      className="flex items-center gap-3 rounded-xl border border-line bg-canvas px-4 py-3.5 font-medium text-mute transition-all hover:border-primary-200 hover:text-primary-700 dark:hover:border-primary-500/30 dark:hover:text-primary-400"
+                      className="flex items-center gap-3 rounded-xl border border-gray-200 bg-white px-4 py-3.5 font-medium text-gray-700 transition-colors hover:border-primary-200 hover:bg-primary-50 hover:text-primary-700"
                     >
-                      <Globe className="h-4 w-4 shrink-0" aria-hidden />
+                      <Globe className="h-5 w-5 shrink-0 text-gray-400" strokeWidth={1.75} />
                       <div className="min-w-0">
                         <div className="text-sm font-semibold">{t(lang, ui.website)}</div>
-                        <div className="truncate text-xs text-faint">{inst.website.replace(/^https?:\/\//, '')}</div>
+                        <div className="text-xs text-gray-400 truncate">{inst.website.replace(/^https?:\/\//, '')}</div>
                       </div>
                     </a>
                   )}
                   {inst.address && (
-                    <div className="flex items-start gap-3 rounded-xl border border-line bg-canvas px-4 py-3.5">
-                      <MapPin className="mt-0.5 h-4 w-4 shrink-0 text-faint" aria-hidden />
+                    <div className="flex items-start gap-3 rounded-xl bg-gray-50 px-4 py-3.5">
+                      <MapPin className="mt-0.5 h-5 w-5 shrink-0 text-gray-400" strokeWidth={1.75} />
                       <div>
-                        <p className="text-xs font-medium text-faint">{t(lang, ui.address)}</p>
-                        <p className="mt-0.5 text-sm leading-snug text-mute">{inst.address}</p>
+                        <p className="text-xs text-gray-400 font-semibold mb-1">{t(lang, ui.address)}</p>
+                        <p className="text-sm text-gray-700 leading-snug">{inst.address}</p>
                       </div>
                     </div>
                   )}
@@ -813,15 +969,24 @@ export default function InstitutionDetail({ inst }: { inst: Institution }) {
               </div>
             )}
 
-            {/* Write review CTA */}
-            {!isGuest ? (
-              <a href="#write-review" className="btn-primary w-full">
-                <PencilLine className="h-4 w-4" aria-hidden />
+            {/* Sharh yozish tugmasi — auth bo'lganda */}
+            {!isGuest && (
+              <a
+                href="#write-review"
+                className="btn-primary w-full text-base py-3.5"
+              >
+                <PencilLine className="h-[18px] w-[18px]" strokeWidth={1.75} />
                 {t(lang, ui.writeReview)}
               </a>
-            ) : (
-              <Link href="/auth" className="btn-secondary w-full">
-                <PencilLine className="h-4 w-4" aria-hidden />
+            )}
+
+            {/* Guest — Sharh yozish CTA */}
+            {isGuest && (
+              <Link
+                href={authHref(instPath)}
+                className="btn-secondary w-full text-base py-3.5"
+              >
+                <PencilLine className="h-[18px] w-[18px]" strokeWidth={1.75} />
                 {lang === 'ru' ? 'Войдите чтобы оставить отзыв' : "Sharh yozish uchun kiring"}
               </Link>
             )}
@@ -829,6 +994,7 @@ export default function InstitutionDetail({ inst }: { inst: Institution }) {
         </div>
       </div>
 
+      {/* Mehmon foydalanuvchilar uchun kontakt ma'lumoti to'plovchi widget */}
       {isGuest && <GuestLeadWidget />}
     </main>
   )
