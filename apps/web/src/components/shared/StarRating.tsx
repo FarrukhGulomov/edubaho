@@ -56,3 +56,23 @@ export default function StarRating({ rating, max = 5, size = 'md', showValue = t
     </span>
   )
 }
+
+/**
+ * RatingHint — reytingning tinch, e'tibor tortmaydigan ko'rinishi.
+ * Reyting subyektiv/taxminiy ko'rsatkich bo'lgani uchun ro'yxat
+ * kartalari va hero'da katta yulduzlar o'rniga shu ishlatiladi.
+ */
+export function RatingHint({ rating, count, lang = 'uz' }: { rating: number; count?: number; lang?: 'uz' | 'ru' }) {
+  return (
+    <span
+      className="inline-flex items-center gap-1 text-xs text-mute"
+      title={lang === 'ru'
+        ? 'Оценка пользователей — приблизительный показатель'
+        : "Foydalanuvchilar bahosi — taxminiy ko'rsatkich"}
+    >
+      <Star className="h-3.5 w-3.5 shrink-0" strokeWidth={2} />
+      {rating.toFixed(1)}
+      {count != null && <span>({count})</span>}
+    </span>
+  )
+}
