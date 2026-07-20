@@ -5,7 +5,7 @@ import { usePathname } from 'next/navigation'
 import { useState } from 'react'
 import {
   Search, PencilLine, BookOpen, Target, ShieldCheck, Menu, X, Home,
-  ArrowLeftRight, LogOut, User,
+  ArrowLeftRight, LogOut, User, Lock,
 } from 'lucide-react'
 import { useAuth } from '@/hooks/useAuth'
 import { authHref } from '@/lib/authHref'
@@ -56,12 +56,14 @@ export default function Header() {
             >
               <PencilLine className="h-4 w-4 shrink-0" strokeWidth={1.75} /> {t(lang, { uz: "O'quv markazlar", ru: 'Учебные центры' })}
             </Link>
-            <Link
-              href="/search?type=SCHOOL"
-              className="flex shrink-0 items-center gap-2 whitespace-nowrap rounded-xl px-3.5 py-2 text-sm font-semibold text-gray-600 transition-colors hover:bg-gray-100 hover:text-gray-900"
+            <span
+              aria-disabled="true"
+              title={lang === 'uz' ? 'Tez orada' : 'Скоро'}
+              className="flex shrink-0 cursor-not-allowed items-center gap-2 whitespace-nowrap rounded-xl px-3.5 py-2 text-sm font-semibold text-gray-300"
             >
               <BookOpen className="h-4 w-4 shrink-0" strokeWidth={1.75} /> {t(lang, { uz: 'Maktablar', ru: 'Школы' })}
-            </Link>
+              <Lock className="h-3 w-3 shrink-0" strokeWidth={2} />
+            </span>
             <Link
               href="/match"
               className={`flex shrink-0 items-center gap-2 whitespace-nowrap rounded-xl px-3.5 py-2 text-sm font-semibold transition-colors ${
@@ -87,7 +89,7 @@ export default function Header() {
             {/* Til almashtirish */}
             <button
               onClick={() => setLang(lang === 'uz' ? 'ru' : 'uz')}
-              className="flex items-center gap-1.5 rounded-xl border border-gray-200 bg-white px-3 py-2 text-sm font-semibold text-gray-600 transition-colors hover:border-primary-300 hover:text-primary-600"
+              className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-gray-200 bg-white text-gray-600 transition-colors hover:border-primary-300 hover:text-primary-600"
               title={lang === 'uz' ? 'Переключить на русский' : "O'zbekchaga o'tish"}
               aria-label={lang === 'uz' ? 'Переключить на русский' : "O'zbekchaga o'tish"}
             >
@@ -127,7 +129,7 @@ export default function Header() {
 
             {/* Mobil: hamburger (faqat katta ekranlarda yo'q) */}
             <button
-              className="rounded-xl border border-gray-200 p-2 text-gray-600 transition-colors hover:bg-gray-100 lg:hidden"
+              className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-gray-200 text-gray-600 transition-colors hover:bg-gray-100 lg:hidden"
               onClick={() => setMenuOpen(v => !v)}
               aria-label="Menyu ochish"
             >
