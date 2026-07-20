@@ -14,6 +14,11 @@ type Step = 'phone' | 'otp' | 'done'
 const BOT_USERNAME = process.env.NEXT_PUBLIC_TELEGRAM_BOT_USERNAME ?? 'edubahobot'
 const GOOGLE_CLIENT_ID = process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID ?? ''
 
+// Playmobile (SMS provider) bilan shartnoma hali yo'q — telefon/OTP orqali
+// kirish vaqtincha yashirilgan (backend/logika o'zgarishsiz, faqat UI'da
+// ko'rinmaydi). Shartnoma tuzilgach shu flagni true qilish kifoya.
+const PHONE_AUTH_ENABLED = false
+
 // Google Identity Services global tipi
 declare global {
   interface Window {
@@ -338,7 +343,7 @@ export default function AuthPage() {
           ))}
         </div>
         <p className="mt-10 text-xs text-primary-300">
-          {t(lang, { uz: 'Telegram yoki SMS — parol kerak emas', ru: 'Telegram или SMS — без пароля' })}
+          {t(lang, { uz: 'Telegram yoki Google — parol kerak emas', ru: 'Telegram или Google — без пароля' })}
         </p>
       </div>
 
@@ -405,8 +410,9 @@ export default function AuthPage() {
                   {error && <ErrorBox msg={error} />}
                 </div>
 
-                {/* Ajratuvchi — faqat yuqorida haqiqiy muqobil (Telegram/Google) turgan bo'lsa */}
-                {(tgReady || GOOGLE_CLIENT_ID) && (
+                {/* Ajratuvchi — faqat yuqorida haqiqiy muqobil (Telegram/Google) turgan bo'lsa
+                    VA pastda SMS forma ko'rsatilsa (hozircha PHONE_AUTH_ENABLED=false) */}
+                {PHONE_AUTH_ENABLED && (tgReady || GOOGLE_CLIENT_ID) && (
                   <div className="flex items-center gap-3">
                     <div className="h-px flex-1 bg-gray-200" />
                     <span className="text-xs font-semibold uppercase text-gray-400">{t(lang, ui.orDivider)}</span>
@@ -414,8 +420,9 @@ export default function AuthPage() {
                   </div>
                 )}
 
-                {/* SMS form — Telegram'i yo'q foydalanuvchilar uchun muqobil yo'l */}
-                <form onSubmit={handleSendOtp} className="space-y-4">
+                {/* SMS form — Playmobile shartnomasi bo'lmagani uchun vaqtincha yashirilgan */}
+                {PHONE_AUTH_ENABLED && (
+                  <form onSubmit={handleSendOtp} className="space-y-4">
                     <div>
                       <label className="mb-1.5 block text-sm font-semibold text-gray-700">
                         {t(lang, ui.phoneLabel)}
@@ -444,6 +451,7 @@ export default function AuthPage() {
                       {loading ? t(lang, ui.sending) : t(lang, ui.sendBtn)}
                     </button>
                   </form>
+                )}
               </div>
             )}
 
