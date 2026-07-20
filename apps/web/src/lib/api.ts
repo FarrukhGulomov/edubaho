@@ -81,6 +81,16 @@ export const institutionsApi = {
     apiFetch<{ data: Array<{ id: string; status: string; institution: { id: string; nameUz: string; slug: string } }> }>(
       '/institutions/claims/me', { token },
     ),
+
+  // Bepul probnoy darsga bron (UTP#2) — token ixtiyoriy, mehmon ham yubora oladi
+  trialBooking: (
+    id: string,
+    data: { name: string; phone: string; preferredTime?: string; note?: string },
+    token?: string | null,
+  ) =>
+    apiFetch<{ data: unknown; message: string }>(`/institutions/${id}/trial-bookings`, {
+      method: 'POST', body: JSON.stringify(data), token: token ?? undefined,
+    }),
 }
 
 // ─── Geo ──────────────────────────────────────────────────────

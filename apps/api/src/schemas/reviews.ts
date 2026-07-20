@@ -30,6 +30,8 @@ export const createReviewSchema = z.object({
     .min(2, "Sharh kamida 2 ta belgi bo'lishi kerak")
     .max(2000, "Sharh 2000 ta belgidan oshmasligi kerak"),
   isAnonymous: z.boolean().optional().default(false),
+  // UTP#1: ixtiyoriy natija ("IELTS 7.0 oldim") — admin tasdiqlasa badge bilan ko'rsatiladi
+  outcomeText: z.string().max(150, "Natija matni 150 ta belgidan oshmasligi kerak").optional(),
 })
 
 export const updateReviewSchema = z.object({
@@ -46,6 +48,7 @@ export const updateReviewSchema = z.object({
     .max(2000, "Sharh 2000 ta belgidan oshmasligi kerak")
     .optional(),
   isAnonymous: z.boolean().optional(),
+  outcomeText: z.string().max(150, "Natija matni 150 ta belgidan oshmasligi kerak").optional(),
 })
 
 // ─────────────────────────────────────────────

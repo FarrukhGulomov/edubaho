@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import { usePathname } from 'next/navigation'
-import { PencilLine, X, CheckCircle2, AlertCircle, UserCheck, School, Wallet, Leaf, Phone } from 'lucide-react'
+import { PencilLine, X, CheckCircle2, AlertCircle, UserCheck, School, Wallet, Leaf, Phone, Award } from 'lucide-react'
 import { authHref } from '@/lib/authHref'
 
 interface Props {
@@ -62,6 +62,7 @@ export default function WriteReview({ institutionId, institutionName }: Props) {
   const [dims, setDims] = useState<Partial<Record<DimensionKey, number>>>({})
   const [title, setTitle] = useState('')
   const [body, setBody] = useState('')
+  const [outcomeText, setOutcomeText] = useState('')
   const [isAnonymous, setIsAnonymous] = useState(false)
   const [loading, setLoading] = useState(false)
   const [done, setDone] = useState(false)
@@ -92,6 +93,7 @@ export default function WriteReview({ institutionId, institutionName }: Props) {
             title: title.trim() || undefined,
             body: body.trim(),
             isAnonymous,
+            outcomeText: outcomeText.trim() || undefined,
           }),
         },
       )
@@ -114,6 +116,7 @@ export default function WriteReview({ institutionId, institutionName }: Props) {
     setDims({})
     setTitle('')
     setBody('')
+    setOutcomeText('')
     setIsAnonymous(false)
     setError('')
     setDone(false)
@@ -264,6 +267,25 @@ export default function WriteReview({ institutionId, institutionName }: Props) {
           />
           <p className={`mt-1 text-right text-xs ${body.length > 1800 ? 'text-orange-500 font-medium' : 'text-gray-400'}`}>
             {body.length}/2000
+          </p>
+        </div>
+
+        {/* Natija — UTP: admin tekshirib tasdiqlasa "Tasdiqlangan natija" nishoni bilan chiqadi */}
+        <div className="rounded-xl border border-amber-100 bg-amber-50/50 p-4">
+          <label className="mb-1 flex items-center gap-1.5 text-sm font-semibold text-gray-700">
+            <Award className="h-4 w-4 shrink-0 text-amber-500" strokeWidth={1.75} />
+            Natijangiz bormi? <span className="text-gray-400 font-normal">(ixtiyoriy)</span>
+          </label>
+          <input
+            type="text"
+            value={outcomeText}
+            onChange={(e) => setOutcomeText(e.target.value)}
+            placeholder="Masalan: IELTS 7.0 oldim, ishga joylashdim..."
+            maxLength={150}
+            className="w-full rounded-xl border border-gray-200 px-4 py-2.5 text-gray-900 outline-none focus:border-primary-400 transition-colors"
+          />
+          <p className="mt-1 text-xs text-gray-400">
+            Admin tekshirib tasdiqlasa — &quot;Tasdiqlangan natija&quot; nishoni bilan ko&apos;rsatiladi
           </p>
         </div>
 

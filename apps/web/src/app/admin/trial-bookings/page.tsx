@@ -3,55 +3,50 @@
 import { useState, useEffect, useCallback } from 'react'
 import Link from 'next/link'
 import {
-  Lock, Ban, GraduationCap, RefreshCw, Clock, Flag, X, CheckCircle2,
-  User, School, Award, ShieldCheck,
+  Lock, Ban, GraduationCap, RefreshCw, Clock, CheckCircle2, X,
+  Phone, School, CalendarCheck,
 } from 'lucide-react'
 import { useAuth } from '@/hooks/useAuth'
 
 const API = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:3001/api/v1'
 
-interface PendingReview {
+interface TrialBooking {
   id: string
+  name: string
+  phone: string
+  preferredTime?: string | null
+  note?: string | null
   status: string
-  overallRating: number
-  title?: string
-  body: string
-  isAnonymous: boolean
   createdAt: string
-  user?: { name?: string; phone?: string }
-  institution?: { nameUz: string; slug: string; type: string }
-  outcomeText?: string | null
-  isVerified?: boolean
+  institution?: { nameUz: string; slug: string }
 }
 
-const STAR = ['', '★', '★★', '★★★', '★★★★', '★★★★★']
 const STATUS_COLORS: Record<string, string> = {
   PENDING: 'bg-yellow-100 text-yellow-800',
-  FLAGGED: 'bg-red-100 text-red-800',
-  APPROVED: 'bg-green-100 text-green-800',
-  REJECTED: 'bg-gray-100 text-gray-600',
+  CONFIRMED: 'bg-green-100 text-green-800',
+  CANCELLED: 'bg-gray-100 text-gray-600',
 }
 
-export default function AdminReviewsPage() {
+export default function AdminTrialBookingsPage() {
   const { user, loading } = useAuth()
-  const [reviews, setReviews] = useState<PendingReview[]>([])
+  const [bookings, setBookings] = useState<TrialBooking[]>([])
   const [meta, setMeta] = useState({ total: 0, page: 1, totalPages: 1 })
-  const [status, setStatus] = useState<'PENDING' | 'FLAGGED' | 'REJECTED' | 'APPROVED'>('PENDING')
+  const [status, setStatus] = useState<'PENDING' | 'CONFIRMED' | 'CANCELLED'>('PENDING')
   const [fetching, setFetching] = useState(false)
   const [actionId, setActionId] = useState<string | null>(null)
   const [toast, setToast] = useState('')
 
-  const fetchReviews = useCallback(async () => {
+  const fetchBookings = useCallback(async () => {
     const token = localStorage.getItem('accessToken')
     if (!token) return
     setFetching(true)
     try {
-      const res = await fetch(`${API}/admin/reviews/pending?status=${status}&limit=20`, {
+      const res = await fetch(`${API}/admin/trial-bookings?status=${status}&limit=20`, {
         headers: { Authorization: `Bearer ${token}`, 'ngrok-skip-browser-warning': '1' },
       })
       if (!res.ok) return
       const data = await res.json()
-      setReviews(data.data ?? [])
+      setBookings(data.data ?? [])
       setMeta(data.meta ?? { total: 0, page: 1, totalPages: 1 })
     } finally {
       setFetching(false)
@@ -59,44 +54,23 @@ export default function AdminReviewsPage() {
   }, [status])
 
   useEffect(() => {
-    if (user) fetchReviews()
-  }, [user, fetchReviews])
+    if (user) fetchBookings()
+  }, [user, fetchBookings])
 
-  async function handleAction(id: string, action: 'approve' | 'reject') {
+  async function handleAction(id: string, next: 'CONFIRMED' | 'CANCELLED') {
     const token = localStorage.getItem('accessToken')
     if (!token) return
     setActionId(id)
     try {
-      const res = await fetch(`${API}/admin/reviews/${id}/${action}`, {
+      const res = await fetch(`${API}/admin/trial-bookings/${id}/status`, {
         method: 'PATCH',
         headers: { Authorization: `Bearer ${token}`, 'ngrok-skip-browser-warning': '1', 'Content-Type': 'application/json' },
-        body: JSON.stringify(action === 'reject' ? { reason: 'Moderatsiya' } : {}),
+        body: JSON.stringify({ status: next }),
       })
       if (res.ok) {
-        setReviews((prev) => prev.filter((r) => r.id !== id))
+        setBookings((prev) => prev.filter((b) => b.id !== id))
         setMeta((m) => ({ ...m, total: m.total - 1 }))
-        setToast(action === 'approve' ? 'Sharh tasdiqlandi' : 'Sharh rad etildi')
-        setTimeout(() => setToast(''), 3000)
-      }
-    } finally {
-      setActionId(null)
-    }
-  }
-
-  // UTP#1: foydalanuvchi yozgan natijani tasdiqlash/bekor qilish
-  async function handleVerifyOutcome(id: string, verified: boolean) {
-    const token = localStorage.getItem('accessToken')
-    if (!token) return
-    setActionId(id)
-    try {
-      const res = await fetch(`${API}/admin/reviews/${id}/verify-outcome`, {
-        method: 'PATCH',
-        headers: { Authorization: `Bearer ${token}`, 'ngrok-skip-browser-warning': '1', 'Content-Type': 'application/json' },
-        body: JSON.stringify({ verified }),
-      })
-      if (res.ok) {
-        setReviews((prev) => prev.map((r) => (r.id === id ? { ...r, isVerified: verified } : r)))
-        setToast(verified ? 'Natija tasdiqlandi' : "Natija tasdig'i bekor qilindi")
+        setToast(next === 'CONFIRMED' ? 'Bron tasdiqlandi' : 'Bron bekor qilindi')
         setTimeout(() => setToast(''), 3000)
       }
     } finally {
@@ -133,7 +107,7 @@ export default function AdminReviewsPage() {
           <div className="mb-4 flex justify-center">
             <Ban className="h-12 w-12 text-gray-300" strokeWidth={1.5} />
           </div>
-          <h1 className="text-xl font-bold text-gray-900 mb-2">Ruxsat yo'q</h1>
+          <h1 className="text-xl font-bold text-gray-900 mb-2">Ruxsat yo&apos;q</h1>
           <p className="text-gray-500 mb-4">Bu sahifa faqat moderatorlar uchun</p>
           <Link href="/" className="text-primary-600 hover:underline">Bosh sahifaga qaytish</Link>
         </div>
@@ -143,7 +117,6 @@ export default function AdminReviewsPage() {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      {/* Header */}
       <header className="sticky top-0 z-10 border-b border-gray-200 bg-white shadow-sm">
         <div className="mx-auto flex max-w-5xl items-center justify-between gap-3 px-4 py-3">
           <div className="flex min-w-0 items-center gap-3 overflow-hidden">
@@ -168,21 +141,22 @@ export default function AdminReviewsPage() {
       </header>
 
       <main className="mx-auto max-w-5xl px-4 py-8">
-        {/* Toast */}
         {toast && (
           <div className="mb-4 rounded-2xl bg-green-50 border border-green-200 px-5 py-3 text-green-800 font-medium">
             {toast}
           </div>
         )}
 
-        {/* Title + stats */}
         <div className="mb-6 flex items-center justify-between">
           <div>
-            <h1 className="text-2xl font-bold text-gray-900">Sharhlarni moderatsiya qilish</h1>
-            <p className="text-gray-500 mt-1">Ko'rib chiqish kerak: <strong>{meta.total} ta sharh</strong></p>
+            <h1 className="flex items-center gap-2 text-2xl font-bold text-gray-900">
+              <CalendarCheck className="h-6 w-6 shrink-0 text-emerald-600" strokeWidth={1.75} />
+              Probnoy dars bronlari
+            </h1>
+            <p className="text-gray-500 mt-1">Jami: <strong>{meta.total} ta</strong></p>
           </div>
           <button
-            onClick={fetchReviews}
+            onClick={fetchBookings}
             disabled={fetching}
             className="flex items-center gap-1.5 whitespace-nowrap rounded-xl border border-gray-200 bg-white px-4 py-2.5 text-sm font-semibold text-gray-600 transition-colors hover:border-gray-300 hover:bg-gray-50 disabled:opacity-50"
           >
@@ -190,13 +164,11 @@ export default function AdminReviewsPage() {
           </button>
         </div>
 
-        {/* Status tabs */}
         <div className="mb-6 flex flex-wrap gap-2">
           {([
             { key: 'PENDING' as const, Icon: Clock, label: 'Kutayotgan' },
-            { key: 'FLAGGED' as const, Icon: Flag, label: 'Shikoyat' },
-            { key: 'REJECTED' as const, Icon: X, label: 'Rad etilgan' },
-            { key: 'APPROVED' as const, Icon: Award, label: "Natijalar (tasdiqlangan sharhlar)" },
+            { key: 'CONFIRMED' as const, Icon: CheckCircle2, label: 'Tasdiqlangan' },
+            { key: 'CANCELLED' as const, Icon: X, label: 'Bekor qilingan' },
           ]).map(({ key, Icon, label }) => (
             <button
               key={key}
@@ -212,104 +184,73 @@ export default function AdminReviewsPage() {
           ))}
         </div>
 
-        {/* Reviews list */}
         {fetching ? (
           <div className="py-20 text-center text-gray-400">Yuklanmoqda...</div>
-        ) : reviews.length === 0 ? (
+        ) : bookings.length === 0 ? (
           <div className="py-20 text-center">
             <div className="mb-3 flex justify-center">
               <CheckCircle2 className="h-12 w-12 text-emerald-400" strokeWidth={1.5} />
             </div>
-            <p className="text-lg font-semibold text-gray-600">Barcha sharhlar ko'rib chiqildi!</p>
+            <p className="text-lg font-semibold text-gray-600">Bu bo&apos;limda bron yo&apos;q</p>
           </div>
         ) : (
           <div className="space-y-4">
-            {reviews.map((review) => (
-              <div key={review.id} className="rounded-2xl border border-gray-200 bg-white p-6 shadow-sm transition-colors hover:border-gray-300">
-                {/* Top row */}
+            {bookings.map((booking) => (
+              <div key={booking.id} className="rounded-2xl border border-gray-200 bg-white p-6 shadow-sm transition-colors hover:border-gray-300">
                 <div className="mb-3 flex flex-wrap items-start justify-between gap-3">
                   <div>
                     <div className="flex items-center gap-2 flex-wrap">
-                      <span className={`whitespace-nowrap rounded-full px-2.5 py-0.5 text-xs font-semibold ${STATUS_COLORS[review.status]}`}>
-                        {review.status}
+                      <span className={`whitespace-nowrap rounded-full px-2.5 py-0.5 text-xs font-semibold ${STATUS_COLORS[booking.status]}`}>
+                        {booking.status}
                       </span>
-                      <span className="text-yellow-500 font-bold">{STAR[review.overallRating]}</span>
-                      <span className="text-sm text-gray-500">{review.overallRating}/5</span>
+                      <span className="font-bold text-gray-900">{booking.name}</span>
                     </div>
-                    <div className="mt-1 flex items-center gap-2 text-sm text-gray-500">
+                    <div className="mt-1 flex flex-wrap items-center gap-2 text-sm text-gray-500">
                       <span className="flex items-center gap-1">
-                        <User className="h-3.5 w-3.5 shrink-0" strokeWidth={1.75} />
-                        {review.isAnonymous ? 'Anonim' : (review.user?.name ?? review.user?.phone ?? 'Noma\'lum')}
+                        <Phone className="h-3.5 w-3.5 shrink-0" strokeWidth={1.75} /> {booking.phone}
                       </span>
                       <span>•</span>
-                      <span>{new Date(review.createdAt).toLocaleDateString('uz-UZ')}</span>
+                      <span>{new Date(booking.createdAt).toLocaleDateString('uz-UZ')}</span>
                     </div>
                   </div>
-                  {review.institution && (
+                  {booking.institution && (
                     <Link
-                      href={`/institutions/${review.institution.slug}`}
+                      href={`/institutions/${booking.institution.slug}`}
                       target="_blank"
                       className="flex items-center gap-1.5 whitespace-nowrap rounded-xl border border-primary-100 bg-primary-50 px-3 py-2 text-sm font-semibold text-primary-700 transition-colors hover:border-primary-200 hover:bg-primary-100"
                     >
-                      <School className="h-3.5 w-3.5 shrink-0" strokeWidth={1.75} /> {review.institution.nameUz} →
+                      <School className="h-3.5 w-3.5 shrink-0" strokeWidth={1.75} /> {booking.institution.nameUz} →
                     </Link>
                   )}
                 </div>
 
-                {/* Content */}
-                {review.title && (
-                  <p className="mb-2 font-bold text-gray-900">{review.title}</p>
+                {booking.preferredTime && (
+                  <p className="text-sm text-gray-600"><strong>Afzal ko&apos;rgan vaqt:</strong> {booking.preferredTime}</p>
                 )}
-                <p className="text-gray-700 leading-relaxed whitespace-pre-wrap">{review.body}</p>
-
-                {/* UTP#1: foydalanuvchi yozgan natija + tasdiqlash */}
-                {review.outcomeText && (
-                  <div className="mt-3 flex flex-wrap items-center gap-3 rounded-xl border border-amber-100 bg-amber-50 px-4 py-3">
-                    <div className="flex min-w-0 flex-1 items-center gap-2 text-sm text-amber-800">
-                      <Award className="h-4 w-4 shrink-0" strokeWidth={1.75} />
-                      <span className="truncate"><strong>Natija:</strong> {review.outcomeText}</span>
-                    </div>
-                    {review.isVerified ? (
-                      <button
-                        onClick={() => handleVerifyOutcome(review.id, false)}
-                        disabled={actionId === review.id}
-                        className="flex shrink-0 items-center gap-1.5 whitespace-nowrap rounded-lg bg-emerald-100 px-3 py-1.5 text-xs font-semibold text-emerald-700 transition-colors hover:bg-emerald-200 disabled:opacity-50"
-                      >
-                        <ShieldCheck className="h-3.5 w-3.5 shrink-0" strokeWidth={2} /> Tasdiqlangan (bekor qilish)
-                      </button>
-                    ) : (
-                      <button
-                        onClick={() => handleVerifyOutcome(review.id, true)}
-                        disabled={actionId === review.id}
-                        className="flex shrink-0 items-center gap-1.5 whitespace-nowrap rounded-lg bg-white px-3 py-1.5 text-xs font-semibold text-amber-700 ring-1 ring-amber-300 transition-colors hover:bg-amber-100 disabled:opacity-50"
-                      >
-                        <ShieldCheck className="h-3.5 w-3.5 shrink-0" strokeWidth={2} /> Natijani tasdiqlash
-                      </button>
-                    )}
-                  </div>
+                {booking.note && (
+                  <p className="mt-1 text-sm text-gray-600"><strong>Izoh:</strong> {booking.note}</p>
                 )}
 
-                {/* Actions */}
-                {review.status === 'PENDING' || review.status === 'FLAGGED' ? (
+                {booking.status === 'PENDING' ? (
                   <div className="mt-5 flex gap-3">
                     <button
-                      onClick={() => handleAction(review.id, 'approve')}
-                      disabled={actionId === review.id}
+                      onClick={() => handleAction(booking.id, 'CONFIRMED')}
+                      disabled={actionId === booking.id}
                       className="flex flex-1 items-center justify-center gap-2 rounded-xl bg-emerald-600 py-3 text-base font-semibold text-white transition-colors hover:bg-emerald-700 disabled:opacity-50"
                     >
-                      {actionId === review.id ? '...' : <><CheckCircle2 className="h-4 w-4 shrink-0" strokeWidth={1.75} /> Tasdiqlash</>}
+                      {actionId === booking.id ? '...' : <><CheckCircle2 className="h-4 w-4 shrink-0" strokeWidth={1.75} /> Tasdiqlash</>}
                     </button>
                     <button
-                      onClick={() => handleAction(review.id, 'reject')}
-                      disabled={actionId === review.id}
+                      onClick={() => handleAction(booking.id, 'CANCELLED')}
+                      disabled={actionId === booking.id}
                       className="flex flex-1 items-center justify-center gap-2 rounded-xl border border-red-200 bg-white py-3 text-base font-semibold text-red-600 transition-colors hover:border-red-300 hover:bg-red-50 disabled:opacity-50"
                     >
-                      {actionId === review.id ? '...' : <><X className="h-4 w-4 shrink-0" strokeWidth={1.75} /> Rad etish</>}
+                      {actionId === booking.id ? '...' : <><X className="h-4 w-4 shrink-0" strokeWidth={1.75} /> Bekor qilish</>}
                     </button>
                   </div>
                 ) : (
                   <div className="mt-4 text-center text-sm text-gray-400">
-                    Bu sharh allaqachon {review.status === 'APPROVED' ? 'tasdiqlangan' : 'rad etilgan'}
+                    Bu bron allaqachon {booking.status === 'CONFIRMED' ? 'tasdiqlangan' : 'bekor qilingan'}
                   </div>
                 )}
               </div>

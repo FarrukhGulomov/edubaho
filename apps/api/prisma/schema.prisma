@@ -49,6 +49,12 @@ enum ReviewStatus {
   FLAGGED
 }
 
+enum TrialBookingStatus {
+  PENDING
+  CONFIRMED
+  CANCELLED
+}
+
 enum SubscriptionPlan {
   FREE
   STARTER
@@ -135,6 +141,7 @@ model User {
   searchHistory     SearchHistory[]
   adminPermission   AdminPermission?
   leadEvents        LeadEvent[]
+  trialBookings     TrialBooking[]
 
   @@index([phone])
   @@index([telegramId])
@@ -205,6 +212,7 @@ model Institution {
   analyticsEvents AnalyticsEvent[]
   leadEvents      LeadEvent[]
   branches        InstitutionBranch[]
+  trialBookings   TrialBooking[]
 
   @@index([type, status, cityId])
   @@index([status, avgRating])
@@ -332,6 +340,10 @@ model Review {
   title            String?
   body             String
   isAnonymous      Boolean      @default(false)
+  // UTP#1: foydalanuvchi ixtiyoriy o'z natijasini yozadi ("IELTS 7.0 oldim"),
+  // admin moderatsiyada tekshirib isVerified'ni true qiladi — shundagina
+  // "Tasdiqlangan natija" nishoni bilan ko'rsatiladi
+  outcomeText      String?
   isVerified       Boolean      @default(false)
   helpfulCount     Int          @default(0)
   replyCount       Int          @default(0)
@@ -535,5 +547,30 @@ model Notification {
   user User @relation(fields: [userId], references: [id])
 
   @@index([userId, isRead])
+  @@index([createdAt])
+}
+
+// ─────────────────────────────────────────────────
+// TRIAL BOOKING — UTP#2: bepul probnoy darsga bron
+// ─────────────────────────────────────────────────
+
+model TrialBooking {
+  id             String   @id @default(cuid())
+  institutionId  String
+  userId         String?
+  name           String
+  phone          String
+  // Erkin matn ("Dushanba, 15:00 atrofida" kabi) — MVP bosqichida taqvim/slot
+  // tizimi emas, faqat afzal ko'rgan vaqtni yozib qo'yish
+  preferredTime  String?
+  note           String?
+  status         TrialBookingStatus @default(PENDING)
+  createdAt      DateTime @default(now())
+
+  institution Institution @relation(fields: [institutionId], references: [id])
+  user        User?       @relation(fields: [userId], references: [id])
+
+  @@index([institutionId, status])
+  @@index([userId])
   @@index([createdAt])
 }

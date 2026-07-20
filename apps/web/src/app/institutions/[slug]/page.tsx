@@ -93,5 +93,7 @@ export interface Institution {
     helpfulCount: number
     createdAt?: string
     user?: { name?: string }
+    outcomeText?: string | null
+    isVerified?: boolean
   }>
 }

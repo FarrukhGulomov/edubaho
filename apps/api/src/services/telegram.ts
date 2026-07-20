@@ -103,3 +103,36 @@ function safeHashCompare(a: string, b: string): boolean {
   if (bufA.length !== bufB.length) return false
   return crypto.timingSafeEqual(bufA, bufB)
 }
+
+// ─────────────────────────────────────────────────────────────
+// Proaktiv push (Telegram Bot API)
+// ─────────────────────────────────────────────────────────────
+
+/**
+ * Foydalanuvchiga Telegram orqali xabar yuboradi (masalan: narx tushdi,
+ * saqlangan muassasada yangi sharh). Xatolik bo'lsa (bot bloklangan,
+ * chatId noto'g'ri va h.k.) jim tashlab yuboriladi — bu fire-and-forget
+ * bildirishnoma, asosiy oqimni to'xtatmasligi kerak.
+ */
+export async function sendTelegramMessage(
+  botToken: string,
+  telegramId: string,
+  text: string,
+): Promise<boolean> {
+  if (!botToken || !telegramId) return false
+  try {
+    const res = await fetch(`https://api.telegram.org/bot${botToken}/sendMessage`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        chat_id: telegramId,
+        text,
+        parse_mode: 'HTML',
+        disable_web_page_preview: true,
+      }),
+    })
+    return res.ok
+  } catch {
+    return false
+  }
+}

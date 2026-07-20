@@ -210,6 +210,33 @@ export default function HomePage() {
         </div>
       </div>
 
+      {/* ── Mashhur yo'nalishlar — SEO landing sahifalariga (shahar×mavzu)
+             havolalar. Toshkent bo'yicha, chunki seed ma'lumotlarining
+             asosiy qismi shu yerda. ── */}
+      <div className="mx-auto w-full max-w-6xl px-4 pt-6">
+        <h2 className="mb-3 text-sm font-bold uppercase tracking-wide text-gray-400">
+          {uz ? "Mashhur yo'nalishlar" : 'Популярные направления'}
+        </h2>
+        <div className="flex flex-wrap gap-2">
+          {[
+            { topic: 'python', uz: 'Python (Toshkent)', ru: 'Python (Ташкент)' },
+            { topic: 'frontend', uz: 'Frontend (Toshkent)', ru: 'Frontend (Ташкент)' },
+            { topic: 'ielts', uz: 'IELTS (Toshkent)', ru: 'IELTS (Ташкент)' },
+            { topic: 'ingliz-tili', uz: 'Ingliz tili (Toshkent)', ru: 'Английский (Ташкент)' },
+            { topic: 'dizayn', uz: 'Dizayn (Toshkent)', ru: 'Дизайн (Ташкент)' },
+            { topic: 'robototexnika', uz: 'Robototexnika (Toshkent)', ru: 'Робототехника (Ташкент)' },
+          ].map(l => (
+            <Link
+              key={l.topic}
+              href={`/toshkent/${l.topic}`}
+              className="rounded-xl border border-gray-200 bg-white px-3.5 py-2 text-sm font-medium text-gray-600 transition-colors hover:border-primary-300 hover:bg-primary-50/40 hover:text-primary-700"
+            >
+              {uz ? l.uz : l.ru}
+            </Link>
+          ))}
+        </div>
+      </div>
+
       {/* ── Eng yaxshi baholangan muassasalar — qisqa preview, to'liq
              katalog emas. Filtrlash/saralash/pagination faqat /search'da. ── */}
       <div className="mx-auto w-full max-w-6xl flex-1 px-4 py-8">

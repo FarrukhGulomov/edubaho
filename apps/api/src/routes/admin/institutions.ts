@@ -2,6 +2,7 @@ import type { FastifyInstance } from 'fastify'
 import { z } from 'zod'
 import { InstitutionType, InstitutionStatus } from '@prisma/client'
 import { indexInstitution, removeFromIndex } from '../../services/searchService'
+import { notifyUser } from '../../services/notify'
 
 /**
  * Admin muassasalar CRUD routes
@@ -269,6 +270,11 @@ export default async function adminInstitutionRoutes(fastify: FastifyInstance) {
 
     // Pricing upsert
     if (monthlyMin !== undefined || monthlyMax !== undefined || paymentMethods !== undefined) {
+      // UTP#4: narx tushganini aniqlash uchun eski narxni oldindan olamiz
+      const oldPricing = monthlyMin !== undefined
+        ? await prisma.institutionPricing.findUnique({ where: { institutionId: id }, select: { monthlyMin: true } })
+        : null
+
       await prisma.institutionPricing.upsert({
         where:  { institutionId: id },
         create: {
@@ -283,6 +289,25 @@ export default async function adminInstitutionRoutes(fastify: FastifyInstance) {
           paymentMethods: paymentMethods ?? undefined,
         },
       })
+
+      // UTP#4: narx pasaysa — shu muassasani saqlagan foydalanuvchilarga proaktiv push
+      const newMonthlyMin = monthlyMin ? Number(monthlyMin) : null
+      if (oldPricing?.monthlyMin != null && newMonthlyMin != null && newMonthlyMin < oldPricing.monthlyMin) {
+        const savers = await prisma.savedInstitution.findMany({
+          where: { institutionId: id },
+          select: { userId: true },
+        })
+        const fmtUzs = (n: number) => `${n.toLocaleString('ru-RU').replace(/,/g, ' ')} so'm`
+        for (const { userId } of savers) {
+          notifyUser(prisma, {
+            userId,
+            type: 'saved_institution_price_drop',
+            title: 'Saqlangan muassasada narx tushdi!',
+            body: `${institution.nameUz} — endi oyiga ${fmtUzs(newMonthlyMin)} (avval ${fmtUzs(oldPricing.monthlyMin)}).`,
+            data: { institutionId: id, slug: institution.slug, oldPrice: oldPricing.monthlyMin, newPrice: newMonthlyMin },
+          })
+        }
+      }
     }
 
     // Meilisearch indexini yangilaymiz

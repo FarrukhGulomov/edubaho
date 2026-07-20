@@ -2,7 +2,7 @@
 
 import Link from 'next/link'
 import { useEffect, useState } from 'react'
-import { GraduationCap, Crown, ShieldCheck, ClipboardList, School } from 'lucide-react'
+import { GraduationCap, Crown, ShieldCheck, ClipboardList, School, CalendarCheck } from 'lucide-react'
 import { useAuth } from '@/hooks/useAuth'
 import { useRouter } from 'next/navigation'
 
@@ -110,6 +110,19 @@ export default function AdminPage() {
             <div>
               <h2 className="text-lg font-bold text-primary-900">Muassasalar boshqaruvi</h2>
               <p className="text-sm text-primary-700">Qo&apos;shish, tahrirlash, o&apos;chirish, status o&apos;zgartirish</p>
+            </div>
+          </Link>
+
+          <Link
+            href="/admin/trial-bookings"
+            className="flex items-center gap-4 rounded-2xl border border-emerald-200 bg-emerald-50 p-6 transition-colors hover:border-emerald-400"
+          >
+            <span className="icon-chip h-14 w-14 shrink-0 bg-emerald-600 text-white">
+              <CalendarCheck className="h-6 w-6" strokeWidth={1.75} />
+            </span>
+            <div>
+              <h2 className="text-lg font-bold text-emerald-900">Probnoy dars bronlari</h2>
+              <p className="text-sm text-emerald-700">Bepul probnoy darsga yozilgan so&apos;rovlar</p>
             </div>
           </Link>
 
