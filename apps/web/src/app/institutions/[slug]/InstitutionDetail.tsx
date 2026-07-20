@@ -127,30 +127,29 @@ function GuestGate({
         </div>
       )}
 
-      {/* Overlay */}
+      {/* Overlay — RegisterBanner'dan (sidebar) YENGILROQ: bu faqat shu bo'lim
+          (masalan, sharhlar) uchun kontekstual eslatma, ikkinchi to'liq sotuv
+          taklifi emas — shuning uchun qisqa, bitta CTA, ortiqcha izohsiz */}
       <div className={`${blurPreview ? 'absolute inset-0' : ''} flex items-center justify-center bg-white/80 backdrop-blur-sm`}>
-        <div className="mx-4 w-full max-w-sm rounded-2xl border border-gray-200 bg-white p-7 text-center shadow-lg">
-          <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-xl bg-primary-50 text-primary-600">
-            <Lock className="h-6 w-6" strokeWidth={1.75} />
+        <div className="mx-4 w-full max-w-sm rounded-2xl border border-gray-200 bg-white p-6 text-center shadow-lg">
+          <div className="mx-auto mb-3 flex h-11 w-11 items-center justify-center rounded-xl bg-primary-50 text-primary-600">
+            <Lock className="h-5 w-5" strokeWidth={1.75} />
           </div>
-          <h3 className="mb-2 text-xl font-bold text-gray-900">
+          <h3 className="mb-1.5 text-base font-bold text-gray-900">
             {lang === 'ru' ? 'Войдите для просмотра' : "Ko'rish uchun kiring"}
           </h3>
-          <p className="mb-5 text-base text-gray-500 leading-relaxed">
+          <p className="mb-4 text-sm text-gray-500 leading-relaxed">
             {lang === 'ru'
-              ? 'Контакты, цены и отзывы доступны только зарегистрированным пользователям'
-              : "Kontaktlar, narxlar va sharhlar faqat ro'yxatdan o'tgan foydalanuvchilarga ko'rinadi"}
+              ? 'Отзывы доступны только зарегистрированным пользователям'
+              : "Sharhlar faqat ro'yxatdan o'tgan foydalanuvchilarga ko'rinadi"}
           </p>
           <Link
             href={authHref(next)}
             onClick={() => trackGateCta(gateType ?? 'gate', institutionId)}
-            className="btn-primary w-full text-base py-3.5"
+            className="btn-primary w-full text-sm py-2.5"
           >
-            {lang === 'ru' ? 'Зарегистрироваться / Войти' : "Ro'yxatdan o'tish / Kirish"}
+            {lang === 'ru' ? 'Войти' : 'Kirish'}
           </Link>
-          <p className="mt-3 text-sm text-gray-400">
-            {lang === 'ru' ? 'Бесплатно · Только номер телефона' : "Bepul · Faqat telefon raqam"}
-          </p>
         </div>
       </div>
     </div>
