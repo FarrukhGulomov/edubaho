@@ -77,6 +77,15 @@ export default function ProfilePage() {
     if (!loading && !user) router.replace('/auth')
   }, [loading, user, router])
 
+  // Birinchi marta profilga kirgan (yoki hali onboarding'ni bajarmagan/o'tkazib
+  // yubormagan) foydalanuvchi — bo'sh profil o'rniga avval "Mos Edu'ni top"
+  // (EduFit) wizard'i ko'rsatiladi. Wizard tugagach yoki o'tkazib yuborilgach
+  // shu yerga qaytadi (mavjud /match sahifasi qayta ishlatiladi — duplikat yo'q).
+  const needsOnboarding = !!user && !user.matchOnboardingCompletedAt
+  useEffect(() => {
+    if (needsOnboarding) router.replace('/match?next=/profile')
+  }, [needsOnboarding, router])
+
   useEffect(() => {
     if (user?.name) setName(user.name)
   }, [user])
@@ -132,6 +141,20 @@ export default function ProfilePage() {
   )
 
   if (!user) return null
+
+  // Onboarding'ga yo'naltirilayotgan payt bo'sh profilni bir lahza ko'rsatib
+  // qo'ymaslik uchun — xuddi yuqoridagi "loading" holati bilan bir xil
+  if (needsOnboarding) return (
+    <div className="flex min-h-screen flex-col bg-gray-50">
+      <Header />
+      <div className="flex flex-1 items-center justify-center">
+        <div className="text-center">
+          <div className="mx-auto mb-5 h-14 w-14 animate-spin rounded-full border-4 border-primary-200 border-t-primary-600" />
+          <p className="text-lg text-gray-500">{uz ? 'Yuklanmoqda...' : 'Загрузка...'}</p>
+        </div>
+      </div>
+    </div>
+  )
 
   const initials = user.name
     ? user.name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2)

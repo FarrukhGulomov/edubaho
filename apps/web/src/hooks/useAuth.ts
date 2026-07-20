@@ -9,6 +9,8 @@ export interface AuthUser {
   name?: string
   role: string
   avatar?: string
+  // null/undefined — "Mos Edu'ni top" onboarding'ni hali ko'rmagan
+  matchOnboardingCompletedAt?: string | null
 }
 
 export function useAuth() {

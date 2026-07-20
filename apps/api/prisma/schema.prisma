@@ -122,6 +122,10 @@ model User {
   createdAt    DateTime  @default(now())
   updatedAt    DateTime  @updatedAt
 
+  // "Mos Edu'ni top" (EduFit) onboarding'ni bajargan/o'tkazib yuborgan vaqti.
+  // null — hali ko'rmagan (profil ochilganda onboarding ko'rsatiladi).
+  matchOnboardingCompletedAt DateTime?
+
   city              City?              @relation(fields: [cityId], references: [id])
   reviews           Review[]
   reviewVotes       ReviewVote[]

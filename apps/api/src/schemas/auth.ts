@@ -24,6 +24,8 @@ export const updateProfileSchema = z.object({
   name: z.string().min(2, 'Ism kamida 2 ta belgi').max(100).optional(),
   email: z.string().email('Noto\'g\'ri email format').optional(),
   cityId: z.string().min(1).optional(),
+  // "Mos Edu'ni top" onboarding'ni bajarish/o'tkazib yuborish belgisi
+  matchOnboardingCompletedAt: z.coerce.date().optional(),
 })
 
 export type SendOtpInput = z.infer<typeof sendOtpSchema>
