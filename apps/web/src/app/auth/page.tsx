@@ -118,7 +118,7 @@ export default function AuthPage() {
   // Login'dan keyin yo'naltirish: kelgan sahifa > (yangi user: match wizard) > profil
   useEffect(() => {
     if (step === 'done') {
-      const dest = nextUrl ?? (isNewUser ? '/match' : '/profile')
+      const dest = nextUrl ?? (isNewUser ? '/match?next=/profile' : '/profile')
       const timer = setTimeout(() => { window.location.href = dest }, 1600)
       return () => clearTimeout(timer)
     }

@@ -2,15 +2,16 @@
 
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
+import { useRouter } from 'next/navigation'
 import {
   Target, PencilLine, School, Palette, Sunrise, Sun, Sunset, Calendar,
   Clock, Wallet, Globe, MapPin, BadgeCheck, Lightbulb, AlertCircle,
-  Search, RotateCcw, Medal, Lock,
+  Search, RotateCcw, Medal, Lock, ArrowRight,
 } from 'lucide-react'
 import Header from '@/components/shared/Header'
 import { RatingHint } from '@/components/shared/StarRating'
 import { useLang, t } from '@/contexts/LangContext'
-import { matchApi, geoApi, type MatchItem } from '@/lib/api'
+import { matchApi, geoApi, authApi, type MatchItem } from '@/lib/api'
 import { track } from '@/lib/analytics'
 import { haptic } from '@/lib/telegram'
 
@@ -70,6 +71,7 @@ function fmtUzs(n: number) {
 export default function MatchPage() {
   const { lang } = useLang()
   const uz = lang === 'uz'
+  const router = useRouter()
 
   const [step, setStep]         = useState<Step>('type')
   const [type, setType]         = useState('')
@@ -83,19 +85,47 @@ export default function MatchPage() {
   const [loading, setLoading]   = useState(false)
   const [error, setError]       = useState('')
   const [expanded, setExpanded] = useState<string | null>(null)
+  // Profil onboarding rejimi: ?next=/profile bilan kelingan bo'lsa —
+  // wizard tugagach (yoki o'tkazib yuborilganda) o'sha yerga qaytariladi
+  // va bajarilgani profilda saqlanadi (bir marta ko'rsatish uchun)
+  const [next, setNext] = useState<string | null>(null)
 
   useEffect(() => {
     track('match_started', { category: 'engagement' })
     geoApi.cities().then((r) => setCities(r.data as CityOption[])).catch(() => {})
 
+    const params = new URLSearchParams(window.location.search)
+
     // Deep-link: bosh sahifadagi hero'da tur allaqachon tanlangan bo'lsa
     // (?type=SCHOOL) — 1-qadamni takrorlamasdan 2-qadamdan davom etamiz
-    const preType = new URLSearchParams(window.location.search).get('type')
+    const preType = params.get('type')
     if (preType && TYPE_OPTIONS.some((o) => o.value === preType && !o.disabled)) {
       setType(preType)
       setStep('goal')
     }
+
+    // Faqat ichki yo'llar qabul qilinadi (open-redirect himoyasi) —
+    // auth/page.tsx'dagi bir xil qoida
+    const n = params.get('next')
+    if (n && n.startsWith('/') && !n.startsWith('//')) setNext(n)
   }, [])
+
+  // Onboarding bajarilgani/o'tkazib yuborilganini profilda saqlaydi.
+  // Mavjud PATCH /auth/profile endpoint'i qayta ishlatiladi — yangi API yo'q.
+  function markOnboardingDone() {
+    const token = localStorage.getItem('accessToken')
+    if (!token) return
+    authApi
+      .updateProfile(token, { matchOnboardingCompletedAt: new Date().toISOString() })
+      .catch(() => {})
+  }
+
+  function handleSkip() {
+    if (next) {
+      markOnboardingDone()
+      router.replace(next)
+    }
+  }
 
   const stepIndex = STEPS.indexOf(step)
 
@@ -118,6 +148,10 @@ export default function MatchPage() {
         category: 'engagement',
         properties: { type, goal, budget, shift: finalShift, resultCount: res.data.length },
       })
+      // Onboarding rejimida — natija olingani "bajarildi" hisoblanadi,
+      // lekin foydalanuvchi natijalarni ko'rib bo'lgach o'zi profilga o'tadi
+      // (pastdagi CTA orqali) — bu yerda darhol majburiy yo'naltirmaymiz
+      if (next) markOnboardingDone()
     } catch (err: unknown) {
       setError(err instanceof Error ? err.message : t(lang, { uz: 'Xatolik yuz berdi', ru: 'Произошла ошибка' }))
     } finally {
@@ -161,6 +195,23 @@ export default function MatchPage() {
       <Header />
 
       <main className="mx-auto max-w-2xl px-4 py-8">
+        {/* Profil onboarding rejimi — nega so'ralayotgani tushuntiriladi + o'tkazib yuborish */}
+        {next && step !== 'results' && (
+          <div className="mb-6 flex items-center justify-between gap-3 rounded-xl border border-primary-100 bg-primary-50 px-4 py-3">
+            <p className="text-sm text-primary-800">
+              {uz
+                ? 'Profilingizni ochishdan oldin — sizga eng mos muassasalarni topamiz'
+                : 'Прежде чем открыть профиль — подберём для вас подходящие заведения'}
+            </p>
+            <button
+              onClick={handleSkip}
+              className="shrink-0 whitespace-nowrap text-sm font-semibold text-primary-600 hover:underline"
+            >
+              {uz ? 'Keyinroq' : 'Позже'}
+            </button>
+          </div>
+        )}
+
         {/* Sarlavha */}
         <div className="mb-6 text-center">
           <h1 className="flex items-center justify-center gap-2 text-2xl font-bold text-gray-900 sm:text-3xl">
@@ -390,6 +441,16 @@ export default function MatchPage() {
                     <RotateCcw className="h-3.5 w-3.5 shrink-0" strokeWidth={2} /> {t(lang, ui.restart)}
                   </button>
                 </div>
+
+                {/* Onboarding rejimida — natijalarni ko'rgach profilga o'tish */}
+                {next && (
+                  <Link
+                    href={next}
+                    className="btn-primary flex w-full items-center justify-center gap-2 py-3"
+                  >
+                    {uz ? 'Profilimga o\'tish' : 'Перейти в профиль'} <ArrowRight className="h-4 w-4 shrink-0" strokeWidth={2} />
+                  </Link>
+                )}
 
                 {results.length === 0 && (
                   <div className="rounded-2xl border border-gray-200 bg-white p-10 text-center">

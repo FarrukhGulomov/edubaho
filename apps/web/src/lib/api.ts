@@ -205,6 +205,9 @@ export const authApi = {
   me: (token: string) =>
     apiFetch('/auth/me', { token }),
 
+  updateProfile: (token: string, data: { name?: string; email?: string; cityId?: string; matchOnboardingCompletedAt?: string }) =>
+    apiFetch('/auth/profile', { method: 'PATCH', token, body: JSON.stringify(data) }),
+
   logout: (token: string) =>
     apiFetch('/auth/logout', { method: 'POST', token }),
 }

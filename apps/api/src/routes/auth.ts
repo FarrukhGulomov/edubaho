@@ -218,6 +218,7 @@ export default async function authRoutes(fastify: FastifyInstance) {
           role: true,
           isVerified: true,
           createdAt: true,
+          matchOnboardingCompletedAt: true,
           city: { select: { id: true, nameUz: true, nameRu: true } },
           institutionClaims: {
             where: { status: 'APPROVED' },
@@ -263,6 +264,7 @@ export default async function authRoutes(fastify: FastifyInstance) {
           email: true,
           avatarUrl: true,
           role: true,
+          matchOnboardingCompletedAt: true,
         },
       })
 
