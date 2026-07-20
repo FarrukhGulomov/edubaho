@@ -328,12 +328,17 @@ export default function InstitutionDetail({ inst }: { inst: Institution }) {
       <div className="border-b border-gray-200 bg-white">
         <div className="mx-auto max-w-5xl px-4">
           {/* Breadcrumb */}
-          <nav className="flex items-center gap-1.5 py-4 text-sm text-gray-500">
-            <Link href="/" className="shrink-0 whitespace-nowrap rounded-md px-1 py-0.5 hover:text-gray-900 transition-colors">{t(lang, ui.breadHome)}</Link>
+          <nav className="flex items-center gap-1.5 py-4 text-sm text-gray-500" aria-label={t(lang, ui.breadHome)}>
+            {/* inline-flex items-center: global `a { min-height: 44px }` (touch target)
+                blockifies bu linklarni flex item sifatida — shu sabab matn markazlashtirilishi
+                uchun har bir link o'zi ham flex konteyner bo'lishi kerak, aks holda matn
+                44px balandlikdagi qutining yuqorisiga yopishib qoladi (span bilan solishtirganda
+                pastroq ko'rinadi) */}
+            <Link href="/" className="inline-flex h-11 shrink-0 items-center whitespace-nowrap rounded-md px-1 leading-none hover:text-gray-900 transition-colors">{t(lang, ui.breadHome)}</Link>
             <ChevronRight className="h-3.5 w-3.5 shrink-0 text-gray-300" />
-            <Link href="/search" className="shrink-0 whitespace-nowrap rounded-md px-1 py-0.5 hover:text-gray-900 transition-colors">{t(lang, ui.breadSearch)}</Link>
+            <Link href="/search" className="inline-flex h-11 shrink-0 items-center whitespace-nowrap rounded-md px-1 leading-none hover:text-gray-900 transition-colors">{t(lang, ui.breadSearch)}</Link>
             <ChevronRight className="h-3.5 w-3.5 shrink-0 text-gray-300" />
-            <span className="min-w-0 flex-1 truncate font-medium text-gray-900">{displayName}</span>
+            <span className="min-w-0 flex-1 truncate font-medium leading-none text-gray-900">{displayName}</span>
           </nav>
 
           {/* Muassasa ma'lumotlari */}
