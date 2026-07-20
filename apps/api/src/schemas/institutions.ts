@@ -18,7 +18,7 @@ export const listInstitutionsQuerySchema = z.object({
   minRating:  z.coerce.number().min(1).max(5).optional(),
   monthlyMax: z.coerce.number().positive().optional(),
   lang:       z.enum(['uz', 'ru', 'en']).optional().default('uz'),
-  sortBy:     z.enum(['rating', 'price_asc', 'price_desc', 'newest', 'popular']).optional().default('rating'),
+  sortBy:     z.enum(['rating', 'price_asc', 'price_desc', 'newest', 'popular', 'value']).optional().default('rating'),
   page:       z.coerce.number().int().min(1).optional().default(1),
   limit:      z.coerce.number().int().min(1).max(50).optional().default(20),
 })

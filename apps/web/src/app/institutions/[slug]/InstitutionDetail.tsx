@@ -6,11 +6,12 @@ import {
   ChevronRight, MapPin, BadgeCheck, Sparkles, Lock, BookOpen, Trophy,
   Users2, GraduationCap, Palette, Laptop, Globe2, UserCheck, Dumbbell,
   PencilLine, Wallet, Info, BarChart3, MessageCircle, Phone, Send,
-  Instagram, Globe, Clock, ThumbsUp, Star,
+  Instagram, Globe, Clock, ThumbsUp, Star, Award,
 } from 'lucide-react'
 import StarRating, { RatingHint } from '@/components/shared/StarRating'
 import InstActions from '@/components/institutions/InstActions'
 import ClaimInstitution from '@/components/institutions/ClaimInstitution'
+import TrialBookingWidget from '@/components/institutions/TrialBookingWidget'
 import WriteReview from '@/components/institutions/WriteReview'
 import GuestLeadWidget from '@/components/shared/GuestLeadWidget'
 import { useLang, t } from '@/contexts/LangContext'
@@ -785,6 +786,13 @@ export default function InstitutionDetail({ inst }: { inst: Institution }) {
                                 <p className="mb-1.5 text-base font-semibold text-gray-800">{review.title}</p>
                               )}
                               <p className="text-base leading-relaxed text-gray-600">{review.body}</p>
+                              {review.outcomeText && review.isVerified && (
+                                <div className="mt-2.5 flex items-center gap-1.5 rounded-lg bg-amber-50 px-3 py-1.5 text-xs font-semibold text-amber-700">
+                                  <Award className="h-3.5 w-3.5 shrink-0" strokeWidth={2} />
+                                  {lang === 'ru' ? 'Подтверждённый результат: ' : 'Tasdiqlangan natija: '}
+                                  {review.outcomeText}
+                                </div>
+                              )}
                               {DIM_DEFS.some(({ key }) => (review[key] ?? 0) > 0) && (
                                 <div className="mt-3 flex flex-wrap gap-1.5">
                                   {DIM_DEFS.map(({ key, Icon, label }) => {
@@ -835,6 +843,9 @@ export default function InstitutionDetail({ inst }: { inst: Institution }) {
                 type: inst.type, avgRating: inst.avgRating, pricing: inst.pricing,
               }}
             />
+
+            {/* UTP#2 — bepul probnoy darsga bron (mehmon ham, auth bo'lgan ham ko'radi) */}
+            <TrialBookingWidget institutionId={inst.id} institutionName={displayName} />
 
             {/* Guest — Ro'yxatdan o'tish CTA (sidebar) */}
             {isGuest && <RegisterBanner lang={lang} next={instPath} />}

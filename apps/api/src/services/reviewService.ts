@@ -7,6 +7,7 @@ import type {
   ReplyReviewInput,
   DashboardReviewsQuery,
 } from '../schemas/reviews'
+import { notifyUser } from './notify'
 
 // ─────────────────────────────────────────────────────────────
 // Helpers
@@ -24,6 +25,7 @@ const reviewSelect = {
   title: true,
   body: true,
   isAnonymous: true,
+  outcomeText: true,
   isVerified: true,
   helpfulCount: true,
   replyCount: true,
@@ -182,6 +184,7 @@ export async function createReview(
       title: data.title ?? null,
       body: data.body,
       isAnonymous: data.isAnonymous ?? false,
+      outcomeText: data.outcomeText || null,
     },
     select: reviewSelect,
   })
@@ -392,15 +395,12 @@ export async function reportReview(
     data: { status: ReviewStatus.FLAGGED },
   })
 
-  // Notification (fire-and-forget)
-  void prisma.notification.create({
-    data: {
-      userId,
-      type: 'review_flagged',
-      title: 'Sharh shikoyat qilindi',
-      body: `Sabab: ${reason}${note ? `. Izoh: ${note}` : ''}`,
-      data: { reviewId, reason, note },
-    },
+  notifyUser(prisma, {
+    userId,
+    type: 'review_flagged',
+    title: 'Sharh shikoyat qilindi',
+    body: `Sabab: ${reason}${note ? `. Izoh: ${note}` : ''}`,
+    data: { reviewId, reason, note },
   })
 
   return { success: true }
@@ -447,7 +447,10 @@ export async function listPendingReviews(
 export async function approveReview(prisma: PrismaClient, reviewId: string) {
   const review = await prisma.review.findUnique({
     where: { id: reviewId },
-    select: { id: true, status: true, institutionId: true, userId: true },
+    select: {
+      id: true, status: true, institutionId: true, userId: true, overallRating: true,
+      institution: { select: { nameUz: true, nameRu: true, slug: true } },
+    },
   })
 
   if (!review) {
@@ -465,15 +468,29 @@ export async function approveReview(prisma: PrismaClient, reviewId: string) {
 
   await updateInstitutionRating(prisma, review.institutionId)
 
-  await prisma.notification.create({
-    data: {
-      userId: review.userId,
-      type: 'review_approved',
-      title: 'Sharhingiz tasdiqlandi',
-      body: "Sizning sharhingiz moderatsiyadan o'tdi va e'lon qilindi.",
-      data: { reviewId },
-    },
+  notifyUser(prisma, {
+    userId: review.userId,
+    type: 'review_approved',
+    title: 'Sharhingiz tasdiqlandi',
+    body: "Sizning sharhingiz moderatsiyadan o'tdi va e'lon qilindi.",
+    data: { reviewId },
   })
+
+  // Shu muassasani saqlagan boshqa foydalanuvchilarga — UTP#4: proaktiv push.
+  // Sharh yozgan foydalanuvchining o'ziga ikkinchi marta yubormaslik uchun chetlab o'tiladi.
+  const savers = await prisma.savedInstitution.findMany({
+    where: { institutionId: review.institutionId, userId: { not: review.userId } },
+    select: { userId: true },
+  })
+  for (const { userId } of savers) {
+    notifyUser(prisma, {
+      userId,
+      type: 'saved_institution_new_review',
+      title: 'Saqlangan muassasada yangi sharh',
+      body: `${review.institution.nameUz} — yangi ${review.overallRating}★ sharh qo'shildi.`,
+      data: { reviewId, institutionId: review.institutionId, slug: review.institution.slug },
+    })
+  }
 
   return { success: true }
 }
@@ -511,15 +528,54 @@ export async function rejectReview(
     await updateInstitutionRating(prisma, review.institutionId)
   }
 
-  await prisma.notification.create({
-    data: {
-      userId: review.userId,
-      type: 'review_rejected',
-      title: 'Sharhingiz rad etildi',
-      body: reason ?? "Sharhingiz qoidalarga muvofiq emas deb topildi.",
-      data: { reviewId, reason },
-    },
+  notifyUser(prisma, {
+    userId: review.userId,
+    type: 'review_rejected',
+    title: 'Sharhingiz rad etildi',
+    body: reason ?? "Sharhingiz qoidalarga muvofiq emas deb topildi.",
+    data: { reviewId, reason },
   })
+
+  return { success: true }
+}
+
+// ─────────────────────────────────────────────────────────────
+// ADMIN: VERIFY OUTCOME  — PATCH /admin/reviews/:id/verify-outcome
+// UTP#1: foydalanuvchi yozgan natijani ("IELTS 7.0 oldim") admin tekshirib
+// tasdiqlaydi — shundan keyingina "Tasdiqlangan natija" nishoni chiqadi
+// ─────────────────────────────────────────────────────────────
+
+export async function setReviewOutcomeVerified(
+  prisma: PrismaClient,
+  reviewId: string,
+  verified: boolean,
+) {
+  const review = await prisma.review.findUnique({
+    where: { id: reviewId },
+    select: { id: true, userId: true, outcomeText: true },
+  })
+
+  if (!review) {
+    throw { statusCode: 404, message: 'Sharh topilmadi' }
+  }
+  if (!review.outcomeText) {
+    throw { statusCode: 400, message: "Bu sharhda natija matni yo'q" }
+  }
+
+  await prisma.review.update({
+    where: { id: reviewId },
+    data: { isVerified: verified },
+  })
+
+  if (verified) {
+    notifyUser(prisma, {
+      userId: review.userId,
+      type: 'outcome_verified',
+      title: 'Natijangiz tasdiqlandi',
+      body: `"${review.outcomeText}" — bu natija endi "Tasdiqlangan natija" nishoni bilan ko'rsatiladi.`,
+      data: { reviewId },
+    })
+  }
 
   return { success: true }
 }

@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation'
 import { useState, useEffect, useRef } from 'react'
 import {
   Search, X, MapPin, Globe2, Users2, UserCheck, BadgeCheck, Star,
-  ArrowLeftRight, Check, PencilLine, School, Palette, Lock,
+  ArrowLeftRight, Check, PencilLine, School, Palette, Lock, Award,
 } from 'lucide-react'
 import { RatingHint } from '@/components/shared/StarRating'
 import { useCompare, useSaved } from '@/hooks/useCompare'
@@ -53,6 +53,7 @@ const TYPE_FILTERS = [
 
 const SORT_OPTIONS = [
   { value: 'rating',     uz: "Yuqori reyting", ru: 'Высокий рейтинг' },
+  { value: 'value',      uz: 'Narx-sifat',      ru: 'Цена-качество' },
   { value: 'newest',     uz: 'Yangi',           ru: 'Новые' },
   { value: 'price_asc',  uz: 'Arzon',           ru: 'Дешевле' },
   { value: 'price_desc', uz: 'Qimmat',          ru: 'Дороже' },
@@ -317,6 +318,7 @@ export default function SearchResults({ institutions, meta, params }: Props) {
                 isCompared={isSelected(inst.id)}
                 isSaved={isSaved(inst.id)}
                 ui={ui}
+                showValueBadge={params.sortBy === 'value' && (params.page ?? '1') === '1' && idx < 3}
               />
             ))}
           </div>
@@ -355,6 +357,7 @@ function InstitutionCardComp({
   isCompared,
   isSaved,
   ui,
+  showValueBadge,
 }: {
   institution: InstitutionCard
   lang: 'uz' | 'ru'
@@ -365,12 +368,19 @@ function InstitutionCardComp({
   isCompared: boolean
   isSaved: boolean
   ui: Record<string, { uz: string; ru: string }>
+  showValueBadge?: boolean
 }) {
   const typeInfo = TYPE_LABELS[i.type]
   const name = lang === 'ru' && i.nameRu ? i.nameRu : i.nameUz
 
   return (
-    <div className="group card flex flex-col">
+    <div className="group card relative flex flex-col">
+      {showValueBadge && (
+        <span className="absolute -top-2 left-4 z-10 flex items-center gap-1 rounded-full bg-amber-500 px-2.5 py-1 text-[11px] font-bold text-white shadow-sm">
+          <Award className="h-3 w-3 shrink-0" strokeWidth={2.5} />
+          {lang === 'ru' ? 'ТОП цена-качество' : 'TOP narx-sifat'}
+        </span>
+      )}
       <Link
         href={`/institutions/${i.slug}`}
         className="flex flex-1 flex-col p-6"

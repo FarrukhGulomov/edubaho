@@ -5,16 +5,18 @@ import { listInstitutionsQuerySchema, nearbyQuerySchema, compareQuerySchema } fr
 import type { InstitutionStatus } from '@prisma/client'
 import { normalizeQuery } from '../../utils/transliterate'
 import { expandSearchTerms } from '../../utils/subjectSynonyms'
+import { notifyUser } from '../../services/notify'
 
 /**
  * Institutions routes
  *
- * GET  🔓 /institutions                — Ro'yxat (filter, sort, paginate)
- * GET  🔓 /institutions/nearby         — Koordinat bo'yicha
- * GET  🔓 /institutions/compare        — 2-3 ta solishtirish
- * GET  🔓 /institutions/:slug          — To'liq profil
- * POST 🔑 /institutions/:id/save       — Saqlash/olib tashlash (toggle)
- * POST 🔓 /institutions/:id/view       — Ko'rishlar (analytics)
+ * GET  🔓 /institutions                     — Ro'yxat (filter, sort, paginate)
+ * GET  🔓 /institutions/nearby              — Koordinat bo'yicha
+ * GET  🔓 /institutions/compare             — 2-3 ta solishtirish
+ * GET  🔓 /institutions/:slug               — To'liq profil
+ * POST 🔑 /institutions/:id/save            — Saqlash/olib tashlash (toggle)
+ * POST 🔓 /institutions/:id/view            — Ko'rishlar (analytics)
+ * POST 🔓 /institutions/:id/trial-bookings  — Bepul probnoy darsga bron (UTP#2)
  */
 export default async function institutionRoutes(fastify: FastifyInstance) {
   const { prisma } = fastify
@@ -125,6 +127,44 @@ export default async function institutionRoutes(fastify: FastifyInstance) {
       ...(subject?.trim() && {
         details: { programs: { hasSome: [subject.trim()] } },
       }),
+    }
+
+    // UTP#5 — Narx-sifat indeksi: Prisma darajasida hisoblab bo'lmaydigan
+    // formula (reyting/narx) uchun kandidatlarni JS'da hisoblab, saralab,
+    // qo'lda sahifalaymiz. Real hajm (~40-50 muassasa) uchun bu yetarli.
+    if (sortBy === 'value') {
+      const candidates = await prisma.institution.findMany({
+        where: { ...where, pricing: { monthlyMin: { not: null } } },
+        select: cardSelect,
+        take: 500,
+      })
+
+      const rated = candidates.filter((c) => c.avgRating != null)
+      const globalAvg = rated.length > 0
+        ? rated.reduce((s, c) => s + (c.avgRating ?? 0), 0) / rated.length
+        : 4.0
+      const BAYES_PRIOR = 10
+
+      const withScore = candidates.map((c) => {
+        const n = c.reviewCount
+        const r = c.avgRating
+        // Bayesian silliqlangan reyting — kam sharhli 5.0 ko'p sharhli 4.6'dan
+        // yuqori chiqmasin (xuddi EduFit Fit Score'dagi "Sifat" komponenti kabi)
+        const adjustedRating = r != null ? (BAYES_PRIOR * globalAvg + r * n) / (BAYES_PRIOR + n) : globalAvg
+        const priceIn100k = (c.pricing?.monthlyMin ?? 1) / 100_000
+        const valueScore = adjustedRating / Math.max(priceIn100k, 0.1)
+        return { ...c, valueScore }
+      })
+
+      withScore.sort((a, b) => b.valueScore - a.valueScore)
+
+      const total = withScore.length
+      const paged = withScore.slice(skip, skip + limit)
+
+      return reply.send({
+        data: paged,
+        meta: { total, page, limit, totalPages: Math.ceil(total / limit) },
+      })
     }
 
     const orderBy = buildOrderBy(sortBy)
@@ -347,6 +387,7 @@ export default async function institutionRoutes(fastify: FastifyInstance) {
               title: true,
               body: true,
               isAnonymous: true,
+              outcomeText: true,
               isVerified: true,
               helpfulCount: true,
               createdAt: true,
@@ -569,6 +610,70 @@ export default async function institutionRoutes(fastify: FastifyInstance) {
       })
 
       return reply.send({ data: claims })
+    },
+  )
+
+  // ─────────────────────────────────────────────
+  // POST /institutions/:id/trial-bookings
+  // UTP#2: bepul probnoy darsga bron — mehmon ham, auth bo'lgan ham
+  // (login talab qilinmaydi, konversiya to'sig'i bo'lmasin uchun)
+  // ─────────────────────────────────────────────
+
+  const trialBookingSchema = z.object({
+    name:          z.string().min(2, 'Ism kamida 2 ta belgi').max(100),
+    phone:         z.string().min(9, "Noto'g'ri telefon raqam").max(20),
+    preferredTime: z.string().max(200).optional(),
+    note:          z.string().max(500).optional(),
+  })
+
+  fastify.post<{ Params: { id: string } }>(
+    '/institutions/:id/trial-bookings',
+    { config: { rateLimit: { max: 5, timeWindow: '1 hour' } } },
+    async (request, reply) => {
+      const { id: institutionId } = request.params
+      const body = trialBookingSchema.parse(request.body)
+
+      const institution = await prisma.institution.findUnique({
+        where: { id: institutionId },
+        select: { id: true, nameUz: true },
+      })
+      if (!institution) {
+        return reply.status(404).send({ error: 'Muassasa topilmadi' })
+      }
+
+      // Auth bo'lsa userId biriktiramiz, bo'lmasa mehmon sifatida qabul qilinadi
+      let userId: string | undefined
+      try {
+        await request.jwtVerify()
+        userId = (request.user as { id: string }).id
+      } catch {
+        // Mehmon — davom etamiz
+      }
+
+      const booking = await prisma.trialBooking.create({
+        data: { institutionId, userId, ...body },
+        select: { id: true, status: true, createdAt: true },
+      })
+
+      // Muassasa tasdiqlangan egasiga bildirishnoma (B2B qiymat — UTP#4 infratuzilmasi qayta ishlatiladi)
+      const owner = await prisma.institutionClaim.findFirst({
+        where: { institutionId, status: 'APPROVED' },
+        select: { userId: true },
+      })
+      if (owner) {
+        notifyUser(prisma, {
+          userId: owner.userId,
+          type: 'trial_booking_received',
+          title: 'Yangi probnoy dars so\'rovi',
+          body: `${body.name} (${body.phone}) — ${institution.nameUz}'ga bepul probnoy darsga yozildi.`,
+          data: { bookingId: booking.id, institutionId },
+        })
+      }
+
+      return reply.status(201).send({
+        data: booking,
+        message: "So'rovingiz qabul qilindi! Muassasa siz bilan tez orada bog'lanadi.",
+      })
     },
   )
 }
