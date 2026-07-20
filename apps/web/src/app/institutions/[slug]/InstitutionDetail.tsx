@@ -328,7 +328,7 @@ export default function InstitutionDetail({ inst }: { inst: Institution }) {
       <div className="border-b border-gray-200 bg-white">
         <div className="mx-auto max-w-5xl px-4">
           {/* Breadcrumb */}
-          <nav className="flex items-center gap-1 py-4 text-sm text-gray-500">
+          <nav className="flex items-center gap-1.5 py-4 text-sm text-gray-500">
             <Link href="/" className="shrink-0 whitespace-nowrap rounded-md px-1 py-0.5 hover:text-gray-900 transition-colors">{t(lang, ui.breadHome)}</Link>
             <ChevronRight className="h-3.5 w-3.5 shrink-0 text-gray-300" />
             <Link href="/search" className="shrink-0 whitespace-nowrap rounded-md px-1 py-0.5 hover:text-gray-900 transition-colors">{t(lang, ui.breadSearch)}</Link>
@@ -385,7 +385,7 @@ export default function InstitutionDetail({ inst }: { inst: Institution }) {
                         if (isGuest) document.getElementById('auth-gate-reviews')?.scrollIntoView({ behavior: 'smooth' })
                         else document.getElementById('reviews')?.scrollIntoView({ behavior: 'smooth' })
                       }}
-                      className="transition-colors hover:text-gray-600"
+                      className="-m-1.5 rounded-md p-1.5 transition-colors hover:bg-gray-100 hover:text-gray-600"
                     >
                       <RatingHint rating={inst.avgRating} count={inst.reviewCount} lang={lang} />
                     </button>
