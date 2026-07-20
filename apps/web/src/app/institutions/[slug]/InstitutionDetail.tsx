@@ -209,7 +209,7 @@ function RegisterBanner({ lang, next }: { lang: 'uz' | 'ru'; next?: string }) {
           {lang === 'ru' ? 'Зарегистрироваться бесплатно →' : "Bepul ro'yxatdan o'tish →"}
         </Link>
         <p className="mt-3 text-center text-xs text-gray-400">
-          {lang === 'ru' ? 'Только номер телефона · SMS-код · Бесплатно' : 'Faqat telefon raqam · SMS-kod · Bepul'}
+          {lang === 'ru' ? 'Telegram или Google · Бесплатно' : 'Telegram yoki Google · Bepul'}
         </p>
       </div>
     </div>

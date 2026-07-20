@@ -32,8 +32,8 @@ export default function ClaimInstitution({ institutionId, isVerified }: Props) {
   const ui = {
     title:    { uz: 'Bu muassasa siznikimi?', ru: 'Это ваше заведение?' },
     desc:     {
-      uz: "Profilni boshqaring: ma'lumotlarni yangilang, sharhlarga javob bering, statistikani ko'ring. Korporativ email shart emas — telefon raqamingiz yetarli.",
-      ru: 'Управляйте профилем: обновляйте данные, отвечайте на отзывы, смотрите статистику. Корпоративная почта не нужна — достаточно номера телефона.',
+      uz: "Profilni boshqaring: ma'lumotlarni yangilang, sharhlarga javob bering, statistikani ko'ring. Korporativ email shart emas — Google yoki Telegram hisobingiz yetarli.",
+      ru: 'Управляйте профилем: обновляйте данные, отвечайте на отзывы, смотрите статистику. Корпоративная почта не нужна — достаточно аккаунта Google или Telegram.',
     },
     cta:      { uz: 'Egalik so\'rovi yuborish', ru: 'Отправить запрос' },
     position: { uz: 'Lavozimingiz (masalan, Direktor)', ru: 'Ваша должность (напр., Директор)' },
@@ -42,7 +42,7 @@ export default function ClaimInstitution({ institutionId, isVerified }: Props) {
     send:     { uz: 'Yuborish', ru: 'Отправить' },
     sending:  { uz: 'Yuborilmoqda...', ru: 'Отправляется...' },
     cancel:   { uz: 'Bekor qilish', ru: 'Отмена' },
-    loginFirst: { uz: 'Avval tizimga kiring — telefon, Telegram yoki Gmail orqali', ru: 'Сначала войдите — через телефон, Telegram или Gmail' },
+    loginFirst: { uz: 'Avval tizimga kiring — Telegram yoki Google orqali', ru: 'Сначала войдите — через Telegram или Google' },
   }
 
   // Egasi tasdiqlangan muassasada karta ko'rsatilmaydi
