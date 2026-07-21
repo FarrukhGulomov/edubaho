@@ -37,7 +37,7 @@ export const nearbyQuerySchema = z.object({
 
 export const compareQuerySchema = z.object({
   ids: z.string().transform((v) => v.split(',')).pipe(
-    z.array(z.string().min(1)).min(2, 'Kamida 2 ta muassasa kerak').max(3, 'Ko\'pi bilan 3 ta muassasa'),
+    z.array(z.string().min(1)).min(2, 'Kamida 2 ta muassasa kerak').max(4, 'Ko\'pi bilan 4 ta muassasa'),
   ),
 })
 

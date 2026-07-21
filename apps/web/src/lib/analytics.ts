@@ -25,6 +25,8 @@
  *  filter_applied     — filter qo'lladi
  *  price_viewed       — narx bo'limini ko'rdi
  *  compare_opened     — solishtirish paneli ochildi
+ *  compare_share      — solishtirish havolasi nusxalandi yoki chop etildi
+ *  compare_save       — solishtirish profilga saqlandi
  */
 
 const API = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:3001/api/v1'
@@ -42,6 +44,7 @@ export type TrackEvent =
   | 'auth_otp_error' | 'auth_completed' | 'auth_abandoned'
   | 'contact_click' | 'review_started' | 'review_submitted'
   | 'filter_applied' | 'price_viewed' | 'compare_opened'
+  | 'compare_share' | 'compare_save'
   | 'match_started' | 'match_completed' | 'match_result_click'
 
 export interface TrackPayload {

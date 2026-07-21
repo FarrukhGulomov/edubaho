@@ -226,4 +226,10 @@
 
   /* Telegram Mini App: status-bar/notch orqasiga yashiringan kontentni himoya qilish */
   .pt-safe { padding-top: env(safe-area-inset-top, 0px); }
+
+  /* Solishtirishni "PDF sifatida saqlash" — brauzerning standart chop
+     etish dialogidan foydalanamiz, interfeys elementlari yashiriladi */
+  @media print {
+    .no-print { display: none !important; }
+  }
 }

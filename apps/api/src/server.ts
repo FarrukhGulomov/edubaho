@@ -25,6 +25,7 @@ import adminTrialBookingRoutes from './routes/admin/trial-bookings'
 import superAdminRoutes from './routes/super-admin/index'
 import superAdminAnalytics from './routes/super-admin/analytics'
 import trackRoutes from './routes/track'
+import compareRoutes from './routes/compare'
 import dashboardRoutes from './routes/dashboard'
 import dashboardReviewRoutes from './routes/dashboard/reviews'
 
@@ -106,6 +107,7 @@ async function buildApp() {
       await api.register(searchRoutes)
       await api.register(matchRoutes)
       await api.register(geoRoutes)
+      await api.register(compareRoutes)
 
       // Admin routes
       await api.register(adminReviewRoutes)

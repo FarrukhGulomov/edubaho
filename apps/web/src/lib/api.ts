@@ -93,6 +93,29 @@ export const institutionsApi = {
     }),
 }
 
+// ─── Saqlangan solishtirishlar ──────────────────────────────────
+
+export interface SavedComparison {
+  id: string
+  institutionIds: string[]
+  label: string | null
+  createdAt: string
+  institutions: Array<{ id: string; nameUz: string; nameRu?: string | null; slug: string }>
+}
+
+export const compareApi = {
+  save: (institutionIds: string[], token: string, label?: string) =>
+    apiFetch<{ data: unknown; message: string }>('/compare/saved', {
+      method: 'POST', body: JSON.stringify({ institutionIds, label }), token,
+    }),
+
+  saved: (token: string) =>
+    apiFetch<{ data: SavedComparison[] }>('/compare/saved', { token }),
+
+  removeSaved: (id: string, token: string) =>
+    apiFetch<{ message: string }>(`/compare/saved/${id}`, { method: 'DELETE', token }),
+}
+
 // ─── Geo ──────────────────────────────────────────────────────
 
 export const geoApi = {

@@ -7,12 +7,14 @@ import {
   Pencil, Phone, CheckCircle2, AlertCircle, Star, ArrowLeftRight, PencilLine,
   ShieldCheck, ClipboardList, School, Plus, Search, Laptop, GraduationCap,
   Send, LogOut, MessageCircle, Calendar, Globe2, Palette, Dumbbell, Trophy,
+  Bookmark, Trash2,
 } from 'lucide-react'
 import StarRating, { RatingHint } from '@/components/shared/StarRating'
 import Header from '@/components/shared/Header'
 import { useAuth } from '@/hooks/useAuth'
 import { useSaved, useCompare } from '@/hooks/useCompare'
 import { useLang, t } from '@/contexts/LangContext'
+import { compareApi, type SavedComparison } from '@/lib/api'
 
 interface MyReview {
   id: string
@@ -69,6 +71,8 @@ export default function ProfilePage() {
   const [saveErr, setSaveErr]     = useState('')
   const [reviews, setReviews]     = useState<MyReview[]>([])
   const [revLoading, setRevLoading] = useState(false)
+  const [savedComparisons, setSavedComparisons] = useState<SavedComparison[]>([])
+  const [comparisonsLoading, setComparisonsLoading] = useState(false)
 
   const uz = lang === 'uz'
   const API = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:3001/api/v1'
@@ -103,6 +107,29 @@ export default function ProfilePage() {
       .catch(() => {})
       .finally(() => setRevLoading(false))
   }, [user, API])
+
+  useEffect(() => {
+    if (!user) return
+    const token = localStorage.getItem('accessToken')
+    if (!token) return
+    setComparisonsLoading(true)
+    compareApi.saved(token)
+      .then(d => setSavedComparisons(d.data ?? []))
+      .catch(() => {})
+      .finally(() => setComparisonsLoading(false))
+  }, [user])
+
+  async function handleDeleteComparison(id: string) {
+    const token = localStorage.getItem('accessToken')
+    if (!token) return
+    setSavedComparisons(prev => prev.filter(c => c.id !== id))
+    try {
+      await compareApi.removeSaved(id, token)
+    } catch {
+      // Xato bo'lsa ro'yxatni qayta yuklaymiz
+      compareApi.saved(token).then(d => setSavedComparisons(d.data ?? [])).catch(() => {})
+    }
+  }
 
   async function handleSaveName(e: React.FormEvent) {
     e.preventDefault()
@@ -415,6 +442,56 @@ export default function ProfilePage() {
             </div>
           )}
         </div>
+
+        {/* ══ Saqlangan solishtirishlar ═══════════════════════════ */}
+        {(comparisonsLoading || savedComparisons.length > 0) && (
+          <div className="overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-sm">
+            <div className="flex items-center justify-between border-b border-gray-100 px-6 py-4">
+              <h2 className="flex items-center gap-2 text-xl font-bold text-gray-900">
+                <Bookmark className="h-5 w-5 shrink-0 text-primary-500" strokeWidth={1.75} /> {uz ? 'Saqlangan solishtirishlar' : 'Сохранённые сравнения'}
+              </h2>
+              {savedComparisons.length > 0 && (
+                <span className="shrink-0 whitespace-nowrap rounded-full bg-primary-50 px-3 py-1.5 text-sm font-semibold text-primary-700">
+                  {savedComparisons.length} ta
+                </span>
+              )}
+            </div>
+
+            {comparisonsLoading ? (
+              <div className="py-12 text-center">
+                <div className="mx-auto h-10 w-10 animate-spin rounded-full border-4 border-primary-200 border-t-primary-600" />
+              </div>
+            ) : (
+              <div className="divide-y divide-gray-100">
+                {savedComparisons.map(comparison => (
+                  <div key={comparison.id} className="flex items-center gap-4 px-6 py-4 transition-colors hover:bg-gray-50">
+                    <span className="icon-chip h-14 w-14 shrink-0">
+                      <ArrowLeftRight className="h-6 w-6" strokeWidth={1.5} />
+                    </span>
+                    <div className="min-w-0 flex-1">
+                      <Link
+                        href={`/compare?ids=${comparison.institutionIds.join(',')}`}
+                        className="block line-clamp-1 text-lg font-semibold text-gray-900 transition-colors hover:text-primary-600"
+                      >
+                        {comparison.institutions.map(i => (uz || !i.nameRu ? i.nameUz : i.nameRu)).join(' • ')}
+                      </Link>
+                      <p className="mt-1 text-sm text-gray-400">
+                        {new Date(comparison.createdAt).toLocaleDateString('uz-UZ')}
+                      </p>
+                    </div>
+                    <button
+                      onClick={() => handleDeleteComparison(comparison.id)}
+                      title={uz ? "O'chirish" : 'Удалить'}
+                      className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl text-gray-400 transition-colors hover:bg-red-50 hover:text-red-500"
+                    >
+                      <Trash2 className="h-5 w-5" strokeWidth={1.75} />
+                    </button>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        )}
 
         {/* ══ Mening sharhlarim ═══════════════════════════════════ */}
         <div className="overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-sm">
