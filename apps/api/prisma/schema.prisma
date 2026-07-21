@@ -142,6 +142,7 @@ model User {
   adminPermission   AdminPermission?
   leadEvents        LeadEvent[]
   trialBookings     TrialBooking[]
+  savedComparisons  SavedComparison[]
 
   @@index([phone])
   @@index([telegramId])
@@ -576,4 +577,19 @@ model TrialBooking {
   @@index([institutionId, status])
   @@index([userId])
   @@index([createdAt])
+}
+
+// Solishtirish sahifasini saqlab qo'yish — muassasa ma'lumotlari
+// snapshot qilinmaydi, faqat id'lar ro'yxati saqlanadi, ochilganda
+// /institutions/compare orqali eng so'nggi ma'lumot bilan qayta yuklanadi
+model SavedComparison {
+  id             String   @id @default(cuid())
+  userId         String
+  institutionIds String[]
+  label          String?
+  createdAt      DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
 }

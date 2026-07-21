@@ -5,6 +5,7 @@ import './globals.css'
 import CompareBar from '@/components/compare/CompareBar'
 import TelegramProvider from '@/components/shared/TelegramProvider'
 import { LangProvider } from '@/contexts/LangContext'
+import { CompareProvider } from '@/hooks/useCompare'
 
 const inter = Inter({
   subsets: ['latin', 'cyrillic'],
@@ -63,8 +64,10 @@ export default function RootLayout({
         <Script src="https://telegram.org/js/telegram-web-app.js" strategy="beforeInteractive" />
         <LangProvider>
           <TelegramProvider>
-            {children}
-            <CompareBar />
+            <CompareProvider>
+              {children}
+              <div className="no-print"><CompareBar /></div>
+            </CompareProvider>
           </TelegramProvider>
         </LangProvider>
       </body>

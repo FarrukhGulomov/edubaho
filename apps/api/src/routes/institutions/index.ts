@@ -12,7 +12,7 @@ import { notifyUser } from '../../services/notify'
  *
  * GET  🔓 /institutions                     — Ro'yxat (filter, sort, paginate)
  * GET  🔓 /institutions/nearby              — Koordinat bo'yicha
- * GET  🔓 /institutions/compare             — 2-3 ta solishtirish
+ * GET  🔓 /institutions/compare             — 2-4 ta solishtirish
  * GET  🔓 /institutions/:slug               — To'liq profil
  * POST 🔑 /institutions/:id/save            — Saqlash/olib tashlash (toggle)
  * POST 🔓 /institutions/:id/view            — Ko'rishlar (analytics)
@@ -251,7 +251,7 @@ export default async function institutionRoutes(fastify: FastifyInstance) {
   })
 
   // ─────────────────────────────────────────────
-  // GET /institutions/compare?ids=id1,id2,id3
+  // GET /institutions/compare?ids=id1,id2,id3,id4
   // ─────────────────────────────────────────────
 
   fastify.get('/institutions/compare', async (request, reply) => {
@@ -273,7 +273,9 @@ export default async function institutionRoutes(fastify: FastifyInstance) {
         viewCount: true,
         isVerified: true,
         address: true,
+        phone: true,
         telegram: true,
+        createdAt: true,
         city: { select: { nameUz: true, nameRu: true } },
         details: {
           select: {
@@ -293,15 +295,22 @@ export default async function institutionRoutes(fastify: FastifyInstance) {
           select: { monthlyMin: true, monthlyMax: true, currency: true, paymentMethods: true },
         },
         features: { select: { key: true, value: true } },
+        accreditations: { select: { id: true, name: true, issuedBy: true } },
         media: {
           where: { type: 'IMAGE' },
           select: { url: true, thumbnailUrl: true },
           take: 1,
         },
+        _count: { select: { branches: true } },
       },
     })
 
-    return reply.send({ data: institutions })
+    // Requestdagi ids tartibini saqlaymiz — foydalanuvchi qo'shgan
+    // ketma-ketlik (masalan CompareBar'da) taqqoslash sahifasida ham bir xil bo'lsin
+    const order = new Map(ids.map((id, i) => [id, i]))
+    const sorted = institutions.sort((a, b) => (order.get(a.id) ?? 0) - (order.get(b.id) ?? 0))
+
+    return reply.send({ data: sorted })
   })
 
   // ─────────────────────────────────────────────
