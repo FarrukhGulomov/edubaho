@@ -191,6 +191,9 @@ model Institution {
   lat         Float?
   lng         Float?
   isVerified  Boolean           @default(false)
+  // UTP#2: probnoy darsga yozilish tugmasi faqat shu xizmatni taklif
+  // qiladigan muassasalarda ko'rinadi — admin har bir muassasa uchun alohida yoqadi
+  trialLessonEnabled Boolean    @default(false)
   viewCount   Int               @default(0)
   saveCount   Int               @default(0)
   avgRating   Float?

@@ -58,6 +58,7 @@ export interface Institution {
   instagram?: string
   address?: string
   isVerified: boolean
+  trialLessonEnabled?: boolean
   avgRating?: number
   reviewCount: number
   city?: { id?: string; nameUz: string; nameRu?: string | null } | null
