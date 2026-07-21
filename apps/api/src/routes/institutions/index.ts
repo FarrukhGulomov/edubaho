@@ -333,6 +333,7 @@ export default async function institutionRoutes(fastify: FastifyInstance) {
           lat: true,
           lng: true,
           isVerified: true,
+          trialLessonEnabled: true,
           avgRating: true,
           reviewCount: true,
           viewCount: true,
@@ -635,10 +636,13 @@ export default async function institutionRoutes(fastify: FastifyInstance) {
 
       const institution = await prisma.institution.findUnique({
         where: { id: institutionId },
-        select: { id: true, nameUz: true },
+        select: { id: true, nameUz: true, trialLessonEnabled: true },
       })
       if (!institution) {
         return reply.status(404).send({ error: 'Muassasa topilmadi' })
+      }
+      if (!institution.trialLessonEnabled) {
+        return reply.status(403).send({ error: 'Bu muassasada probnoy dars xizmati mavjud emas' })
       }
 
       // Auth bo'lsa userId biriktiramiz, bo'lmasa mehmon sifatida qabul qilinadi

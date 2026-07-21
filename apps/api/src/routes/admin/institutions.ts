@@ -84,6 +84,8 @@ export default async function adminInstitutionRoutes(fastify: FastifyInstance) {
     type:        z.nativeEnum(InstitutionType),
     status:      z.nativeEnum(InstitutionStatus).optional().default(InstitutionStatus.PENDING),
     isVerified:  z.boolean().optional().default(false),
+    // UTP#2: faqat probnoy dars xizmatini taklif qiladigan muassasalarda yoqiladi
+    trialLessonEnabled: z.boolean().optional().default(false),
     phone:       z.string().optional(),
     phone2:      z.string().optional(),
     email:       z.string().email().optional().or(z.literal('')),

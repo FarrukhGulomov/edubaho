@@ -40,6 +40,7 @@ export default function EditInstitutionPage() {
           type:          inst.type          ?? 'IT_SCHOOL',
           status:        inst.status        ?? 'PENDING',
           isVerified:    inst.isVerified    ?? false,
+          trialLessonEnabled: inst.trialLessonEnabled ?? false,
           phone:         inst.phone         ?? '',
           phone2:        inst.phone2        ?? '',
           email:         inst.email         ?? '',

@@ -844,8 +844,11 @@ export default function InstitutionDetail({ inst }: { inst: Institution }) {
               }}
             />
 
-            {/* UTP#2 — bepul probnoy darsga bron (mehmon ham, auth bo'lgan ham ko'radi) */}
-            <TrialBookingWidget institutionId={inst.id} institutionName={displayName} />
+            {/* UTP#2 — bepul probnoy darsga bron (mehmon ham, auth bo'lgan ham ko'radi).
+                Faqat admin shu muassasada probnoy dars xizmatini yoqqan bo'lsa chiqadi. */}
+            {inst.trialLessonEnabled && (
+              <TrialBookingWidget institutionId={inst.id} institutionName={displayName} />
+            )}
 
             {/* Guest — Ro'yxatdan o'tish CTA (sidebar) */}
             {isGuest && <RegisterBanner lang={lang} next={instPath} />}

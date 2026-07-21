@@ -4,7 +4,7 @@ import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import {
   ClipboardList, Phone, Info, Wallet, AlertCircle, BookOpen, Target,
-  Clock, Trophy, ChevronLeft, ChevronRight, CheckCircle2,
+  Clock, Trophy, ChevronLeft, ChevronRight, CheckCircle2, CalendarCheck,
 } from 'lucide-react'
 
 const API = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:3001/api/v1'
@@ -42,6 +42,7 @@ export interface InstitutionFormData {
   type: string
   status: string
   isVerified: boolean
+  trialLessonEnabled: boolean
   phone: string
   phone2: string
   email: string
@@ -66,7 +67,7 @@ export interface InstitutionFormData {
 
 const EMPTY: InstitutionFormData = {
   nameUz: '', nameRu: '', slug: '', type: 'IT_SCHOOL', status: 'PENDING',
-  isVerified: false, phone: '', phone2: '', email: '', website: '',
+  isVerified: false, trialLessonEnabled: false, phone: '', phone2: '', email: '', website: '',
   telegram: '', instagram: '', address: '',
   descriptionUz: '', descriptionRu: '',
   foundedYear: '', studentCount: '', teacherCount: '',
@@ -303,6 +304,23 @@ export default function InstitutionForm({ initialData, institutionId, mode }: Pr
                 <CheckCircle2 className="h-4 w-4 shrink-0 text-emerald-500" strokeWidth={1.75} /> Tasdiqlangan muassasa
               </p>
               <p className="text-xs text-gray-400">Qidiruv natijalarida "Tasdiqlangan" badge ko'rsatiladi</p>
+            </div>
+          </label>
+
+          <label className="flex cursor-pointer items-center gap-3 rounded-xl border border-gray-200 px-4 py-3 hover:bg-gray-50">
+            <div
+              onClick={() => set('trialLessonEnabled', !form.trialLessonEnabled)}
+              className={`relative h-6 w-11 shrink-0 rounded-full transition-colors ${form.trialLessonEnabled ? 'bg-emerald-500' : 'bg-gray-200'}`}
+            >
+              <div className={`absolute top-0.5 h-5 w-5 rounded-full bg-white shadow transition-transform ${form.trialLessonEnabled ? 'translate-x-5' : 'translate-x-0.5'}`} />
+            </div>
+            <div>
+              <p className="flex items-center gap-1.5 text-sm font-semibold text-gray-700">
+                <CalendarCheck className="h-4 w-4 shrink-0 text-emerald-500" strokeWidth={1.75} /> Probnoy darsga yozilish mavjud
+              </p>
+              <p className="text-xs text-gray-400">
+                Faqat probnoy dars xizmatini taklif qiladigan muassasalarda yoqing — muassasa sahifasida bron tugmasi shunga qarab chiqadi
+              </p>
             </div>
           </label>
         </div>
