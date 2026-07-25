@@ -20,6 +20,9 @@ interface CompareInstitution {
   address?: string
   phone?: string
   telegram?: string
+  website?: string
+  lat?: number
+  lng?: number
   details?: {
     foundedYear?: number
     studentCount?: number

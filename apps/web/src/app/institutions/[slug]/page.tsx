@@ -57,6 +57,8 @@ export interface Institution {
   telegram?: string
   instagram?: string
   address?: string
+  lat?: number
+  lng?: number
   isVerified: boolean
   trialLessonEnabled?: boolean
   avgRating?: number

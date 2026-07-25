@@ -275,6 +275,9 @@ export default async function institutionRoutes(fastify: FastifyInstance) {
         address: true,
         phone: true,
         telegram: true,
+        website: true,
+        lat: true,
+        lng: true,
         createdAt: true,
         city: { select: { nameUz: true, nameRu: true } },
         details: {
