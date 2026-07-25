@@ -6,7 +6,7 @@ import { useRouter } from 'next/navigation'
 import {
   Target, PencilLine, School, Palette, Sunrise, Sun, Sunset, Calendar,
   Clock, Wallet, Globe, MapPin, BadgeCheck, Lightbulb, AlertCircle,
-  Search, RotateCcw, Medal, Lock, ArrowRight,
+  Search, RotateCcw, Medal, Lock, ArrowRight, Info,
 } from 'lucide-react'
 import Header from '@/components/shared/Header'
 import { RatingHint } from '@/components/shared/StarRating'
@@ -82,6 +82,7 @@ export default function MatchPage() {
   const [shift, setShift]       = useState<string | null>(null)
   const [age, setAge]           = useState('')
   const [results, setResults]   = useState<MatchItem[]>([])
+  const [resultsMeta, setResultsMeta] = useState<{ locationRelaxed?: boolean; subjectRelaxed?: boolean; usedRegionFallback?: boolean }>({})
   const [loading, setLoading]   = useState(false)
   const [error, setError]       = useState('')
   const [expanded, setExpanded] = useState<string | null>(null)
@@ -143,6 +144,7 @@ export default function MatchPage() {
         age:    age ? Number(age) : undefined,
       })
       setResults(res.data)
+      setResultsMeta(res.meta)
       haptic('success')
       track('match_completed', {
         category: 'engagement',
@@ -178,6 +180,10 @@ export default function MatchPage() {
     why:       { uz: 'Nega bu tavsiya?', ru: 'Почему эта рекомендация?' },
     hide:      { uz: 'Yopish', ru: 'Скрыть' },
     empty:     { uz: 'Afsuski, mos muassasa topilmadi. Boshqa tur yoki shahar bilan urinib ko\'ring.', ru: 'К сожалению, ничего не найдено. Попробуйте другой тип или город.' },
+    relaxedCityGoal: { uz: "Siz tanlagan shahar va yo'nalishga aynan mos muassasa topilmadi — yaqin natijalarni ko'rsatmoqdamiz", ru: 'Точного совпадения по городу и направлению не найдено — показываем близкие варианты' },
+    relaxedRegion:   { uz: "Siz tanlagan shaharda topilmadi — shu viloyatdagi natijalarni ko'rsatmoqdamiz", ru: 'В выбранном городе не найдено — показываем результаты по всей области' },
+    relaxedGoal:     { uz: "Aynan shu yo'nalish bo'yicha topilmadi — yaqin dasturlarni ko'rsatmoqdamiz", ru: 'Точно по этому направлению не найдено — показываем близкие программы' },
+    relaxedCity:     { uz: 'Siz tanlagan shaharda topilmadi — boshqa shaharlardagi natijalarni ko\'rsatmoqdamiz', ru: 'В выбранном городе не найдено — показываем результаты из других городов' },
     restart:   { uz: 'Qaytadan boshlash', ru: 'Начать заново' },
     anyCity:   { uz: 'Farqi yo\'q / Online', ru: 'Не важно / Онлайн' },
     reviews:   { uz: 'sharh', ru: 'отзывов' },
@@ -435,7 +441,7 @@ export default function MatchPage() {
                 <div className="flex items-center justify-between">
                   <h2 className="text-lg font-bold text-gray-900">{t(lang, ui.results)}</h2>
                   <button
-                    onClick={() => { setStep('type'); setResults([]) }}
+                    onClick={() => { setStep('type'); setResults([]); setResultsMeta({}) }}
                     className="flex items-center gap-1.5 text-sm font-semibold text-primary-600 hover:underline"
                   >
                     <RotateCcw className="h-3.5 w-3.5 shrink-0" strokeWidth={2} /> {t(lang, ui.restart)}
@@ -458,6 +464,23 @@ export default function MatchPage() {
                       <Search className="h-10 w-10 text-gray-300" strokeWidth={1.5} />
                     </div>
                     <p className="text-gray-500">{t(lang, ui.empty)}</p>
+                  </div>
+                )}
+
+                {/* Natijalar yumshatilgan bo'lsa (aynan shahar/yo'nalishga mos
+                    topilmasa) — buni shaffof aytamiz, jim aralashtirmaymiz */}
+                {results.length > 0 && (resultsMeta.locationRelaxed || resultsMeta.subjectRelaxed) && (
+                  <div className="flex items-start gap-2.5 rounded-xl bg-amber-50 px-4 py-3 text-sm text-amber-800">
+                    <Info className="mt-0.5 h-4 w-4 shrink-0" strokeWidth={2} />
+                    <p>
+                      {t(lang, resultsMeta.locationRelaxed && resultsMeta.subjectRelaxed
+                        ? ui.relaxedCityGoal
+                        : resultsMeta.locationRelaxed && resultsMeta.usedRegionFallback
+                          ? ui.relaxedRegion
+                          : resultsMeta.locationRelaxed
+                            ? ui.relaxedCity
+                            : ui.relaxedGoal)}
+                    </p>
                   </div>
                 )}
 

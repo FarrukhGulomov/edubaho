@@ -147,18 +147,14 @@ export function computeMatchScore(
 
 // ─── 1. Maqsad mosligi ────────────────────────────────────────
 
-function scoreGoal(inst: MatchCandidate, prefs: MatchPreferences): ScoreComponent {
-  const base = { key: 'goal', labelUz: 'Maqsadga moslik', labelRu: 'Соответствие цели', weight: WEIGHTS.goal }
-
-  if (!prefs.goal?.trim()) {
-    // Maqsad kiritilmagan — tur mosligi allaqachon filtrlangan, neytral yuqori
-    return {
-      ...base, score: 70, hasData: false,
-      reasonUz: "Yo'nalish bo'yicha mos", reasonRu: 'Подходит по направлению',
-    }
-  }
-
-  const goalTokens = tokenize(prefs.goal)
+/**
+ * Foydalanuvchi maqsadi (fan/yo'nalish) muassasa nomi, tavsifi, dasturlari
+ * yoki mutaxassisliklarida qay darajada uchrashini hisoblaydi.
+ * Qattiq filtrlash (ratio > 0) va ballash (scoreGoal) ikkalasida ham
+ * qayta ishlatiladi — bitta manba, ikki joyda mos kelmay qolish xavfi yo'q.
+ */
+export function computeGoalMatch(inst: MatchCandidate, goal: string): { ratio: number; hits: number; total: number } {
+  const goalTokens = tokenize(goal)
   const haystack = [
     inst.nameUz,
     inst.nameRu ?? '',
@@ -172,7 +168,25 @@ function scoreGoal(inst: MatchCandidate, prefs: MatchPreferences): ScoreComponen
   const hits = goalTokens.filter((tok) =>
     expandSearchTerms(tok).some((variant) => haystack.includes(variant.toLowerCase())),
   )
-  const ratio = goalTokens.length > 0 ? hits.length / goalTokens.length : 0
+  return {
+    ratio: goalTokens.length > 0 ? hits.length / goalTokens.length : 0,
+    hits: hits.length,
+    total: goalTokens.length,
+  }
+}
+
+function scoreGoal(inst: MatchCandidate, prefs: MatchPreferences): ScoreComponent {
+  const base = { key: 'goal', labelUz: 'Maqsadga moslik', labelRu: 'Соответствие цели', weight: WEIGHTS.goal }
+
+  if (!prefs.goal?.trim()) {
+    // Maqsad kiritilmagan — tur mosligi allaqachon filtrlangan, neytral yuqori
+    return {
+      ...base, score: 70, hasData: false,
+      reasonUz: "Yo'nalish bo'yicha mos", reasonRu: 'Подходит по направлению',
+    }
+  }
+
+  const { ratio } = computeGoalMatch(inst, prefs.goal)
 
   if (ratio >= 0.99) {
     return {

@@ -172,7 +172,15 @@ export const matchApi = {
     shift?: string
     age?: number
   }) =>
-    apiFetch<{ data: MatchItem[]; meta: { total: number } }>('/match', {
+    apiFetch<{
+      data: MatchItem[]
+      meta: {
+        total: number
+        locationRelaxed?: boolean
+        subjectRelaxed?: boolean
+        usedRegionFallback?: boolean
+      }
+    }>('/match', {
       method: 'POST',
       body: JSON.stringify(prefs),
     }),
