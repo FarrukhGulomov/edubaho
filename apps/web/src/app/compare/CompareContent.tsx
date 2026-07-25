@@ -12,7 +12,7 @@ import {
 import { useLang, t } from '@/contexts/LangContext'
 import { useCompare, useSaved, MAX_COMPARE } from '@/hooks/useCompare'
 import { useAuth } from '@/hooks/useAuth'
-import { track } from '@/lib/analytics'
+import { track, trackContactClick } from '@/lib/analytics'
 import { compareApi } from '@/lib/api'
 import {
   computeHighlights, computeRecommendation, BADGE_LABELS,
@@ -33,6 +33,9 @@ interface CompareInstitution {
   address?: string
   phone?: string
   telegram?: string
+  website?: string
+  lat?: number
+  lng?: number
   details?: {
     foundedYear?: number
     studentCount?: number
@@ -94,6 +97,19 @@ interface SectionRow {
   label: { uz: string; ru: string }
   value: (inst: CompareInstitution) => string | null
   badge?: HighlightBadge
+  /** Qiymat bosiladigan havola bo'lsa (tel/telegram/vebsayt/xarita) */
+  href?: (inst: CompareInstitution) => string | null
+  external?: boolean
+  trackType?: 'phone' | 'telegram' | 'website'
+}
+
+/** Manzil uchun Google Maps havolasi — koordinata bo'lsa aniq nuqta, bo'lmasa matn qidiruv */
+function mapsUrl(inst: CompareInstitution): string | null {
+  if (!inst.address) return null
+  if (inst.lat != null && inst.lng != null) {
+    return `https://www.google.com/maps/search/?api=1&query=${inst.lat},${inst.lng}`
+  }
+  return `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(inst.address)}`
 }
 
 interface Section {
@@ -288,9 +304,24 @@ export default function CompareContent({ institutions }: { institutions: Compare
     {
       key: 'contact', Icon: Phone, label: { uz: 'Aloqa va manzil', ru: 'Контакты и адрес' }, show: () => true,
       rows: [
-        { key: 'phone', label: { uz: 'Telefon', ru: 'Телефон' }, value: (i) => i.phone ?? null },
-        { key: 'telegram', label: { uz: 'Telegram', ru: 'Telegram' }, value: (i) => i.telegram ? `@${i.telegram}` : null },
-        { key: 'address', label: { uz: 'Manzil', ru: 'Адрес' }, value: (i) => i.address ?? null },
+        {
+          key: 'phone', label: { uz: 'Telefon', ru: 'Телефон' }, value: (i) => i.phone ?? null,
+          href: (i) => i.phone ? `tel:${i.phone}` : null, trackType: 'phone',
+        },
+        {
+          key: 'telegram', label: { uz: 'Telegram', ru: 'Telegram' }, value: (i) => i.telegram ? `@${i.telegram}` : null,
+          href: (i) => i.telegram ? `https://t.me/${i.telegram.replace('@', '')}` : null, external: true, trackType: 'telegram',
+        },
+        {
+          key: 'website', label: { uz: 'Veb-sayt', ru: 'Сайт' },
+          value: (i) => i.website ? i.website.replace(/^https?:\/\//, '') : null,
+          href: (i) => i.website ? (i.website.startsWith('http') ? i.website : `https://${i.website}`) : null,
+          external: true, trackType: 'website',
+        },
+        {
+          key: 'address', label: { uz: 'Manzil', ru: 'Адрес' }, value: (i) => i.address ?? null,
+          href: (i) => mapsUrl(i), external: true,
+        },
       ],
     },
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -522,15 +553,32 @@ export default function CompareContent({ institutions }: { institutions: Compare
                           {sorted.map((inst, idx) => {
                             const val = values[idx]
                             const isHi = row.badge ? (highlights.get(inst.id)?.includes(row.badge) ?? false) : false
-                            return (
-                              <div
-                                key={inst.id}
-                                className={`rounded-xl px-2 py-2 text-center text-[13px] leading-snug ${
-                                  isHi ? 'bg-amber-50 font-bold text-amber-800 ring-1 ring-amber-300' : 'text-gray-700'
-                                }`}
-                              >
+                            const href = val && row.href ? row.href(inst) : null
+                            const cellClass = `min-w-0 break-words rounded-xl px-2 py-2 text-center text-[13px] leading-snug ${
+                              isHi ? 'bg-amber-50 font-bold text-amber-800 ring-1 ring-amber-300' : 'text-gray-700'
+                            }`
+                            const content = (
+                              <>
                                 {isHi && <Crown className="mx-auto mb-0.5 h-3 w-3 text-amber-500" strokeWidth={2.5} />}
                                 {val ?? <span className="text-gray-300">—</span>}
+                              </>
+                            )
+                            if (href) {
+                              return (
+                                <a
+                                  key={inst.id}
+                                  href={href}
+                                  {...(row.external ? { target: '_blank', rel: 'noopener noreferrer' } : {})}
+                                  onClick={() => row.trackType && trackContactClick(row.trackType, inst.id)}
+                                  className={`${cellClass} block text-primary-700 underline decoration-primary-200 underline-offset-2 transition-colors hover:bg-primary-50 hover:decoration-primary-400`}
+                                >
+                                  {content}
+                                </a>
+                              )
+                            }
+                            return (
+                              <div key={inst.id} className={cellClass}>
+                                {content}
                               </div>
                             )
                           })}

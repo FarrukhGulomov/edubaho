@@ -26,6 +26,15 @@ function formatNum(n: number) {
 }
 function formatUzs(n: number) { return `${formatNum(n)} so'm` }
 
+/** Manzil uchun Google Maps havolasi \u2014 koordinata bo'lsa aniq nuqta, bo'lmasa matn qidiruv */
+function mapsUrl(inst: { address?: string; lat?: number; lng?: number }): string | null {
+  if (!inst.address) return null
+  if (inst.lat != null && inst.lng != null) {
+    return `https://www.google.com/maps/search/?api=1&query=${inst.lat},${inst.lng}`
+  }
+  return `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(inst.address)}`
+}
+
 const TYPE_LABELS: Record<string, { uz: string; ru: string }> = {
   KINDERGARTEN:    { uz: "Bog'cha",         ru: 'Детский сад' },
   SCHOOL:          { uz: 'Maktab',          ru: 'Школа' },
@@ -575,13 +584,19 @@ export default function InstitutionDetail({ inst }: { inst: Institution }) {
 
                 <div className="space-y-3">
                   {inst.address && (
-                    <div className="flex items-start gap-3 rounded-xl bg-gray-50 px-4 py-3.5">
+                    <a
+                      href={mapsUrl(inst) ?? undefined}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      onClick={() => trackContactClick('address', inst.id)}
+                      className="flex items-start gap-3 rounded-xl bg-gray-50 px-4 py-3.5 transition-colors hover:bg-primary-50"
+                    >
                       <MapPin className="mt-0.5 h-4 w-4 shrink-0 text-gray-400" strokeWidth={1.75} />
                       <div>
                         <p className="text-xs text-gray-400 font-semibold mb-1">{t(lang, ui.address)}</p>
-                        <p className="text-base font-medium text-gray-800 leading-snug">{inst.address}</p>
+                        <p className="text-base font-medium text-primary-700 underline decoration-primary-200 underline-offset-2 leading-snug">{inst.address}</p>
                       </div>
-                    </div>
+                    </a>
                   )}
 
                   {/* Format ko'rsatkichlari */}
@@ -975,13 +990,19 @@ export default function InstitutionDetail({ inst }: { inst: Institution }) {
                     </a>
                   )}
                   {inst.address && (
-                    <div className="flex items-start gap-3 rounded-xl bg-gray-50 px-4 py-3.5">
+                    <a
+                      href={mapsUrl(inst) ?? undefined}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      onClick={() => trackContactClick('address', inst.id)}
+                      className="flex items-start gap-3 rounded-xl bg-gray-50 px-4 py-3.5 transition-colors hover:bg-primary-50"
+                    >
                       <MapPin className="mt-0.5 h-5 w-5 shrink-0 text-gray-400" strokeWidth={1.75} />
                       <div>
                         <p className="text-xs text-gray-400 font-semibold mb-1">{t(lang, ui.address)}</p>
-                        <p className="text-sm text-gray-700 leading-snug">{inst.address}</p>
+                        <p className="text-sm text-primary-700 underline decoration-primary-200 underline-offset-2 leading-snug">{inst.address}</p>
                       </div>
-                    </div>
+                    </a>
                   )}
                 </div>
               </div>
