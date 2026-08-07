@@ -31,6 +31,12 @@ const STATUSES = [
   { value: 'INACTIVE',  label: 'Nofaol' },
 ]
 
+const DELIVERY_MODES = [
+  { value: 'OFFLINE', label: 'Offlayn' },
+  { value: 'ONLINE',  label: 'Onlayn' },
+  { value: 'HYBRID',  label: 'Gibrid (ikkalasi ham)' },
+]
+
 const PAYMENT_METHODS = ['Payme', 'Click', 'Uzcard', 'Humo', 'Naqd']
 const LANGUAGES = ['uz', 'ru', 'en', 'de', 'fr', 'ko', 'zh']
 const SHIFTS = ['Ertalabki (08:00-13:00)', 'Tushki (13:00-18:00)', 'Kechki (18:00-22:00)', 'Hafta oxiri', 'Online']
@@ -43,6 +49,7 @@ export interface InstitutionFormData {
   status: string
   isVerified: boolean
   trialLessonEnabled: boolean
+  deliveryMode: string
   phone: string
   phone2: string
   email: string
@@ -67,7 +74,7 @@ export interface InstitutionFormData {
 
 const EMPTY: InstitutionFormData = {
   nameUz: '', nameRu: '', slug: '', type: 'IT_SCHOOL', status: 'PENDING',
-  isVerified: false, trialLessonEnabled: false, phone: '', phone2: '', email: '', website: '',
+  isVerified: false, trialLessonEnabled: false, deliveryMode: 'OFFLINE', phone: '', phone2: '', email: '', website: '',
   telegram: '', instagram: '', address: '',
   descriptionUz: '', descriptionRu: '',
   foundedYear: '', studentCount: '', teacherCount: '',
@@ -290,6 +297,22 @@ export default function InstitutionForm({ initialData, institutionId, mode }: Pr
                 ))}
               </select>
             </div>
+          </div>
+
+          <div>
+            <label className="mb-1 block text-sm font-semibold text-gray-700">O'qish formati</label>
+            <select
+              value={form.deliveryMode}
+              onChange={(e) => set('deliveryMode', e.target.value)}
+              className={INPUT_CLS}
+            >
+              {DELIVERY_MODES.map((d) => (
+                <option key={d.value} value={d.value}>{d.label}</option>
+              ))}
+            </select>
+            <p className="mt-1 text-xs text-gray-400">
+              "Menga eng mos ta'lim markazini top" bo'limida moslik hisoblashda ishlatiladi — Onlayn/Gibrid tanlansa, shahar mos kelmasa ham tavsiya qilinadi
+            </p>
           </div>
 
           <label className="flex cursor-pointer items-center gap-3 rounded-xl border border-gray-200 px-4 py-3 hover:bg-gray-50">

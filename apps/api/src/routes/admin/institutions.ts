@@ -1,6 +1,6 @@
 import type { FastifyInstance } from 'fastify'
 import { z } from 'zod'
-import { InstitutionType, InstitutionStatus } from '@prisma/client'
+import { InstitutionType, InstitutionStatus, DeliveryMode } from '@prisma/client'
 import { indexInstitution, removeFromIndex } from '../../services/searchService'
 import { notifyUser } from '../../services/notify'
 
@@ -86,6 +86,8 @@ export default async function adminInstitutionRoutes(fastify: FastifyInstance) {
     isVerified:  z.boolean().optional().default(false),
     // UTP#2: faqat probnoy dars xizmatini taklif qiladigan muassasalarda yoqiladi
     trialLessonEnabled: z.boolean().optional().default(false),
+    // EduFit moslik algoritmi: onlayn/gibrid markazlar shahar mos kelmasa ham tavsiya qilinadi
+    deliveryMode: z.nativeEnum(DeliveryMode).optional().default(DeliveryMode.OFFLINE),
     phone:       z.string().optional(),
     phone2:      z.string().optional(),
     email:       z.string().email().optional().or(z.literal('')),

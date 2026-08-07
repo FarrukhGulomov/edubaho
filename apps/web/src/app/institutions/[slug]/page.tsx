@@ -61,6 +61,7 @@ export interface Institution {
   lng?: number
   isVerified: boolean
   trialLessonEnabled?: boolean
+  deliveryMode?: string
   avgRating?: number
   reviewCount: number
   city?: { id?: string; nameUz: string; nameRu?: string | null } | null

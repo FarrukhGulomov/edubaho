@@ -153,6 +153,34 @@ const SUBJECT_GROUPS: string[][] = [
 
   // ── Raqamli savodxonlik ───────────────────────────────────────────────────
   ['raqamli', 'digital', 'raqamli savodxonlik', 'digital literacy'],
+
+  // ── OTMga kirish / Universitetga tayyorlov ────────────────────────────────
+  [
+    'otmga kirish', 'universitetga tayyorlov', 'universitetga kirish',
+    'подготовка к поступлению', 'поступление в университет',
+    'university admission', 'college admission', 'abituriyent', 'абитуриент',
+  ],
+
+  // ── Marketing ─────────────────────────────────────────────────────────────
+  ['marketing', 'маркетинг', 'smm', 'digital marketing', 'raqamli marketing'],
+
+  // ── Kasbiy sertifikatlash ──────────────────────────────────────────────────
+  [
+    'sertifikat', 'kasbiy sertifikat', 'сертификат', 'сертификация',
+    'professional certification', 'certification', 'sertifikatlash',
+  ],
+
+  // ── Kasb almashtirish ─────────────────────────────────────────────────────
+  [
+    'kasb almashtirish', 'kasb o\'zgartirish', 'смена профессии',
+    'career change', 'qayta kasb egallash', 'переквалификация',
+  ],
+
+  // ── Shaxsiy rivojlanish ───────────────────────────────────────────────────
+  [
+    'shaxsiy rivojlanish', 'личностный рост', 'personal development',
+    'self development', 'soft skills', 'софт скиллс', 'shaxsiy o\'sish',
+  ],
 ]
 
 // ─── Lookup map: lowercase term → all terms in its group ─────────────────────

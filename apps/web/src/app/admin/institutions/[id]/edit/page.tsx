@@ -41,6 +41,7 @@ export default function EditInstitutionPage() {
           status:        inst.status        ?? 'PENDING',
           isVerified:    inst.isVerified    ?? false,
           trialLessonEnabled: inst.trialLessonEnabled ?? false,
+          deliveryMode:  inst.deliveryMode  ?? 'OFFLINE',
           phone:         inst.phone         ?? '',
           phone2:        inst.phone2        ?? '',
           email:         inst.email         ?? '',

@@ -346,6 +346,7 @@ export default async function institutionRoutes(fastify: FastifyInstance) {
           lng: true,
           isVerified: true,
           trialLessonEnabled: true,
+          deliveryMode: true,
           avgRating: true,
           reviewCount: true,
           viewCount: true,
