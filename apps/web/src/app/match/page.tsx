@@ -107,7 +107,12 @@ export default function MatchPage() {
   const [language, setLanguage] = useState<string | null>(null)
   const [preferPremium, setPreferPremium] = useState(false)
   const [results, setResults]   = useState<MatchItem[]>([])
-  const [resultsMeta, setResultsMeta] = useState<{ locationRelaxed?: boolean; subjectRelaxed?: boolean; usedRegionFallback?: boolean }>({})
+  const [resultsMeta, setResultsMeta] = useState<{
+    locationRelaxed?: boolean
+    usedRegionFallback?: boolean
+    noSpecializationMatch?: boolean
+    belowThreshold?: boolean
+  }>({})
   const [loading, setLoading]   = useState(false)
   const [error, setError]       = useState('')
   const [expanded, setExpanded] = useState<string | null>(null)
@@ -223,10 +228,18 @@ export default function MatchPage() {
     why:       { uz: 'Nega bu tavsiya?', ru: 'Почему эта рекомендация?' },
     hide:      { uz: 'Yopish', ru: 'Скрыть' },
     empty:     { uz: 'Afsuski, mos muassasa topilmadi. Boshqa tur yoki shahar bilan urinib ko\'ring.', ru: 'К сожалению, ничего не найдено. Попробуйте другой тип или город.' },
-    relaxedCityGoal: { uz: "Siz tanlagan shahar va yo'nalishga aynan mos muassasa topilmadi — yaqin natijalarni ko'rsatmoqdamiz", ru: 'Точного совпадения по городу и направлению не найдено — показываем близкие варианты' },
+    // Yo'nalish (maqsad) endi QATTIQ filtr — hech qachon yumshatilmaydi,
+    // shuning uchun bu bannerlar faqat JOYLASHUV yumshatilganini bildiradi
     relaxedRegion:   { uz: "Siz tanlagan shaharda topilmadi — shu viloyatdagi natijalarni ko'rsatmoqdamiz", ru: 'В выбранном городе не найдено — показываем результаты по всей области' },
-    relaxedGoal:     { uz: "Aynan shu yo'nalish bo'yicha topilmadi — yaqin dasturlarni ko'rsatmoqdamiz", ru: 'Точно по этому направлению не найдено — показываем близкие программы' },
     relaxedCity:     { uz: 'Siz tanlagan shaharda topilmadi — boshqa shaharlardagi natijalarni ko\'rsatmoqdamiz', ru: 'В выбранном городе не найдено — показываем результаты из других городов' },
+    emptySpecialization: {
+      uz: "Joriy afzalliklaringiz asosida yuqori darajada mos ta'lim markazlari topilmadi — siz tanlagan yo'nalishni o'qitadigan muassasa hozircha yo'q. Boshqa yo'nalish yoki shahar bilan urinib ko'ring.",
+      ru: 'Не найдено высоко подходящих центров по текущим предпочтениям — учреждений с выбранным направлением пока нет. Попробуйте другое направление или город.',
+    },
+    emptyBelowThreshold: {
+      uz: "Joriy afzalliklaringiz asosida yuqori darajada mos ta'lim markazlari topilmadi. Filtrlarni o'zgartirib ko'ring.",
+      ru: 'Не найдено высоко подходящих центров по текущим предпочтениям. Попробуйте изменить фильтры.',
+    },
     restart:   { uz: 'Qaytadan boshlash', ru: 'Начать заново' },
     anyCity:   { uz: 'Farqi yo\'q / Online', ru: 'Не важно / Онлайн' },
     reviews:   { uz: 'sharh', ru: 'отзывов' },
@@ -572,23 +585,24 @@ export default function MatchPage() {
                     <div className="mb-3 flex justify-center">
                       <Search className="h-10 w-10 text-gray-300" strokeWidth={1.5} />
                     </div>
-                    <p className="text-gray-500">{t(lang, ui.empty)}</p>
+                    <p className="text-gray-500">
+                      {t(lang, resultsMeta.noSpecializationMatch
+                        ? ui.emptySpecialization
+                        : resultsMeta.belowThreshold
+                          ? ui.emptyBelowThreshold
+                          : ui.empty)}
+                    </p>
                   </div>
                 )}
 
-                {/* Natijalar yumshatilgan bo'lsa (aynan shahar/yo'nalishga mos
-                    topilmasa) — buni shaffof aytamiz, jim aralashtirmaymiz */}
-                {results.length > 0 && (resultsMeta.locationRelaxed || resultsMeta.subjectRelaxed) && (
+                {/* Joylashuv yumshatilgan bo'lsa (aynan shaharga mos topilmasa)
+                    — buni shaffof aytamiz, jim aralashtirmaymiz. Yo'nalish
+                    (maqsad) esa QATTIQ filtr — hech qachon yumshatilmaydi */}
+                {results.length > 0 && resultsMeta.locationRelaxed && (
                   <div className="flex items-start gap-2.5 rounded-xl bg-amber-50 px-4 py-3 text-sm text-amber-800">
                     <Info className="mt-0.5 h-4 w-4 shrink-0" strokeWidth={2} />
                     <p>
-                      {t(lang, resultsMeta.locationRelaxed && resultsMeta.subjectRelaxed
-                        ? ui.relaxedCityGoal
-                        : resultsMeta.locationRelaxed && resultsMeta.usedRegionFallback
-                          ? ui.relaxedRegion
-                          : resultsMeta.locationRelaxed
-                            ? ui.relaxedCity
-                            : ui.relaxedGoal)}
+                      {t(lang, resultsMeta.usedRegionFallback ? ui.relaxedRegion : ui.relaxedCity)}
                     </p>
                   </div>
                 )}

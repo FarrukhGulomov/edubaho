@@ -1,5 +1,6 @@
 import { PrismaClient, InstitutionType, InstitutionStatus, Role } from '@prisma/client'
 import { generateSlug } from './utils/slug'
+import { inferCategories } from './utils/educationCategories'
 
 const prisma = new PrismaClient()
 
@@ -1104,6 +1105,14 @@ async function main() {
             specializations: inst.specializations ?? [],
             shifts:          inst.shifts          ?? [],
             achievements:    inst.achievements,
+            // EduFit Ta'lim profili: mavjud programs/specializations matnidan
+            // avtomatik aniqlanadi (admin keyin qo'lda tahrirlashi mumkin)
+            categories: inferCategories({
+              type: inst.type,
+              programs: inst.programs,
+              specializations: inst.specializations,
+              descriptionUz: inst.descUz,
+            }),
             foundedYear:     inst.founded,
             studentCount:    inst.students,
             teacherCount:    inst.teachers,

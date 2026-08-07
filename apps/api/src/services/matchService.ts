@@ -14,6 +14,7 @@
  */
 
 import { expandSearchTerms } from '../utils/subjectSynonyms'
+import { classifyGoalCategory, getCategoryDef } from '../utils/educationCategories'
 
 // ─── Kirish ma'lumotlari ──────────────────────────────────────
 
@@ -61,6 +62,8 @@ export interface MatchCandidate {
     programs: string[]
     shifts: string[]
     specializations: string[]
+    /** Ta'lim profili: muassasa qattiq belgilagan yo'nalishlar (EducationCategoryCode[]) */
+    categories: string[]
   } | null
   pricing: {
     monthlyMin: number | null
@@ -100,23 +103,37 @@ export interface MatchResult {
 //
 // v1'dan v2'ga: format (onlayn/offlayn/gibrid) va til komponentlari
 // qo'shildi (til maydoni v1'da mavjud edi, lekin ballashda ishlatilmasdi).
-// Mavjud komponentlarning hech biri olib tashlanmadi — faqat yangi
-// ikkitasiga joy ochish uchun og'irliklar proporsional kamaytirildi,
-// nisbiy tartib (goal/quality eng yuqori, trust/age eng past) saqlandi.
+//
+// v2'dan v3'ga: real xato — "OTMga kirish" + "Buxoro" so'ralganda faqat
+// IT kurslarini o'qitadigan markaz 67% moslik bilan chiqib ketdi, chunki
+// maqsad (goal) og'irligi joylashuv/sifat bilan deyarli teng edi. Endi
+// TA'LIM YO'NALISHI (goal) QATTIQ FILTR + ustuvor omil: og'irligi
+// joylashuv/sifat/byudjetdan sezilarli yuqori qilib ko'tarildi.
+// Boshqa komponentlarning hech biri olib tashlanmadi — faqat
+// proporsional pasaytirildi.
 const WEIGHTS = {
-  goal:     0.20,
-  quality:  0.20,
-  budget:   0.13,
-  location: 0.12,
-  schedule: 0.09,
-  format:   0.08,
-  language: 0.07,
-  age:      0.06,
-  trust:    0.05,
+  goal:     0.38,
+  quality:  0.14,
+  budget:   0.10,
+  location: 0.09,
+  schedule: 0.08,
+  format:   0.07,
+  language: 0.06,
+  age:      0.04,
+  trust:    0.04,
 } as const
 
 // Bayesian silliqlash: kam sharhli 5.0 reyting ko'p sharhli 4.5 dan yuqori chiqmasin
 const BAYES_PRIOR_COUNT = 10
+
+/**
+ * Minimal tavsiya balli (0-100). Shundan past ball olgan muassasalar
+ * "moslik" sifatida umuman ko'rsatilmaydi — 45%, 52% kabi zaif
+ * "to'ldiruvchi" natijalar ro'yxatni to'ldirish uchun chiqarilmaydi.
+ * Kelajakda muassasa turi/segment bo'yicha sozlanishi mumkin (shu sabab
+ * alohida konstanta sifatida eksport qilingan).
+ */
+export const DEFAULT_MIN_MATCH_SCORE = 75
 
 /**
  * Bitta muassasa uchun moslik ballini hisoblash.
@@ -161,38 +178,92 @@ export function computeMatchScore(
   }
 }
 
-// ─── 1. Maqsad mosligi ────────────────────────────────────────
+// ─── 1. Maqsad mosligi (QATTIQ FILTR + ustuvor ballash) ───────
+
+export interface GoalEvaluation {
+  /** false bo'lsa — muassasa qattiq filtrda chetlab o'tiladi (tavsiya ro'yxatiga kirmaydi) */
+  matched: boolean
+  matchType: 'none' | 'category' | 'course'
+  /** matchType === 'category' bo'lsa — aniqlangan toifa kodi */
+  category?: string
+  /** matchType === 'course' bo'lsa — dastur/mutaxassislik matnidagi mos kelish darajasi (0-1) */
+  ratio: number
+}
 
 /**
- * Foydalanuvchi maqsadi (fan/yo'nalish) muassasa nomi, tavsifi, dasturlari
- * yoki mutaxassisliklarida qay darajada uchrashini hisoblaydi.
- * Qattiq filtrlash (ratio > 0) va ballash (scoreGoal) ikkalasida ham
- * qayta ishlatiladi — bitta manba, ikki joyda mos kelmay qolish xavfi yo'q.
+ * Muassasaning haqiqatda o'qitadigan dasturlariga (STRUKTURALANGAN
+ * maydonlar — programs/specializations) qarab maqsadni tekshiradi.
+ *
+ * Ataylab faqat strukturalangan maydonlar ishlatiladi — erkin matnli
+ * tavsif (descriptionUz) yoki nomga (nameUz) qo'shilmaydi, chunki aynan
+ * shu orqali soxta mosliklar yuzaga kelgan edi (masalan tavsifda
+ * marketing maqsadida tilga olingan umumiy so'zlar noto'g'ri hit bergan).
  */
-export function computeGoalMatch(inst: MatchCandidate, goal: string): { ratio: number; hits: number; total: number } {
+function computeCourseMatch(inst: MatchCandidate, goal: string): { ratio: number } {
   const goalTokens = tokenize(goal)
   const haystack = [
-    inst.nameUz,
-    inst.nameRu ?? '',
-    inst.details?.descriptionUz ?? '',
     ...(inst.details?.programs ?? []),
     ...(inst.details?.specializations ?? []),
   ].join(' ').toLowerCase()
 
+  if (goalTokens.length === 0) return { ratio: 0 }
+
   // Har bir token sinonimlari bilan kengaytiriladi:
   // "химия" → ["kimyo", "chemistry", ...] — qaysi tilda yozilishidan qat'i nazar topiladi
   const hits = goalTokens.filter((tok) =>
-    expandSearchTerms(tok).some((variant) => haystack.includes(variant.toLowerCase())),
+    expandSearchTerms(tok).some((variant) => haystackHasTerm(haystack, variant)),
   )
-  return {
-    ratio: goalTokens.length > 0 ? hits.length / goalTokens.length : 0,
-    hits: hits.length,
-    total: goalTokens.length,
+  return { ratio: hits.length / goalTokens.length }
+}
+
+/**
+ * Qisqa (≤4 belgili) atamalar so'z chegarasi bilan qidiriladi — aks holda
+ * "act" (SAT/ACT sinonimi) "React" so'zi ichida noto'g'ri topilib qolardi
+ * (aynan shu turdagi xato "OTMga kirish" bagida ham uchragan edi).
+ */
+function haystackHasTerm(haystack: string, term: string): boolean {
+  const t = term.toLowerCase()
+  if (t.length <= 4) {
+    return new RegExp(`\\b${t.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}\\b`, 'i').test(haystack)
   }
+  return haystack.includes(t)
+}
+
+/**
+ * Maqsad mosligini QATTIQ tekshiradi — filtrlash (match.ts) va ballash
+ * (scoreGoal) ikkalasida ham shu funksiya ishlatiladi (bitta manba).
+ *
+ * Tartib:
+ * 1) Avval aniq dastur nomi bo'yicha qidiramiz (masalan "Java") —
+ *    strukturalangan programs/specializations maydonida topilsa, bu
+ *    eng ishonchli signal.
+ * 2) Agar dastur darajasida hech narsa topilmasa — maqsad matni ma'lum
+ *    ta'lim toifasiga (masalan "OTMga kirish", "IELTS") mos kelsa,
+ *    muassasada aynan shu toifa Ta'lim profilida belgilanganmi tekshiramiz.
+ * 3) Ikkalasi ham topilmasa — mos kelmaydi (qattiq chetlab o'tiladi,
+ *    faqat yaqin joyda joylashgani yoki reytingi yaxshi bo'lgani uchun
+ *    ko'rsatilmaydi).
+ */
+export function evaluateGoal(inst: MatchCandidate, goal: string): GoalEvaluation {
+  const trimmed = goal.trim()
+  if (!trimmed) return { matched: true, matchType: 'none', ratio: 0 }
+
+  const { ratio } = computeCourseMatch(inst, trimmed)
+  if (ratio > 0) {
+    return { matched: true, matchType: 'course', ratio }
+  }
+
+  const category = classifyGoalCategory(trimmed)
+  if (category) {
+    const categories = inst.details?.categories ?? []
+    return { matched: categories.includes(category), matchType: 'category', category, ratio: 0 }
+  }
+
+  return { matched: false, matchType: 'none', ratio: 0 }
 }
 
 function scoreGoal(inst: MatchCandidate, prefs: MatchPreferences): ScoreComponent {
-  const base = { key: 'goal', labelUz: 'Maqsadga moslik', labelRu: 'Соответствие цели', weight: WEIGHTS.goal }
+  const base = { key: 'goal', labelUz: 'Ta\'lim yo\'nalishi mosligi', labelRu: 'Соответствие направлению обучения', weight: WEIGHTS.goal }
 
   if (!prefs.goal?.trim()) {
     // Maqsad kiritilmagan — tur mosligi allaqachon filtrlangan, neytral yuqori
@@ -202,26 +273,40 @@ function scoreGoal(inst: MatchCandidate, prefs: MatchPreferences): ScoreComponen
     }
   }
 
-  const { ratio } = computeGoalMatch(inst, prefs.goal)
+  const ev = evaluateGoal(inst, prefs.goal)
 
-  if (ratio >= 0.99) {
+  // Nazariy jihatdan bu yerga yetib kelmasligi kerak — match.ts allaqachon
+  // mos kelmagan nomzodlarni qattiq filtrlab tashlaydi. Xavfsizlik uchun
+  // (scoreGoal boshqa joyda alohida chaqirilib qolsa) past ball qaytaramiz.
+  if (!ev.matched) {
+    return {
+      ...base, score: 0, hasData: true,
+      reasonUz: `"${prefs.goal}" yo'nalishi topilmadi`,
+      reasonRu: `Направление "${prefs.goal}" не найдено`,
+    }
+  }
+
+  if (ev.matchType === 'category' && ev.category) {
+    const def = getCategoryDef(ev.category)
+    return {
+      ...base, score: 90, hasData: true,
+      reasonUz: def?.reasonUz ?? "Yo'nalish mos keladi",
+      reasonRu: def?.reasonRu ?? 'Направление подходит',
+    }
+  }
+
+  if (ev.ratio >= 0.99) {
     return {
       ...base, score: 100, hasData: true,
-      reasonUz: `"${prefs.goal}" yo'nalishi mavjud`,
-      reasonRu: `Есть направление "${prefs.goal}"`,
+      reasonUz: `"${prefs.goal}" yo'nalishi aniq mavjud`,
+      reasonRu: `Есть точное направление "${prefs.goal}"`,
     }
   }
-  if (ratio > 0) {
-    return {
-      ...base, score: 65, hasData: true,
-      reasonUz: `"${prefs.goal}" ga yaqin dasturlar bor`,
-      reasonRu: `Есть близкие к "${prefs.goal}" программы`,
-    }
-  }
+  // Qisman mos (masalan bir nechta so'zdan faqat biri topildi)
   return {
-    ...base, score: 25, hasData: true,
-    reasonUz: `"${prefs.goal}" dasturi topilmadi`,
-    reasonRu: `Программа "${prefs.goal}" не найдена`,
+    ...base, score: 60 + Math.round(ev.ratio * 30), hasData: true,
+    reasonUz: `"${prefs.goal}" ga yaqin dasturlar bor`,
+    reasonRu: `Есть близкие к "${prefs.goal}" программы`,
   }
 }
 

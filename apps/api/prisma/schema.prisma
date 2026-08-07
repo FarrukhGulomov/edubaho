@@ -277,6 +277,12 @@ model InstitutionDetail {
   shifts          String[]
   specializations String[]
   achievements    String?
+  // EduFit: Ta'lim profili — muassasa aynan qaysi yo'nalishlarni
+  // o'qitishini qattiq belgilaydi (masalan "OTMga kirish", "IELTS").
+  // Moslik algoritmida bu qattiq filtr sifatida ishlatiladi — mos
+  // kelmasa muassasa umuman tavsiya ro'yxatiga kirmaydi (bo'sh matnli
+  // tavsifga asoslangan noaniq moslikdan farqli o'laroq)
+  categories      String[] @default([])
   updatedAt       DateTime @updatedAt
 
   institution Institution @relation(fields: [institutionId], references: [id], onDelete: Cascade)

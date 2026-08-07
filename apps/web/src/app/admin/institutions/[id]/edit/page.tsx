@@ -59,6 +59,7 @@ export default function EditInstitutionPage() {
           specializations: inst.details?.specializations?.join(', ') ?? '',
           shifts:          inst.details?.shifts            ?? [],
           achievements:    inst.details?.achievements      ?? '',
+          categories:      inst.details?.categories        ?? [],
           monthlyMin:    inst.pricing?.monthlyMin    ? String(inst.pricing.monthlyMin) : '',
           monthlyMax:    inst.pricing?.monthlyMax    ? String(inst.pricing.monthlyMax) : '',
           paymentMethods: inst.pricing?.paymentMethods ?? [],

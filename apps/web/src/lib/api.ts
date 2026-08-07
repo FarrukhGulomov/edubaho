@@ -182,8 +182,10 @@ export const matchApi = {
       meta: {
         total: number
         locationRelaxed?: boolean
-        subjectRelaxed?: boolean
         usedRegionFallback?: boolean
+        noSpecializationMatch?: boolean
+        belowThreshold?: boolean
+        minScore?: number
       }
     }>('/match', {
       method: 'POST',

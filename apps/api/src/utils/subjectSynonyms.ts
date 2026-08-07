@@ -115,8 +115,25 @@ const SUBJECT_GROUPS: string[][] = [
   // ── Tabiatshunoslik ───────────────────────────────────────────────────────
   ['tabiatshunoslik', 'естествознание', 'natural science', 'tabiat'],
 
-  // ── IELTS / Xalqaro imtihonlar ────────────────────────────────────────────
-  ['ielts', 'toefl', 'cefr', 'sat', 'act', 'gre', 'gmat', 'duolingo'],
+  // ── IELTS ─────────────────────────────────────────────────────────────────
+  // MUHIM: IELTS/SAT/TOEFL/CEFR ATAYLAB alohida guruhlarga ajratilgan —
+  // ilgari bittalashtirilgan edi, natijada "SAT" qidiruvi IELTS o'qitadigan
+  // (lekin SAT'ni umuman o'qitmaydigan) markazlarni ham qattiq filtrdan
+  // xato o'tkazib yuborardi (chunki sinonim kengaytirish orqali "sat" so'zi
+  // "ielts" so'ziga ham mos deb hisoblanardi). Endi har biri mustaqil.
+  ['ielts'],
+
+  // ── SAT / ACT ────────────────────────────────────────────────────────────
+  ['sat', 'act'],
+
+  // ── TOEFL / CEFR ─────────────────────────────────────────────────────────
+  ['toefl', 'cefr'],
+
+  // ── GRE / GMAT ───────────────────────────────────────────────────────────
+  ['gre', 'gmat'],
+
+  // ── Duolingo English Test ───────────────────────────────────────────────
+  ['duolingo'],
 
   // ── Maktabgacha ta'lim ────────────────────────────────────────────────────
   ['maktabgacha', 'дошкольное', 'preschool', 'kindergarten', "bog'cha", "bog'cha tayyorlov"],
