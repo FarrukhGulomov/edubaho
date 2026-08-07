@@ -4,7 +4,7 @@ import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import {
   ClipboardList, Phone, Info, Wallet, AlertCircle, BookOpen, Target,
-  Clock, Trophy, ChevronLeft, ChevronRight, CheckCircle2, CalendarCheck,
+  Clock, Trophy, ChevronLeft, ChevronRight, CheckCircle2, CalendarCheck, ChevronDown,
 } from 'lucide-react'
 
 const API = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:3001/api/v1'
@@ -298,41 +298,17 @@ export default function InstitutionForm({ initialData, institutionId, mode }: Pr
               <label className="mb-1 block text-sm font-semibold text-gray-700">
                 Tur <span className="text-red-500">*</span>
               </label>
-              <select
-                value={form.type}
-                onChange={(e) => set('type', e.target.value)}
-                className={INPUT_CLS}
-              >
-                {INSTITUTION_TYPES.map((t) => (
-                  <option key={t.value} value={t.value}>{t.label}</option>
-                ))}
-              </select>
+              <SelectField value={form.type} onChange={(v) => set('type', v)} options={INSTITUTION_TYPES} />
             </div>
             <div>
               <label className="mb-1 block text-sm font-semibold text-gray-700">Status</label>
-              <select
-                value={form.status}
-                onChange={(e) => set('status', e.target.value)}
-                className={INPUT_CLS}
-              >
-                {STATUSES.map((s) => (
-                  <option key={s.value} value={s.value}>{s.label}</option>
-                ))}
-              </select>
+              <SelectField value={form.status} onChange={(v) => set('status', v)} options={STATUSES} />
             </div>
           </div>
 
           <div>
             <label className="mb-1 block text-sm font-semibold text-gray-700">O'qish formati</label>
-            <select
-              value={form.deliveryMode}
-              onChange={(e) => set('deliveryMode', e.target.value)}
-              className={INPUT_CLS}
-            >
-              {DELIVERY_MODES.map((d) => (
-                <option key={d.value} value={d.value}>{d.label}</option>
-              ))}
-            </select>
+            <SelectField value={form.deliveryMode} onChange={(v) => set('deliveryMode', v)} options={DELIVERY_MODES} />
             <p className="mt-1 text-xs text-gray-400">
               "Menga eng mos ta'lim markazini top" bo'limida moslik hisoblashda ishlatiladi — Onlayn/Gibrid tanlansa, shahar mos kelmasa ham tavsiya qilinadi
             </p>
@@ -689,3 +665,29 @@ export default function InstitutionForm({ initialData, institutionId, mode }: Pr
 }
 
 const INPUT_CLS = 'w-full rounded-xl border border-gray-200 px-4 py-2.5 text-gray-900 outline-none focus:border-primary-400 text-sm transition-colors'
+
+/**
+ * Brauzer standart <select> ko'rinishini butun formaning boshqa
+ * inputlariga mos qilib qayta stillashtiradi (appearance-none +
+ * qo'lda chizilgan chevron) — native select xatti-harakati saqlanadi.
+ */
+function SelectField({ value, onChange, options }: {
+  value: string
+  onChange: (value: string) => void
+  options: { value: string; label: string }[]
+}) {
+  return (
+    <div className="relative">
+      <select
+        value={value}
+        onChange={(e) => onChange(e.target.value)}
+        className={INPUT_CLS + ' cursor-pointer appearance-none bg-white pr-9'}
+      >
+        {options.map((o) => (
+          <option key={o.value} value={o.value}>{o.label}</option>
+        ))}
+      </select>
+      <ChevronDown className="pointer-events-none absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" strokeWidth={1.75} />
+    </div>
+  )
+}
