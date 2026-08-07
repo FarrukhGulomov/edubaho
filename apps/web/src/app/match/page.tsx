@@ -135,14 +135,15 @@ export default function MatchPage() {
     setError('')
     setStep('results')
     try {
-      const res = await matchApi.find({
+      const prefs = {
         type,
         goal:   goal || undefined,
         cityId: cityId || undefined,
         budget: budget || undefined,
         shift:  finalShift || undefined,
         age:    age ? Number(age) : undefined,
-      })
+      }
+      const res = await matchApi.find(prefs)
       setResults(res.data)
       setResultsMeta(res.meta)
       haptic('success')
@@ -150,6 +151,14 @@ export default function MatchPage() {
         category: 'engagement',
         properties: { type, goal, budget, shift: finalShift, resultCount: res.data.length },
       })
+      // Oxirgi ishlatilgan afzalliklarni saqlaymiz — Profil sahifasidagi
+      // shaxsiy tavsiyalar bloki shu saqlangan so'rovni qayta ishlatadi
+      // (yangi API/DB shart emas, mavjud /match endpointi qayta chaqiriladi)
+      try {
+        localStorage.setItem('edu_last_match', JSON.stringify(prefs))
+      } catch {
+        // localStorage mavjud bo'lmasa jim o'tkazamiz
+      }
       // Onboarding rejimida — natija olingani "bajarildi" hisoblanadi,
       // lekin foydalanuvchi natijalarni ko'rib bo'lgach o'zi profilga o'tadi
       // (pastdagi CTA orqali) — bu yerda darhol majburiy yo'naltirmaymiz

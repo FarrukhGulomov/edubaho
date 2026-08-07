@@ -7,10 +7,11 @@ import {
   Pencil, Phone, CheckCircle2, AlertCircle, Star, ArrowLeftRight, PencilLine,
   ShieldCheck, ClipboardList, School, Plus, Search, Laptop, GraduationCap,
   Send, LogOut, MessageCircle, Calendar, Globe2, Palette, Dumbbell, Trophy,
-  Bookmark, Trash2,
+  Bookmark, Trash2, Sparkles, UserCog,
 } from 'lucide-react'
 import StarRating, { RatingHint } from '@/components/shared/StarRating'
 import Header from '@/components/shared/Header'
+import RecommendationDashboard from '@/components/profile/RecommendationDashboard'
 import { useAuth } from '@/hooks/useAuth'
 import { useSaved, useCompare } from '@/hooks/useCompare'
 import { useLang, t } from '@/contexts/LangContext'
@@ -73,6 +74,9 @@ export default function ProfilePage() {
   const [revLoading, setRevLoading] = useState(false)
   const [savedComparisons, setSavedComparisons] = useState<SavedComparison[]>([])
   const [comparisonsLoading, setComparisonsLoading] = useState(false)
+  // Profil ochilganda avval shaxsiy tavsiyalar paneli ko'rsatiladi —
+  // Sozlamalar endi ikkinchi darajali, tab orqali qo'lda ochiladi
+  const [view, setView] = useState<'dashboard' | 'settings'>('dashboard')
 
   const uz = lang === 'uz'
   const API = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:3001/api/v1'
@@ -195,6 +199,31 @@ export default function ProfilePage() {
 
       <main className="mx-auto max-w-2xl px-4 py-8 space-y-5">
 
+        {/* ══ Tab: Tavsiyalar / Sozlamalar ═══════════════════════ */}
+        <div className="flex gap-1 rounded-2xl bg-gray-100 p-1">
+          {([
+            { key: 'dashboard' as const, Icon: Sparkles, uz: 'Tavsiyalar', ru: 'Рекомендации' },
+            { key: 'settings' as const,  Icon: UserCog,  uz: 'Sozlamalar', ru: 'Настройки' },
+          ]).map(tab => (
+            <button
+              key={tab.key}
+              onClick={() => setView(tab.key)}
+              className={`flex flex-1 items-center justify-center gap-1.5 whitespace-nowrap rounded-xl py-2.5 text-sm font-semibold transition-colors ${
+                view === tab.key ? 'bg-white text-primary-700 shadow-sm' : 'text-gray-500 hover:text-gray-800'
+              }`}
+            >
+              <tab.Icon className="h-4 w-4 shrink-0" strokeWidth={1.75} />
+              {uz ? tab.uz : tab.ru}
+            </button>
+          ))}
+        </div>
+
+        {view === 'dashboard' && (
+          <RecommendationDashboard onGoToSettings={() => setView('settings')} />
+        )}
+
+        {view === 'settings' && (
+        <>
         {/* ══ Avatar + ism bloki ══════════════════════════════════ */}
         <div className="overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-sm">
           {/* Rangli banner */}
@@ -620,6 +649,8 @@ export default function ProfilePage() {
         </div>
 
         <div className="h-4" />
+        </>
+        )}
       </main>
     </div>
   )
