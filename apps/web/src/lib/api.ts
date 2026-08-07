@@ -171,6 +171,7 @@ export const matchApi = {
     budget?: number
     shift?: string
     age?: number
+    limit?: number
   }) =>
     apiFetch<{
       data: MatchItem[]
