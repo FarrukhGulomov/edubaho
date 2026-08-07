@@ -1,6 +1,6 @@
 import type { FastifyInstance } from 'fastify'
 import { z } from 'zod'
-import { computeMatchScore, computeGoalMatch, type MatchCandidate } from '../services/matchService'
+import { computeMatchScore, evaluateGoal, DEFAULT_MIN_MATCH_SCORE, type MatchCandidate } from '../services/matchService'
 
 /**
  * POST 🔓 /match — EduFit: shaxsiy moslik bo'yicha tavsiya
@@ -12,14 +12,15 @@ import { computeMatchScore, computeGoalMatch, type MatchCandidate } from '../ser
  * Javob shaffof: har bir ball komponenti sabab bilan qaytadi —
  * foydalanuvchi NEGA aynan shu tavsiya chiqqanini ko'radi.
  *
- * QIDIRUV BOSQICHLARI (progressiv yumshatish):
- * Foydalanuvchi "Buxoro" tanlasa yoki aniq fan/yo'nalish yozsa, natijalar
- * shu shartlarga QAT'IY mos bo'lishi kerak — aks holda "top darajadagi"
- * tavsiya emas, tasodifiy ro'yxat bo'lib qoladi. Shu sababli avval eng
- * qat'iy shartlar (shahar + yo'nalish) bilan qidiramiz; agar natija bo'sh
- * chiqsa, birma-bir yumshatamiz (viloyat → butun O'zbekiston, yo'nalish
- * mosligi → istalgan). Har bir bosqichda QAYSI shartlar yumshatilgani
- * javobda ko'rsatiladi — natijalar hech qachon jim aralashtirilmaydi.
+ * QIDIRUV BOSQICHLARI:
+ * Real xato: "OTMga kirish" + "Buxoro" so'ralganda faqat IT kurslarini
+ * o'qitadigan markaz 67% moslik bilan chiqib ketdi — chunki eski
+ * versiyada natija bo'sh chiqsa YO'NALISH shartimi ham yumshatib,
+ * mos kelmagan muassasalar ko'rsatilardi. Endi bu yo'q: YO'NALISH
+ * (maqsad) QATTIQ filtr — hech qachon yumshatilmaydi. Faqat JOYLASHUV
+ * bosqichma-bosqich yumshatiladi (shahar → viloyat → butun O'zbekiston).
+ * Agar aynan mos yo'nalishli muassasa hech qayerda topilmasa — bo'sh
+ * natija qaytariladi (soxta/yaqin natija bilan to'ldirilmaydi).
  */
 
 const matchSchema = z.object({
@@ -75,6 +76,7 @@ export default async function matchRoutes(fastify: FastifyInstance) {
           select: {
             descriptionUz: true, minAge: true, maxAge: true,
             languages: true, programs: true, shifts: true, specializations: true,
+            categories: true,
           },
         },
         pricing: { select: { monthlyMin: true, monthlyMax: true, hasDiscount: true } },
@@ -86,7 +88,10 @@ export default async function matchRoutes(fastify: FastifyInstance) {
     if (candidates.length === 0) {
       return reply.send({
         data: [],
-        meta: { total: 0, globalAvgRating: null, locationRelaxed: false, subjectRelaxed: false, usedRegionFallback: false },
+        meta: {
+          total: 0, globalAvgRating: null, locationRelaxed: false, usedRegionFallback: false,
+          noSpecializationMatch: false, belowThreshold: false, minScore: DEFAULT_MIN_MATCH_SCORE,
+        },
       })
     }
 
@@ -106,15 +111,20 @@ export default async function matchRoutes(fastify: FastifyInstance) {
       selectedRegionId = city?.regionId ?? null
     }
 
+    // YO'NALISH — QATTIQ FILTR. Hech qachon yumshatilmaydi: foydalanuvchi
+    // "IELTS" yoki "OTMga kirish" desa, aynan shuni o'qitmaydigan
+    // muassasa reytingi/joylashuvi qanchalik yaxshi bo'lishidan qat'i
+    // nazar natijaga chiqmaydi.
     const hasGoal = !!prefs.goal?.trim()
-    const goalHit = (c: (typeof candidates)[number]) => !hasGoal || computeGoalMatch(c as MatchCandidate, prefs.goal!).ratio > 0
+    const goalHit = (c: (typeof candidates)[number]) => !hasGoal || evaluateGoal(c as MatchCandidate, prefs.goal!).matched
+    const goalFiltered = candidates.filter(goalHit)
+
     const inCity = (c: (typeof candidates)[number]) => c.cityId === prefs.cityId
     const inRegion = (c: (typeof candidates)[number]) => !!selectedRegionId && c.regionId === selectedRegionId
 
     interface Attempt {
       pool: typeof candidates
       locationRelaxed: boolean
-      subjectRelaxed: boolean
       usedRegionFallback: boolean
     }
 
@@ -127,49 +137,28 @@ export default async function matchRoutes(fastify: FastifyInstance) {
     const skipLocationTiers = prefs.format === 'online'
 
     if (prefs.cityId && !skipLocationTiers) {
-      // 1) Aynan shu shahar + yo'nalish mos
+      // 1) Aynan shu shahar
       attempts.push(() => ({
-        pool: candidates.filter((c) => inCity(c) && goalHit(c)),
-        locationRelaxed: false, subjectRelaxed: false, usedRegionFallback: false,
+        pool: goalFiltered.filter((c) => inCity(c)),
+        locationRelaxed: false, usedRegionFallback: false,
       }))
-      if (hasGoal) {
-        // 2) Aynan shu shahar, yo'nalish yumshatiladi
-        attempts.push(() => ({
-          pool: candidates.filter((c) => inCity(c)),
-          locationRelaxed: false, subjectRelaxed: true, usedRegionFallback: false,
-        }))
-      }
       if (selectedRegionId) {
-        // 3) Shu viloyat bo'yicha + yo'nalish mos
+        // 2) Shu viloyat bo'yicha
         attempts.push(() => ({
-          pool: candidates.filter((c) => inRegion(c) && goalHit(c)),
-          locationRelaxed: true, subjectRelaxed: false, usedRegionFallback: true,
+          pool: goalFiltered.filter((c) => inRegion(c)),
+          locationRelaxed: true, usedRegionFallback: true,
         }))
-        if (hasGoal) {
-          // 4) Shu viloyat bo'yicha, yo'nalish yumshatiladi
-          attempts.push(() => ({
-            pool: candidates.filter((c) => inRegion(c)),
-            locationRelaxed: true, subjectRelaxed: true, usedRegionFallback: true,
-          }))
-        }
       }
     }
-    // 5) Butun O'zbekiston bo'yicha + yo'nalish mos
+    // 3) Butun O'zbekiston bo'yicha (yo'nalish hamon qattiq qo'llanadi)
     // Onlayn format uchun bu "yumshatish" emas — foydalanuvchi aynan shuni
     // so'ragan, shuning uchun locationRelaxed=true qo'yilmaydi
     attempts.push(() => ({
-      pool: candidates.filter((c) => goalHit(c)),
-      locationRelaxed: !!prefs.cityId && !skipLocationTiers, subjectRelaxed: false, usedRegionFallback: false,
+      pool: goalFiltered,
+      locationRelaxed: !!prefs.cityId && !skipLocationTiers, usedRegionFallback: false,
     }))
-    if (hasGoal) {
-      // 6) So'nggi chora: butun mamlakat, yo'nalish yumshatiladi
-      attempts.push(() => ({
-        pool: candidates,
-        locationRelaxed: !!prefs.cityId && !skipLocationTiers, subjectRelaxed: true, usedRegionFallback: false,
-      }))
-    }
 
-    let chosen: Attempt = { pool: [], locationRelaxed: false, subjectRelaxed: false, usedRegionFallback: false }
+    let chosen: Attempt = { pool: [], locationRelaxed: false, usedRegionFallback: false }
     for (const make of attempts) {
       const attempt = make()
       if (attempt.pool.length > 0) {
@@ -177,13 +166,15 @@ export default async function matchRoutes(fastify: FastifyInstance) {
         break
       }
     }
-    // Shu turdagi muassasa umuman shunday shartlarga to'g'ri kelmasa —
-    // bo'sh javob o'rniga hech bo'lmasa turi mos barcha nomzodlarni ko'rsatamiz
-    if (chosen.pool.length === 0) {
-      chosen = { pool: candidates, locationRelaxed: !!prefs.cityId && !skipLocationTiers, subjectRelaxed: hasGoal, usedRegionFallback: false }
-    }
 
-    const results = chosen.pool
+    // Aynan mos yo'nalishli muassasa HECH QAYERDA topilmasa — bo'sh javob
+    // qaytariladi. Eski versiyada bu yerda "hech bo'lmasa hammasini
+    // ko'rsatamiz" degan zaif fallback bor edi — aynan shu soxta
+    // moslikka olib kelgan (masalan faqat IT kurs o'qitadigan markaz
+    // "OTMga kirish" so'ralganda chiqib ketardi). Endi sifat > miqdor.
+    const noSpecializationMatch = hasGoal && chosen.pool.length === 0
+
+    const scored = chosen.pool
       .map((c) => {
         const candidate: MatchCandidate = {
           ...c,
@@ -209,18 +200,31 @@ export default async function matchRoutes(fastify: FastifyInstance) {
         }
       })
       .sort((a, b) => b.match.score - a.match.score)
-      .slice(0, prefs.limit)
+
+    // Minimal moslik chegarasi: 45%, 52% kabi zaif natijalar ro'yxatni
+    // to'ldirish uchun ko'rsatilmaydi — sifat > miqdor. Chegaradan past
+    // qolganlar bo'lsa (lekin qattiq filtrdan o'tgan bo'lsa ham), buni
+    // frontendga alohida bayroq bilan bildiramiz.
+    const aboveThreshold = scored.filter((r) => r.match.score >= DEFAULT_MIN_MATCH_SCORE)
+    const belowThreshold = scored.length > 0 && aboveThreshold.length === 0
+    const results = aboveThreshold.slice(0, prefs.limit)
 
     return reply.send({
       data: results,
       meta: {
-        total: chosen.pool.length,
+        total: aboveThreshold.length,
         globalAvgRating: Math.round(globalAvg * 10) / 10,
-        // Frontend shu bayroqlar bilan "Buxoroda hali topilmadi, yaqin
-        // natijalarni ko'rsatmoqdamiz" kabi shaffof izoh ko'rsatishi mumkin
+        // Frontend shu bayroqlar bilan shaffof izoh ko'rsatishi mumkin:
+        // - locationRelaxed/usedRegionFallback: joylashuv yumshatilgani
+        // - noSpecializationMatch: aynan so'ralgan yo'nalishni o'qitadigan
+        //   muassasa umuman topilmadi
+        // - belowThreshold: yo'nalishga mos muassasa bor, lekin umumiy
+        //   moslik balli minScore'dan past (zaif tavsiya ko'rsatilmaydi)
         locationRelaxed: chosen.locationRelaxed,
-        subjectRelaxed: chosen.subjectRelaxed,
         usedRegionFallback: chosen.usedRegionFallback,
+        noSpecializationMatch,
+        belowThreshold,
+        minScore: DEFAULT_MIN_MATCH_SCORE,
       },
     })
   })

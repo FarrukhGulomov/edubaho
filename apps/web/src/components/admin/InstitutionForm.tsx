@@ -37,6 +37,27 @@ const DELIVERY_MODES = [
   { value: 'HYBRID',  label: 'Gibrid (ikkalasi ham)' },
 ]
 
+// EduFit Ta'lim profili — moslik algoritmida QATTIQ filtr sifatida
+// ishlatiladi (masalan "OTMga kirish" so'ralganda shu belgi yo'q
+// muassasa umuman tavsiya qilinmaydi). apps/api/src/utils/educationCategories.ts
+// bilan bir xil kodlar — o'zgartirilsa ikkalasida ham yangilanishi kerak.
+const EDUCATION_CATEGORIES = [
+  { value: 'UNIVERSITY_PREP', label: 'OTMga kirish tayyorlov' },
+  { value: 'IELTS', label: 'IELTS' },
+  { value: 'SAT', label: 'SAT' },
+  { value: 'CEFR', label: 'CEFR / TOEFL' },
+  { value: 'SCHOOL_SUBJECTS', label: 'Maktab fanlari' },
+  { value: 'IT_COURSES', label: 'IT kurslari' },
+  { value: 'PROGRAMMING', label: 'Dasturlash' },
+  { value: 'DESIGN', label: 'Dizayn' },
+  { value: 'MARKETING', label: 'Marketing' },
+  { value: 'ACCOUNTING', label: 'Buxgalteriya' },
+  { value: 'LANGUAGES', label: 'Chet tillari' },
+  { value: 'KIDS_EDUCATION', label: "Bolalar ta'limi" },
+  { value: 'PROFESSIONAL_CERTIFICATION', label: 'Kasbiy sertifikatlash' },
+  { value: 'CAREER_CHANGE', label: 'Kasb almashtirish' },
+]
+
 const PAYMENT_METHODS = ['Payme', 'Click', 'Uzcard', 'Humo', 'Naqd']
 const LANGUAGES = ['uz', 'ru', 'en', 'de', 'fr', 'ko', 'zh']
 const SHIFTS = ['Ertalabki (08:00-13:00)', 'Tushki (13:00-18:00)', 'Kechki (18:00-22:00)', 'Hafta oxiri', 'Online']
@@ -67,6 +88,7 @@ export interface InstitutionFormData {
   specializations: string // vergul bilan ajratilgan
   shifts: string[]
   achievements: string
+  categories: string[]
   monthlyMin: string
   monthlyMax: string
   paymentMethods: string[]
@@ -79,6 +101,7 @@ const EMPTY: InstitutionFormData = {
   descriptionUz: '', descriptionRu: '',
   foundedYear: '', studentCount: '', teacherCount: '',
   languages: [], programs: '', specializations: '', shifts: [], achievements: '',
+  categories: [],
   monthlyMin: '', monthlyMax: '', paymentMethods: [],
 }
 
@@ -129,7 +152,7 @@ export default function InstitutionForm({ initialData, institutionId, mode }: Pr
       .replace(/ҳ/g,'h').replace(/[^a-z0-9-]/g, '')
   }
 
-  function toggleArray(field: 'languages' | 'paymentMethods' | 'shifts', val: string) {
+  function toggleArray(field: 'languages' | 'paymentMethods' | 'shifts' | 'categories', val: string) {
     const arr = form[field] as string[]
     set(field, arr.includes(val) ? arr.filter((x) => x !== val) : [...arr, val])
   }
@@ -405,6 +428,30 @@ export default function InstitutionForm({ initialData, institutionId, mode }: Pr
       {/* ── TAB: BATAFSIL ── */}
       {tab === 'details' && (
         <div className="space-y-4">
+          <div className="rounded-xl border border-primary-100 bg-primary-50/40 p-4">
+            <label className="mb-1 flex items-center gap-1.5 text-sm font-semibold text-gray-800">
+              <Target className="h-4 w-4 shrink-0 text-primary-600" strokeWidth={1.75} /> Ta'lim profili
+            </label>
+            <p className="mb-3 text-xs text-gray-500">
+              Muassasa aynan qaysi yo'nalishlarni o'qitishini belgilang — "Menga mosini top" algoritmida bu QATTIQ filtr sifatida ishlatiladi (belgilanmagan yo'nalish bo'yicha muassasa umuman tavsiya qilinmaydi)
+            </p>
+            <div className="flex flex-wrap gap-2">
+              {EDUCATION_CATEGORIES.map((cat) => (
+                <button
+                  key={cat.value}
+                  type="button"
+                  onClick={() => toggleArray('categories', cat.value)}
+                  className={`rounded-xl px-3.5 py-2 text-sm font-semibold transition-colors border ${
+                    form.categories.includes(cat.value)
+                      ? 'border-primary-500 bg-primary-600 text-white shadow-sm'
+                      : 'border-gray-200 bg-white text-gray-700 hover:border-primary-300 hover:text-primary-700'
+                  }`}
+                >
+                  {cat.label}
+                </button>
+              ))}
+            </div>
+          </div>
           <div>
             <label className="mb-1 block text-sm font-semibold text-gray-700">Tavsif (O'zbek)</label>
             <textarea

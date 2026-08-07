@@ -107,6 +107,9 @@ export default async function adminInstitutionRoutes(fastify: FastifyInstance) {
     specializations: z.array(z.string()).optional().default([]),
     shifts:          z.array(z.string()).optional().default([]),
     achievements:    z.string().optional(),
+    // EduFit Ta'lim profili: muassasa qattiq belgilagan yo'nalishlar
+    // (moslik algoritmida qattiq filtr sifatida ishlatiladi)
+    categories:      z.array(z.string()).optional().default([]),
     // Pricing
     monthlyMin:    z.coerce.number().int().min(0).optional().or(z.literal('')),
     monthlyMax:    z.coerce.number().int().min(0).optional().or(z.literal('')),
@@ -124,7 +127,7 @@ export default async function adminInstitutionRoutes(fastify: FastifyInstance) {
 
     const {
       descriptionUz, descriptionRu, foundedYear, studentCount, teacherCount,
-      languages, programs, specializations, shifts, achievements,
+      languages, programs, specializations, shifts, achievements, categories,
       monthlyMin, monthlyMax, paymentMethods,
       cityId, email, website, ...main
     } = body
@@ -135,7 +138,8 @@ export default async function adminInstitutionRoutes(fastify: FastifyInstance) {
         email:   email   || undefined,
         website: website || undefined,
         cityId:  cityId  || undefined,
-        details: (descriptionUz || descriptionRu || foundedYear || studentCount || teacherCount) ? {
+        details: (descriptionUz || descriptionRu || foundedYear || studentCount || teacherCount
+          || languages?.length || programs?.length || specializations?.length || categories?.length) ? {
           create: {
             descriptionUz:   descriptionUz   || undefined,
             descriptionRu:   descriptionRu   || undefined,
@@ -147,6 +151,7 @@ export default async function adminInstitutionRoutes(fastify: FastifyInstance) {
             specializations: specializations ?? [],
             shifts:          shifts          ?? [],
             achievements:    achievements    || undefined,
+            categories:      categories      ?? [],
           },
         } : undefined,
         pricing: (monthlyMin || monthlyMax) ? {
@@ -220,7 +225,7 @@ export default async function adminInstitutionRoutes(fastify: FastifyInstance) {
 
     const {
       descriptionUz, descriptionRu, foundedYear, studentCount, teacherCount,
-      languages, programs, specializations, shifts, achievements,
+      languages, programs, specializations, shifts, achievements, categories,
       monthlyMin, monthlyMax, paymentMethods,
       cityId, email, website, ...main
     } = body
@@ -241,7 +246,8 @@ export default async function adminInstitutionRoutes(fastify: FastifyInstance) {
         foundedYear   !== undefined || studentCount  !== undefined ||
         teacherCount  !== undefined || languages     !== undefined ||
         programs      !== undefined || specializations !== undefined ||
-        shifts        !== undefined || achievements  !== undefined) {
+        shifts        !== undefined || achievements  !== undefined ||
+        categories    !== undefined) {
       await prisma.institutionDetail.upsert({
         where:  { institutionId: id },
         create: {
@@ -256,6 +262,7 @@ export default async function adminInstitutionRoutes(fastify: FastifyInstance) {
           specializations: specializations ?? [],
           shifts:          shifts          ?? [],
           achievements:    achievements    || undefined,
+          categories:      categories      ?? [],
         },
         update: {
           descriptionUz:   descriptionUz   !== undefined ? (descriptionUz   || null) : undefined,
@@ -268,6 +275,7 @@ export default async function adminInstitutionRoutes(fastify: FastifyInstance) {
           specializations: specializations ?? undefined,
           shifts:          shifts          ?? undefined,
           achievements:    achievements    !== undefined ? (achievements    || null) : undefined,
+          categories:      categories      ?? undefined,
         },
       })
     }
