@@ -599,20 +599,16 @@ export default function InstitutionDetail({ inst }: { inst: Institution }) {
                     </a>
                   )}
 
-                  {/* Format ko'rsatkichlari */}
+                  {/* Format ko'rsatkichi — muassasa admin panelida belgilagan haqiqiy deliveryMode */}
                   <div className="flex flex-wrap gap-2">
-                    {inst.type === 'IT_SCHOOL' || inst.type === 'LANGUAGE_CENTER' || inst.type === 'COURSE_CENTER' ? (
-                      <>
-                        <span className="flex items-center gap-1.5 rounded-lg border border-gray-200 bg-white px-3 py-1.5 text-sm font-medium text-gray-700">
-                          <BookOpen className="h-3.5 w-3.5 text-gray-400" strokeWidth={2} /> {lang === 'ru' ? 'Офлайн' : 'Offline'}
-                        </span>
-                        <span className="flex items-center gap-1.5 rounded-lg border border-primary-100 bg-primary-50 px-3 py-1.5 text-sm font-medium text-primary-700">
-                          <Laptop className="h-3.5 w-3.5" strokeWidth={2} /> {lang === 'ru' ? 'Онлайн' : 'Online'}
-                        </span>
-                      </>
-                    ) : (
+                    {(inst.deliveryMode === 'ONLINE' || inst.deliveryMode === 'HYBRID') && (
+                      <span className="flex items-center gap-1.5 rounded-lg border border-primary-100 bg-primary-50 px-3 py-1.5 text-sm font-medium text-primary-700">
+                        <Laptop className="h-3.5 w-3.5" strokeWidth={2} /> {lang === 'ru' ? 'Онлайн' : 'Online'}
+                      </span>
+                    )}
+                    {(inst.deliveryMode === 'OFFLINE' || inst.deliveryMode === 'HYBRID' || !inst.deliveryMode) && (
                       <span className="flex items-center gap-1.5 rounded-lg border border-gray-200 bg-white px-3 py-1.5 text-sm font-medium text-gray-700">
-                        <BookOpen className="h-3.5 w-3.5 text-gray-400" strokeWidth={2} /> {lang === 'ru' ? 'Очное обучение' : "Offline ta'lim"}
+                        <BookOpen className="h-3.5 w-3.5 text-gray-400" strokeWidth={2} /> {lang === 'ru' ? 'Офлайн' : 'Offline'}
                       </span>
                     )}
                   </div>

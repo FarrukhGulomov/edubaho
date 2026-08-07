@@ -6,7 +6,8 @@ import { useRouter } from 'next/navigation'
 import {
   Target, PencilLine, School, Palette, Sunrise, Sun, Sunset, Calendar,
   Clock, Wallet, Globe, MapPin, BadgeCheck, Lightbulb, AlertCircle,
-  Search, RotateCcw, Medal, Lock, ArrowRight, Info,
+  Search, RotateCcw, Medal, Lock, ArrowRight, Info, Building2, Shuffle,
+  Languages, Crown, Wifi,
 } from 'lucide-react'
 import Header from '@/components/shared/Header'
 import { RatingHint } from '@/components/shared/StarRating'
@@ -22,7 +23,7 @@ import { haptic } from '@/lib/telegram'
  * va NEGA mos kelishining shaffof sabablari.
  */
 
-type Step = 'type' | 'goal' | 'city' | 'budget' | 'time' | 'results'
+type Step = 'type' | 'goal' | 'format' | 'city' | 'budget' | 'time' | 'results'
 
 interface CityOption {
   id: string
@@ -40,10 +41,31 @@ const TYPE_OPTIONS = [
 ]
 
 const GOAL_SUGGESTIONS: Record<string, string[]> = {
-  COURSE_CENTER: ['IELTS', 'Ingliz tili', 'Frontend', 'Python', 'Matematika', 'DTM tayyorlov'],
+  COURSE_CENTER: [
+    'IELTS', 'SAT', 'TOEFL', 'Ingliz tili', 'Frontend', 'Dasturlash',
+    'Dizayn', 'Marketing', 'Tadbirkorlik', 'Buxgalteriya', 'Matematika',
+    'OTMga tayyorlov', 'Kasb almashtirish', 'Shaxsiy rivojlanish',
+  ],
   SCHOOL:        ['Prezident maktabi', 'Xususiy maktab', 'Ingliz tili'],
   KINDERGARTEN:  ['Xususiy bog\'cha', 'Ingliz tili guruhi', 'Rivojlantiruvchi darslar'],
 }
+
+// EduFit: joylashuv & format mosligi — onlayn tanlansa shahar bosqichi
+// butunlay o'tkazib yuboriladi (butun O'zbekiston bo'yicha eng yaxshi
+// onlayn markazlar taklif qilinadi, shahar cheklovi qo'yilmaydi)
+const FORMAT_OPTIONS = [
+  { value: 'offline', Icon: Building2, uz: 'Offlayn (yuzma-yuz)',        ru: 'Офлайн (очно)' },
+  { value: 'online',  Icon: Wifi,      uz: 'Onlayn',                     ru: 'Онлайн' },
+  { value: 'hybrid',  Icon: Shuffle,   uz: 'Ikkalasi ham (moslashuvchan)', ru: 'И то, и другое (гибрид)' },
+  { value: '',        Icon: Clock,     uz: 'Farqi yo\'q',                ru: 'Не важно' },
+]
+
+const LANGUAGE_OPTIONS = [
+  { value: 'uz', uz: "O'zbek tilida",  ru: 'На узбекском' },
+  { value: 'ru', uz: 'Rus tilida',     ru: 'На русском' },
+  { value: 'en', uz: 'Ingliz tilida',  ru: 'На английском' },
+  { value: '',   uz: 'Farqi yo\'q',    ru: 'Не важно' },
+]
 
 const BUDGET_OPTIONS = [
   { value: 500_000,    uz: "500 ming so'mgacha",   ru: 'До 500 тыс. сум' },
@@ -61,7 +83,7 @@ const SHIFT_OPTIONS = [
   { value: '',          Icon: Clock,   uz: 'Farqi yo\'q',   ru: 'Не важно' },
 ]
 
-const STEPS: Step[] = ['type', 'goal', 'city', 'budget', 'time']
+const STEPS: Step[] = ['type', 'goal', 'format', 'city', 'budget', 'time']
 
 /** UZS format: 1 500 000 so'm (loyiha standarti — bo'shliq ajratuvchi) */
 function fmtUzs(n: number) {
@@ -76,11 +98,14 @@ export default function MatchPage() {
   const [step, setStep]         = useState<Step>('type')
   const [type, setType]         = useState('')
   const [goal, setGoal]         = useState('')
+  const [format, setFormat]     = useState<string | null>(null)
   const [cityId, setCityId]     = useState('')
   const [cities, setCities]     = useState<CityOption[]>([])
   const [budget, setBudget]     = useState<number | null>(null)
   const [shift, setShift]       = useState<string | null>(null)
   const [age, setAge]           = useState('')
+  const [language, setLanguage] = useState<string | null>(null)
+  const [preferPremium, setPreferPremium] = useState(false)
   const [results, setResults]   = useState<MatchItem[]>([])
   const [resultsMeta, setResultsMeta] = useState<{ locationRelaxed?: boolean; subjectRelaxed?: boolean; usedRegionFallback?: boolean }>({})
   const [loading, setLoading]   = useState(false)
@@ -128,7 +153,10 @@ export default function MatchPage() {
     }
   }
 
-  const stepIndex = STEPS.indexOf(step)
+  // Onlayn format tanlansa — shahar bosqichi umuman kerak emas, chunki
+  // onlayn markaz istalgan shahardan foydalanuvchiga bir xil darajada mos
+  const activeSteps = format === 'online' ? STEPS.filter((s) => s !== 'city') : STEPS
+  const stepIndex = activeSteps.indexOf(step)
 
   async function runMatch(finalShift: string | null) {
     setLoading(true)
@@ -142,6 +170,9 @@ export default function MatchPage() {
         budget: budget || undefined,
         shift:  finalShift || undefined,
         age:    age ? Number(age) : undefined,
+        format: format || undefined,
+        language: language || undefined,
+        preferPremium: preferPremium || undefined,
       }
       const res = await matchApi.find(prefs)
       setResults(res.data)
@@ -176,10 +207,13 @@ export default function MatchPage() {
     qType:     { uz: 'Nima qidiryapsiz?', ru: 'Что вы ищете?' },
     qGoal:     { uz: 'Maqsadingiz nima?', ru: 'Какая у вас цель?' },
     qGoalHint: { uz: 'Masalan: IELTS, Frontend, matematika... (ixtiyoriy)', ru: 'Например: IELTS, Frontend, математика... (необязательно)' },
+    qFormat:   { uz: "Qanday formatda o'qishni istaysiz?", ru: 'В каком формате хотите учиться?' },
     qCity:     { uz: 'Qaysi shaharda?', ru: 'В каком городе?' },
     qBudget:   { uz: 'Oylik byudjetingiz?', ru: 'Ваш месячный бюджет?' },
     qTime:     { uz: 'Qachon o\'qiy olasiz?', ru: 'Когда вы можете учиться?' },
     qAge:      { uz: "O'quvchi yoshi (ixtiyoriy)", ru: 'Возраст ученика (необязательно)' },
+    qLanguage: { uz: "O'qitish tili (ixtiyoriy)", ru: 'Язык обучения (необязательно)' },
+    premiumLabel: { uz: 'Premium tasdiqlangan markazlarga ustunlik berish', ru: 'Отдавать предпочтение Premium-центрам' },
     next:      { uz: 'Keyingisi →', ru: 'Далее →' },
     skip:      { uz: "O'tkazib yuborish", ru: 'Пропустить' },
     back:      { uz: '← Orqaga', ru: '← Назад' },
@@ -201,8 +235,8 @@ export default function MatchPage() {
 
   function goBack() {
     if (step === 'results') { setStep('time'); return }
-    const i = STEPS.indexOf(step)
-    if (i > 0) setStep(STEPS[i - 1])
+    const i = activeSteps.indexOf(step)
+    if (i > 0) setStep(activeSteps[i - 1])
   }
 
   return (
@@ -240,7 +274,7 @@ export default function MatchPage() {
         {/* Progress bar */}
         {step !== 'results' && (
           <div className="mb-8 flex gap-1.5">
-            {STEPS.map((s, i) => (
+            {activeSteps.map((s, i) => (
               <div
                 key={s}
                 className={`h-1.5 flex-1 rounded-full transition-colors ${
@@ -316,10 +350,40 @@ export default function MatchPage() {
             )}
             <WizardNav
               onBack={goBack}
-              onNext={() => setStep('city')}
+              onNext={() => setStep('format')}
               nextLabel={t(lang, goal ? ui.next : ui.skip)}
               backLabel={t(lang, ui.back)}
             />
+          </div>
+        )}
+
+        {/* ── 2b. O'qish formati ── */}
+        {step === 'format' && (
+          <div className="space-y-4">
+            <h2 className="text-lg font-bold text-gray-900">{t(lang, ui.qFormat)}</h2>
+            <div className="grid grid-cols-2 gap-2.5">
+              {FORMAT_OPTIONS.map((o) => {
+                const val = o.value || 'any'
+                return (
+                  <button
+                    key={val}
+                    onClick={() => {
+                      const next = o.value || null
+                      setFormat(next)
+                      // Onlayn tanlansa — shahar so'ralmaydi, to'g'ridan-to'g'ri byudjetga o'tamiz
+                      setStep(next === 'online' ? 'budget' : 'city')
+                    }}
+                    className={`flex items-center gap-2.5 rounded-xl border bg-white px-4 py-3 text-left font-semibold shadow-sm transition-colors hover:border-primary-300 ${
+                      format === o.value ? 'border-primary-500 bg-primary-50' : 'border-gray-200'
+                    }`}
+                  >
+                    <o.Icon className="h-5 w-5 shrink-0 text-primary-500" strokeWidth={1.75} />
+                    <span className="text-sm">{uz ? o.uz : o.ru}</span>
+                  </button>
+                )
+              })}
+            </div>
+            <WizardNav onBack={goBack} backLabel={t(lang, ui.back)} />
           </div>
         )}
 
@@ -412,6 +476,42 @@ export default function MatchPage() {
                 className="input w-32 px-4 py-2.5"
               />
             </div>
+
+            <div>
+              <label className="mb-1.5 flex items-center gap-1.5 text-sm font-semibold text-gray-600">
+                <Languages className="h-4 w-4 shrink-0" strokeWidth={1.75} /> {t(lang, ui.qLanguage)}
+              </label>
+              <div className="flex flex-wrap gap-2">
+                {LANGUAGE_OPTIONS.map((l) => {
+                  const val = l.value || 'any'
+                  return (
+                    <button
+                      key={val}
+                      onClick={() => setLanguage(l.value || null)}
+                      className={`rounded-full border px-4 py-1.5 text-sm font-semibold transition-colors ${
+                        (language ?? '') === l.value
+                          ? 'border-primary-500 bg-primary-600 text-white'
+                          : 'border-gray-300 bg-white text-gray-600 hover:border-primary-400'
+                      }`}
+                    >
+                      {uz ? l.uz : l.ru}
+                    </button>
+                  )
+                })}
+              </div>
+            </div>
+
+            <label className="flex cursor-pointer items-center gap-3 rounded-xl border border-gray-200 bg-white px-4 py-3 shadow-sm hover:border-primary-300">
+              <div
+                onClick={() => setPreferPremium(!preferPremium)}
+                className={`relative h-6 w-11 shrink-0 rounded-full transition-colors ${preferPremium ? 'bg-primary-600' : 'bg-gray-200'}`}
+              >
+                <div className={`absolute top-0.5 h-5 w-5 rounded-full bg-white shadow transition-transform ${preferPremium ? 'translate-x-5' : 'translate-x-0.5'}`} />
+              </div>
+              <span className="flex items-center gap-1.5 text-sm font-semibold text-gray-700">
+                <Crown className="h-4 w-4 shrink-0 text-amber-500" strokeWidth={1.75} /> {t(lang, ui.premiumLabel)}
+              </span>
+            </label>
 
             <div className="flex items-center justify-between">
               <button onClick={goBack} className="text-sm font-semibold text-gray-500 hover:text-gray-700">
@@ -529,10 +629,17 @@ export default function MatchPage() {
                           {r.institution.avgRating != null && (
                             <RatingHint rating={r.institution.avgRating} count={r.institution.reviewCount} lang={lang} />
                           )}
-                          {r.institution.city && (
+                          {r.institution.deliveryMode === 'ONLINE' ? (
+                            <span className="flex items-center gap-1 font-semibold text-sky-600">
+                              <Wifi className="h-3.5 w-3.5 shrink-0" strokeWidth={1.75} /> {uz ? 'Onlayn' : 'Онлайн'}
+                            </span>
+                          ) : r.institution.city && (
                             <span className="flex items-center gap-1">
                               <MapPin className="h-3.5 w-3.5 shrink-0" strokeWidth={1.75} />
                               {uz ? r.institution.city.nameUz : (r.institution.city.nameRu ?? r.institution.city.nameUz)}
+                              {r.institution.deliveryMode === 'HYBRID' && (
+                                <span className="ml-1 text-sky-500">+ {uz ? 'onlayn' : 'онлайн'}</span>
+                              )}
                             </span>
                           )}
                           {/* Narx — byudjet so'ralgani uchun natijada ham ko'rsatamiz */}

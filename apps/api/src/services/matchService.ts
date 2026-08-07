@@ -32,6 +32,10 @@ export interface MatchPreferences {
   age?: number
   /** Ta'lim tili: uz | ru | en */
   language?: string
+  /** O'qish formati: offline | online | hybrid */
+  format?: string
+  /** Faqat Premium (tekshirilgan, kengaytirilgan profilli) markazlarni afzal ko'rish */
+  preferPremium?: boolean
 }
 
 /** Baholanadigan muassasa (Prisma'dan keladigan minimal shakl) */
@@ -41,12 +45,14 @@ export interface MatchCandidate {
   nameRu: string | null
   slug: string
   type: string
+  status: string
   isVerified: boolean
   avgRating: number | null
   reviewCount: number
   cityId: string | null
   regionId: string | null
   phone: string | null
+  deliveryMode: string
   details: {
     descriptionUz: string | null
     minAge: number | null
@@ -59,6 +65,7 @@ export interface MatchCandidate {
   pricing: {
     monthlyMin: number | null
     monthlyMax: number | null
+    hasDiscount?: boolean
   } | null
   mediaCount?: number
 }
@@ -90,14 +97,21 @@ export interface MatchResult {
 }
 
 // ─── Og'irliklar (yig'indisi 1.0) ─────────────────────────────
-
+//
+// v1'dan v2'ga: format (onlayn/offlayn/gibrid) va til komponentlari
+// qo'shildi (til maydoni v1'da mavjud edi, lekin ballashda ishlatilmasdi).
+// Mavjud komponentlarning hech biri olib tashlanmadi — faqat yangi
+// ikkitasiga joy ochish uchun og'irliklar proporsional kamaytirildi,
+// nisbiy tartib (goal/quality eng yuqori, trust/age eng past) saqlandi.
 const WEIGHTS = {
-  goal:     0.25,
-  quality:  0.25,
-  budget:   0.15,
-  location: 0.15,
-  schedule: 0.10,
-  age:      0.05,
+  goal:     0.20,
+  quality:  0.20,
+  budget:   0.13,
+  location: 0.12,
+  schedule: 0.09,
+  format:   0.08,
+  language: 0.07,
+  age:      0.06,
   trust:    0.05,
 } as const
 
@@ -119,8 +133,10 @@ export function computeMatchScore(
     scoreBudget(inst, prefs),
     scoreLocation(inst, prefs),
     scoreSchedule(inst, prefs),
+    scoreFormat(inst, prefs),
+    scoreLanguage(inst, prefs),
     scoreAge(inst, prefs),
-    scoreTrust(inst),
+    scoreTrust(inst, prefs),
   ]
 
   const total = components.reduce((sum, c) => sum + c.score * c.weight, 0)
@@ -256,11 +272,21 @@ function scoreBudget(inst: MatchCandidate, prefs: MatchPreferences): ScoreCompon
     }
   }
 
-  // Byudjetdan oshsa: har +10% uchun -20 ball (50% oshsa 0)
+  // Byudjetdan oshsa: har +10% uchun -20 ball (50% oshsa 0).
+  // Chegirma/aksiya mavjud bo'lsa (InstitutionPricing.hasDiscount) —
+  // real narx pastroq bo'lishi mumkinligi uchun jarima yumshatiladi
   const over = min / prefs.budget - 1
-  const score = Math.max(0, Math.round(100 - over * 200))
+  const rawScore = Math.max(0, Math.round(100 - over * 200))
+  if (inst.pricing?.hasDiscount) {
+    const score = Math.min(100, rawScore + 15)
+    return {
+      ...base, score, hasData: true,
+      reasonUz: 'Chegirma mavjud — byudjetga yaqinlashishi mumkin',
+      reasonRu: 'Есть скидка — может уложиться в бюджет',
+    }
+  }
   return {
-    ...base, score, hasData: true,
+    ...base, score: rawScore, hasData: true,
     reasonUz: over <= 0.2 ? 'Byudjetdan biroz qimmat' : 'Byudjetdan ancha qimmat',
     reasonRu: over <= 0.2 ? 'Немного дороже бюджета' : 'Значительно дороже бюджета',
   }
@@ -270,6 +296,17 @@ function scoreBudget(inst: MatchCandidate, prefs: MatchPreferences): ScoreCompon
 
 function scoreLocation(inst: MatchCandidate, prefs: MatchPreferences): ScoreComponent {
   const base = { key: 'location', labelUz: 'Joylashuv', labelRu: 'Расположение', weight: WEIGHTS.location }
+
+  // Onlayn markaz — istalgan shahardan qatnashish mumkin, shuning uchun
+  // shahar mos kelmasligi uni PASAYTIRMASLIGI kerak (boshqa hududdagi
+  // sifatli onlayn markaz jazolanmasligi shart)
+  if (inst.deliveryMode === 'ONLINE') {
+    return {
+      ...base, score: 95, hasData: true,
+      reasonUz: "Onlayn — istalgan shahardan qatnashish mumkin",
+      reasonRu: 'Онлайн — можно из любого города',
+    }
+  }
 
   if (!prefs.cityId && !prefs.regionId) {
     return { ...base, score: 60, hasData: false, reasonUz: 'Shahar tanlanmagan', reasonRu: 'Город не выбран' }
@@ -319,7 +356,67 @@ function scoreSchedule(inst: MatchCandidate, prefs: MatchPreferences): ScoreComp
   return { ...base, score: 30, hasData: true, reasonUz: 'Siz tanlagan vaqtda guruh yo\'q', reasonRu: 'Нет групп в выбранное время' }
 }
 
-// ─── 6. Yosh mosligi ─────────────────────────────────────────
+// ─── 6. O'qish formati (offlayn / onlayn / gibrid) ────────────
+
+function scoreFormat(inst: MatchCandidate, prefs: MatchPreferences): ScoreComponent {
+  const base = { key: 'format', labelUz: "O'qish formati", labelRu: 'Формат обучения', weight: WEIGHTS.format }
+
+  if (!prefs.format) {
+    return { ...base, score: 60, hasData: false, reasonUz: 'Format tanlanmagan', reasonRu: 'Формат не выбран' }
+  }
+
+  const mode = inst.deliveryMode // 'OFFLINE' | 'ONLINE' | 'HYBRID'
+
+  if (mode === 'HYBRID') {
+    // Gibrid markaz har qanday format afzalligiga mos keladi
+    return { ...base, score: 100, hasData: true, reasonUz: 'Offlayn va onlayn ikkalasi ham mavjud', reasonRu: 'Доступны офлайн и онлайн' }
+  }
+
+  if (prefs.format === 'hybrid') {
+    // Foydalanuvchi ikkalasiga ham moslashuvchan — sof offlayn/onlayn ham yetarli
+    return { ...base, score: 75, hasData: true, reasonUz: "Moslashuvchan format bilan mos", reasonRu: 'Подходит по гибкому формату' }
+  }
+
+  const wantsOnline = prefs.format === 'online'
+  const isOnline = mode === 'ONLINE'
+  if (wantsOnline === isOnline) {
+    return {
+      ...base, score: 100, hasData: true,
+      reasonUz: wantsOnline ? 'Onlayn formatda o\'qitiladi' : 'Offlayn (yuzma-yuz) darslar',
+      reasonRu: wantsOnline ? 'Обучение в онлайн-формате' : 'Очные занятия',
+    }
+  }
+  return {
+    ...base, score: 25, hasData: true,
+    reasonUz: wantsOnline ? 'Faqat offlayn xizmat ko\'rsatadi' : 'Faqat onlayn xizmat ko\'rsatadi',
+    reasonRu: wantsOnline ? 'Работает только офлайн' : 'Работает только онлайн',
+  }
+}
+
+// ─── 7. Til mosligi ────────────────────────────────────────────
+
+function scoreLanguage(inst: MatchCandidate, prefs: MatchPreferences): ScoreComponent {
+  const base = { key: 'language', labelUz: "O'qitish tili", labelRu: 'Язык обучения', weight: WEIGHTS.language }
+
+  if (!prefs.language) {
+    return { ...base, score: 60, hasData: false, reasonUz: 'Til tanlanmagan', reasonRu: 'Язык не выбран' }
+  }
+  const langs = inst.details?.languages ?? []
+  if (langs.length === 0) {
+    return { ...base, score: 55, hasData: false, reasonUz: "Til ma'lumoti yo'q", reasonRu: 'Нет данных о языке' }
+  }
+  if (langs.map((l) => l.toLowerCase()).includes(prefs.language.toLowerCase())) {
+    const label = { uz: "O'zbek", ru: 'Rus', en: 'Ingliz' }[prefs.language] ?? prefs.language
+    const labelRu = { uz: 'узбекском', ru: 'русском', en: 'английском' }[prefs.language] ?? prefs.language
+    return {
+      ...base, score: 100, hasData: true,
+      reasonUz: `${label} tilida o'qitiladi`, reasonRu: `Обучение на ${labelRu} языке`,
+    }
+  }
+  return { ...base, score: 30, hasData: true, reasonUz: 'Siz tanlagan tilda emas', reasonRu: 'Не на выбранном языке' }
+}
+
+// ─── 8. Yosh mosligi ─────────────────────────────────────────
 
 function scoreAge(inst: MatchCandidate, prefs: MatchPreferences): ScoreComponent {
   const base = { key: 'age', labelUz: 'Yoshga moslik', labelRu: 'Соответствие возрасту', weight: WEIGHTS.age }
@@ -345,9 +442,9 @@ function scoreAge(inst: MatchCandidate, prefs: MatchPreferences): ScoreComponent
   return { ...base, score: 15, hasData: true, reasonUz: 'Yosh chegarasidan tashqarida', reasonRu: 'Вне возрастных рамок' }
 }
 
-// ─── 7. Ishonch (profil to'liqligi + tasdiqlanganlik) ─────────
+// ─── 9. Ishonch (profil to'liqligi + tasdiqlanganlik + Premium) ─
 
-function scoreTrust(inst: MatchCandidate): ScoreComponent {
+function scoreTrust(inst: MatchCandidate, prefs: MatchPreferences): ScoreComponent {
   const base = { key: 'trust', labelUz: 'Ishonchlilik', labelRu: 'Надёжность', weight: WEIGHTS.trust }
 
   let score = 20
@@ -357,12 +454,20 @@ function scoreTrust(inst: MatchCandidate): ScoreComponent {
   if (inst.pricing?.monthlyMin) score += 10
   if ((inst.mediaCount ?? 0) > 0) score += 10
 
+  // Foydalanuvchi Premium markazlarni afzal ko'rsa — qo'shimcha bonus
+  const isPremium = inst.status === 'PREMIUM'
+  if (prefs.preferPremium && isPremium) score += 15
+
   return {
     ...base,
     score: Math.min(100, score),
     hasData: true,
-    reasonUz: inst.isVerified ? 'Rasman tasdiqlangan muassasa' : "Profil ma'lumotlari mavjud",
-    reasonRu: inst.isVerified ? 'Официально подтверждено' : 'Профиль заполнен',
+    reasonUz: prefs.preferPremium && isPremium
+      ? 'Premium tasdiqlangan muassasa'
+      : inst.isVerified ? 'Rasman tasdiqlangan muassasa' : "Profil ma'lumotlari mavjud",
+    reasonRu: prefs.preferPremium && isPremium
+      ? 'Premium подтверждённое учреждение'
+      : inst.isVerified ? 'Официально подтверждено' : 'Профиль заполнен',
   }
 }
 

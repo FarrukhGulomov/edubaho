@@ -34,6 +34,9 @@ const matchSchema = z.object({
   budget:   z.number().int().positive().max(1_000_000_000).optional(),
   shift:    z.enum(['morning', 'afternoon', 'evening', 'weekend']).optional(),
   age:      z.number().int().min(1).max(99).optional(),
+  language: z.enum(['uz', 'ru', 'en']).optional(),
+  format:   z.enum(['offline', 'online', 'hybrid']).optional(),
+  preferPremium: z.boolean().optional(),
   limit:    z.number().int().min(1).max(30).default(12),
 })
 
@@ -58,6 +61,8 @@ export default async function matchRoutes(fastify: FastifyInstance) {
         nameRu: true,
         slug: true,
         type: true,
+        status: true,
+        deliveryMode: true,
         isVerified: true,
         avgRating: true,
         reviewCount: true,
@@ -72,7 +77,7 @@ export default async function matchRoutes(fastify: FastifyInstance) {
             languages: true, programs: true, shifts: true, specializations: true,
           },
         },
-        pricing: { select: { monthlyMin: true, monthlyMax: true } },
+        pricing: { select: { monthlyMin: true, monthlyMax: true, hasDiscount: true } },
         _count: { select: { media: true } },
       },
       take: 300,
@@ -115,7 +120,13 @@ export default async function matchRoutes(fastify: FastifyInstance) {
 
     const attempts: Array<() => Attempt> = []
 
-    if (prefs.cityId) {
+    // Onlayn format tanlansa, joylashuv bosqichlari umuman kerak emas —
+    // onlayn markaz istalgan shahardan foydalanuvchiga mos, shuning uchun
+    // to'g'ridan-to'g'ri butun O'zbekiston bo'yicha qidiruvga o'tamiz
+    // ("eng yaxshi onlayn markazlarni butun mamlakat bo'yicha tavsiya qilish")
+    const skipLocationTiers = prefs.format === 'online'
+
+    if (prefs.cityId && !skipLocationTiers) {
       // 1) Aynan shu shahar + yo'nalish mos
       attempts.push(() => ({
         pool: candidates.filter((c) => inCity(c) && goalHit(c)),
@@ -144,15 +155,17 @@ export default async function matchRoutes(fastify: FastifyInstance) {
       }
     }
     // 5) Butun O'zbekiston bo'yicha + yo'nalish mos
+    // Onlayn format uchun bu "yumshatish" emas — foydalanuvchi aynan shuni
+    // so'ragan, shuning uchun locationRelaxed=true qo'yilmaydi
     attempts.push(() => ({
       pool: candidates.filter((c) => goalHit(c)),
-      locationRelaxed: !!prefs.cityId, subjectRelaxed: false, usedRegionFallback: false,
+      locationRelaxed: !!prefs.cityId && !skipLocationTiers, subjectRelaxed: false, usedRegionFallback: false,
     }))
     if (hasGoal) {
       // 6) So'nggi chora: butun mamlakat, yo'nalish yumshatiladi
       attempts.push(() => ({
         pool: candidates,
-        locationRelaxed: !!prefs.cityId, subjectRelaxed: true, usedRegionFallback: false,
+        locationRelaxed: !!prefs.cityId && !skipLocationTiers, subjectRelaxed: true, usedRegionFallback: false,
       }))
     }
 
@@ -167,7 +180,7 @@ export default async function matchRoutes(fastify: FastifyInstance) {
     // Shu turdagi muassasa umuman shunday shartlarga to'g'ri kelmasa —
     // bo'sh javob o'rniga hech bo'lmasa turi mos barcha nomzodlarni ko'rsatamiz
     if (chosen.pool.length === 0) {
-      chosen = { pool: candidates, locationRelaxed: !!prefs.cityId, subjectRelaxed: hasGoal, usedRegionFallback: false }
+      chosen = { pool: candidates, locationRelaxed: !!prefs.cityId && !skipLocationTiers, subjectRelaxed: hasGoal, usedRegionFallback: false }
     }
 
     const results = chosen.pool
@@ -190,6 +203,7 @@ export default async function matchRoutes(fastify: FastifyInstance) {
             address: c.address,
             city: c.city,
             pricing: c.pricing,
+            deliveryMode: c.deliveryMode,
           },
           match,
         }

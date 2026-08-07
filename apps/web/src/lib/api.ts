@@ -138,6 +138,7 @@ export interface MatchInstitution {
   address?: string | null
   city?: { nameUz: string; nameRu?: string | null } | null
   pricing?: { monthlyMin?: number | null; monthlyMax?: number | null } | null
+  deliveryMode?: string
 }
 
 export interface MatchComponent {
@@ -171,6 +172,9 @@ export const matchApi = {
     budget?: number
     shift?: string
     age?: number
+    language?: string
+    format?: string
+    preferPremium?: boolean
     limit?: number
   }) =>
     apiFetch<{
