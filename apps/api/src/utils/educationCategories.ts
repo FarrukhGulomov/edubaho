@@ -13,6 +13,8 @@
  * shu toifa bo'lmasa, u umuman tavsiya ro'yxatiga kirmaydi.
  */
 
+import { hasWordMatch } from './textMatch'
+
 export interface EducationCategoryDef {
   code: string
   labelUz: string
@@ -27,6 +29,18 @@ export interface EducationCategoryDef {
    *    (inferCategories — admin keyin qo'lda tahrirlashi mumkin)
    */
   keywords: string[]
+  /**
+   * Juft so'zlar — IKKALASI HAM matnda uchrasagina toifa deb hisoblanadi.
+   * O'zbek tili qo'shimchali (agglutinativ) bo'lgani uchun ("universitet"
+   * → "universitetga"/"universitetlarga"/"universitetiga") aniq bir butun
+   * ibora ro'yxati barcha shakllarni tutolmaydi — masalan "Xorijiy
+   * universitetlarga tayyorlov" iborasi "universitetga tayyorlov" bilan
+   * so'zma-so'z mos kelmaydi. Juft tekshiruv ikkala ildizni (masalan
+   * "universitet" + "tayyor") alohida qidiradi — qo'shimchalardan qat'i
+   * nazar topiladi, lekin faqat ikkalasi birga kelganda (yolg'iz
+   * "universitet" so'zi haqida gap ketishi kabi soxta hitlardan saqlaydi).
+   */
+  keywordPairs?: [string, string][]
 }
 
 export const EDUCATION_CATEGORIES: EducationCategoryDef[] = [
@@ -41,6 +55,10 @@ export const EDUCATION_CATEGORIES: EducationCategoryDef[] = [
       'подготовка к поступлению', 'поступление в университет', 'поступление в вуз',
       'university admission', 'college admission', 'abituriyent', 'абитуриент',
       'dtm tayyorlov', 'дтм', 'oliy ta\'lim muassasasiga',
+    ],
+    keywordPairs: [
+      ['universitet', 'tayyor'], ['universitet', 'kirish'], ['universitet', 'qabul'],
+      ["oliy ta'lim", 'tayyor'], ['вуз', 'поступлен'], ['университет', 'поступлен'],
     ],
   },
   {
@@ -179,20 +197,10 @@ export function getCategoryDef(code: string): EducationCategoryDef | undefined {
   return CATEGORY_BY_CODE.get(code)
 }
 
-function escapeRegex(s: string): string {
-  return s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
-}
-
-/**
- * Qisqa (≤4 belgili) kalit so'zlar so'z chegarasi bilan qidiriladi
- * (masalan "sat" so'zi "saqlash" ichida noto'g'ri topilmasin).
- * Uzunroq, o'ziga xos iboralar oddiy substring bilan tekshiriladi.
- */
-function textHasKeyword(text: string, kw: string): boolean {
-  if (kw.length <= 4) {
-    return new RegExp(`\\b${escapeRegex(kw)}\\b`, 'i').test(text)
-  }
-  return text.includes(kw)
+function defMatches(text: string, def: EducationCategoryDef): boolean {
+  if (def.keywords.some((kw) => hasWordMatch(text, kw))) return true
+  if (def.keywordPairs?.some(([a, b]) => hasWordMatch(text, a) && hasWordMatch(text, b))) return true
+  return false
 }
 
 /**
@@ -205,7 +213,7 @@ export function classifyGoalCategory(goal: string): string | null {
   const g = goal.toLowerCase().trim()
   if (!g) return null
   for (const def of EDUCATION_CATEGORIES) {
-    if (def.keywords.some((kw) => textHasKeyword(g, kw))) return def.code
+    if (defMatches(g, def)) return def.code
   }
   return null
 }
@@ -229,7 +237,7 @@ export function inferCategories(input: {
 
   const found = new Set<string>()
   for (const def of EDUCATION_CATEGORIES) {
-    if (def.keywords.some((kw) => textHasKeyword(haystack, kw))) found.add(def.code)
+    if (defMatches(haystack, def)) found.add(def.code)
   }
 
   // Dasturlash aniqlansa — IT kurslari toifasi ham mantiqan to'g'ri keladi

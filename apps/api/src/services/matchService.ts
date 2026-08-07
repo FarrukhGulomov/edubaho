@@ -15,6 +15,7 @@
 
 import { expandSearchTerms } from '../utils/subjectSynonyms'
 import { classifyGoalCategory, getCategoryDef } from '../utils/educationCategories'
+import { hasWordMatch } from '../utils/textMatch'
 
 // ─── Kirish ma'lumotlari ──────────────────────────────────────
 
@@ -211,22 +212,9 @@ function computeCourseMatch(inst: MatchCandidate, goal: string): { ratio: number
   // Har bir token sinonimlari bilan kengaytiriladi:
   // "химия" → ["kimyo", "chemistry", ...] — qaysi tilda yozilishidan qat'i nazar topiladi
   const hits = goalTokens.filter((tok) =>
-    expandSearchTerms(tok).some((variant) => haystackHasTerm(haystack, variant)),
+    expandSearchTerms(tok).some((variant) => hasWordMatch(haystack, variant)),
   )
   return { ratio: hits.length / goalTokens.length }
-}
-
-/**
- * Qisqa (≤4 belgili) atamalar so'z chegarasi bilan qidiriladi — aks holda
- * "act" (SAT/ACT sinonimi) "React" so'zi ichida noto'g'ri topilib qolardi
- * (aynan shu turdagi xato "OTMga kirish" bagida ham uchragan edi).
- */
-function haystackHasTerm(haystack: string, term: string): boolean {
-  const t = term.toLowerCase()
-  if (t.length <= 4) {
-    return new RegExp(`\\b${t.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}\\b`, 'i').test(haystack)
-  }
-  return haystack.includes(t)
 }
 
 /**
