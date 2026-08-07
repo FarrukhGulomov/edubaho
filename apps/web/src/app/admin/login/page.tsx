@@ -339,9 +339,8 @@ export default function AdminLoginPage() {
                 <input
                   ref={pinRef}
                   type="password"
-                  inputMode="numeric"
                   value={pin}
-                  onChange={e => setPin(e.target.value.replace(/\D/g, '').slice(0, 8))}
+                  onChange={e => setPin(e.target.value.slice(0, 32))}
                   placeholder="PIN kiriting"
                   required
                   className="w-full rounded-xl border border-white/20 bg-white/10 px-4 py-3.5 text-center text-2xl font-mono tracking-widest text-white outline-none focus:border-purple-400 transition-colors placeholder:text-white/30"
