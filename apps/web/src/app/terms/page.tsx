@@ -1,5 +1,7 @@
 import type { Metadata } from 'next'
 import Link from 'next/link'
+import Header from '@/components/shared/Header'
+import Footer from '@/components/shared/Footer'
 
 export const metadata: Metadata = {
   title: "Foydalanish shartlari",
@@ -8,8 +10,9 @@ export const metadata: Metadata = {
 
 export default function TermsPage() {
   return (
-    <div className="min-h-screen bg-gray-50">
-      <div className="mx-auto max-w-3xl px-4 py-12">
+    <div className="flex min-h-screen flex-col bg-gray-50">
+      <Header />
+      <div className="mx-auto w-full max-w-3xl flex-1 px-4 py-12">
         {/* Header */}
         <div className="mb-8">
           <Link href="/" className="text-sm text-primary-600 hover:underline">
@@ -82,6 +85,7 @@ export default function TermsPage() {
           </section>
         </div>
       </div>
+      <Footer />
     </div>
   )
 }
