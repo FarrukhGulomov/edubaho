@@ -35,11 +35,11 @@ export default async function InstitutionPage({ params }: Props) {
   if (!inst) notFound()
 
   return (
-    <>
+    <div className="flex min-h-screen flex-col">
       <Header />
       <InstitutionDetail inst={inst} />
       <Footer />
-    </>
+    </div>
   )
 }
 

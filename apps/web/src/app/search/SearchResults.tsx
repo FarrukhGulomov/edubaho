@@ -137,7 +137,7 @@ export default function SearchResults({ institutions, meta, params }: Props) {
   const activeRegion = params.regionId ? regions.find(r => r.id === params.regionId) : null
 
   return (
-    <main className="min-h-screen bg-gray-50">
+    <main className="flex-1 bg-gray-50">
       {/* ── Qidiruv satri ─── */}
       <div className="sticky top-[65px] z-30 border-b border-gray-200 bg-white/97 backdrop-blur px-4 py-3 shadow-sm">
         <div className="mx-auto max-w-6xl">

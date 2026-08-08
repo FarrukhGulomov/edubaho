@@ -147,7 +147,7 @@ export default async function CityTopicPage({
   }
 
   return (
-    <>
+    <div className="flex min-h-screen flex-col">
       <Header />
       <div className="mx-auto max-w-6xl px-4 pt-6">
         <h1 className="text-2xl font-bold text-gray-900 sm:text-3xl">
@@ -157,6 +157,6 @@ export default async function CityTopicPage({
       </div>
       <SearchResults institutions={institutions} meta={meta} params={searchParams} />
       <Footer />
-    </>
+    </div>
   )
 }

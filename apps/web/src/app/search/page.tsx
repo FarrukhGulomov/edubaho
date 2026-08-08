@@ -33,11 +33,11 @@ export default async function SearchPage({
   }
 
   return (
-    <>
+    <div className="flex min-h-screen flex-col">
       <Header />
       <SearchResults institutions={institutions} meta={meta} params={params} />
       <Footer />
-    </>
+    </div>
   )
 }
 

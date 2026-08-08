@@ -263,10 +263,10 @@ export default function MatchPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="flex min-h-screen flex-col bg-gray-50">
       <Header />
 
-      <main className="mx-auto max-w-2xl px-4 py-8">
+      <main className="mx-auto w-full max-w-2xl flex-1 px-4 py-8">
         {/* Profil onboarding rejimi — nega so'ralayotgani tushuntiriladi + o'tkazib yuborish */}
         {next && step !== 'results' && (
           <div className="mb-6 flex items-center justify-between gap-3 rounded-xl border border-primary-100 bg-primary-50 px-4 py-3">

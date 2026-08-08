@@ -332,7 +332,7 @@ export default function InstitutionDetail({ inst }: { inst: Institution }) {
   if (!authChecked) return null
 
   return (
-    <main className="min-h-screen bg-gray-50">
+    <main className="flex-1 bg-gray-50">
       {/* ── Toza, minimalistik hero — gradient/dekor yo'q ─── */}
       <div className="border-b border-gray-200 bg-white">
         <div className="mx-auto max-w-5xl px-4">
