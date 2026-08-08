@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation'
 import { useState, useEffect, useRef } from 'react'
 import {
   Search, X, MapPin, Globe2, Users2, UserCheck, BadgeCheck, Star,
-  ArrowLeftRight, Check, PencilLine, School, Palette, Lock, Award,
+  ArrowLeftRight, Check, PencilLine, School, Palette, Lock, Award, ChevronDown,
 } from 'lucide-react'
 import { RatingHint } from '@/components/shared/StarRating'
 import { useCompare, useSaved } from '@/hooks/useCompare'
@@ -212,11 +212,7 @@ export default function SearchResults({ institutions, meta, params }: Props) {
 
           {/* Region filter */}
           {regions.length > 0 && (
-            <select
-              value={params.regionId ?? ''}
-              onChange={e => setParam('regionId', e.target.value)}
-              className="rounded-xl border border-gray-200 bg-white px-3 py-2 text-xs font-medium text-gray-700 shadow-sm outline-none focus:border-primary-400 cursor-pointer"
-            >
+            <FilterSelect value={params.regionId ?? ''} onChange={v => setParam('regionId', v)}>
               <option value="">{t(lang, ui.allRegions)}</option>
               {regions.map(r => (
                 <option key={r.id} value={r.id}>
@@ -226,37 +222,29 @@ export default function SearchResults({ institutions, meta, params }: Props) {
                   {r.institutionCount > 0 ? ` (${r.institutionCount})` : ''}
                 </option>
               ))}
-            </select>
+            </FilterSelect>
           )}
 
           {/* City filter */}
           {cities.length > 0 && (
-            <select
-              value={params.cityId ?? ''}
-              onChange={e => setParam('cityId', e.target.value)}
-              className="rounded-xl border border-gray-200 bg-white px-3 py-2 text-xs font-medium text-gray-700 shadow-sm outline-none focus:border-primary-400 cursor-pointer"
-            >
+            <FilterSelect value={params.cityId ?? ''} onChange={v => setParam('cityId', v)}>
               <option value="">{t(lang, ui.allCities)}</option>
               {cities.map(c => (
                 <option key={c.id} value={c.id}>
                   {lang === 'ru' ? c.nameRu : c.nameUz}
                 </option>
               ))}
-            </select>
+            </FilterSelect>
           )}
 
           {/* Sort */}
-          <select
-            value={params.sortBy ?? 'rating'}
-            onChange={e => setParam('sortBy', e.target.value)}
-            className="rounded-xl border border-gray-200 bg-white px-3 py-2 text-xs font-medium text-gray-700 shadow-sm outline-none focus:border-primary-400 cursor-pointer"
-          >
+          <FilterSelect value={params.sortBy ?? 'rating'} onChange={v => setParam('sortBy', v)}>
             {SORT_OPTIONS.map(opt => (
               <option key={opt.value} value={opt.value}>
                 {lang === 'uz' ? opt.uz : opt.ru}
               </option>
             ))}
-          </select>
+          </FilterSelect>
         </div>
 
 
@@ -344,6 +332,26 @@ export default function SearchResults({ institutions, meta, params }: Props) {
         )}
       </div>
     </main>
+  )
+}
+
+// Brauzer standart strelkasi o'rniga izchil lucide chevron bilan select
+function FilterSelect({ value, onChange, children }: {
+  value: string
+  onChange: (v: string) => void
+  children: React.ReactNode
+}) {
+  return (
+    <div className="relative">
+      <select
+        value={value}
+        onChange={e => onChange(e.target.value)}
+        className="cursor-pointer appearance-none rounded-xl border border-gray-200 bg-white py-2 pl-3 pr-8 text-xs font-medium text-gray-700 shadow-sm outline-none focus:border-primary-400"
+      >
+        {children}
+      </select>
+      <ChevronDown className="pointer-events-none absolute right-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-gray-400" strokeWidth={2} />
+    </div>
   )
 }
 

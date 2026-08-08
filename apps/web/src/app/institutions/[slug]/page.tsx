@@ -1,6 +1,7 @@
 import type { Metadata } from 'next'
 import { notFound } from 'next/navigation'
 import Header from '@/components/shared/Header'
+import Footer from '@/components/shared/Footer'
 import InstitutionDetail from './InstitutionDetail'
 
 const API = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:3001/api/v1'
@@ -37,6 +38,7 @@ export default async function InstitutionPage({ params }: Props) {
     <>
       <Header />
       <InstitutionDetail inst={inst} />
+      <Footer />
     </>
   )
 }

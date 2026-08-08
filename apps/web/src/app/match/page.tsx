@@ -10,6 +10,7 @@ import {
   Languages, Crown, Wifi,
 } from 'lucide-react'
 import Header from '@/components/shared/Header'
+import Footer from '@/components/shared/Footer'
 import { RatingHint } from '@/components/shared/StarRating'
 import { useLang, t } from '@/contexts/LangContext'
 import { matchApi, geoApi, authApi, type MatchItem } from '@/lib/api'
@@ -743,6 +744,7 @@ export default function MatchPage() {
           </div>
         )}
       </main>
+      <Footer />
     </div>
   )
 }

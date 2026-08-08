@@ -1,5 +1,6 @@
 import { notFound } from 'next/navigation'
 import Header from '@/components/shared/Header'
+import Footer from '@/components/shared/Footer'
 import CompareContent from './CompareContent'
 import CompareEmpty from './CompareEmpty'
 import { MAX_COMPARE } from '@/lib/compareConstants'
@@ -65,6 +66,7 @@ export default async function ComparePage({ searchParams }: Props) {
       <>
         <div className="no-print"><Header /></div>
         <CompareEmpty />
+        <div className="no-print"><Footer /></div>
       </>
     )
   }
@@ -76,6 +78,7 @@ export default async function ComparePage({ searchParams }: Props) {
     <>
       <div className="no-print"><Header /></div>
       <CompareContent institutions={institutions} />
+      <div className="no-print"><Footer /></div>
     </>
   )
 }

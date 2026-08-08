@@ -1,6 +1,7 @@
 import type { Metadata } from 'next'
 import { notFound } from 'next/navigation'
 import Header from '@/components/shared/Header'
+import Footer from '@/components/shared/Footer'
 import SearchResults from '../../search/SearchResults'
 import type { InstitutionCard } from '../../search/page'
 
@@ -155,6 +156,7 @@ export default async function CityTopicPage({
         <p className="mt-1.5 max-w-2xl text-gray-500">{topic.descUz}</p>
       </div>
       <SearchResults institutions={institutions} meta={meta} params={searchParams} />
+      <Footer />
     </>
   )
 }
