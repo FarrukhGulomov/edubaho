@@ -66,6 +66,7 @@ export default function ProfilePage() {
   const { items: compareItems } = useCompare()
 
   const [name, setName]           = useState('')
+  const [phone, setPhone]         = useState('')
   const [editing, setEditing]     = useState(false)
   const [saving, setSaving]       = useState(false)
   const [saveOk, setSaveOk]       = useState(false)
@@ -96,6 +97,7 @@ export default function ProfilePage() {
 
   useEffect(() => {
     if (user?.name) setName(user.name)
+    if (user?.phone) setPhone(user.phone)
   }, [user])
 
   useEffect(() => {
@@ -140,20 +142,26 @@ export default function ProfilePage() {
     setSaving(true)
     setSaveErr('')
     try {
+      const normalizedPhone = phone.replace(/\s/g, '')
+      if (normalizedPhone && !/^\+998(9[0-9]|88)\d{7}$/.test(normalizedPhone)) {
+        setSaveErr(uz ? "Noto'g'ri telefon raqami formati (+998XXXXXXXXX)" : 'Неверный формат номера (+998XXXXXXXXX)')
+        setSaving(false)
+        return
+      }
       const token = localStorage.getItem('accessToken')!
       const res = await fetch(`${API}/auth/profile`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}`, 'ngrok-skip-browser-warning': '1' },
-        body: JSON.stringify({ name }),
+        body: JSON.stringify({ name, ...(normalizedPhone ? { phone: normalizedPhone } : {}) }),
       })
-      if (!res.ok) throw new Error()
       const data = await res.json()
+      if (!res.ok) throw new Error(data.error ?? undefined)
       setUser(data.data)
       setEditing(false)
       setSaveOk(true)
       setTimeout(() => setSaveOk(false), 3000)
-    } catch {
-      setSaveErr(uz ? "Saqlashda xatolik. Qayta urinib ko'ring." : 'Ошибка при сохранении. Попробуйте ещё раз.')
+    } catch (err: unknown) {
+      setSaveErr(err instanceof Error && err.message ? err.message : (uz ? "Saqlashda xatolik. Qayta urinib ko'ring." : 'Ошибка при сохранении. Попробуйте ещё раз.'))
     } finally {
       setSaving(false)
     }
@@ -261,6 +269,28 @@ export default function ProfilePage() {
                     className="input"
                   />
                 </div>
+                <div>
+                  <label className="mb-2 block text-base font-bold text-gray-700">
+                    {uz ? 'Telefon raqami' : 'Номер телефона'}
+                  </label>
+                  <input
+                    type="tel"
+                    value={phone}
+                    onChange={e => {
+                      const val = e.target.value
+                      if (!val.startsWith('+998')) { setPhone('+998 '); return }
+                      setPhone(val)
+                    }}
+                    onFocus={() => { if (!phone) setPhone('+998 ') }}
+                    placeholder="+998 90 123 45 67"
+                    className="input"
+                  />
+                  <p className="mt-1 text-sm text-gray-400">
+                    {uz
+                      ? "Ta'lim markazlari siz bilan bog'lanishi uchun kerak"
+                      : 'Нужен, чтобы учебные центры могли связаться с вами'}
+                  </p>
+                </div>
                 {saveErr && (
                   <div className="flex items-start gap-2 rounded-xl bg-red-50 px-4 py-3 text-base text-red-700">
                     <AlertCircle className="mt-0.5 h-4 w-4 shrink-0" strokeWidth={2} /> {saveErr}
@@ -276,7 +306,7 @@ export default function ProfilePage() {
                   </button>
                   <button
                     type="button"
-                    onClick={() => { setEditing(false); setName(user.name ?? '') }}
+                    onClick={() => { setEditing(false); setName(user.name ?? ''); setPhone(user.phone ?? '') }}
                     className="btn-secondary"
                   >
                     {uz ? 'Bekor' : 'Отмена'}
@@ -288,9 +318,19 @@ export default function ProfilePage() {
                 <h1 className="text-2xl font-bold text-gray-900">
                   {user.name ?? <span className="text-gray-400 italic">{uz ? 'Ism kiritilmagan' : 'Имя не указано'}</span>}
                 </h1>
-                <p className="mt-1 flex items-center gap-1.5 text-base text-gray-500">
-                  <Phone className="h-4 w-4 shrink-0" strokeWidth={1.75} /> {user.phone}
-                </p>
+                {user.phone ? (
+                  <p className="mt-1 flex items-center gap-1.5 text-base text-gray-500">
+                    <Phone className="h-4 w-4 shrink-0" strokeWidth={1.75} /> {user.phone}
+                  </p>
+                ) : (
+                  <button
+                    onClick={() => setEditing(true)}
+                    className="mt-1 flex items-center gap-1.5 text-base font-semibold text-amber-600 hover:text-amber-700"
+                  >
+                    <Phone className="h-4 w-4 shrink-0" strokeWidth={1.75} />
+                    {uz ? 'Telefon raqamini qo\'shish' : 'Добавить номер телефона'}
+                  </button>
+                )}
               </div>
             )}
 
@@ -317,6 +357,33 @@ export default function ProfilePage() {
             </div>
           </div>
         </div>
+
+        {/* ══ Telefon raqami eslatmasi — faqat yo'q bo'lsa, majburlamasdan ══ */}
+        {!editing && !user.phone && (
+          <div className="flex items-center gap-4 rounded-2xl border border-amber-200 bg-amber-50 p-5">
+            <span className="icon-chip h-12 w-12 shrink-0 bg-amber-500 text-white">
+              <Phone className="h-5 w-5" strokeWidth={1.75} />
+            </span>
+            <div className="min-w-0 flex-1">
+              <p className="font-semibold text-amber-900">
+                {uz
+                  ? "Shaxsiy yordam olish uchun telefon raqamingizni qo'shing"
+                  : 'Добавьте номер телефона, чтобы получать персональную помощь'}
+              </p>
+              <p className="text-sm text-amber-700">
+                {uz
+                  ? "Tanlagan ta'lim markazlari siz bilan bog'lanishi uchun kerak"
+                  : 'Нужен, чтобы выбранные учебные центры могли связаться с вами'}
+              </p>
+            </div>
+            <button
+              onClick={() => setEditing(true)}
+              className="shrink-0 whitespace-nowrap rounded-xl bg-amber-600 px-4 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-amber-700"
+            >
+              {uz ? "Qo'shish" : 'Добавить'}
+            </button>
+          </div>
+        )}
 
         {/* ══ Admin panel — faqat adminlar uchun ═════════════════ */}
         {isAdmin && (

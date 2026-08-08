@@ -4,7 +4,7 @@ import Link from 'next/link'
 import { useEffect, useState } from 'react'
 import {
   GraduationCap, Crown, ShieldCheck, ClipboardList, School, CalendarCheck,
-  Building2, Clock, Sparkles, type LucideIcon,
+  Building2, Clock, Sparkles, Users, type LucideIcon,
 } from 'lucide-react'
 import { useAuth } from '@/hooks/useAuth'
 import { useRouter } from 'next/navigation'
@@ -16,6 +16,7 @@ interface DashboardStats {
   pendingInstitutions: number
   pendingReviews: number
   pendingBookings: number
+  leadsNeedContact: number
 }
 
 export default function AdminPage() {
@@ -64,13 +65,15 @@ export default function AdminPage() {
       fetch(`${API}/admin/institutions?status=PENDING&limit=1`, { headers }).then(r => r.json()),
       fetch(`${API}/admin/reviews/pending?limit=1`, { headers }).then(r => r.json()),
       fetch(`${API}/admin/trial-bookings?status=PENDING&limit=1`, { headers }).then(r => r.json()),
+      fetch(`${API}/admin/leads?status=CONTACT_REQUIRED&limit=1`, { headers }).then(r => r.json()),
     ])
-      .then(([institutions, pending, reviews, bookings]) => {
+      .then(([institutions, pending, reviews, bookings, leads]) => {
         setStats({
           totalInstitutions:   institutions.meta?.total ?? 0,
           pendingInstitutions: pending.meta?.total ?? 0,
           pendingReviews:      reviews.meta?.total ?? 0,
           pendingBookings:     bookings.meta?.total ?? 0,
+          leadsNeedContact:    leads.meta?.total ?? 0,
         })
       })
       .catch(() => {}) // statistika ixtiyoriy — muvaffaqiyatsiz bo'lsa jim o'tkaziladi
@@ -124,14 +127,29 @@ export default function AdminPage() {
 
         {/* Tezkor statistika — admin panelga kirgan zahoti nima e'tibor talab
             qilayotgani bir qarashda ko'rinishi kerak */}
-        <div className="mb-8 grid grid-cols-2 gap-3 sm:grid-cols-4">
+        <div className="mb-8 grid grid-cols-2 gap-3 sm:grid-cols-5">
           <StatTile Icon={Building2} label="Jami muassasa" value={stats?.totalInstitutions} accent="text-primary-600 bg-primary-50" />
           <StatTile Icon={Sparkles} label="Tasdiq kutmoqda" value={stats?.pendingInstitutions} accent="text-amber-600 bg-amber-50" urgent={!!stats?.pendingInstitutions} />
           <StatTile Icon={ClipboardList} label="Kutayotgan sharhlar" value={stats?.pendingReviews} accent="text-orange-600 bg-orange-50" urgent={!!stats?.pendingReviews} />
           <StatTile Icon={Clock} label="Probnoy so'rovlar" value={stats?.pendingBookings} accent="text-emerald-600 bg-emerald-50" urgent={!!stats?.pendingBookings} />
+          <StatTile Icon={Users} label="Bog'lanish kerak" value={stats?.leadsNeedContact} accent="text-rose-600 bg-rose-50" urgent={!!stats?.leadsNeedContact} />
         </div>
 
         <div className="grid gap-4 sm:grid-cols-2">
+          <Link
+            href="/admin/leads"
+            className="relative flex items-center gap-4 rounded-2xl border border-rose-200 bg-rose-50 p-6 transition-colors hover:border-rose-400"
+          >
+            <span className="icon-chip h-14 w-14 shrink-0 bg-rose-600 text-white">
+              <Users className="h-6 w-6" strokeWidth={1.75} />
+            </span>
+            <div>
+              <h2 className="text-lg font-bold text-rose-900">Lidlar (CRM)</h2>
+              <p className="text-sm text-rose-700">Foydalanuvchilar, ularning maqsadi, holati va faoliyati</p>
+            </div>
+            <NavBadge count={stats?.leadsNeedContact} className="bg-rose-600" />
+          </Link>
+
           <Link
             href="/admin/reviews"
             className="relative flex items-center gap-4 rounded-2xl border border-orange-200 bg-orange-50 p-6 transition-colors hover:border-orange-400"
