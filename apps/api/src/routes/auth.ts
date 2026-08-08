@@ -254,21 +254,36 @@ export default async function authRoutes(fastify: FastifyInstance) {
         return reply.status(400).send({ error: "O'zgartirilishi kerak bo'lgan ma'lumot yo'q" })
       }
 
-      const user = await prisma.user.update({
-        where: { id },
-        data,
-        select: {
-          id: true,
-          phone: true,
-          name: true,
-          email: true,
-          avatarUrl: true,
-          role: true,
-          matchOnboardingCompletedAt: true,
-        },
-      })
+      try {
+        const user = await prisma.user.update({
+          where: { id },
+          data,
+          select: {
+            id: true,
+            phone: true,
+            name: true,
+            email: true,
+            avatarUrl: true,
+            role: true,
+            matchOnboardingCompletedAt: true,
+          },
+        })
 
-      return reply.send({ data: user, message: 'Profil yangilandi' })
+        return reply.send({ data: user, message: 'Profil yangilandi' })
+      } catch (err: unknown) {
+        // P2002: unique constraint — telefon/email boshqa hisobda allaqachon ishlatilgan
+        const code = (err as { code?: string; meta?: { target?: string[] } }).code
+        if (code === 'P2002') {
+          const field = (err as { meta?: { target?: string[] } }).meta?.target?.[0]
+          const msg = field === 'phone'
+            ? 'Bu telefon raqami boshqa hisobda ishlatilmoqda'
+            : field === 'email'
+              ? 'Bu email boshqa hisobda ishlatilmoqda'
+              : "Bu ma'lumot allaqachon band"
+          return reply.status(409).send({ error: msg })
+        }
+        throw err
+      }
     },
   )
 

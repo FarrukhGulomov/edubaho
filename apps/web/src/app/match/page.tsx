@@ -183,9 +183,18 @@ export default function MatchPage() {
       setResults(res.data)
       setResultsMeta(res.meta)
       haptic('success')
+      // Admin Lead CRM'da "Ta'lim profili" bo'limi shu voqeaning eng
+      // so'nggisidan o'qiladi (apps/api/src/services/leadService.ts) —
+      // shuning uchun barcha afzalliklar to'liq yuboriladi, faqat
+      // type/goal/budget/shift emas
       track('match_completed', {
         category: 'engagement',
-        properties: { type, goal, budget, shift: finalShift, resultCount: res.data.length },
+        properties: {
+          type, goal, budget, shift: finalShift, resultCount: res.data.length,
+          cityId: cityId || undefined, age: age ? Number(age) : undefined,
+          format: format || undefined, language: language || undefined,
+          preferPremium: preferPremium || undefined,
+        },
       })
       // Oxirgi ishlatilgan afzalliklarni saqlaymiz — Profil sahifasidagi
       // shaxsiy tavsiyalar bloki shu saqlangan so'rovni qayta ishlatadi

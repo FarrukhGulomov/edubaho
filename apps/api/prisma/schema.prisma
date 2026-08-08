@@ -42,6 +42,22 @@ enum InstitutionStatus {
   INACTIVE
 }
 
+// Lead CRM: admin qo'lda belgilaydigan holat — boshqa hech qanday
+// manbadan (LeadEvent va h.k.) chiqarib bo'lmaydigan haqiqiy admin
+// qarori, shuning uchun (faqat shu maydon) User'da saqlanadi
+enum LeadStatus {
+  NEW
+  CONTACT_REQUIRED
+  CONTACTED
+  INTERESTED
+  CENTER_SELECTED
+  APPLICATION_STARTED
+  APPLICATION_SUBMITTED
+  CONVERTED
+  NOT_INTERESTED
+  LOST
+}
+
 // EduFit moslik algoritmi uchun: onlayn markazlarni joylashuvdan
 // qat'i nazar butun O'zbekiston bo'yicha tavsiya qilish imkonini beradi
 enum DeliveryMode {
@@ -140,6 +156,13 @@ model User {
   // null — hali ko'rmagan (profil ochilganda onboarding ko'rsatiladi).
   matchOnboardingCompletedAt DateTime?
 
+  // Lead CRM: admin qo'lda belgilaydigan holat. Priority (Hot/Warm/Cold)
+  // ATAYLAB bu yerda saqlanmaydi — u LeadEvent tarixi va profil
+  // to'liqligidan real vaqtda hisoblanadi (leadService.ts), aks holda
+  // faoliyat o'zgarganda eskirib qolgan/noto'g'ri qiymat saqlanib qolardi
+  leadStatus          LeadStatus @default(NEW)
+  leadStatusUpdatedAt DateTime?
+
   city              City?              @relation(fields: [cityId], references: [id])
   reviews           Review[]
   reviewVotes       ReviewVote[]
@@ -156,6 +179,8 @@ model User {
   @@index([telegramId])
   @@index([telegramUsername])
   @@index([googleId])
+  @@index([role, leadStatus])
+  @@index([role, createdAt])
   @@index([cityId])
 }
 

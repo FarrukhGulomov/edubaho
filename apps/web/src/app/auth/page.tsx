@@ -9,7 +9,7 @@ import { authTrack } from '@/lib/analytics'
 import { isTelegramWebApp } from '@/lib/telegram'
 import Logo from '@/components/shared/Logo'
 
-type Step = 'phone' | 'otp' | 'done'
+type Step = 'phone' | 'otp' | 'collect-phone' | 'done'
 
 const BOT_USERNAME = process.env.NEXT_PUBLIC_TELEGRAM_BOT_USERNAME ?? 'edubahobot'
 const GOOGLE_CLIENT_ID = process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID ?? ''
@@ -61,6 +61,11 @@ export default function AuthPage() {
   // Telegram widget haqiqatan render bo'ldimi — bo'lmasa bo'sh joy va
   // "yoki" ajratgichni ko'rsatmaymiz (sahifa buzilgandek ko'rinmasligi uchun)
   const [tgReady, setTgReady] = useState(false)
+  // Telefon so'rash qadami faqat Telegram orqali kirgan va telefon raqami
+  // hali yo'q foydalanuvchilar uchun ko'rsatiladi (Google'da bu qadam
+  // UMUMAN yo'q — mavjud Google oqimi o'zgarishsiz qoladi)
+  const [collectPhoneValue, setCollectPhoneValue] = useState('+998 ')
+  const [collectPhoneError, setCollectPhoneError] = useState('')
   const otpRef  = useRef<HTMLInputElement>(null)
   const tgRef   = useRef<HTMLDivElement>(null)
   const googleRef = useRef<HTMLDivElement>(null)
@@ -100,13 +105,15 @@ export default function AuthPage() {
 
     authApi.telegramLogin(tgUser)
       .then((result) => {
-        const r = result as { accessToken: string; refreshToken: string; isNewUser: boolean }
+        const r = result as { accessToken: string; refreshToken: string; isNewUser: boolean; user: { phone: string | null } }
         localStorage.setItem('accessToken', r.accessToken)
         localStorage.setItem('refreshToken', r.refreshToken)
         authTrack.completed(r.isNewUser ?? false)
         setIsNewUser(r.isNewUser ?? false)
         window.history.replaceState({}, '', '/auth')
-        setStep('done')
+        // Telegram telefon raqamini bermaydi — agar hali saqlanmagan bo'lsa
+        // bir martalik (o'tkazib yuborish mumkin) so'rov ko'rsatamiz
+        setStep(r.user.phone ? 'done' : 'collect-phone')
       })
       .catch((err: unknown) => {
         setError(err instanceof Error ? err.message : 'Telegram orqali kirish muvaffaqiyatsiz')
@@ -241,6 +248,10 @@ export default function AuthPage() {
     resend:     { uz: 'Kodni qayta yuborish', ru: 'Отправить код снова' },
     resendIn:   { uz: 'Qayta yuborish', ru: 'Повторить через' },
     back:       { uz: '← Raqamni o\'zgartirish', ru: '← Изменить номер' },
+    collectPhoneTitle: { uz: 'Telefon raqamingiz', ru: 'Ваш номер телефона' },
+    collectPhoneSub:   { uz: "Ta'lim markazlari siz bilan bog'lanishi uchun telefon raqamingizni qoldiring", ru: 'Оставьте номер телефона, чтобы учебные центры могли связаться с вами' },
+    collectPhoneSave:  { uz: 'Saqlash', ru: 'Сохранить' },
+    collectPhoneSkip:  { uz: "Hozircha o'tkazib yuborish", ru: 'Пропустить пока' },
     doneTitle:  { uz: 'Muvaffaqiyatli kirdingiz!', ru: 'Вы успешно вошли!' },
     doneSub:      { uz: 'Profilingizga o\'tasiz...', ru: 'Переходим в профиль...' },
     doneSubBack:  { uz: 'Sahifangizga qaytmoqdasiz...', ru: 'Возвращаемся на страницу...' },
@@ -320,6 +331,28 @@ export default function AuthPage() {
     }
   }
 
+  // Telegram orqali kirgandan keyin telefon raqamini saqlash (bir martalik,
+  // o'tkazib yuborish mumkin qadam) — mavjud PATCH /auth/profile qayta ishlatiladi
+  async function handleSaveCollectedPhone(e: React.FormEvent) {
+    e.preventDefault()
+    setCollectPhoneError('')
+    const normalized = collectPhoneValue.replace(/\s/g, '')
+    if (normalized.replace(/\D/g, '').length < 12) {
+      setCollectPhoneError(t(lang, { uz: "Noto'g'ri telefon raqami formati", ru: 'Неверный формат номера телефона' }))
+      return
+    }
+    setLoading(true)
+    try {
+      const token = localStorage.getItem('accessToken')!
+      await authApi.updateProfile(token, { phone: normalized })
+      setStep('done')
+    } catch (err: unknown) {
+      setCollectPhoneError(err instanceof Error ? err.message : t(lang, { uz: 'Xatolik yuz berdi', ru: 'Произошла ошибка' }))
+    } finally {
+      setLoading(false)
+    }
+  }
+
   return (
     <div className="flex min-h-screen bg-gray-50">
 
@@ -382,6 +415,8 @@ export default function AuthPage() {
               <h1 className="text-xl font-bold text-gray-900">
                 {step === 'done'
                   ? t(lang, ui.doneTitle)
+                  : step === 'collect-phone'
+                  ? t(lang, ui.collectPhoneTitle)
                   : step === 'otp'
                   ? t(lang, ui.otpSub)
                   : t(lang, ui.subtitle)}
@@ -532,6 +567,44 @@ export default function AuthPage() {
                     </button>
                   )}
                 </div>
+              </form>
+            )}
+
+            {/* ── Telegram: telefon so'rash (bir martalik, o'tkazib yuborish mumkin) ── */}
+            {step === 'collect-phone' && (
+              <form onSubmit={handleSaveCollectedPhone} className="space-y-4">
+                <p className="text-center text-sm text-gray-500">{t(lang, ui.collectPhoneSub)}</p>
+                <div>
+                  <label className="mb-1.5 block text-sm font-semibold text-gray-700">
+                    {t(lang, ui.phoneLabel)}
+                  </label>
+                  <input
+                    type="tel"
+                    autoFocus
+                    value={collectPhoneValue}
+                    onChange={(e) => {
+                      const val = e.target.value
+                      if (!val.startsWith('+998')) { setCollectPhoneValue('+998 '); return }
+                      setCollectPhoneValue(val)
+                    }}
+                    placeholder="+998 90 123 45 67"
+                    className="input text-lg"
+                  />
+                  <p className="mt-1 text-xs text-gray-400">
+                    {t(lang, { uz: "Faqat O'zbekiston raqamlari (+998)", ru: 'Только номера Узбекистана (+998)' })}
+                  </p>
+                </div>
+                {collectPhoneError && <ErrorBox msg={collectPhoneError} />}
+                <button type="submit" disabled={loading} className="btn-primary w-full">
+                  {loading ? t(lang, ui.sending) : t(lang, ui.collectPhoneSave)}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setStep('done')}
+                  className="w-full text-center text-sm font-semibold text-gray-500 hover:text-gray-700"
+                >
+                  {t(lang, ui.collectPhoneSkip)}
+                </button>
               </form>
             )}
 

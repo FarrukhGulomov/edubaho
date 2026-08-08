@@ -24,6 +24,9 @@ export const updateProfileSchema = z.object({
   name: z.string().min(2, 'Ism kamida 2 ta belgi').max(100).optional(),
   email: z.string().email('Noto\'g\'ri email format').optional(),
   cityId: z.string().min(1).optional(),
+  // Telegram/Google orqali ro'yxatdan o'tgan foydalanuvchilar telefon
+  // raqamini profildan qo'shishi/yangilashi uchun (Lead CRM'da ko'rinishi shart)
+  phone: uzPhoneSchema.optional(),
   // "Mos Edu'ni top" onboarding'ni bajarish/o'tkazib yuborish belgisi
   matchOnboardingCompletedAt: z.coerce.date().optional(),
 })
