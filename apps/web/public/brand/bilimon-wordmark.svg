@@ -1,0 +1,5 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 4 242 80" font-family="Inter,system-ui,sans-serif">
+  <text x="0" y="66" font-size="60" font-weight="800" letter-spacing="-1.2" fill="#0c4a6e">bilim</text>
+  <g transform="translate(136 12) scale(0.72)"><circle cx="48" cy="54" r="26" stroke="#0ea5e9" stroke-width="9" fill="none" stroke-linecap="round" stroke-dasharray="130 33" transform="rotate(-54 48 54)"></circle><path d="M48 8 74 20 48 32 22 20Z" fill="#0c4a6e"></path><path d="M68 23v12" stroke="#0c4a6e" stroke-width="4" stroke-linecap="round"></path><circle cx="68" cy="38" r="3.4" fill="#0284c7"></circle></g>
+  <text x="197" y="66" font-size="60" font-weight="800" letter-spacing="-1.2" fill="#0c4a6e">n</text>
+</svg>

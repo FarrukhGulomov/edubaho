@@ -9,6 +9,10 @@ const nextConfig: NextConfig = {
     remotePatterns: [
       {
         protocol: 'https',
+        hostname: 'media.bilimon.uz',
+      },
+      {
+        protocol: 'https',
         hostname: 'media.edureyting.uz',
       },
       {

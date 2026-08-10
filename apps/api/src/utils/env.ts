@@ -25,7 +25,7 @@ const envSchema = z.object({
   // ── SMS (Playmobile) — ixtiyoriy, yo'q bo'lsa OTP faqat logga chiqadi ────
   SMS_LOGIN: z.string().default(''),
   SMS_PASSWORD: z.string().default(''),
-  SMS_FROM: z.string().default('Edula'),
+  SMS_FROM: z.string().default('BilimOn'),
   SMS_BASE_URL: z.string().default('http://91.204.239.44/broker-api/send'),
 
   // ── Telegram Login Widget — ixtiyoriy, yo'q bo'lsa Telegram kirish o'chiq ─
@@ -42,8 +42,8 @@ const envSchema = z.object({
   R2_ACCOUNT_ID: z.string().default(''),
   R2_ACCESS_KEY: z.string().default(''),
   R2_SECRET_KEY: z.string().default(''),
-  R2_BUCKET: z.string().default('edureyting-media'),
-  R2_PUBLIC_URL: z.string().default('https://media.edureyting.uz'),
+  R2_BUCKET: z.string().default('bilimon-media'),
+  R2_PUBLIC_URL: z.string().default('https://media.bilimon.uz'),
 })
 
 const parsed = envSchema.safeParse(process.env)

@@ -42,11 +42,11 @@ export async function generateMetadata({
   const city = topic ? await resolveCity(citySlug) : null
 
   if (!topic || !city) {
-    return { title: 'EDULA' }
+    return { title: 'BilimOn' }
   }
 
   return {
-    title: `${topic.labelUz} — ${city.nameUz} | EDULA`,
+    title: `${topic.labelUz} — ${city.nameUz} | BilimOn`,
     description: `${city.nameUz}dagi eng yaxshi ${topic.labelUz.toLowerCase()}. ${topic.descUz}`,
   }
 }

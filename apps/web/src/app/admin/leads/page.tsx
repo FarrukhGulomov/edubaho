@@ -3,12 +3,13 @@
 import { useState, useEffect, useCallback } from 'react'
 import Link from 'next/link'
 import {
-  GraduationCap, Search, RefreshCw, Users, Phone, Mail, Send as TelegramIcon,
+  Search, RefreshCw, Users, Phone, Mail, Send as TelegramIcon,
   ChevronDown, Download, MapPin, Target, Flame, Sun, Snowflake, Clock,
   SlidersHorizontal, Ban, PhoneOff, FileSpreadsheet, FileText, FileType,
 } from 'lucide-react'
 import { useAuth } from '@/hooks/useAuth'
 import { useRouter } from 'next/navigation'
+import BrandMark from '@/components/shared/BrandMark'
 
 const API = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:3001/api/v1'
 
@@ -158,7 +159,7 @@ export default function AdminLeadsPage() {
       const blob = await res.blob()
       const disposition = res.headers.get('Content-Disposition') ?? ''
       const filenameMatch = disposition.match(/filename="(.+)"/)
-      const filename = filenameMatch?.[1] ?? `edula-leads.${exportFormat}`
+      const filename = filenameMatch?.[1] ?? `bilimon-leads.${exportFormat}`
       const url = URL.createObjectURL(blob)
       const a = document.createElement('a')
       a.href = url
@@ -198,7 +199,7 @@ export default function AdminLeadsPage() {
         <div className="mx-auto flex max-w-7xl items-center justify-between gap-3 px-4 py-3">
           <div className="flex min-w-0 items-center gap-3 overflow-hidden">
             <Link href="/" className="flex shrink-0 items-center gap-1.5 whitespace-nowrap font-bold text-primary-600">
-              <GraduationCap className="h-4 w-4 shrink-0" strokeWidth={1.75} /> EDULA
+              <BrandMark size={16} className="shrink-0" /> BilimOn
             </Link>
             <span className="shrink-0 text-gray-300">›</span>
             <Link href="/admin" className="shrink-0 whitespace-nowrap text-gray-500 hover:text-gray-700">Admin</Link>

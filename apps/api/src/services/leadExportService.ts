@@ -114,7 +114,7 @@ async function exportToPdf(rows: ExportRow[]): Promise<Buffer> {
     doc.on('end', () => resolve(Buffer.concat(chunks)))
     doc.on('error', reject)
 
-    doc.fontSize(16).text('EDULA — Lidlar ro\'yxati', { align: 'left' })
+    doc.fontSize(16).text('BilimOn — Lidlar ro\'yxati', { align: 'left' })
     doc.moveDown(0.3)
     doc.fontSize(9).fillColor('#666').text(`Yaratilgan sana: ${new Date().toLocaleString('uz-UZ')} • Jami: ${rows.length} ta lid`)
     doc.moveDown(0.8)
@@ -180,7 +180,7 @@ async function exportToDocx(rows: ExportRow[]): Promise<Buffer> {
   const doc = new Document({
     sections: [{
       children: [
-        new Paragraph({ text: "EDULA — Lidlar ro'yxati", heading: HeadingLevel.HEADING_1 }),
+        new Paragraph({ text: "BilimOn — Lidlar ro'yxati", heading: HeadingLevel.HEADING_1 }),
         new Paragraph({ text: `Yaratilgan sana: ${new Date().toLocaleString('uz-UZ')} • Jami: ${rows.length} ta lid` }),
         new Paragraph({ text: '' }),
         new Table({ width: { size: 100, type: WidthType.PERCENTAGE }, rows: [headerRow, ...dataRows] }),
@@ -202,12 +202,12 @@ export async function exportLeads(
 
   switch (format) {
     case 'csv':
-      return { buffer: exportToCsv(rows), filename: `edula-leads-${stamp}.csv`, contentType: 'text/csv; charset=utf-8' }
+      return { buffer: exportToCsv(rows), filename: `bilimon-leads-${stamp}.csv`, contentType: 'text/csv; charset=utf-8' }
     case 'xlsx':
-      return { buffer: await exportToXlsx(rows), filename: `edula-leads-${stamp}.xlsx`, contentType: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' }
+      return { buffer: await exportToXlsx(rows), filename: `bilimon-leads-${stamp}.xlsx`, contentType: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' }
     case 'pdf':
-      return { buffer: await exportToPdf(rows), filename: `edula-leads-${stamp}.pdf`, contentType: 'application/pdf' }
+      return { buffer: await exportToPdf(rows), filename: `bilimon-leads-${stamp}.pdf`, contentType: 'application/pdf' }
     case 'docx':
-      return { buffer: await exportToDocx(rows), filename: `edula-leads-${stamp}.docx`, contentType: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document' }
+      return { buffer: await exportToDocx(rows), filename: `bilimon-leads-${stamp}.docx`, contentType: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document' }
   }
 }
