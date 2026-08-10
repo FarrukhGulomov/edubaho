@@ -1,7 +1,7 @@
-import type { FastifyInstance } from 'fastify'
+import type { FastifyInstance, FastifyReply } from 'fastify'
 import { z } from 'zod'
 import { env } from '../utils/env'
-import { sendOtpSchema, verifyOtpSchema, refreshSchema, updateProfileSchema } from '../schemas/auth'
+import { sendOtpSchema, verifyOtpSchema, updateProfileSchema } from '../schemas/auth'
 import { normalizePhone, generateOtp } from '../utils/phone'
 import {
   redis, setOtp, verifyOtp, canSendOtp, markOtpSent,
@@ -10,7 +10,23 @@ import {
 import { sendSmsOtp } from '../services/sms'
 import { verifyTelegramAuth, verifyTelegramWebAppInitData } from '../services/telegram'
 import { verifyGoogleIdToken } from '../services/google'
-import { generateTokens, verifyRefreshToken, revokeRefreshToken } from '../services/tokens'
+import { generateTokens, verifyRefreshToken, revokeRefreshToken, REFRESH_TTL } from '../services/tokens'
+
+const REFRESH_COOKIE = 'rt'
+// Faqat /auth/* yo'llariga yuboriladi — boshqa so'rovlarga tarqalmaydi.
+// JS o'qiy olmaydi (httpOnly) — XSS orqali refresh token o'g'irlanishining oldini oladi.
+function setRefreshCookie(reply: FastifyReply, token: string) {
+  reply.setCookie(REFRESH_COOKIE, token, {
+    httpOnly: true,
+    secure: env.NODE_ENV === 'production',
+    sameSite: 'lax',
+    path: '/api/v1/auth',
+    maxAge: REFRESH_TTL,
+  })
+}
+function clearRefreshCookie(reply: FastifyReply) {
+  reply.clearCookie(REFRESH_COOKIE, { path: '/api/v1/auth' })
+}
 
 /**
  * Auth routes
@@ -115,6 +131,7 @@ export default async function authRoutes(fastify: FastifyInstance) {
       user.role as Parameters<typeof generateTokens>[1],
       institutionId,
     )
+    setRefreshCookie(reply, refreshToken)
 
     return reply.send({
       success: true,
@@ -126,16 +143,19 @@ export default async function authRoutes(fastify: FastifyInstance) {
         role: user.role,
       },
       accessToken,
-      refreshToken,
     })
   })
 
   // ─────────────────────────────────────────────
   // POST /auth/refresh
+  // Refresh token faqat httpOnly cookie'dan o'qiladi — JS unga kira olmaydi.
   // ─────────────────────────────────────────────
 
   fastify.post('/auth/refresh', async (request, reply) => {
-    const { refreshToken } = refreshSchema.parse(request.body)
+    const refreshToken = request.cookies[REFRESH_COOKIE]
+    if (!refreshToken) {
+      return reply.status(401).send({ error: 'Qayta kirish kerak' })
+    }
 
     try {
       const payload = await verifyRefreshToken(refreshToken)
@@ -168,8 +188,9 @@ export default async function authRoutes(fastify: FastifyInstance) {
         user.role as Parameters<typeof generateTokens>[1],
         institutionId,
       )
+      setRefreshCookie(reply, tokens.refreshToken)
 
-      return reply.send(tokens)
+      return reply.send({ accessToken: tokens.accessToken })
     } catch (err: unknown) {
       const error = err as { statusCode?: number; message?: string }
       if (error.statusCode) {
@@ -192,6 +213,7 @@ export default async function authRoutes(fastify: FastifyInstance) {
       if (jti) {
         await revokeRefreshToken(userId, jti)
       }
+      clearRefreshCookie(reply)
 
       return reply.send({ success: true, message: 'Muvaffaqiyatli chiqdingiz' })
     },
@@ -444,13 +466,13 @@ export default async function authRoutes(fastify: FastifyInstance) {
       user.role as Parameters<typeof generateTokens>[1],
       institutionId,
     )
+    setRefreshCookie(reply, refreshToken)
 
     return reply.send({
       success: true,
       isNewUser,
       user: { id: user.id, phone: user.phone, name: user.name, role: user.role },
       accessToken,
-      refreshToken,
     })
   })
 
@@ -506,13 +528,13 @@ export default async function authRoutes(fastify: FastifyInstance) {
       user.role as Parameters<typeof generateTokens>[1],
       institutionId,
     )
+    setRefreshCookie(reply, refreshToken)
 
     return reply.send({
       success: true,
       isNewUser,
       user: { id: user.id, phone: user.phone, name: user.name, role: user.role },
       accessToken,
-      refreshToken,
     })
   })
 
@@ -584,13 +606,13 @@ export default async function authRoutes(fastify: FastifyInstance) {
       user.role as Parameters<typeof generateTokens>[1],
       institutionId,
     )
+    setRefreshCookie(reply, refreshToken)
 
     return reply.send({
       success: true,
       isNewUser,
       user: { id: user.id, phone: user.phone, name: user.name, role: user.role },
       accessToken,
-      refreshToken,
     })
   })
 

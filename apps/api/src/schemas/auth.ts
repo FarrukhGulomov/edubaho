@@ -16,10 +16,6 @@ export const verifyOtpSchema = z.object({
   otp: z.string().length(6, 'OTP 6 ta raqamdan iborat bo\'lishi kerak').regex(/^\d+$/, 'OTP faqat raqamlardan iborat'),
 })
 
-export const refreshSchema = z.object({
-  refreshToken: z.string().min(1, 'Refresh token talab qilinadi'),
-})
-
 export const updateProfileSchema = z.object({
   name: z.string().min(2, 'Ism kamida 2 ta belgi').max(100).optional(),
   email: z.string().email('Noto\'g\'ri email format').optional(),

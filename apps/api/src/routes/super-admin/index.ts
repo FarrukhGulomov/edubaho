@@ -1,6 +1,7 @@
 import type { FastifyInstance } from 'fastify'
 import { z } from 'zod'
 import { indexInstitution, setupSearchIndex } from '../../services/searchService'
+import { logAdminAction } from '../../services/auditLog'
 
 /**
  * Super Admin routes — faqat SUPER_ADMIN roli uchun
@@ -105,6 +106,13 @@ export default async function superAdminRoutes(fastify: FastifyInstance) {
 
     await prisma.user.update({ where: { id }, data: { isActive } })
 
+    logAdminAction(prisma, request, {
+      action: isActive ? 'user.activate' : 'user.deactivate',
+      entityType: 'User',
+      entityId: id,
+      after: { isActive },
+    })
+
     return reply.send({
       message: isActive ? 'Foydalanuvchi aktivlashtirildi' : 'Foydalanuvchi deaktivlashtirildi',
     })
@@ -130,6 +138,13 @@ export default async function superAdminRoutes(fastify: FastifyInstance) {
     }
 
     await prisma.user.delete({ where: { id } })
+
+    logAdminAction(prisma, request, {
+      action: 'user.delete',
+      entityType: 'User',
+      entityId: id,
+      before: { role: target.role },
+    })
 
     return reply.send({ message: "Foydalanuvchi muvaffaqiyatli o'chirildi" })
   })
@@ -204,6 +219,14 @@ export default async function superAdminRoutes(fastify: FastifyInstance) {
       }),
     ])
 
+    logAdminAction(prisma, request, {
+      action: 'admin.create',
+      entityType: 'User',
+      entityId: foundUser.id,
+      entityLabel: foundUser.phone ?? undefined,
+      after: permissions,
+    })
+
     return reply.status(201).send({ message: 'Admin muvaffaqiyatli tayinlandi' })
   })
 
@@ -236,6 +259,13 @@ export default async function superAdminRoutes(fastify: FastifyInstance) {
       update: body,
     })
 
+    logAdminAction(prisma, request, {
+      action: 'admin.permissions_update',
+      entityType: 'User',
+      entityId: id,
+      after: body,
+    })
+
     return reply.send({ message: 'Ruxsatlar yangilandi' })
   })
 
@@ -255,6 +285,12 @@ export default async function superAdminRoutes(fastify: FastifyInstance) {
       prisma.adminPermission.deleteMany({ where: { adminId: id } }),
       prisma.user.update({ where: { id }, data: { role: 'USER' } }),
     ])
+
+    logAdminAction(prisma, request, {
+      action: 'admin.revoke',
+      entityType: 'User',
+      entityId: id,
+    })
 
     return reply.send({ message: 'Admin huquqlari olib tashlandi' })
   })

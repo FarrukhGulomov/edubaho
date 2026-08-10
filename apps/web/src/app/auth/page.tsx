@@ -105,9 +105,8 @@ export default function AuthPage() {
 
     authApi.telegramLogin(tgUser)
       .then((result) => {
-        const r = result as { accessToken: string; refreshToken: string; isNewUser: boolean; user: { phone: string | null } }
+        const r = result as { accessToken: string; isNewUser: boolean; user: { phone: string | null } }
         localStorage.setItem('accessToken', r.accessToken)
-        localStorage.setItem('refreshToken', r.refreshToken)
         authTrack.completed(r.isNewUser ?? false)
         setIsNewUser(r.isNewUser ?? false)
         window.history.replaceState({}, '', '/auth')
@@ -201,9 +200,8 @@ export default function AuthPage() {
           setError('')
           authApi.googleLogin(response.credential)
             .then((result) => {
-              const r = result as { accessToken: string; refreshToken: string; isNewUser: boolean }
+              const r = result as { accessToken: string; isNewUser: boolean }
               localStorage.setItem('accessToken', r.accessToken)
-              localStorage.setItem('refreshToken', r.refreshToken)
               authTrack.completed(r.isNewUser ?? false)
               setIsNewUser(r.isNewUser ?? false)
               setStep('done')
@@ -316,10 +314,9 @@ export default function AuthPage() {
     setLoading(true)
     try {
       const result = await authApi.verifyOtp(phone.replace(/\s/g, ''), otp) as {
-        accessToken: string; refreshToken: string; isNewUser: boolean
+        accessToken: string; isNewUser: boolean
       }
       localStorage.setItem('accessToken', result.accessToken)
-      localStorage.setItem('refreshToken', result.refreshToken)
       authTrack.completed(result.isNewUser ?? false)
       setIsNewUser(result.isNewUser ?? false)
       setStep('done')

@@ -174,6 +174,7 @@ model User {
   leadEvents        LeadEvent[]
   trialBookings     TrialBooking[]
   savedComparisons  SavedComparison[]
+  adminAuditLogs    AdminAuditLog[]
 
   @@index([phone])
   @@index([telegramId])
@@ -200,6 +201,33 @@ model AdminPermission {
   admin User @relation(fields: [adminId], references: [id], onDelete: Cascade)
 
   @@index([adminId])
+}
+
+// Admin panelidagi barcha o'zgartiruvchi (write) amallar shu yerga yoziladi:
+// kim (adminId/adminName snapshot — admin o'chirilsa ham tarix o'qilishi
+// uchun), qachon, nima ustida (entityType/entityId), qanday o'zgarish
+// (before/after) bo'ldi. Faqat yozish uchun — hech qachon o'zgartirilmaydi.
+model AdminAuditLog {
+  id          String   @id @default(cuid())
+  // Admin o'chirilgan taqdirda ham tarix o'qilishi uchun ism/rol saqlanadi
+  adminId     String?
+  adminName   String
+  adminRole   String
+  action      String
+  entityType  String
+  entityId    String?
+  entityLabel String?
+  before      Json?
+  after       Json?
+  ip          String?
+  createdAt   DateTime @default(now())
+
+  admin User? @relation(fields: [adminId], references: [id], onDelete: SetNull)
+
+  @@index([adminId, createdAt])
+  @@index([entityType, entityId])
+  @@index([action, createdAt])
+  @@index([createdAt])
 }
 
 // ─────────────────────────────────────────────────
