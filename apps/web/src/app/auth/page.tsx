@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef } from 'react'
 import Link from 'next/link'
-import { Star, PencilLine, ArrowLeftRight, Smartphone, AlertCircle, CheckCircle2 } from 'lucide-react'
+import { Star, PencilLine, ArrowLeftRight, Smartphone, AlertCircle, CheckCircle2, Send } from 'lucide-react'
 import { authApi } from '@/lib/api'
 import { useLang, t } from '@/contexts/LangContext'
 import { authTrack } from '@/lib/analytics'
@@ -631,6 +631,16 @@ export default function AuthPage() {
             </Link>
             {lang === 'uz' && t(lang, ui.termsEnd)}
           </p>
+
+          <a
+            href="https://t.me/TrustboxInc"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="mt-4 flex items-center justify-center gap-1.5 text-xs font-semibold text-gray-400 transition-colors hover:text-primary-600"
+          >
+            <Send className="h-3.5 w-3.5 shrink-0" strokeWidth={1.75} />
+            {t(lang, { uz: 'Yordam kerakmi? @TrustboxInc', ru: 'Нужна помощь? @TrustboxInc' })}
+          </a>
         </div>
       </div>
     </div>

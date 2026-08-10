@@ -1,5 +1,6 @@
 import type { Metadata } from 'next'
 import Header from '@/components/shared/Header'
+import Footer from '@/components/shared/Footer'
 import SearchResults from './SearchResults'
 
 export const metadata: Metadata = {
@@ -32,10 +33,11 @@ export default async function SearchPage({
   }
 
   return (
-    <>
+    <div className="flex min-h-screen flex-col">
       <Header />
       <SearchResults institutions={institutions} meta={meta} params={params} />
-    </>
+      <Footer />
+    </div>
   )
 }
 
