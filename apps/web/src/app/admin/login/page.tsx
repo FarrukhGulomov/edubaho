@@ -3,8 +3,9 @@
 import Link from 'next/link'
 import { useState, useEffect, useRef } from 'react'
 import { useRouter } from 'next/navigation'
-import { GraduationCap, ShieldCheck, Info, Crown, Lock, Unlock, CheckCircle2, AlertCircle, Check } from 'lucide-react'
+import { ShieldCheck, Info, Crown, Lock, Unlock, CheckCircle2, AlertCircle, Check } from 'lucide-react'
 import { authApi } from '@/lib/api'
+import BrandMark from '@/components/shared/BrandMark'
 
 const API          = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:3001/api/v1'
 const BOT_USERNAME = process.env.NEXT_PUBLIC_TELEGRAM_BOT_USERNAME ?? 'edubahobot'
@@ -194,7 +195,7 @@ export default function AdminLoginPage() {
           {/* Logo */}
           <div className="mb-8 text-center">
             <Link href="/" className="inline-flex items-center gap-2 text-2xl font-bold text-white">
-              <GraduationCap className="h-6 w-6 shrink-0" strokeWidth={1.75} /> EDULA.uz
+              <BrandMark size={22} className="shrink-0" /> BilimOn
             </Link>
             <div className="mt-2 flex justify-center">
               <span className="flex items-center gap-1.5 whitespace-nowrap rounded-full border border-purple-800 bg-purple-900/60 px-4 py-1 text-xs font-semibold text-purple-300">

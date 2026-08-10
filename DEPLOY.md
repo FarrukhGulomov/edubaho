@@ -1,4 +1,4 @@
-# EDUBAHO — Production Deploy Qo'llanmasi (Docker + Railway)
+# BilimOn — Production Deploy Qo'llanmasi (Docker + Railway)
 
 Barcha servislar **bitta Railway project**ida, **Docker** orqali ishga tushiriladi:
 
@@ -94,7 +94,7 @@ Hech narsa qo'shimcha sozlash shart emas — connection stringlar avtomatik yara
    |---|---|
    | `NEXT_PUBLIC_API_URL` | `https://<api-domen>/api/v1` (2-qadamdagi domen) |
    | `NEXT_PUBLIC_SITE_URL` | shu servisning domeni (keyin to'ldirasiz) |
-   | `NEXT_PUBLIC_APP_NAME` | `EDUBAHO` |
+   | `NEXT_PUBLIC_APP_NAME` | `BilimOn` |
    | `NEXT_PUBLIC_TELEGRAM_BOT_USERNAME` | bot username (ixtiyoriy) |
    | `NEXT_PUBLIC_GOOGLE_CLIENT_ID` | API'dagi `GOOGLE_CLIENT_ID` bilan bir xil (ixtiyoriy) |
 
@@ -160,7 +160,7 @@ Meilisearch'siz ham qidiruv ishlaydi (PostgreSQL fallback). Kuchli qidiruv uchun
 
 ## 8-qadam (ixtiyoriy). Cloudflare R2 (rasm yuklash)
 
-1. Cloudflare Dashboard → R2 → bucket yarating (`edubaho-media`)
+1. Cloudflare Dashboard → R2 → bucket yarating (`bilimon-media`)
 2. R2 API Token yarating (Object Read & Write)
 3. `api` servisga: `R2_ACCOUNT_ID`, `R2_ACCESS_KEY`, `R2_SECRET_KEY`, `R2_BUCKET`, `R2_PUBLIC_URL`
 4. Bucket'ga public domen ulang va `R2_PUBLIC_URL`ga yozing —
@@ -207,7 +207,7 @@ docker run --rm -p 3001:3001 --env-file apps/api/.env edubaho-api
 docker build -f apps/web/Dockerfile \
   --build-arg NEXT_PUBLIC_API_URL=http://localhost:3001/api/v1 \
   --build-arg NEXT_PUBLIC_SITE_URL=http://localhost:3000 \
-  --build-arg NEXT_PUBLIC_APP_NAME=EDUBAHO \
+  --build-arg NEXT_PUBLIC_APP_NAME=BilimOn \
   -t edubaho-web .
 docker run --rm -p 3000:3000 edubaho-web
 ```

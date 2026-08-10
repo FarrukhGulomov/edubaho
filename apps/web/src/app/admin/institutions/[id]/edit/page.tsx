@@ -1,7 +1,8 @@
 'use client'
 
 import Link from 'next/link'
-import { Ban, GraduationCap, PencilLine, AlertCircle } from 'lucide-react'
+import { Ban, PencilLine, AlertCircle } from 'lucide-react'
+import BrandMark from '@/components/shared/BrandMark'
 import { useAuth } from '@/hooks/useAuth'
 import { useRouter, useParams } from 'next/navigation'
 import { useEffect, useState } from 'react'
@@ -98,7 +99,7 @@ export default function EditInstitutionPage() {
         <div className="mx-auto flex max-w-3xl items-center justify-between gap-3 px-4 py-3">
           <div className="flex min-w-0 items-center gap-3 overflow-hidden text-sm">
             <Link href="/" className="flex shrink-0 items-center gap-1.5 whitespace-nowrap font-bold text-primary-600">
-              <GraduationCap className="h-4 w-4 shrink-0" strokeWidth={1.75} /> EDULA
+              <BrandMark size={16} className="shrink-0" /> BilimOn
             </Link>
             <span className="shrink-0 text-gray-300">›</span>
             <Link href="/admin/institutions" className="shrink-0 whitespace-nowrap text-gray-500 hover:text-gray-700">Muassasalar</Link>

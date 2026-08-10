@@ -1,4 +1,4 @@
-# EDUBAHO 🎓
+# BilimOn 🎓
 
 O'zbekistondagi ta'lim muassasalarini (bog'chalar, maktablar, universitetlar,
 o'quv markazlari) qidirish, solishtirish va baholash platformasi.

@@ -1,4 +1,4 @@
-# EduReyting — Dev Quick Reference
+# BilimOn — Dev Quick Reference
 
 ## Servislarni ishga tushirish
 

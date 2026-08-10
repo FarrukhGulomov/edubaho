@@ -1,74 +1,52 @@
 /**
- * EDULA brend logotipi — kod orqali yasalgan SVG component.
+ * BilimOn brend logotipi — kod orqali yasalgan SVG component.
  * Rasm fayli kerak emas, har qanday o'lchamda aniq ko'rinadi.
+ * "bilim" so'zidagi "o" harfi o'rniga bitiruv qalpog'i + progress
+ * halqasi belgisi (asl dizayn: public/brand/bilimon-wordmark.svg).
  */
 
 interface LogoProps {
   /** Logo balandligi (px). Default: 40 */
   size?: number
-  /** Qora fon uchun — matn ranglarini oqqa o'zgartiradi */
+  /** Qora fon uchun — matn/belgi ranglarini oqqa o'zgartiradi */
   inverted?: boolean
 }
 
+const NAVY = '#0c4a6e'
+const SKY = '#0ea5e9'
+const SKY_DOT = '#0284c7'
+
 export default function Logo({ size = 40, inverted = false }: LogoProps) {
-  // Proporsional hisoblash
-  const h = size
-  const fontSize = h * 0.62
-  const iconSize = h * 0.72
+  const textColor = inverted ? '#ffffff' : NAVY
+  const ringColor = inverted ? '#ffffff' : SKY
+  const capColor = inverted ? '#ffffff' : NAVY
+  const dotColor = inverted ? '#bae6fd' : SKY_DOT
+
+  // Asl SVG viewBox 340x84 — nisbatni saqlab, berilgan balandlikka moslaymiz
+  const width = size * (340 / 84)
 
   return (
-    <span className="inline-flex items-center select-none" style={{ height: h }}>
-      {/* ── "EDU" — yashil ── */}
-      <span
-        style={{
-          fontSize,
-          fontWeight: 900,
-          lineHeight: 1,
-          color: inverted ? '#4ade80' : '#16a34a',
-          letterSpacing: '-0.02em',
-          fontFamily: 'inherit',
-        }}
-      >
-        EDU
-      </span>
-
-      {/* ── "LA" — ko'k ── */}
-      <span
-        style={{
-          fontSize,
-          fontWeight: 900,
-          lineHeight: 1,
-          color: inverted ? '#93c5fd' : '#1d4ed8',
-          letterSpacing: '-0.02em',
-          fontFamily: 'inherit',
-        }}
-      >
-        LA
-      </span>
-
-      {/* ── Icon: bar chart + checkmark ── */}
-      <svg
-        viewBox="0 0 40 36"
-        fill="none"
-        style={{ width: iconSize, height: iconSize, marginLeft: size * 0.12 }}
-      >
-        {/* Bar chart — 3 ta ustun */}
-        <rect x="1"  y="18" width="9" height="17" rx="2"
-          fill={inverted ? '#93c5fd' : '#1d4ed8'} />
-        <rect x="15" y="10" width="9" height="25" rx="2"
-          fill={inverted ? '#93c5fd' : '#1d4ed8'} />
-        <rect x="29" y="2"  width="9" height="33" rx="2"
-          fill={inverted ? '#93c5fd' : '#1d4ed8'} />
-
-        {/* Checkmark — yashil */}
-        <path
-          d="M3 28 L13 36 L37 10"
-          stroke={inverted ? '#4ade80' : '#16a34a'}
-          strokeWidth="5"
-          strokeLinecap="round"
-          strokeLinejoin="round"
+    <svg
+      viewBox="0 0 340 84"
+      style={{ height: size, width, display: 'block' }}
+      aria-label="BilimOn"
+    >
+      <text x="0" y="66" fontSize="60" fontWeight="800" letterSpacing="-1.2" fill={textColor} fontFamily="var(--font-inter), Inter, system-ui, sans-serif">
+        bilim
+      </text>
+      <g transform="translate(160 12) scale(0.72)">
+        <circle
+          cx="48" cy="54" r="26"
+          stroke={ringColor} strokeWidth="9" fill="none" strokeLinecap="round"
+          strokeDasharray="130 33" transform="rotate(-54 48 54)"
         />
-      </svg>
-    </span>
+        <path d="M48 8 74 20 48 32 22 20Z" fill={capColor} />
+        <path d="M68 23v12" stroke={capColor} strokeWidth="4" strokeLinecap="round" />
+        <circle cx="68" cy="38" r="3.4" fill={dotColor} />
+      </g>
+      <text x="228" y="66" fontSize="60" fontWeight="800" letterSpacing="-1.2" fill={textColor} fontFamily="var(--font-inter), Inter, system-ui, sans-serif">
+        n
+      </text>
+    </svg>
   )
 }

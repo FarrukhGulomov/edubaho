@@ -1,5 +1,5 @@
 /**
- * EDULA Lead Analytics
+ * BilimOn Lead Analytics
  *
  * Barcha voqealar shu modul orqali yuboriladi.
  * React'siz ham ishlaydi (plain TypeScript).

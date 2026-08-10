@@ -5,7 +5,7 @@ import Footer from '@/components/shared/Footer'
 
 export const metadata: Metadata = {
   title: "Foydalanish shartlari",
-  description: "Edula.uz foydalanish shartlari va maxfiylik siyosati.",
+  description: "BilimOn foydalanish shartlari va maxfiylik siyosati.",
 }
 
 export default function TermsPage() {
@@ -27,7 +27,7 @@ export default function TermsPage() {
           <section>
             <h2 className="mb-3 text-xl font-bold text-gray-900">1. Umumiy qoidalar</h2>
             <p className="text-gray-600 leading-relaxed">
-              Edula.uz — O&apos;zbekistondagi ta&apos;lim muassasalarini qidirish, solishtirish va baholash
+              BilimOn — O&apos;zbekistondagi ta&apos;lim muassasalarini qidirish, solishtirish va baholash
               platformasi. Saytdan foydalanish orqali siz ushbu shartlarga rozilik bildirasiz.
             </p>
           </section>
@@ -63,7 +63,7 @@ export default function TermsPage() {
             <h2 className="mb-3 text-xl font-bold text-gray-900">5. Muassasalar ma&apos;lumotlari</h2>
             <p className="text-gray-600 leading-relaxed">
               Platformadagi muassasalar haqidagi ma&apos;lumotlar ochiq manbalar va muassasa
-              vakillari tomonidan taqdim etiladi. Edula.uz ma&apos;lumotlarning to&apos;liqligi
+              vakillari tomonidan taqdim etiladi. BilimOn ma&apos;lumotlarning to&apos;liqligi
               uchun javobgar emas.
             </p>
           </section>

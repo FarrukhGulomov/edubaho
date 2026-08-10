@@ -1,5 +1,5 @@
 // ─────────────────────────────────────────────────────────────
-// EduReyting.uz — Umumiy konstantalar
+// BilimOn — Umumiy konstantalar
 // ─────────────────────────────────────────────────────────────
 
 import type { InstitutionType } from './types'

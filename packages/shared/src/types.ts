@@ -1,5 +1,5 @@
 // ─────────────────────────────────────────────────────────────
-// EduReyting.uz — Umumiy TypeScript tiplar
+// BilimOn — Umumiy TypeScript tiplar
 // API va Web o'rtasida umumiy ishlatiladi
 // ─────────────────────────────────────────────────────────────
 
