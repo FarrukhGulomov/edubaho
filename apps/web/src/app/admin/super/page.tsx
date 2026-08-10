@@ -2,7 +2,7 @@
 
 import Link from 'next/link'
 import { useEffect, useState } from 'react'
-import { Ban, GraduationCap, Crown, ShieldCheck, Users2, BarChart3, Search, RefreshCw } from 'lucide-react'
+import { Ban, GraduationCap, Crown, ShieldCheck, Users2, BarChart3, Search, RefreshCw, ScrollText } from 'lucide-react'
 import { useAuth } from '@/hooks/useAuth'
 import { useRouter } from 'next/navigation'
 
@@ -149,6 +149,19 @@ export default function SuperAdminPage() {
             <div>
               <h2 className="text-lg font-bold text-emerald-900">Lead Analytics</h2>
               <p className="text-sm text-emerald-700">Funnel, lidlar, sessiya tarixi, konversiya</p>
+            </div>
+          </Link>
+
+          <Link
+            href="/admin/super/audit-log"
+            className="flex items-center gap-4 rounded-2xl border border-slate-200 bg-slate-50 p-6 transition-colors hover:border-slate-400"
+          >
+            <span className="icon-chip h-14 w-14 shrink-0 bg-slate-600 text-white">
+              <ScrollText className="h-6 w-6" strokeWidth={1.75} />
+            </span>
+            <div>
+              <h2 className="text-lg font-bold text-slate-900">Audit jurnali</h2>
+              <p className="text-sm text-slate-700">Adminlarning barcha o&apos;zgartiruvchi amallari</p>
             </div>
           </Link>
         </div>

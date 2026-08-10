@@ -1,5 +1,6 @@
 import type { FastifyInstance } from 'fastify'
 import { z } from 'zod'
+import { logAdminAction } from '../../services/auditLog'
 
 /**
  * Admin: muassasa egaligi so'rovlari (claims) moderatsiyasi
@@ -96,6 +97,13 @@ export default async function adminClaimRoutes(fastify: FastifyInstance) {
         })
       })
 
+      logAdminAction(prisma, request, {
+        action: 'claim.approve',
+        entityType: 'InstitutionClaim',
+        entityId: id,
+        after: { userId: claim.userId, institutionId: claim.institutionId },
+      })
+
       return reply.send({ success: true, message: "So'rov tasdiqlandi — foydalanuvchi endi muassasa egasi" })
     },
   )
@@ -128,6 +136,13 @@ export default async function adminClaimRoutes(fastify: FastifyInstance) {
           reviewedAt: new Date(),
           note: reason ? `${claim.note ?? ''}\nRad etish sababi: ${reason}`.trim() : claim.note,
         },
+      })
+
+      logAdminAction(prisma, request, {
+        action: 'claim.reject',
+        entityType: 'InstitutionClaim',
+        entityId: id,
+        after: { reason },
       })
 
       return reply.send({ success: true, message: "So'rov rad etildi" })

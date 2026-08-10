@@ -42,9 +42,8 @@ export default function TelegramProvider({ children }: { children: React.ReactNo
 
     authApi.telegramWebAppLogin(initData)
       .then((result) => {
-        const r = result as { accessToken: string; refreshToken: string; isNewUser: boolean }
+        const r = result as { accessToken: string; isNewUser: boolean }
         localStorage.setItem('accessToken', r.accessToken)
-        localStorage.setItem('refreshToken', r.refreshToken)
         track('auth_completed', { category: 'auth', properties: { method: 'telegram_webapp', isNewUser: r.isNewUser } })
         haptic('success')
         // Sahifadagi komponentlar (Header, GuestGate) yangi tokenni ko'rsin

@@ -68,16 +68,13 @@ export default function AdminLoginPage() {
       .then((result) => {
         const r = result as {
           accessToken: string
-          refreshToken: string
           user: { role: string }
         }
         localStorage.setItem('accessToken', r.accessToken)
-        localStorage.setItem('refreshToken', r.refreshToken)
 
         const userRole = r.user?.role
         if (userRole !== 'ADMIN' && userRole !== 'SUPER_ADMIN') {
           localStorage.removeItem('accessToken')
-          localStorage.removeItem('refreshToken')
           setError("Sizda admin huquqi yo'q. Faqat adminlar kira oladi.")
           setLoading(false)
           return
@@ -123,7 +120,7 @@ export default function AdminLoginPage() {
     setLoading(true)
     try {
       const result = await authApi.verifyOtp(phone.replace(/\s/g, ''), otp) as {
-        accessToken: string; refreshToken: string; user: { role: string }
+        accessToken: string; user: { role: string }
       }
       const userRole = result.user?.role
       if (userRole !== 'ADMIN' && userRole !== 'SUPER_ADMIN') {
@@ -131,7 +128,6 @@ export default function AdminLoginPage() {
         return
       }
       localStorage.setItem('accessToken', result.accessToken)
-      localStorage.setItem('refreshToken', result.refreshToken)
       setRole(userRole)
       setStep('pin')
     } catch (err: unknown) {

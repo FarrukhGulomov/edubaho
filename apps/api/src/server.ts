@@ -4,6 +4,7 @@ import cors from '@fastify/cors'
 import jwt from '@fastify/jwt'
 import rateLimit from '@fastify/rate-limit'
 import multipart from '@fastify/multipart'
+import cookie from '@fastify/cookie'
 
 import { env } from './utils/env'
 import prismaPlugin from './plugins/prisma'
@@ -25,6 +26,7 @@ import adminTrialBookingRoutes from './routes/admin/trial-bookings'
 import adminLeadRoutes from './routes/admin/leads'
 import superAdminRoutes from './routes/super-admin/index'
 import superAdminAnalytics from './routes/super-admin/analytics'
+import superAdminAuditLog from './routes/super-admin/audit-log'
 import trackRoutes from './routes/track'
 import compareRoutes from './routes/compare'
 import dashboardRoutes from './routes/dashboard'
@@ -70,6 +72,9 @@ async function buildApp() {
   await fastify.register(multipart, {
     limits: { fileSize: 5 * 1024 * 1024, files: 10 },
   })
+
+  // ─── Cookie (refresh token uchun httpOnly cookie) ────
+  await fastify.register(cookie)
 
   // ─── DB & Cache plugins ───────────────────────
   await fastify.register(prismaPlugin)
@@ -120,6 +125,7 @@ async function buildApp() {
       // Super Admin routes
       await api.register(superAdminRoutes)
       await api.register(superAdminAnalytics)
+      await api.register(superAdminAuditLog)
 
       // Analytics / Lead tracking (auth shart emas)
       await api.register(trackRoutes)

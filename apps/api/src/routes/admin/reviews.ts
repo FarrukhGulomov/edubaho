@@ -5,6 +5,7 @@ import { moderateReviewSchema } from '../../schemas/reviews'
 import {
   listPendingReviews, approveReview, rejectReview, setReviewOutcomeVerified,
 } from '../../services/reviewService'
+import { logAdminAction } from '../../services/auditLog'
 
 /**
  * Admin review moderation routes
@@ -50,6 +51,7 @@ export default async function adminReviewRoutes(fastify: FastifyInstance) {
 
       try {
         const result = await approveReview(prisma, id)
+        logAdminAction(prisma, request, { action: 'review.approve', entityType: 'Review', entityId: id })
         return reply.send({ ...result, message: 'Sharh tasdiqlandi' })
       } catch (err: unknown) {
         const error = err as { statusCode?: number; message?: string }
@@ -74,6 +76,7 @@ export default async function adminReviewRoutes(fastify: FastifyInstance) {
 
       try {
         const result = await rejectReview(prisma, id, reason)
+        logAdminAction(prisma, request, { action: 'review.reject', entityType: 'Review', entityId: id, after: { reason } })
         return reply.send({ ...result, message: 'Sharh rad etildi' })
       } catch (err: unknown) {
         const error = err as { statusCode?: number; message?: string }
@@ -100,6 +103,7 @@ export default async function adminReviewRoutes(fastify: FastifyInstance) {
 
       try {
         const result = await setReviewOutcomeVerified(prisma, id, verified)
+        logAdminAction(prisma, request, { action: 'review.verify_outcome', entityType: 'Review', entityId: id, after: { verified } })
         return reply.send({
           ...result,
           message: verified ? 'Natija tasdiqlandi' : 'Natija tasdig\'i bekor qilindi',

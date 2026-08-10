@@ -4,7 +4,7 @@ import { redis } from '../utils/redis'
 import { env } from '../utils/env'
 import type { Role } from '@prisma/client'
 
-const REFRESH_TTL = 30 * 24 * 60 * 60 // 30 kun (soniya)
+export const REFRESH_TTL = 30 * 24 * 60 * 60 // 30 kun (soniya)
 
 /**
  * Access + Refresh token juftini yaratish.

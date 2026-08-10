@@ -3,6 +3,7 @@ import { z } from 'zod'
 import { InstitutionType, InstitutionStatus, DeliveryMode } from '@prisma/client'
 import { indexInstitution, removeFromIndex } from '../../services/searchService'
 import { notifyUser } from '../../services/notify'
+import { logAdminAction } from '../../services/auditLog'
 
 /**
  * Admin muassasalar CRUD routes
@@ -174,6 +175,14 @@ export default async function adminInstitutionRoutes(fastify: FastifyInstance) {
       indexInstitution(institution).catch((err) => fastify.log.warn(err, 'Meilisearch indexlashda xato'))
     }
 
+    logAdminAction(prisma, request, {
+      action: 'institution.create',
+      entityType: 'Institution',
+      entityId: institution.id,
+      entityLabel: institution.nameUz,
+      after: { status: institution.status, type: institution.type },
+    })
+
     return reply.status(201).send({ data: { id: institution.id, slug: institution.slug, nameUz: institution.nameUz }, message: 'Muassasa yaratildi' })
   })
 
@@ -339,6 +348,15 @@ export default async function adminInstitutionRoutes(fastify: FastifyInstance) {
       }
     }
 
+    logAdminAction(prisma, request, {
+      action: 'institution.update',
+      entityType: 'Institution',
+      entityId: id,
+      entityLabel: institution.nameUz,
+      before: { nameUz: institution.nameUz, status: institution.status, isVerified: institution.isVerified },
+      after: body,
+    })
+
     return reply.send({ message: 'Muassasa yangilandi' })
   })
 
@@ -366,6 +384,14 @@ export default async function adminInstitutionRoutes(fastify: FastifyInstance) {
 
     // Meilisearch'dan o'chiramiz
     removeFromIndex(id).catch((err) => fastify.log.warn(err, 'Meilisearch o\'chirishda xato'))
+
+    logAdminAction(prisma, request, {
+      action: 'institution.delete',
+      entityType: 'Institution',
+      entityId: id,
+      entityLabel: institution.nameUz,
+      before: { nameUz: institution.nameUz, status: institution.status },
+    })
 
     return reply.send({ message: "Muassasa o'chirildi" })
   })
@@ -404,6 +430,15 @@ export default async function adminInstitutionRoutes(fastify: FastifyInstance) {
       removeFromIndex(id).catch((err) => fastify.log.warn(err, 'Meilisearch o\'chirishda xato'))
     }
 
+    logAdminAction(prisma, request, {
+      action: 'institution.status_change',
+      entityType: 'Institution',
+      entityId: id,
+      entityLabel: institution.nameUz,
+      before: { status: institution.status },
+      after: { status },
+    })
+
     return reply.send({ message: `Status ${status} ga o'zgartirildi` })
   })
 
@@ -421,6 +456,15 @@ export default async function adminInstitutionRoutes(fastify: FastifyInstance) {
 
     const isVerified = !institution.isVerified
     await prisma.institution.update({ where: { id }, data: { isVerified } })
+
+    logAdminAction(prisma, request, {
+      action: 'institution.verify_toggle',
+      entityType: 'Institution',
+      entityId: id,
+      before: { isVerified: institution.isVerified },
+      after: { isVerified },
+    })
+
     return reply.send({ isVerified, message: isVerified ? 'Muassasa tasdiqlandi' : 'Tasdiq bekor qilindi' })
   })
 }

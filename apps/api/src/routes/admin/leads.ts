@@ -7,6 +7,7 @@ import {
   type LeadListFilters, type LeadSort,
 } from '../../services/leadService'
 import { exportLeads, type ExportFormat } from '../../services/leadExportService'
+import { logAdminAction } from '../../services/auditLog'
 
 /**
  * Admin Lead CRM routes
@@ -175,7 +176,7 @@ export default async function adminLeadRoutes(fastify: FastifyInstance) {
     const { id } = request.params
     const { status } = z.object({ status: z.nativeEnum(LeadStatus) }).parse(request.body)
 
-    const user = await prisma.user.findUnique({ where: { id }, select: { role: true } })
+    const user = await prisma.user.findUnique({ where: { id }, select: { role: true, leadStatus: true } })
     if (!user || user.role !== 'USER') {
       return reply.status(404).send({ error: 'Lid topilmadi' })
     }
@@ -183,6 +184,14 @@ export default async function adminLeadRoutes(fastify: FastifyInstance) {
     await prisma.user.update({
       where: { id },
       data: { leadStatus: status, leadStatusUpdatedAt: new Date() },
+    })
+
+    logAdminAction(prisma, request, {
+      action: 'lead.status_update',
+      entityType: 'User',
+      entityId: id,
+      before: { leadStatus: user.leadStatus },
+      after: { leadStatus: status },
     })
 
     return reply.send({ message: `Lid holati "${status}" ga o'zgartirildi` })

@@ -24,6 +24,8 @@ async function apiFetch<T>(path: string, options: FetchOptions = {}): Promise<T>
   }
 
   const res = await fetch(`${BASE_URL}${path}`, {
+    // Refresh token httpOnly cookie orqali yuboriladi/qabul qilinadi (XSS himoyasi)
+    credentials: 'include',
     ...init,
     headers,
   })
@@ -247,8 +249,9 @@ export const authApi = {
   googleLogin: (idToken: string) =>
     apiFetch('/auth/google', { method: 'POST', body: JSON.stringify({ idToken }) }),
 
-  refresh: (refreshToken: string) =>
-    apiFetch('/auth/refresh', { method: 'POST', body: JSON.stringify({ refreshToken }) }),
+  // Refresh token httpOnly cookie'dan olinadi — parametr shart emas
+  refresh: () =>
+    apiFetch<{ accessToken: string }>('/auth/refresh', { method: 'POST' }),
 
   me: (token: string) =>
     apiFetch('/auth/me', { token }),
