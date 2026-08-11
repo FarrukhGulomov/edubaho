@@ -2,7 +2,13 @@ import type { FastifyInstance } from 'fastify'
 import { z } from 'zod'
 import { getOrCreateReferralCode, getReferralStats, getAvailableBalance } from '../services/referralService'
 import { MIN_WITHDRAWAL_UZS, REFERRAL_REWARD_UZS } from '../config/referral'
-import { PAYMENT_METHOD_LABELS } from '@edureyting/shared'
+
+// Loyihaning to'lov usullari (packages/shared'dagi PAYMENT_METHOD_LABELS
+// bilan bir xil kalitlar) — apps/api hech qachon @edureyting/shared'ni
+// import qilmaydi, chunki paths-mapping orqali paket manba (.ts) fayliga
+// bog'lansa, tsc'ning "rootDir" avtomatik xulosasi butun monorepo ildiziga
+// kengayib, dist chiqishi (dist/apps/api/src/... namuna) buzilib qoladi
+const VALID_PAYMENT_METHODS = ['payme', 'click', 'uzcard', 'humo', 'cash'] as const
 
 /**
  * Referral & Rewards — foydalanuvchi (referrer) uchun API.
@@ -90,7 +96,7 @@ export default async function referralRoutes(fastify: FastifyInstance) {
 
   const withdrawSchema = z.object({
     amount: z.coerce.number().int().positive(),
-    paymentMethod: z.enum(Object.keys(PAYMENT_METHOD_LABELS) as [string, ...string[]]),
+    paymentMethod: z.enum(VALID_PAYMENT_METHODS),
     paymentDetails: z.string().min(4, "To'lov ma'lumotlarini kiriting").max(200),
   })
 
