@@ -16,6 +16,7 @@ import { useLang, t } from '@/contexts/LangContext'
 import { matchApi, geoApi, authApi, type MatchItem, type MatchInsights } from '@/lib/api'
 import { track } from '@/lib/analytics'
 import { haptic } from '@/lib/telegram'
+import { GOAL_SUGGESTIONS } from '@/lib/matchConstants'
 
 /**
  * EduFit — "Menga mosini top" wizard'i
@@ -40,16 +41,6 @@ const TYPE_OPTIONS = [
   { value: 'SCHOOL',        Icon: School,     uz: 'Maktab',       ru: 'Школа',         disabled: true },
   { value: 'KINDERGARTEN',  Icon: Palette,    uz: "Bog'cha",      ru: 'Детский сад',   disabled: true },
 ]
-
-const GOAL_SUGGESTIONS: Record<string, string[]> = {
-  COURSE_CENTER: [
-    'IELTS', 'SAT', 'TOEFL', 'Ingliz tili', 'Frontend', 'Dasturlash',
-    'Dizayn', 'Marketing', 'Tadbirkorlik', 'Buxgalteriya', 'Matematika',
-    'OTMga tayyorlov', 'Kasb almashtirish', 'Shaxsiy rivojlanish',
-  ],
-  SCHOOL:        ['Prezident maktabi', 'Xususiy maktab', 'Ingliz tili'],
-  KINDERGARTEN:  ['Xususiy bog\'cha', 'Ingliz tili guruhi', 'Rivojlantiruvchi darslar'],
-}
 
 // EduFit: joylashuv & format mosligi — onlayn tanlansa shahar bosqichi
 // butunlay o'tkazib yuboriladi (butun O'zbekiston bo'yicha eng yaxshi
@@ -134,11 +125,19 @@ export default function MatchPage() {
     const params = new URLSearchParams(window.location.search)
 
     // Deep-link: bosh sahifadagi hero'da tur allaqachon tanlangan bo'lsa
-    // (?type=SCHOOL) — 1-qadamni takrorlamasdan 2-qadamdan davom etamiz
+    // (?type=SCHOOL) — 1-qadamni takrorlamasdan 2-qadamdan davom etamiz.
+    // Agar hero'da maqsad ham kiritilgan bo'lsa (?type=...&goal=IELTS) —
+    // 2-qadamni ham takrorlamasdan to'g'ridan-to'g'ri formatdan davom etamiz
     const preType = params.get('type')
+    const preGoal = params.get('goal')
     if (preType && TYPE_OPTIONS.some((o) => o.value === preType && !o.disabled)) {
       setType(preType)
-      setStep('goal')
+      if (preGoal?.trim()) {
+        setGoal(preGoal.trim())
+        setStep('format')
+      } else {
+        setStep('goal')
+      }
     }
 
     // Faqat ichki yo'llar qabul qilinadi (open-redirect himoyasi) —
