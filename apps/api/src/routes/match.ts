@@ -1,6 +1,7 @@
 import type { FastifyInstance } from 'fastify'
 import { z } from 'zod'
 import { computeMatchScore, evaluateGoal, DEFAULT_MIN_MATCH_SCORE, type MatchCandidate } from '../services/matchService'
+import { getCategoryDef } from '../utils/educationCategories'
 
 /**
  * POST 🔓 /match — EduFit: shaxsiy moslik bo'yicha tavsiya
@@ -41,8 +42,157 @@ const matchSchema = z.object({
   limit:    z.number().int().min(1).max(30).default(12),
 })
 
+/**
+ * GET 🔓 /match/insights — anketa to'ldirilayotganda LIVE, HAQIQIY ma'lumot
+ *
+ * Foydalanuvchi hali "Ko'rish" tugmasini bosmasdan turib — masalan faqat
+ * fanni ("IELTS") yoki shaharni tanlagandayoq — real platformadagi
+ * ma'lumotlarga asoslangan aniq raqamlarni ko'radi: nechta muassasa mos
+ * keladi, narx oralig'i qanday, qaysi aniq dastur nomlari topildi.
+ * Hech narsa o'ylab topilmaydi — barchasi shu so'rov ichida DB'dan
+ * hisoblanadi (soxta/statik "1000+ muassasa" kabi marketing raqamlar emas).
+ */
+const insightsSchema = z.object({
+  type: z.enum([
+    'KINDERGARTEN', 'SCHOOL', 'LYCEUM', 'COLLEGE', 'UNIVERSITY',
+    'COURSE_CENTER', 'LANGUAGE_CENTER', 'IT_SCHOOL', 'TUTORING',
+    'SPORTS_SCHOOL', 'ARTS_SCHOOL',
+  ]),
+  goal:   z.string().max(100).optional(),
+  cityId: z.string().max(40).optional(),
+  budget: z.coerce.number().int().positive().max(1_000_000_000).optional(),
+  format: z.enum(['offline', 'online', 'hybrid']).optional(),
+})
+
+const candidateSelect = {
+  id: true,
+  nameUz: true,
+  nameRu: true,
+  slug: true,
+  type: true,
+  status: true,
+  deliveryMode: true,
+  isVerified: true,
+  avgRating: true,
+  reviewCount: true,
+  cityId: true,
+  regionId: true,
+  phone: true,
+  address: true,
+  city:   { select: { nameUz: true, nameRu: true } },
+  details: {
+    select: {
+      descriptionUz: true, minAge: true, maxAge: true,
+      languages: true, programs: true, shifts: true, specializations: true,
+      categories: true,
+    },
+  },
+  pricing: { select: { monthlyMin: true, monthlyMax: true, hasDiscount: true } },
+  _count: { select: { media: true } },
+} as const
+
+function matchesFormat(deliveryMode: string, format: 'offline' | 'online' | 'hybrid'): boolean {
+  if (deliveryMode === 'HYBRID') return true
+  if (format === 'hybrid') return true
+  return (format === 'online') === (deliveryMode === 'ONLINE')
+}
+
 export default async function matchRoutes(fastify: FastifyInstance) {
   const { prisma } = fastify
+
+  fastify.get('/match/insights', {
+    config: { rateLimit: { max: 60, timeWindow: '1 minute' } },
+  }, async (request, reply) => {
+    const q = insightsSchema.parse(request.query)
+
+    const candidates = await prisma.institution.findMany({
+      where: { status: { in: ['ACTIVE', 'PREMIUM'] }, type: q.type },
+      select: candidateSelect,
+      take: 300,
+    })
+
+    const totalInThisType = candidates.length
+
+    const hasGoal = !!q.goal?.trim()
+    const matchedPrograms: string[] = []
+    let matchedCategory: { code: string; labelUz: string; labelRu: string } | null = null
+
+    const goalFiltered = candidates.filter((c) => {
+      if (!hasGoal) return true
+      const ev = evaluateGoal(c as MatchCandidate, q.goal!)
+      if (ev.matched) {
+        if (ev.matchedProgram && matchedPrograms.length < 5 && !matchedPrograms.includes(ev.matchedProgram)) {
+          matchedPrograms.push(ev.matchedProgram)
+        }
+        if (!matchedCategory && ev.matchType === 'category' && ev.category) {
+          const def = getCategoryDef(ev.category)
+          if (def) matchedCategory = { code: def.code, labelUz: def.labelUz, labelRu: def.labelRu }
+        }
+      }
+      return ev.matched
+    })
+
+    // Joylashuv: agar shahar tanlangan bo'lsa-yu, aynan shu shaharda mos
+    // muassasa topilmasa — bo'sh natija o'rniga butun mamlakat bo'yicha
+    // ko'rsatamiz (asosiy /match algoritmi bilan bir xil mantiq), lekin
+    // buni "locationRelaxed" bayrog'i orqali shaffof bildiramiz.
+    let locationPool = goalFiltered
+    let cityCount: number | null = null
+    let locationRelaxed = false
+    if (q.cityId) {
+      const inCity = goalFiltered.filter((c) => c.cityId === q.cityId)
+      cityCount = inCity.length
+      if (inCity.length > 0) {
+        locationPool = inCity
+      } else {
+        locationRelaxed = goalFiltered.length > 0
+      }
+    }
+
+    let formatPool = locationPool
+    if (q.format) {
+      const inFormat = locationPool.filter((c) => matchesFormat(c.deliveryMode, q.format!))
+      if (inFormat.length > 0) formatPool = inFormat
+    }
+
+    const priced = formatPool.filter((c) => c.pricing?.monthlyMin != null)
+    const priceRange = priced.length > 0 ? {
+      min: Math.min(...priced.map((c) => c.pricing!.monthlyMin!)),
+      max: Math.max(...priced.map((c) => c.pricing!.monthlyMax ?? c.pricing!.monthlyMin!)),
+    } : { min: null, max: null }
+
+    const rated = formatPool.filter((c) => c.avgRating != null)
+    const avgRating = rated.length > 0
+      ? Math.round((rated.reduce((s, c) => s + (c.avgRating ?? 0), 0) / rated.length) * 10) / 10
+      : null
+
+    const withinBudgetCount = q.budget != null
+      ? formatPool.filter((c) => c.pricing?.monthlyMin != null && c.pricing.monthlyMin <= q.budget!).length
+      : null
+
+    const sampleInstitutions = [...formatPool]
+      .sort((a, b) => (b.avgRating ?? 0) - (a.avgRating ?? 0))
+      .slice(0, 3)
+      .map((c) => ({
+        nameUz: c.nameUz, nameRu: c.nameRu, slug: c.slug,
+        avgRating: c.avgRating, city: c.city,
+      }))
+
+    return reply.send({
+      data: {
+        totalInThisType,
+        matchingCount: formatPool.length,
+        cityCount,
+        locationRelaxed,
+        matchedCategory,
+        matchedPrograms,
+        priceRange,
+        avgRating,
+        withinBudgetCount,
+        sampleInstitutions,
+      },
+    })
+  })
 
   fastify.post('/match', {
     config: { rateLimit: { max: 30, timeWindow: '1 minute' } },
@@ -56,32 +206,7 @@ export default async function matchRoutes(fastify: FastifyInstance) {
         status: { in: ['ACTIVE', 'PREMIUM'] },
         type: prefs.type,
       },
-      select: {
-        id: true,
-        nameUz: true,
-        nameRu: true,
-        slug: true,
-        type: true,
-        status: true,
-        deliveryMode: true,
-        isVerified: true,
-        avgRating: true,
-        reviewCount: true,
-        cityId: true,
-        regionId: true,
-        phone: true,
-        address: true,
-        city:   { select: { nameUz: true, nameRu: true } },
-        details: {
-          select: {
-            descriptionUz: true, minAge: true, maxAge: true,
-            languages: true, programs: true, shifts: true, specializations: true,
-            categories: true,
-          },
-        },
-        pricing: { select: { monthlyMin: true, monthlyMax: true, hasDiscount: true } },
-        _count: { select: { media: true } },
-      },
+      select: candidateSelect,
       take: 300,
     })
 

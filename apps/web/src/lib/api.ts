@@ -165,6 +165,25 @@ export interface MatchItem {
   }
 }
 
+export interface MatchInsights {
+  totalInThisType: number
+  matchingCount: number
+  cityCount: number | null
+  locationRelaxed: boolean
+  matchedCategory: { code: string; labelUz: string; labelRu: string } | null
+  matchedPrograms: string[]
+  priceRange: { min: number | null; max: number | null }
+  avgRating: number | null
+  withinBudgetCount: number | null
+  sampleInstitutions: Array<{
+    nameUz: string
+    nameRu?: string | null
+    slug: string
+    avgRating: number | null
+    city?: { nameUz: string; nameRu?: string | null } | null
+  }>
+}
+
 export const matchApi = {
   find: (prefs: {
     type: string
@@ -193,6 +212,16 @@ export const matchApi = {
       method: 'POST',
       body: JSON.stringify(prefs),
     }),
+
+  // Anketa to'ldirilayotganda live, real ma'lumot (hali "Ko'rish" bosilmasdan)
+  insights: (prefs: { type: string; goal?: string; cityId?: string; budget?: number; format?: string }) => {
+    const params = new URLSearchParams({ type: prefs.type })
+    if (prefs.goal?.trim()) params.set('goal', prefs.goal.trim())
+    if (prefs.cityId) params.set('cityId', prefs.cityId)
+    if (prefs.budget) params.set('budget', String(prefs.budget))
+    if (prefs.format) params.set('format', prefs.format)
+    return apiFetch<{ data: MatchInsights }>(`/match/insights?${params}`)
+  },
 }
 
 // ─── Search ───────────────────────────────────────────────────

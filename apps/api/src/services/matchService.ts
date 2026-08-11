@@ -189,6 +189,13 @@ export interface GoalEvaluation {
   category?: string
   /** matchType === 'course' bo'lsa — dastur/mutaxassislik matnidagi mos kelish darajasi (0-1) */
   ratio: number
+  /**
+   * matchType === 'course' bo'lsa — aynan qaysi dastur/mutaxassislik
+   * yozuvi mos kelgani (masalan "IELTS Advanced"). Foydalanuvchiga
+   * "nega bu tavsiya" tushuntirishida aniq dastur nomini ko'rsatish uchun
+   * (generic "IELTS yo'nalishi mavjud" o'rniga).
+   */
+  matchedProgram?: string
 }
 
 /**
@@ -200,12 +207,13 @@ export interface GoalEvaluation {
  * shu orqali soxta mosliklar yuzaga kelgan edi (masalan tavsifda
  * marketing maqsadida tilga olingan umumiy so'zlar noto'g'ri hit bergan).
  */
-function computeCourseMatch(inst: MatchCandidate, goal: string): { ratio: number } {
+function computeCourseMatch(inst: MatchCandidate, goal: string): { ratio: number; matchedProgram?: string } {
   const goalTokens = tokenize(goal)
-  const haystack = [
+  const entries = [
     ...(inst.details?.programs ?? []),
     ...(inst.details?.specializations ?? []),
-  ].join(' ').toLowerCase()
+  ]
+  const haystack = entries.join(' ').toLowerCase()
 
   if (goalTokens.length === 0) return { ratio: 0 }
 
@@ -214,7 +222,17 @@ function computeCourseMatch(inst: MatchCandidate, goal: string): { ratio: number
   const hits = goalTokens.filter((tok) =>
     expandSearchTerms(tok).some((variant) => hasWordMatch(haystack, variant)),
   )
-  return { ratio: hits.length / goalTokens.length }
+  if (hits.length === 0) return { ratio: 0 }
+
+  // Foydalanuvchiga aynan qaysi dastur/mutaxassislik mos kelganini
+  // ko'rsatish uchun — birinchi mos kelgan yozuvni topamiz (generic
+  // "IELTS yo'nalishi mavjud" o'rniga "IELTS Advanced" deb aytish mumkin)
+  const matchedProgram = entries.find((entry) => {
+    const entryLower = entry.toLowerCase()
+    return hits.some((tok) => expandSearchTerms(tok).some((variant) => hasWordMatch(entryLower, variant)))
+  })
+
+  return { ratio: hits.length / goalTokens.length, matchedProgram }
 }
 
 /**
@@ -236,9 +254,9 @@ export function evaluateGoal(inst: MatchCandidate, goal: string): GoalEvaluation
   const trimmed = goal.trim()
   if (!trimmed) return { matched: true, matchType: 'none', ratio: 0 }
 
-  const { ratio } = computeCourseMatch(inst, trimmed)
+  const { ratio, matchedProgram } = computeCourseMatch(inst, trimmed)
   if (ratio > 0) {
-    return { matched: true, matchType: 'course', ratio }
+    return { matched: true, matchType: 'course', ratio, matchedProgram }
   }
 
   const category = classifyGoalCategory(trimmed)
@@ -284,7 +302,13 @@ function scoreGoal(inst: MatchCandidate, prefs: MatchPreferences): ScoreComponen
   }
 
   if (ev.ratio >= 0.99) {
-    return {
+    // Aniq dastur nomi topilgan bo'lsa — o'sha nomni ko'rsatamiz
+    // (foydalanuvchi so'zini qaytarishdan ko'ra ancha ishonchli va aniq)
+    return ev.matchedProgram ? {
+      ...base, score: 100, hasData: true,
+      reasonUz: `"${ev.matchedProgram}" dasturi mavjud`,
+      reasonRu: `Есть программа "${ev.matchedProgram}"`,
+    } : {
       ...base, score: 100, hasData: true,
       reasonUz: `"${prefs.goal}" yo'nalishi aniq mavjud`,
       reasonRu: `Есть точное направление "${prefs.goal}"`,
@@ -293,8 +317,8 @@ function scoreGoal(inst: MatchCandidate, prefs: MatchPreferences): ScoreComponen
   // Qisman mos (masalan bir nechta so'zdan faqat biri topildi)
   return {
     ...base, score: 60 + Math.round(ev.ratio * 30), hasData: true,
-    reasonUz: `"${prefs.goal}" ga yaqin dasturlar bor`,
-    reasonRu: `Есть близкие к "${prefs.goal}" программы`,
+    reasonUz: ev.matchedProgram ? `"${ev.matchedProgram}" dasturiga yaqin` : `"${prefs.goal}" ga yaqin dasturlar bor`,
+    reasonRu: ev.matchedProgram ? `Близко к программе "${ev.matchedProgram}"` : `Есть близкие к "${prefs.goal}" программы`,
   }
 }
 

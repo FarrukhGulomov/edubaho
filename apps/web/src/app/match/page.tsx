@@ -7,13 +7,13 @@ import {
   Target, PencilLine, School, Palette, Sunrise, Sun, Sunset, Calendar,
   Clock, Wallet, Globe, MapPin, BadgeCheck, Lightbulb, AlertCircle,
   Search, RotateCcw, Medal, Lock, ArrowRight, Info, Building2, Shuffle,
-  Languages, Crown, Wifi,
+  Languages, Crown, Wifi, Sparkles, Star,
 } from 'lucide-react'
 import Header from '@/components/shared/Header'
 import Footer from '@/components/shared/Footer'
 import { RatingHint } from '@/components/shared/StarRating'
 import { useLang, t } from '@/contexts/LangContext'
-import { matchApi, geoApi, authApi, type MatchItem } from '@/lib/api'
+import { matchApi, geoApi, authApi, type MatchItem, type MatchInsights } from '@/lib/api'
 import { track } from '@/lib/analytics'
 import { haptic } from '@/lib/telegram'
 
@@ -109,6 +109,7 @@ export default function MatchPage() {
   const [preferPremium, setPreferPremium] = useState(false)
   const [results, setResults]   = useState<MatchItem[]>([])
   const [resultsMeta, setResultsMeta] = useState<{
+    total?: number
     locationRelaxed?: boolean
     usedRegionFallback?: boolean
     noSpecializationMatch?: boolean
@@ -117,6 +118,10 @@ export default function MatchPage() {
   const [loading, setLoading]   = useState(false)
   const [error, setError]       = useState('')
   const [expanded, setExpanded] = useState<string | null>(null)
+  // Live insight: anketa to'ldirilayotganda real DB ma'lumotiga asoslangan
+  // aniq raqamlar (soxta emas) — foydalanuvchi hali "Ko'rish"ni bosmasdan
+  const [insights, setInsights] = useState<MatchInsights | null>(null)
+  const [insightsLoading, setInsightsLoading] = useState(false)
   // Profil onboarding rejimi: ?next=/profile bilan kelingan bo'lsa —
   // wizard tugagach (yoki o'tkazib yuborilganda) o'sha yerga qaytariladi
   // va bajarilgani profilda saqlanadi (bir marta ko'rsatish uchun)
@@ -141,6 +146,26 @@ export default function MatchPage() {
     const n = params.get('next')
     if (n && n.startsWith('/') && !n.startsWith('//')) setNext(n)
   }, [])
+
+  // Live insight panel: tur tanlangandan keyin har bir qadamda (maqsad,
+  // format, shahar, byudjet) foydalanuvchiga real DB'dan hisoblangan aniq
+  // raqamlar ko'rsatiladi — 400ms debounce bilan (har harf bosilganda emas)
+  useEffect(() => {
+    if (!type || step === 'type' || step === 'results') {
+      setInsights(null)
+      return
+    }
+    let cancelled = false
+    setInsightsLoading(true)
+    const timer = setTimeout(() => {
+      matchApi
+        .insights({ type, goal: goal || undefined, cityId: cityId || undefined, budget: budget || undefined, format: format || undefined })
+        .then((r) => { if (!cancelled) setInsights(r.data) })
+        .catch(() => { if (!cancelled) setInsights(null) })
+        .finally(() => { if (!cancelled) setInsightsLoading(false) })
+    }, 400)
+    return () => { cancelled = true; clearTimeout(timer) }
+  }, [type, goal, cityId, budget, format, step])
 
   // Onboarding bajarilgani/o'tkazib yuborilganini profilda saqlaydi.
   // Mavjud PATCH /auth/profile endpoint'i qayta ishlatiladi — yangi API yo'q.
@@ -306,6 +331,11 @@ export default function MatchPage() {
               />
             ))}
           </div>
+        )}
+
+        {/* Live insight: real DB'ga asoslangan aniq raqamlar */}
+        {step !== 'type' && step !== 'results' && (
+          <InsightsCard insights={insights} loading={insightsLoading} uz={uz} hasGoal={!!goal.trim()} />
         )}
 
         {/* ── 1. Tur ── */}
@@ -571,7 +601,16 @@ export default function MatchPage() {
             {!loading && !error && (
               <>
                 <div className="flex items-center justify-between">
-                  <h2 className="text-lg font-bold text-gray-900">{t(lang, ui.results)}</h2>
+                  <div>
+                    <h2 className="text-lg font-bold text-gray-900">{t(lang, ui.results)}</h2>
+                    {results.length > 0 && (
+                      <p className="mt-0.5 text-xs text-gray-400">
+                        {uz
+                          ? `Yuqori moslikdagi ${resultsMeta.total ?? results.length} ta muassasadan ${results.length} tasi ko'rsatilmoqda`
+                          : `Показано ${results.length} из ${resultsMeta.total ?? results.length} учреждений с высоким совпадением`}
+                      </p>
+                    )}
+                  </div>
                   <button
                     onClick={() => { setStep('type'); setResults([]); setResultsMeta({}) }}
                     className="flex items-center gap-1.5 text-sm font-semibold text-primary-600 hover:underline"
@@ -745,6 +784,109 @@ export default function MatchPage() {
         )}
       </main>
       <Footer />
+    </div>
+  )
+}
+
+/**
+ * Live insight paneli — anketa to'ldirilayotganda real DB'dan hisoblangan
+ * aniq raqamlarni ko'rsatadi (nechta muassasa mos keladi, narx oralig'i,
+ * aynan qaysi dasturlar topildi). Hech narsa o'ylab topilmaydi.
+ */
+function InsightsCard({ insights, loading, uz, hasGoal }: {
+  insights: MatchInsights | null
+  loading: boolean
+  uz: boolean
+  hasGoal: boolean
+}) {
+  if (!insights) {
+    if (!loading) return null
+    return (
+      <div className="mb-5 flex items-center gap-2 rounded-xl border border-gray-100 bg-gray-50 px-4 py-3 text-xs text-gray-400">
+        <span className="h-3 w-3 shrink-0 animate-spin rounded-full border-2 border-gray-300 border-t-primary-500" />
+        {uz ? 'Hisoblanmoqda...' : 'Считаем...'}
+      </div>
+    )
+  }
+
+  const zeroMatches = hasGoal && insights.matchingCount === 0
+  const names = insights.sampleInstitutions.map((s) => uz ? s.nameUz : (s.nameRu ?? s.nameUz))
+
+  return (
+    <div className={`mb-5 rounded-xl border px-4 py-3.5 transition-opacity ${loading ? 'opacity-60' : ''} ${
+      zeroMatches ? 'border-amber-200 bg-amber-50' : 'border-primary-100 bg-primary-50/70'
+    }`}>
+      <div className={`flex items-center gap-2 text-sm font-bold ${zeroMatches ? 'text-amber-700' : 'text-primary-700'}`}>
+        <Sparkles className="h-4 w-4 shrink-0" strokeWidth={1.75} />
+        {zeroMatches
+          ? (uz ? "Bu yo'nalish bo'yicha hozircha muassasa yo'q" : 'По этому направлению пока нет учреждений')
+          : (uz
+              ? `${insights.matchingCount} ta muassasa mos keladi`
+              : `Подходит ${insights.matchingCount} учреждений`)}
+      </div>
+
+      {zeroMatches ? (
+        <p className="mt-1 text-xs text-amber-700">
+          {uz ? 'Boshqa fan yoki kalit so\'z bilan urinib ko\'ring' : 'Попробуйте другой предмет или ключевое слово'}
+        </p>
+      ) : (
+        <>
+          {(insights.priceRange.min != null || insights.avgRating != null) && (
+            <div className="mt-2 flex flex-wrap gap-x-4 gap-y-1.5 text-xs font-semibold text-primary-800">
+              {insights.priceRange.min != null && (
+                <span className="flex items-center gap-1">
+                  <Wallet className="h-3.5 w-3.5 shrink-0" strokeWidth={1.75} />
+                  {fmtUzs(insights.priceRange.min)}
+                  {insights.priceRange.max != null && insights.priceRange.max !== insights.priceRange.min
+                    ? ` – ${fmtUzs(insights.priceRange.max)}` : ''}
+                  {uz ? '/oy' : '/мес'}
+                </span>
+              )}
+              {insights.avgRating != null && (
+                <span className="flex items-center gap-1">
+                  <Star className="h-3.5 w-3.5 shrink-0 fill-amber-400 text-amber-400" strokeWidth={1.75} />
+                  {insights.avgRating.toFixed(1)}
+                </span>
+              )}
+              {insights.withinBudgetCount != null && (
+                <span>
+                  {uz
+                    ? `${insights.withinBudgetCount} tasi byudjetingizga mos`
+                    : `${insights.withinBudgetCount} в вашем бюджете`}
+                </span>
+              )}
+            </div>
+          )}
+
+          {insights.matchedPrograms.length > 0 ? (
+            <div className="mt-2 flex flex-wrap gap-1.5">
+              {insights.matchedPrograms.map((p) => (
+                <span key={p} className="rounded-full bg-white px-2.5 py-1 text-[11px] font-semibold text-primary-700 shadow-sm">
+                  {p}
+                </span>
+              ))}
+            </div>
+          ) : insights.matchedCategory && (
+            <p className="mt-1.5 text-xs text-primary-700">
+              {uz ? `Toifa: ${insights.matchedCategory.labelUz}` : `Категория: ${insights.matchedCategory.labelRu}`}
+            </p>
+          )}
+
+          {names.length > 0 && (
+            <p className="mt-1.5 truncate text-[11px] text-primary-600">
+              {uz ? 'Masalan: ' : 'Например: '}{names.join(', ')}
+            </p>
+          )}
+
+          {insights.locationRelaxed && (
+            <p className="mt-1.5 text-[11px] text-amber-700">
+              {uz
+                ? 'Tanlangan shaharda topilmadi — boshqa shaharlar hisobga olindi'
+                : 'В выбранном городе не найдено — учтены другие города'}
+            </p>
+          )}
+        </>
+      )}
     </div>
   )
 }
