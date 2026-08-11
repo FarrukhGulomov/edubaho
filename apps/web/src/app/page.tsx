@@ -13,6 +13,8 @@ import BrandMark from '@/components/shared/BrandMark'
 import { RatingHint } from '@/components/shared/StarRating'
 import { useLang, t } from '@/contexts/LangContext'
 import { useCompare, useSaved } from '@/hooks/useCompare'
+import { matchApi, type MatchInsights } from '@/lib/api'
+import { GOAL_SUGGESTIONS } from '@/lib/matchConstants'
 
 interface InstCard {
   id: string
@@ -45,16 +47,6 @@ const TYPE_LABELS: Record<string, { uz: string; ru: string }> = {
   ARTS_SCHOOL:     { uz: "San'at",        ru: 'Искусство' },
 }
 
-// Hero'dagi BilimOn wizard 1-qadam turlari — match wizard'dagi TYPE_OPTIONS bilan
-// bir xil bo'lishi shart (bosilganda /match?type=X 2-qadamdan davom etadi).
-// MVP doirasida faqat O'quv markaz bilan ishlaymiz — Maktab/Bog'cha hozircha
-// disable (ko'rinadi, lekin bosilmaydi, "Tez orada" belgisi bilan).
-const HERO_MATCH_TYPES = [
-  { type: 'COURSE_CENTER', Icon: PencilLine, uz: "O'quv markaz", ru: 'Учебный центр', disabled: false },
-  { type: 'SCHOOL',        Icon: School,     uz: 'Maktab',       ru: 'Школа',         disabled: true },
-  { type: 'KINDERGARTEN',  Icon: Palette,    uz: "Bog'cha",      ru: 'Детский сад',   disabled: true },
-]
-
 // Tezkor kategoriya havolalari — endi filtrlashni o'zi qilmaydi, balki
 // yagona katalog sahifasiga (/search) yo'naltiradi (duplikatsiyani oldini olish).
 // MVP doirasida faqat O'quv markaz aktiv — qolganlari disable.
@@ -77,6 +69,13 @@ export default function HomePage() {
   const [topInstitutions, setTopInstitutions] = useState<InstCard[]>([])
   const [loadingTop, setLoadingTop] = useState(true)
 
+  // Hero'dagi EduFit taklif: MVP'da faqat O'quv markaz bilan ishlaymiz,
+  // shuning uchun tur tanlash qadami olib tashlandi — foydalanuvchi
+  // to'g'ridan-to'g'ri maqsadini kiritadi (mosini-tanla wizard'ining
+  // "goal" qadami shu yerda, bosh sahifaning asosiy oynasida)
+  const [heroGoal, setHeroGoal] = useState('')
+  const [heroInsights, setHeroInsights] = useState<MatchInsights | null>(null)
+
   const { toggle: toggleCompare, isSelected: isCompared } = useCompare()
   const { toggleSave, isSaved } = useSaved()
 
@@ -94,10 +93,28 @@ export default function HomePage() {
       .finally(() => setLoadingTop(false))
   }, [API])
 
+  // Foydalanuvchi hero'da maqsadini yozayotganda — real DB'dan hisoblangan
+  // aniq son ko'rsatiladi (400ms debounce), /match sahifasidagi InsightsCard
+  // bilan bir xil endpoint (matchApi.insights) qayta ishlatiladi
+  useEffect(() => {
+    let cancelled = false
+    const timer = setTimeout(() => {
+      matchApi.insights({ type: 'COURSE_CENTER', goal: heroGoal || undefined })
+        .then((r) => { if (!cancelled) setHeroInsights(r.data) })
+        .catch(() => { if (!cancelled) setHeroInsights(null) })
+    }, 400)
+    return () => { cancelled = true; clearTimeout(timer) }
+  }, [heroGoal])
+
   function handleSearchSubmit(e: React.FormEvent) {
     e.preventDefault()
     const q = query.trim()
     router.push(q ? `/search?q=${encodeURIComponent(q)}` : '/search')
+  }
+
+  function goToMatch() {
+    const goal = heroGoal.trim()
+    router.push(goal ? `/match?type=COURSE_CENTER&goal=${encodeURIComponent(goal)}` : '/match?type=COURSE_CENTER')
   }
 
   return (
@@ -105,10 +122,13 @@ export default function HomePage() {
       <Header />
 
       {/* ── BilimOn hero — user saytga kirganda BIRINCHI ko'radigan narsa.
-             Banner emas: wizard'ning 1-qadami to'g'ridan-to'g'ri shu yerda,
-             tur tanlangach /match 2-qadamdan davom etadi. ── */}
+             Banner emas: EduFit wizard'ining "maqsad" qadami to'g'ridan-to'g'ri
+             shu yerda (asosiy oynada). MVP'da faqat O'quv markaz bilan
+             ishlaymiz, shuning uchun tur tanlash qadami olib tashlandi —
+             foydalanuvchi darhol maqsadini kiritadi va /match wizard'iga
+             formatdan (tur/maqsad allaqachon ma'lum) davom etadi. ── */}
       <div className="border-b border-gray-200 bg-white px-4 py-8 sm:py-12">
-        <div className="mx-auto max-w-3xl">
+        <div className="mx-auto max-w-2xl">
           <div className="mb-1.5 flex items-center justify-center gap-2 text-primary-600">
             <BrandMark size={20} className="shrink-0" />
             <span className="text-sm font-bold uppercase tracking-wide">BilimOn</span>
@@ -117,47 +137,53 @@ export default function HomePage() {
             {uz ? 'Qaysi ta\'lim muassasasi senga mos?' : 'Какое учебное заведение вам подходит?'}
           </h1>
           <p className="mb-6 text-center text-sm text-gray-500 sm:text-base">
-            {uz
-              ? "Turini tanlang — 1 daqiqada shaxsiy tavsiyalar tayyor bo'ladi"
-              : 'Выберите тип — персональные рекомендации будут готовы за 1 минуту'}
+            {uz ? 'Maqsadingiz nima?' : 'Какая у вас цель?'}
           </p>
 
-          {/* Wizard 1-qadam: tur tanlash (bosilsa /match 2-qadamdan davom etadi).
-              MVP: faqat O'quv markaz aktiv, qolganlari "Tez orada" bilan disable. */}
-          <div className="mb-6 grid grid-cols-3 gap-2.5 sm:gap-4">
-            {HERO_MATCH_TYPES.map(o => (
-              o.disabled ? (
-                <div
-                  key={o.type}
-                  aria-disabled="true"
-                  title={uz ? 'Tez orada' : 'Скоро'}
-                  className="relative flex cursor-not-allowed flex-col items-center gap-2.5 rounded-2xl border-2 border-gray-100 bg-gray-50 px-2 py-5 text-center opacity-60 sm:py-7"
-                >
-                  <span className="absolute right-2 top-2 flex items-center gap-1 rounded-full bg-white px-2 py-0.5 text-[10px] font-semibold text-gray-400 shadow-sm">
-                    <Lock className="h-2.5 w-2.5 shrink-0" strokeWidth={2} />
-                    {uz ? 'Tez orada' : 'Скоро'}
-                  </span>
-                  <span className="flex h-12 w-12 items-center justify-center rounded-xl bg-gray-100 text-gray-400 sm:h-14 sm:w-14">
-                    <o.Icon className="h-6 w-6 sm:h-7 sm:w-7" strokeWidth={1.75} />
-                  </span>
-                  <span className="text-sm font-bold leading-tight text-gray-400 sm:text-base">
-                    {uz ? o.uz : o.ru}
-                  </span>
-                </div>
-              ) : (
-                <Link
-                  key={o.type}
-                  href={`/match?type=${o.type}`}
-                  className="group flex flex-col items-center gap-2.5 rounded-2xl border-2 border-gray-200 bg-white px-2 py-5 text-center shadow-sm transition-colors hover:border-primary-400 hover:bg-primary-50/40 sm:py-7"
-                >
-                  <span className="flex h-12 w-12 items-center justify-center rounded-xl bg-primary-50 text-primary-600 transition-colors group-hover:bg-primary-100 sm:h-14 sm:w-14">
-                    <o.Icon className="h-6 w-6 sm:h-7 sm:w-7" strokeWidth={1.75} />
-                  </span>
-                  <span className="text-sm font-bold leading-tight text-gray-900 sm:text-base">
-                    {uz ? o.uz : o.ru}
-                  </span>
-                </Link>
-              )
+          {/* EduFit wizard'ining "maqsad" qadami — hero'ning asosiy vidjeti */}
+          <div className="mb-3 flex items-center gap-2 rounded-xl border border-gray-200 bg-white p-2 shadow-sm focus-within:border-primary-400">
+            <div className="flex min-w-0 flex-1 items-center gap-2 px-2">
+              <Sparkles className="h-5 w-5 shrink-0 text-primary-500" strokeWidth={1.75} />
+              <input
+                type="text"
+                value={heroGoal}
+                onChange={(e) => setHeroGoal(e.target.value)}
+                onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); goToMatch() } }}
+                placeholder={uz ? 'Masalan: IELTS, Frontend, matematika...' : 'Например: IELTS, Frontend, математика...'}
+                maxLength={100}
+                className="min-w-0 flex-1 bg-transparent py-2 text-base text-gray-900 outline-none placeholder:text-gray-400"
+              />
+            </div>
+            <button
+              onClick={goToMatch}
+              className="btn-primary shrink-0 whitespace-nowrap px-5 py-2.5 text-sm"
+            >
+              {uz ? 'Davom etish →' : 'Продолжить →'}
+            </button>
+          </div>
+
+          {/* Real DB'dan hisoblangan live son — soxta statistika emas */}
+          <p className="mb-3 text-center text-xs font-semibold text-primary-600">
+            {heroInsights
+              ? (heroGoal.trim() && heroInsights.matchingCount === 0
+                  ? (uz ? "Bu yo'nalish bo'yicha hozircha muassasa yo'q — boshqa fan bilan sinab ko'ring" : 'По этому направлению пока нет учреждений')
+                  : (uz ? `${heroInsights.matchingCount} ta muassasa mos keladi` : `Подходит ${heroInsights.matchingCount} учреждений`))
+              : ' '}
+          </p>
+
+          <div className="mb-6 flex flex-wrap justify-center gap-1.5">
+            {(GOAL_SUGGESTIONS.COURSE_CENTER ?? []).map((g) => (
+              <button
+                key={g}
+                onClick={() => setHeroGoal(g)}
+                className={`rounded-full border px-3.5 py-1.5 text-xs font-semibold transition-colors ${
+                  heroGoal === g
+                    ? 'border-primary-500 bg-primary-600 text-white'
+                    : 'border-gray-300 bg-white text-gray-600 hover:border-primary-400'
+                }`}
+              >
+                {g}
+              </button>
             ))}
           </div>
 
