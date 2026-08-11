@@ -372,6 +372,7 @@ export default function MatchPage() {
             <WizardNav
               onNext={() => setStep('format')}
               nextLabel={t(lang, goal ? ui.next : ui.skip)}
+              nextDisabled={!!goal.trim() && insights?.matchingCount === 0}
             />
           </div>
         )}
@@ -872,11 +873,13 @@ function InsightsCard({ insights, loading, uz, hasGoal }: {
   )
 }
 
-function WizardNav({ onBack, onNext, nextLabel, backLabel }: {
+function WizardNav({ onBack, onNext, nextLabel, backLabel, nextDisabled }: {
   onBack?: () => void
   onNext?: () => void
   nextLabel?: string
   backLabel?: string
+  /** Masalan: tanlangan yo'nalish bo'yicha hech qanday muassasa topilmasa — davom etishning ma'nosi yo'q */
+  nextDisabled?: boolean
 }) {
   return (
     <div className="flex items-center justify-between pt-2">
@@ -888,6 +891,7 @@ function WizardNav({ onBack, onNext, nextLabel, backLabel }: {
       {onNext && (
         <button
           onClick={onNext}
+          disabled={nextDisabled}
           className="btn-primary px-6 py-3"
         >
           {nextLabel ?? 'Keyingisi →'}
