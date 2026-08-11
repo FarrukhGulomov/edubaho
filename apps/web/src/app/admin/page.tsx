@@ -4,7 +4,7 @@ import Link from 'next/link'
 import { useEffect, useState } from 'react'
 import {
   Crown, ShieldCheck, ClipboardList, School, CalendarCheck,
-  Building2, Clock, Sparkles, Users, type LucideIcon,
+  Building2, Clock, Sparkles, Users, Gift, type LucideIcon,
 } from 'lucide-react'
 import { useAuth } from '@/hooks/useAuth'
 import { useRouter } from 'next/navigation'
@@ -18,6 +18,7 @@ interface DashboardStats {
   pendingReviews: number
   pendingBookings: number
   leadsNeedContact: number
+  pendingReferralWithdrawals: number
 }
 
 export default function AdminPage() {
@@ -67,14 +68,16 @@ export default function AdminPage() {
       fetch(`${API}/admin/reviews/pending?limit=1`, { headers }).then(r => r.json()),
       fetch(`${API}/admin/trial-bookings?status=PENDING&limit=1`, { headers }).then(r => r.json()),
       fetch(`${API}/admin/leads?status=CONTACT_REQUIRED&limit=1`, { headers }).then(r => r.json()),
+      fetch(`${API}/admin/referral-withdrawals?status=PENDING&limit=1`, { headers }).then(r => r.json()),
     ])
-      .then(([institutions, pending, reviews, bookings, leads]) => {
+      .then(([institutions, pending, reviews, bookings, leads, refWithdrawals]) => {
         setStats({
           totalInstitutions:   institutions.meta?.total ?? 0,
           pendingInstitutions: pending.meta?.total ?? 0,
           pendingReviews:      reviews.meta?.total ?? 0,
           pendingBookings:     bookings.meta?.total ?? 0,
           leadsNeedContact:    leads.meta?.total ?? 0,
+          pendingReferralWithdrawals: refWithdrawals.meta?.total ?? 0,
         })
       })
       .catch(() => {}) // statistika ixtiyoriy — muvaffaqiyatsiz bo'lsa jim o'tkaziladi
@@ -191,6 +194,20 @@ export default function AdminPage() {
               <p className="text-sm text-emerald-700">Bepul probnoy darsga yozilgan so&apos;rovlar</p>
             </div>
             <NavBadge count={stats?.pendingBookings} className="bg-emerald-600" />
+          </Link>
+
+          <Link
+            href="/admin/referrals"
+            className="relative flex items-center gap-4 rounded-2xl border border-amber-200 bg-amber-50 p-6 transition-colors hover:border-amber-400"
+          >
+            <span className="icon-chip h-14 w-14 shrink-0 bg-amber-500 text-white">
+              <Gift className="h-6 w-6" strokeWidth={1.75} />
+            </span>
+            <div>
+              <h2 className="text-lg font-bold text-amber-900">Referral & Rewards</h2>
+              <p className="text-sm text-amber-700">Referallar, yechib olish so&apos;rovlari</p>
+            </div>
+            <NavBadge count={stats?.pendingReferralWithdrawals} className="bg-amber-600" />
           </Link>
 
           {user.role === 'SUPER_ADMIN' && (

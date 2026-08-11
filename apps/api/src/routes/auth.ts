@@ -11,6 +11,7 @@ import { sendSmsOtp } from '../services/sms'
 import { verifyTelegramAuth, verifyTelegramWebAppInitData } from '../services/telegram'
 import { verifyGoogleIdToken } from '../services/google'
 import { generateTokens, verifyRefreshToken, revokeRefreshToken, REFRESH_TTL } from '../services/tokens'
+import { attributeReferral } from '../services/referralService'
 
 const REFRESH_COOKIE = 'rt'
 // Faqat /auth/* yo'llariga yuboriladi — boshqa so'rovlarga tarqalmaydi.
@@ -93,7 +94,7 @@ export default async function authRoutes(fastify: FastifyInstance) {
     // Brute-force himoyasi: bitta IP dan daqiqasiga ko'pi bilan 10 ta tekshirish
     config: { rateLimit: { max: 10, timeWindow: '1 minute' } },
   }, async (request, reply) => {
-    const { phone: rawPhone, otp } = verifyOtpSchema.parse(request.body)
+    const { phone: rawPhone, otp, referralCode } = verifyOtpSchema.parse(request.body)
 
     const phone = normalizePhone(rawPhone)
     if (!phone) {
@@ -115,6 +116,8 @@ export default async function authRoutes(fastify: FastifyInstance) {
         phone: true,
         name: true,
         role: true,
+        createdAt: true,
+        updatedAt: true,
         institutionClaims: {
           where: { status: 'APPROVED' },
           select: { institutionId: true },
@@ -124,6 +127,15 @@ export default async function authRoutes(fastify: FastifyInstance) {
     })
 
     const isNewUser = !user.name
+    // Referral atributsiyasi FAQAT hisob AYNAN shu so'rovda yaratilgan bo'lsa
+    // ishlaydi (createdAt===updatedAt — upsert "create" tarmog'ini bosgan
+    // paytda ikkalasi bir xil vaqtga o'rnatiladi). "isNewUser" flagiga
+    // ishonib bo'lmaydi — u ismi hali kiritilmagan QAYTA kirgan userda ham
+    // true bo'lishi mumkin, bu esa mavjud userni referralga aylantirib
+    // qo'yardi (texnik topshiriq item #38'ni buzardi)
+    if (referralCode && user.createdAt.getTime() === user.updatedAt.getTime()) {
+      await attributeReferral(prisma, { referralCode, referredUserId: user.id })
+    }
     const institutionId = user.institutionClaims[0]?.institutionId
 
     const { accessToken, refreshToken } = await generateTokens(
@@ -435,6 +447,7 @@ export default async function authRoutes(fastify: FastifyInstance) {
       photo_url:  z.string().optional(),
       auth_date:  z.number(),
       hash:       z.string(),
+      referralCode: z.string().min(4).max(20).optional(),
     }).parse(request.body)
 
     if (!verifyTelegramAuth(tgData, env.TELEGRAM_BOT_TOKEN)) {
@@ -450,7 +463,7 @@ export default async function authRoutes(fastify: FastifyInstance) {
       update: { lastActiveAt: new Date(), telegramUsername },
       create: { telegramId, telegramUsername, name, isVerified: true },
       select: {
-        id: true, phone: true, name: true, role: true,
+        id: true, phone: true, name: true, role: true, createdAt: true, updatedAt: true,
         institutionClaims: {
           where:  { status: 'APPROVED' },
           select: { institutionId: true },
@@ -460,6 +473,9 @@ export default async function authRoutes(fastify: FastifyInstance) {
     })
 
     const isNewUser = !user.phone && !user.name
+    if (tgData.referralCode && user.createdAt.getTime() === user.updatedAt.getTime()) {
+      await attributeReferral(prisma, { referralCode: tgData.referralCode, referredUserId: user.id })
+    }
     const institutionId = user.institutionClaims[0]?.institutionId
     const { accessToken, refreshToken } = await generateTokens(
       user.id,
@@ -490,7 +506,10 @@ export default async function authRoutes(fastify: FastifyInstance) {
       return reply.status(503).send({ error: 'Telegram kirish hali sozlanmagan' })
     }
 
-    const { initData } = z.object({ initData: z.string().min(20).max(8192) }).parse(request.body)
+    const { initData, referralCode } = z.object({
+      initData: z.string().min(20).max(8192),
+      referralCode: z.string().min(4).max(20).optional(),
+    }).parse(request.body)
 
     const tgUser = verifyTelegramWebAppInitData(initData, env.TELEGRAM_BOT_TOKEN)
     if (!tgUser) {
@@ -512,7 +531,7 @@ export default async function authRoutes(fastify: FastifyInstance) {
         isVerified: true,
       },
       select: {
-        id: true, phone: true, name: true, role: true,
+        id: true, phone: true, name: true, role: true, createdAt: true, updatedAt: true,
         institutionClaims: {
           where:  { status: 'APPROVED' },
           select: { institutionId: true },
@@ -522,6 +541,9 @@ export default async function authRoutes(fastify: FastifyInstance) {
     })
 
     const isNewUser = !user.phone && !user.name
+    if (referralCode && user.createdAt.getTime() === user.updatedAt.getTime()) {
+      await attributeReferral(prisma, { referralCode, referredUserId: user.id })
+    }
     const institutionId = user.institutionClaims[0]?.institutionId
     const { accessToken, refreshToken } = await generateTokens(
       user.id,
@@ -550,7 +572,10 @@ export default async function authRoutes(fastify: FastifyInstance) {
       return reply.status(503).send({ error: 'Google orqali kirish hali sozlanmagan' })
     }
 
-    const { idToken } = z.object({ idToken: z.string().min(20) }).parse(request.body)
+    const { idToken, referralCode } = z.object({
+      idToken: z.string().min(20),
+      referralCode: z.string().min(4).max(20).optional(),
+    }).parse(request.body)
 
     const googleUser = await verifyGoogleIdToken(idToken)
     if (!googleUser) {
@@ -568,6 +593,7 @@ export default async function authRoutes(fastify: FastifyInstance) {
 
     // 1) googleId bo'yicha izlash, 2) email bo'yicha mavjud hisobga bog'lash, 3) yangi hisob
     let user = await prisma.user.findUnique({ where: { googleId: googleUser.googleId }, select: userSelect })
+    let justCreated = false
 
     if (user) {
       await prisma.user.update({ where: { id: user.id }, data: { lastActiveAt: new Date() } })
@@ -576,6 +602,7 @@ export default async function authRoutes(fastify: FastifyInstance) {
 
       if (byEmail) {
         // Email allaqachon ro'yxatda — Google hisobini shu foydalanuvchiga bog'laymiz
+        // (mavjud hisob — referral EMAS, texnik topshiriq item #38)
         user = await prisma.user.update({
           where: { id: byEmail.id },
           data: {
@@ -596,7 +623,12 @@ export default async function authRoutes(fastify: FastifyInstance) {
           },
           select: userSelect,
         })
+        justCreated = true
       }
+    }
+
+    if (referralCode && justCreated) {
+      await attributeReferral(prisma, { referralCode, referredUserId: user.id })
     }
 
     const isNewUser = !user.phone

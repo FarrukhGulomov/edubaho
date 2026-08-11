@@ -19,12 +19,14 @@ import reviewRoutes from './routes/reviews'
 import searchRoutes from './routes/search'
 import matchRoutes from './routes/match'
 import geoRoutes from './routes/geo'
+import referralRoutes from './routes/referrals'
 import adminReviewRoutes from './routes/admin/reviews'
 import adminInstitutionRoutes from './routes/admin/institutions'
 import adminPlacesImportRoutes from './routes/admin/placesImport'
 import adminClaimRoutes from './routes/admin/claims'
 import adminTrialBookingRoutes from './routes/admin/trial-bookings'
 import adminLeadRoutes from './routes/admin/leads'
+import adminReferralRoutes from './routes/admin/referrals'
 import superAdminRoutes from './routes/super-admin/index'
 import superAdminAnalytics from './routes/super-admin/analytics'
 import superAdminAuditLog from './routes/super-admin/audit-log'
@@ -115,6 +117,7 @@ async function buildApp() {
       await api.register(matchRoutes)
       await api.register(geoRoutes)
       await api.register(compareRoutes)
+      await api.register(referralRoutes)
 
       // Admin routes
       await api.register(adminReviewRoutes)
@@ -123,6 +126,7 @@ async function buildApp() {
       await api.register(adminClaimRoutes)
       await api.register(adminTrialBookingRoutes)
       await api.register(adminLeadRoutes)
+      await api.register(adminReferralRoutes)
 
       // Super Admin routes
       await api.register(superAdminRoutes)
