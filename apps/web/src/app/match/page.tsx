@@ -25,7 +25,7 @@ import { GOAL_SUGGESTIONS } from '@/lib/matchConstants'
  * va NEGA mos kelishining shaffof sabablari.
  */
 
-type Step = 'type' | 'goal' | 'format' | 'city' | 'budget' | 'time' | 'results'
+type Step = 'goal' | 'format' | 'city' | 'budget' | 'time' | 'results'
 
 interface CityOption {
   id: string
@@ -75,7 +75,7 @@ const SHIFT_OPTIONS = [
   { value: '',          Icon: Clock,   uz: 'Farqi yo\'q',   ru: 'Не важно' },
 ]
 
-const STEPS: Step[] = ['type', 'goal', 'format', 'city', 'budget', 'time']
+const STEPS: Step[] = ['goal', 'format', 'city', 'budget', 'time']
 
 /** UZS format: 1 500 000 so'm (loyiha standarti — bo'shliq ajratuvchi) */
 function fmtUzs(n: number) {
@@ -87,8 +87,12 @@ export default function MatchPage() {
   const uz = lang === 'uz'
   const router = useRouter()
 
-  const [step, setStep]         = useState<Step>('type')
-  const [type, setType]         = useState('')
+  // MVP doirasida faqat O'quv markaz bilan ishlaymiz — tur tanlash qadami
+  // olib tashlangan (bosh sahifa hero'si ham shu tarzda ishlaydi), shuning
+  // uchun tur doim COURSE_CENTER va wizard to'g'ridan-to'g'ri maqsad
+  // savolidan boshlanadi
+  const [step, setStep]         = useState<Step>('goal')
+  const [type, setType]         = useState('COURSE_CENTER')
   const [goal, setGoal]         = useState('')
   const [format, setFormat]     = useState<string | null>(null)
   const [cityId, setCityId]     = useState('')
@@ -125,19 +129,18 @@ export default function MatchPage() {
     const params = new URLSearchParams(window.location.search)
 
     // Deep-link: bosh sahifadagi hero'da tur allaqachon tanlangan bo'lsa
-    // (?type=SCHOOL) — 1-qadamni takrorlamasdan 2-qadamdan davom etamiz.
-    // Agar hero'da maqsad ham kiritilgan bo'lsa (?type=...&goal=IELTS) —
-    // 2-qadamni ham takrorlamasdan to'g'ridan-to'g'ri formatdan davom etamiz
+    // (?type=SCHOOL) — shu turga o'rnatamiz (hozircha faqat COURSE_CENTER
+    // aktiv, boshqalari kelajak uchun). Agar maqsad ham kiritilgan bo'lsa
+    // (?type=...&goal=IELTS) — "maqsad" qadamini ham takrorlamasdan
+    // to'g'ridan-to'g'ri formatdan davom etamiz
     const preType = params.get('type')
     const preGoal = params.get('goal')
     if (preType && TYPE_OPTIONS.some((o) => o.value === preType && !o.disabled)) {
       setType(preType)
-      if (preGoal?.trim()) {
-        setGoal(preGoal.trim())
-        setStep('format')
-      } else {
-        setStep('goal')
-      }
+    }
+    if (preGoal?.trim()) {
+      setGoal(preGoal.trim())
+      setStep('format')
     }
 
     // Faqat ichki yo'llar qabul qilinadi (open-redirect himoyasi) —
@@ -150,7 +153,7 @@ export default function MatchPage() {
   // format, shahar, byudjet) foydalanuvchiga real DB'dan hisoblangan aniq
   // raqamlar ko'rsatiladi — 400ms debounce bilan (har harf bosilganda emas)
   useEffect(() => {
-    if (!type || step === 'type' || step === 'results') {
+    if (!type || step === 'results') {
       setInsights(null)
       return
     }
@@ -333,45 +336,11 @@ export default function MatchPage() {
         )}
 
         {/* Live insight: real DB'ga asoslangan aniq raqamlar */}
-        {step !== 'type' && step !== 'results' && (
+        {step !== 'results' && (
           <InsightsCard insights={insights} loading={insightsLoading} uz={uz} hasGoal={!!goal.trim()} />
         )}
 
-        {/* ── 1. Tur ── */}
-        {step === 'type' && (
-          <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
-            {TYPE_OPTIONS.map((o) =>
-              o.disabled ? (
-                <div
-                  key={o.value}
-                  aria-disabled="true"
-                  title={uz ? 'Tez orada' : 'Скоро'}
-                  className="relative flex cursor-not-allowed flex-col items-center gap-2 rounded-2xl border border-gray-200 bg-gray-50 p-5 opacity-60"
-                >
-                  <span className="absolute right-2 top-2 flex items-center gap-1 rounded-full bg-gray-200 px-2 py-0.5 text-[10px] font-semibold text-gray-500">
-                    <Lock className="h-2.5 w-2.5 shrink-0" strokeWidth={2} />
-                    {uz ? 'Tez orada' : 'Скоро'}
-                  </span>
-                  <o.Icon className="h-7 w-7 text-gray-300" strokeWidth={1.5} />
-                  <span className="text-sm font-semibold text-gray-400">{uz ? o.uz : o.ru}</span>
-                </div>
-              ) : (
-                <button
-                  key={o.value}
-                  onClick={() => { haptic('light'); setType(o.value); setStep('goal') }}
-                  className={`flex flex-col items-center gap-2 rounded-2xl border bg-white p-5 shadow-sm transition-colors hover:border-primary-300 ${
-                    type === o.value ? 'border-primary-500 bg-primary-50' : 'border-gray-200'
-                  }`}
-                >
-                  <o.Icon className="h-7 w-7 text-primary-500" strokeWidth={1.5} />
-                  <span className="text-sm font-semibold text-gray-800">{uz ? o.uz : o.ru}</span>
-                </button>
-              )
-            )}
-          </div>
-        )}
-
-        {/* ── 2. Maqsad ── */}
+        {/* ── 1. Maqsad ── */}
         {step === 'goal' && (
           <div className="space-y-4">
             <h2 className="text-lg font-bold text-gray-900">{t(lang, ui.qGoal)}</h2>
@@ -401,10 +370,8 @@ export default function MatchPage() {
               </div>
             )}
             <WizardNav
-              onBack={goBack}
               onNext={() => setStep('format')}
               nextLabel={t(lang, goal ? ui.next : ui.skip)}
-              backLabel={t(lang, ui.back)}
             />
           </div>
         )}
@@ -611,7 +578,22 @@ export default function MatchPage() {
                     )}
                   </div>
                   <button
-                    onClick={() => { setStep('type'); setResults([]); setResultsMeta({}) }}
+                    onClick={() => {
+                      // "Qaytadan boshlash" — chinakam nol nuqtadan boshlaydi
+                      // (avvalgi barcha tanlovlar tozalanadi, faqat tur
+                      // COURSE_CENTER bo'lib qoladi — MVP'da yagona aktiv tur)
+                      setStep('goal')
+                      setResults([])
+                      setResultsMeta({})
+                      setGoal('')
+                      setFormat(null)
+                      setCityId('')
+                      setBudget(null)
+                      setShift(null)
+                      setAge('')
+                      setLanguage(null)
+                      setPreferPremium(false)
+                    }}
                     className="flex items-center gap-1.5 text-sm font-semibold text-primary-600 hover:underline"
                   >
                     <RotateCcw className="h-3.5 w-3.5 shrink-0" strokeWidth={2} /> {t(lang, ui.restart)}
@@ -891,16 +873,18 @@ function InsightsCard({ insights, loading, uz, hasGoal }: {
 }
 
 function WizardNav({ onBack, onNext, nextLabel, backLabel }: {
-  onBack: () => void
+  onBack?: () => void
   onNext?: () => void
   nextLabel?: string
   backLabel?: string
 }) {
   return (
     <div className="flex items-center justify-between pt-2">
-      <button onClick={onBack} className="text-sm font-semibold text-gray-500 hover:text-gray-700">
-        {backLabel ?? '← Orqaga'}
-      </button>
+      {onBack ? (
+        <button onClick={onBack} className="text-sm font-semibold text-gray-500 hover:text-gray-700">
+          {backLabel ?? '← Orqaga'}
+        </button>
+      ) : <span />}
       {onNext && (
         <button
           onClick={onNext}
