@@ -35,7 +35,8 @@ export default async function adminPlacesImportRoutes(fastify: FastifyInstance) 
       return reply.send({ data: results })
     } catch (err) {
       fastify.log.warn(err, 'Google Places qidiruvida xato')
-      return reply.status(502).send({ error: "Google Places bilan bog'lanishda xatolik" })
+      const reason = err instanceof Error ? err.message : ''
+      return reply.status(502).send({ error: `Google Places bilan bog'lanishda xatolik${reason ? ' (' + reason + ')' : ''}` })
     }
   })
 
@@ -56,7 +57,8 @@ export default async function adminPlacesImportRoutes(fastify: FastifyInstance) 
       return reply.send({ data: details })
     } catch (err) {
       fastify.log.warn(err, 'Google Places tafsilotlarida xato')
-      return reply.status(502).send({ error: "Google Places bilan bog'lanishda xatolik" })
+      const reason = err instanceof Error ? err.message : ''
+      return reply.status(502).send({ error: `Google Places bilan bog'lanishda xatolik${reason ? ' (' + reason + ')' : ''}` })
     }
   })
 }

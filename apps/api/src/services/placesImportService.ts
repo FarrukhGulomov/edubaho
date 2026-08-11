@@ -76,7 +76,7 @@ export async function searchPlaces(query: string): Promise<PlaceSearchResult[]> 
   const data = (await res.json()) as TextSearchResponse
 
   if (data.status !== 'OK' && data.status !== 'ZERO_RESULTS') {
-    throw new Error(data.error_message ?? `Google Places xatosi: ${data.status}`)
+    throw new Error(`${data.status}${data.error_message ? ': ' + data.error_message : ''}`)
   }
 
   return (data.results ?? []).slice(0, 8).map((r) => ({
@@ -109,7 +109,7 @@ export async function getPlaceDetails(placeId: string): Promise<PlaceDetails> {
   const data = (await res.json()) as PlaceDetailsResponse
 
   if (data.status !== 'OK' || !data.result) {
-    throw new Error(data.error_message ?? `Google Places xatosi: ${data.status}`)
+    throw new Error(`${data.status}${data.error_message ? ': ' + data.error_message : ''}`)
   }
 
   const r = data.result
