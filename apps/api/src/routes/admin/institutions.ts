@@ -97,6 +97,10 @@ export default async function adminInstitutionRoutes(fastify: FastifyInstance) {
     instagram:   z.string().optional(),
     address:     z.string().optional(),
     cityId:      z.string().min(1).optional().or(z.literal('')),
+    // Admin Import Yordamchisi (Google Places) orqali to'ldirilishi mumkin —
+    // "yaqin atrofdagi muassasalar" funksiyasi uchun ishlatiladi
+    lat:         z.coerce.number().min(-90).max(90).optional().or(z.literal('')),
+    lng:         z.coerce.number().min(-180).max(180).optional().or(z.literal('')),
     // Details
     descriptionUz: z.string().optional(),
     descriptionRu: z.string().optional(),
@@ -130,7 +134,7 @@ export default async function adminInstitutionRoutes(fastify: FastifyInstance) {
       descriptionUz, descriptionRu, foundedYear, studentCount, teacherCount,
       languages, programs, specializations, shifts, achievements, categories,
       monthlyMin, monthlyMax, paymentMethods,
-      cityId, email, website, ...main
+      cityId, email, website, lat, lng, ...main
     } = body
 
     const institution = await prisma.institution.create({
@@ -139,6 +143,8 @@ export default async function adminInstitutionRoutes(fastify: FastifyInstance) {
         email:   email   || undefined,
         website: website || undefined,
         cityId:  cityId  || undefined,
+        lat:     lat === '' || lat === undefined ? undefined : Number(lat),
+        lng:     lng === '' || lng === undefined ? undefined : Number(lng),
         details: (descriptionUz || descriptionRu || foundedYear || studentCount || teacherCount
           || languages?.length || programs?.length || specializations?.length || categories?.length) ? {
           create: {
@@ -236,7 +242,7 @@ export default async function adminInstitutionRoutes(fastify: FastifyInstance) {
       descriptionUz, descriptionRu, foundedYear, studentCount, teacherCount,
       languages, programs, specializations, shifts, achievements, categories,
       monthlyMin, monthlyMax, paymentMethods,
-      cityId, email, website, ...main
+      cityId, email, website, lat, lng, ...main
     } = body
 
     // Main update
@@ -247,6 +253,8 @@ export default async function adminInstitutionRoutes(fastify: FastifyInstance) {
         email:   email   !== undefined ? (email   || null) : undefined,
         website: website !== undefined ? (website || null) : undefined,
         cityId:  cityId  !== undefined ? (cityId  || null) : undefined,
+        lat:     lat !== undefined ? (lat === '' ? null : Number(lat)) : undefined,
+        lng:     lng !== undefined ? (lng === '' ? null : Number(lng)) : undefined,
       },
     })
 

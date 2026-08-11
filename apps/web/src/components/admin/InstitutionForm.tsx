@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation'
 import {
   ClipboardList, Phone, Info, Wallet, AlertCircle, BookOpen, Target,
   Clock, Trophy, ChevronLeft, ChevronRight, CheckCircle2, CalendarCheck, ChevronDown,
+  Search, MapPin, Star, Sparkles,
 } from 'lucide-react'
 
 const API = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:3001/api/v1'
@@ -58,6 +59,21 @@ const EDUCATION_CATEGORIES = [
   { value: 'CAREER_CHANGE', label: 'Kasb almashtirish' },
 ]
 
+interface PlaceSearchResult {
+  placeId: string
+  name: string
+  address: string
+  lat: number | null
+  lng: number | null
+  rating: number | null
+  userRatingsTotal: number | null
+}
+
+interface PlaceDetails extends PlaceSearchResult {
+  phone: string | null
+  website: string | null
+}
+
 const PAYMENT_METHODS = ['Payme', 'Click', 'Uzcard', 'Humo', 'Naqd']
 const LANGUAGES = ['uz', 'ru', 'en', 'de', 'fr', 'ko', 'zh']
 const SHIFTS = ['Ertalabki (08:00-13:00)', 'Tushki (13:00-18:00)', 'Kechki (18:00-22:00)', 'Hafta oxiri', 'Online']
@@ -78,6 +94,8 @@ export interface InstitutionFormData {
   telegram: string
   instagram: string
   address: string
+  lat: string
+  lng: string
   descriptionUz: string
   descriptionRu: string
   foundedYear: string
@@ -97,7 +115,7 @@ export interface InstitutionFormData {
 const EMPTY: InstitutionFormData = {
   nameUz: '', nameRu: '', slug: '', type: 'IT_SCHOOL', status: 'PENDING',
   isVerified: false, trialLessonEnabled: false, deliveryMode: 'OFFLINE', phone: '', phone2: '', email: '', website: '',
-  telegram: '', instagram: '', address: '',
+  telegram: '', instagram: '', address: '', lat: '', lng: '',
   descriptionUz: '', descriptionRu: '',
   foundedYear: '', studentCount: '', teacherCount: '',
   languages: [], programs: '', specializations: '', shifts: [], achievements: '',
@@ -126,6 +144,17 @@ export default function InstitutionForm({ initialData, institutionId, mode }: Pr
   const [error, setError] = useState('')
   const [success, setSuccess] = useState('')
 
+  // Admin Import Yordamchisi (Google Places) — faqat yangi muassasa
+  // qo'shishda, nom/manzil/koordinata/telefonni qo'lda kiritish o'rniga
+  // qidirib topish uchun. Hech narsa avtomatik saqlanmaydi — admin
+  // natijani tanlagach forma maydonlariga ko'chiriladi, o'zi tahrirlab
+  // saqlaydi (Google Maps shartlariga ko'ra doimiy avtomatik import taqiqlangan).
+  const [placesQuery, setPlacesQuery] = useState('')
+  const [placesResults, setPlacesResults] = useState<PlaceSearchResult[]>([])
+  const [placesLoading, setPlacesLoading] = useState(false)
+  const [placesError, setPlacesError] = useState('')
+  const [imported, setImported] = useState(false)
+
   function set(field: keyof InstitutionFormData, value: string | boolean | string[]) {
     setForm((prev) => ({ ...prev, [field]: value }))
   }
@@ -150,6 +179,60 @@ export default function InstitutionForm({ initialData, institutionId, mode }: Pr
       .replace(/ы/g,'i').replace(/ь/g,'').replace(/э/g,'e').replace(/ю/g,'yu')
       .replace(/я/g,'ya').replace(/ў/g,'o').replace(/қ/g,'q').replace(/ғ/g,'g')
       .replace(/ҳ/g,'h').replace(/[^a-z0-9-]/g, '')
+  }
+
+  /** Google Places'dan qidirish — faqat "Qidirish" bosilganda (har harf uchun emas, pullik so'rov) */
+  async function searchPlaces() {
+    const q = placesQuery.trim()
+    if (!q) return
+    setPlacesLoading(true)
+    setPlacesError('')
+    setPlacesResults([])
+    const token = localStorage.getItem('accessToken')
+    try {
+      const res = await fetch(`${API}/admin/places-import/search?q=${encodeURIComponent(q)}`, {
+        headers: { Authorization: `Bearer ${token}`, 'ngrok-skip-browser-warning': '1' },
+      })
+      const data = await res.json()
+      if (!res.ok) throw new Error(data.error ?? 'Xatolik')
+      setPlacesResults(data.data ?? [])
+      if ((data.data ?? []).length === 0) setPlacesError('Hech narsa topilmadi')
+    } catch (err) {
+      setPlacesError(err instanceof Error ? err.message : "Google Places bilan bog'lanishda xatolik")
+    } finally {
+      setPlacesLoading(false)
+    }
+  }
+
+  /** Tanlangan joyni to'liq ma'lumot bilan (telefon/koordinata) formaga ko'chirish */
+  async function importPlace(placeId: string) {
+    setPlacesLoading(true)
+    setPlacesError('')
+    const token = localStorage.getItem('accessToken')
+    try {
+      const res = await fetch(`${API}/admin/places-import/details/${placeId}`, {
+        headers: { Authorization: `Bearer ${token}`, 'ngrok-skip-browser-warning': '1' },
+      })
+      const data = await res.json()
+      if (!res.ok) throw new Error(data.error ?? 'Xatolik')
+      const d: PlaceDetails = data.data
+      setForm((prev) => ({
+        ...prev,
+        nameUz: prev.nameUz || d.name,
+        slug:   prev.slug   || generateSlug(d.name),
+        address: d.address || prev.address,
+        phone:   d.phone   || prev.phone,
+        lat:     d.lat != null ? String(d.lat) : prev.lat,
+        lng:     d.lng != null ? String(d.lng) : prev.lng,
+      }))
+      setImported(true)
+      setPlacesResults([])
+      setPlacesQuery('')
+    } catch (err) {
+      setPlacesError(err instanceof Error ? err.message : "Google Places bilan bog'lanishda xatolik")
+    } finally {
+      setPlacesLoading(false)
+    }
   }
 
   function toggleArray(field: 'languages' | 'paymentMethods' | 'shifts' | 'categories', val: string) {
@@ -238,6 +321,75 @@ export default function InstitutionForm({ initialData, institutionId, mode }: Pr
       {/* ── TAB: ASOSIY ── */}
       {tab === 'main' && (
         <div className="space-y-4">
+          {/* Admin Import Yordamchisi — Google Places'dan qidirib, nom/manzil/
+              koordinata/telefonni avtomatik to'ldirish (faqat yangi qo'shishda) */}
+          {mode === 'create' && (
+            <div className="rounded-xl border border-sky-100 bg-sky-50/60 p-4">
+              <label className="mb-1 flex items-center gap-1.5 text-sm font-semibold text-gray-800">
+                <Sparkles className="h-4 w-4 shrink-0 text-sky-600" strokeWidth={1.75} /> Google'dan tez import qilish
+              </label>
+              <p className="mb-3 text-xs text-gray-500">
+                Muassasa nomini yozing — Google Maps'dan topib, nom/manzil/koordinata/telefonni avtomatik to'ldiramiz. Qolgan maydonlarni (dastur, narx, ta'lim profili) o'zingiz to'ldirasiz.
+              </p>
+              <div className="flex gap-2">
+                <input
+                  type="text"
+                  value={placesQuery}
+                  onChange={(e) => setPlacesQuery(e.target.value)}
+                  onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); searchPlaces() } }}
+                  placeholder="Masalan: Najot Ta'lim Chilonzor"
+                  className={INPUT_CLS + ' flex-1 bg-white'}
+                />
+                <button
+                  type="button"
+                  onClick={searchPlaces}
+                  disabled={placesLoading || !placesQuery.trim()}
+                  className="flex shrink-0 items-center gap-1.5 whitespace-nowrap rounded-xl bg-sky-600 px-4 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-sky-700 disabled:opacity-50"
+                >
+                  <Search className="h-4 w-4 shrink-0" strokeWidth={1.75} /> {placesLoading ? 'Qidirilmoqda...' : 'Qidirish'}
+                </button>
+              </div>
+
+              {placesError && (
+                <p className="mt-2 flex items-center gap-1.5 text-xs font-medium text-red-600">
+                  <AlertCircle className="h-3.5 w-3.5 shrink-0" strokeWidth={2} /> {placesError}
+                </p>
+              )}
+
+              {placesResults.length > 0 && (
+                <div className="mt-3 space-y-1.5">
+                  {placesResults.map((p) => (
+                    <button
+                      key={p.placeId}
+                      type="button"
+                      onClick={() => importPlace(p.placeId)}
+                      disabled={placesLoading}
+                      className="flex w-full items-start justify-between gap-3 rounded-xl border border-gray-200 bg-white px-3.5 py-2.5 text-left transition-colors hover:border-sky-300 hover:bg-sky-50/50 disabled:opacity-50"
+                    >
+                      <div className="min-w-0">
+                        <p className="truncate text-sm font-semibold text-gray-800">{p.name}</p>
+                        <p className="flex items-center gap-1 truncate text-xs text-gray-400">
+                          <MapPin className="h-3 w-3 shrink-0" strokeWidth={1.75} /> {p.address}
+                        </p>
+                      </div>
+                      {p.rating != null && (
+                        <span className="flex shrink-0 items-center gap-1 text-xs font-semibold text-amber-600">
+                          <Star className="h-3 w-3 shrink-0 fill-amber-400 text-amber-400" strokeWidth={1.75} /> {p.rating.toFixed(1)}
+                        </span>
+                      )}
+                    </button>
+                  ))}
+                </div>
+              )}
+
+              {imported && (
+                <p className="mt-3 flex items-center gap-1.5 text-xs font-semibold text-emerald-700">
+                  <CheckCircle2 className="h-3.5 w-3.5 shrink-0" strokeWidth={2} /> Google'dan import qilindi — maydonlarni tekshirib, to'ldiring
+                </p>
+              )}
+            </div>
+          )}
+
           <div className="grid gap-4 sm:grid-cols-2">
             <div>
               <label className="mb-1 block text-sm font-semibold text-gray-700">
@@ -398,6 +550,25 @@ export default function InstitutionForm({ initialData, institutionId, mode }: Pr
             <input type="text" value={form.address} onChange={(e) => set('address', e.target.value)}
               placeholder="Toshkent sh., Mirzo Ulug'bek tumani, ..." className={INPUT_CLS} />
           </div>
+          <div className="grid gap-4 sm:grid-cols-2">
+            <div>
+              <label className="mb-1 flex items-center gap-1.5 text-sm font-semibold text-gray-700">
+                <MapPin className="h-4 w-4 shrink-0 text-gray-400" strokeWidth={1.75} /> Kenglik (lat)
+              </label>
+              <input type="number" step="any" value={form.lat} onChange={(e) => set('lat', e.target.value)}
+                placeholder="41.311081" className={INPUT_CLS} />
+            </div>
+            <div>
+              <label className="mb-1 block text-sm font-semibold text-gray-700">Uzunlik (lng)</label>
+              <input type="number" step="any" value={form.lng} onChange={(e) => set('lng', e.target.value)}
+                placeholder="69.240562" className={INPUT_CLS} />
+            </div>
+          </div>
+          {form.lat && form.lng && (
+            <p className="text-xs text-gray-400">
+              "Yaqinimda" va xarita funksiyalari uchun ishlatiladi — yuqoridagi Google import orqali avtomatik to'ldirilgan bo'lishi mumkin.
+            </p>
+          )}
         </div>
       )}
 

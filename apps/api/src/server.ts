@@ -21,6 +21,7 @@ import matchRoutes from './routes/match'
 import geoRoutes from './routes/geo'
 import adminReviewRoutes from './routes/admin/reviews'
 import adminInstitutionRoutes from './routes/admin/institutions'
+import adminPlacesImportRoutes from './routes/admin/placesImport'
 import adminClaimRoutes from './routes/admin/claims'
 import adminTrialBookingRoutes from './routes/admin/trial-bookings'
 import adminLeadRoutes from './routes/admin/leads'
@@ -118,6 +119,7 @@ async function buildApp() {
       // Admin routes
       await api.register(adminReviewRoutes)
       await api.register(adminInstitutionRoutes)
+      await api.register(adminPlacesImportRoutes)
       await api.register(adminClaimRoutes)
       await api.register(adminTrialBookingRoutes)
       await api.register(adminLeadRoutes)

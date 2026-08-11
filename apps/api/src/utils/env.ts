@@ -34,6 +34,11 @@ const envSchema = z.object({
   // ── Google OAuth (Gmail orqali kirish) — ixtiyoriy ──────────────────────
   GOOGLE_CLIENT_ID: z.string().default(''),
 
+  // ── Google Places API — ixtiyoriy, "Admin Import Yordamchisi" uchun
+  // (yangi muassasa qo'shishda Google'dan nom/manzil/koordinata/telefon
+  // qidirib, formaga qo'lda ko'chirish — DB'ga avtomatik yozilmaydi) ──────
+  GOOGLE_PLACES_API_KEY: z.string().default(''),
+
   // ── Meilisearch — ixtiyoriy, yo'q bo'lsa search DB fallback ishlatadi ────
   MEILISEARCH_URL: z.string().default('http://localhost:7700'),
   MEILISEARCH_KEY: z.string().default(''),
