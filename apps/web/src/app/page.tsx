@@ -4,7 +4,7 @@ import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { useState, useEffect } from 'react'
 import {
-  Search, PencilLine, BookOpen, Palette, School, BadgeCheck, Sparkles,
+  PencilLine, BookOpen, Palette, School, BadgeCheck, Sparkles,
   MapPin, Users2, UserCheck, Star, ArrowLeftRight, ArrowRight, Lock,
 } from 'lucide-react'
 import Header from '@/components/shared/Header'
@@ -65,7 +65,6 @@ export default function HomePage() {
   const uz = lang === 'uz'
   const router = useRouter()
 
-  const [query, setQuery] = useState('')
   const [topInstitutions, setTopInstitutions] = useState<InstCard[]>([])
   const [loadingTop, setLoadingTop] = useState(true)
 
@@ -106,11 +105,10 @@ export default function HomePage() {
     return () => { cancelled = true; clearTimeout(timer) }
   }, [heroGoal])
 
-  function handleSearchSubmit(e: React.FormEvent) {
-    e.preventDefault()
-    const q = query.trim()
-    router.push(q ? `/search?q=${encodeURIComponent(q)}` : '/search')
-  }
+  // Maqsad kiritilgan-u, aynan shu yo'nalish bo'yicha muassasa topilmasa —
+  // "Davom etish" tugmasi ma'nosiz bo'ladi (mos kelmaydigan yo'nalish bilan
+  // wizard'ga o'tishning foydasi yo'q)
+  const heroZeroMatch = !!heroGoal.trim() && heroInsights?.matchingCount === 0
 
   function goToMatch() {
     const goal = heroGoal.trim()
@@ -140,7 +138,9 @@ export default function HomePage() {
             {uz ? 'Maqsadingiz nima?' : 'Какая у вас цель?'}
           </p>
 
-          {/* EduFit wizard'ining "maqsad" qadami — hero'ning asosiy vidjeti */}
+          {/* EduFit wizard'ining "maqsad" qadami — hero'ning asosiy vidjeti.
+              Tanlangan yo'nalish bo'yicha hech qanday muassasa topilmasa
+              (heroZeroMatch) — davom etishning ma'nosi yo'q, tugma disabled */}
           <div className="mb-3 flex items-center gap-2 rounded-xl border border-gray-200 bg-white p-2 shadow-sm focus-within:border-primary-400">
             <div className="flex min-w-0 flex-1 items-center gap-2 px-2">
               <Sparkles className="h-5 w-5 shrink-0 text-primary-500" strokeWidth={1.75} />
@@ -148,7 +148,7 @@ export default function HomePage() {
                 type="text"
                 value={heroGoal}
                 onChange={(e) => setHeroGoal(e.target.value)}
-                onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); goToMatch() } }}
+                onKeyDown={(e) => { if (e.key === 'Enter' && !heroZeroMatch) { e.preventDefault(); goToMatch() } }}
                 placeholder={uz ? 'Masalan: IELTS, Frontend, matematika...' : 'Например: IELTS, Frontend, математика...'}
                 maxLength={100}
                 className="min-w-0 flex-1 bg-transparent py-2 text-base text-gray-900 outline-none placeholder:text-gray-400"
@@ -156,6 +156,7 @@ export default function HomePage() {
             </div>
             <button
               onClick={goToMatch}
+              disabled={heroZeroMatch}
               className="btn-primary shrink-0 whitespace-nowrap px-5 py-2.5 text-sm"
             >
               {uz ? 'Davom etish →' : 'Продолжить →'}
@@ -187,26 +188,10 @@ export default function HomePage() {
             ))}
           </div>
 
-          {/* Qidiruv qutisi — /search'ga yo'naltiradi (ikkinchi mustaqil
-              filtrlash mexanizmi emas, yagona katalogga kirish nuqtasi) */}
-          <p className="mb-2 text-center text-xs font-medium text-gray-400">
-            {uz ? "yoki quyidan o'zingiz qidiring" : 'или найдите самостоятельно ниже'}
-          </p>
-          <form onSubmit={handleSearchSubmit} className="flex items-center gap-2 rounded-xl border border-gray-200 bg-white p-2 shadow-sm">
-            <div className="flex min-w-0 flex-1 items-center gap-2 px-2">
-              <Search className="h-5 w-5 shrink-0 text-gray-400" strokeWidth={1.75} />
-              <input
-                type="text"
-                value={query}
-                onChange={e => setQuery(e.target.value)}
-                placeholder={uz ? "Muassasa nomi, fan yoki shahar..." : "Название, предмет или город..."}
-                className="min-w-0 flex-1 bg-transparent py-2 text-base text-gray-900 outline-none placeholder:text-gray-400"
-              />
-            </div>
-            <button type="submit" className="btn-primary shrink-0 whitespace-nowrap px-5 py-2.5 text-sm">
-              {uz ? 'Qidirish' : 'Найти'}
-            </button>
-          </form>
+          {/* Ikkinchi qidiruv qutisi olib tashlandi — hero'da yuqorida
+              allaqachon maqsad-input mavjud, bitta oynada 2 ta qidiruv
+              chalkash edi. Umumiy qidiruv Header navigatsiyasida ("Qidirish")
+              va pastdagi tezkor kategoriyalarda mavjud bo'lib qoladi. */}
 
           {/* Tezkor kategoriyalar — to'g'ridan-to'g'ri /search'ga yo'naltiradi.
               MVP: disable qilinganlari ko'rinadi, lekin bosilmaydi. */}
