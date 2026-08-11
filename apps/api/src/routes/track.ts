@@ -1,5 +1,7 @@
 import type { FastifyInstance } from 'fastify'
 import { z } from 'zod'
+import { tryQualifyReferral } from '../services/referralService'
+import { ACTIVE_USER_QUALIFYING_EVENTS } from '../config/referral'
 
 /**
  * POST /track  — Lead analytics event yozish
@@ -105,6 +107,14 @@ export default async function trackRoutes(fastify: FastifyInstance) {
       } else {
         throw e
       }
+    }
+
+    // Referral & Rewards: userId JWT orqali tekshirilgan (yuqorida) — mehmon
+    // yoki soxta userId bilan qalbakilashtirib bo'lmaydi. "ACTIVE USER"ni
+    // belgilaydigan harakat bo'lsa — referral qualification'ni sinab ko'ramiz
+    // (idempotent, asosiy javobni bloklamasligi uchun fire-and-forget)
+    if (userId && (ACTIVE_USER_QUALIFYING_EVENTS as readonly string[]).includes(event)) {
+      tryQualifyReferral(prisma, userId).catch((err) => fastify.log.warn(err, 'Referral qualification xatosi'))
     }
 
     return reply.status(201).send({ ok: true })

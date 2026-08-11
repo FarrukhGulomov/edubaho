@@ -265,18 +265,20 @@ export const authApi = {
   sendOtp: (phone: string) =>
     apiFetch('/auth/send-otp', { method: 'POST', body: JSON.stringify({ phone }) }),
 
-  verifyOtp: (phone: string, otp: string) =>
-    apiFetch('/auth/verify-otp', { method: 'POST', body: JSON.stringify({ phone, otp }) }),
+  // referralCode — faqat ?ref= bilan kelgan YANGI foydalanuvchilar uchun
+  // ta'sir qiladi, backend mavjud userlarni referralga aylantirmaydi
+  verifyOtp: (phone: string, otp: string, referralCode?: string | null) =>
+    apiFetch('/auth/verify-otp', { method: 'POST', body: JSON.stringify({ phone, otp, referralCode: referralCode || undefined }) }),
 
-  telegramLogin: (data: object) =>
-    apiFetch('/auth/telegram', { method: 'POST', body: JSON.stringify(data) }),
+  telegramLogin: (data: object, referralCode?: string | null) =>
+    apiFetch('/auth/telegram', { method: 'POST', body: JSON.stringify({ ...data, referralCode: referralCode || undefined }) }),
 
   // Telegram Mini App ichidan avtomatik kirish
-  telegramWebAppLogin: (initData: string) =>
-    apiFetch('/auth/telegram-webapp', { method: 'POST', body: JSON.stringify({ initData }) }),
+  telegramWebAppLogin: (initData: string, referralCode?: string | null) =>
+    apiFetch('/auth/telegram-webapp', { method: 'POST', body: JSON.stringify({ initData, referralCode: referralCode || undefined }) }),
 
-  googleLogin: (idToken: string) =>
-    apiFetch('/auth/google', { method: 'POST', body: JSON.stringify({ idToken }) }),
+  googleLogin: (idToken: string, referralCode?: string | null) =>
+    apiFetch('/auth/google', { method: 'POST', body: JSON.stringify({ idToken, referralCode: referralCode || undefined }) }),
 
   // Refresh token httpOnly cookie'dan olinadi — parametr shart emas
   refresh: () =>
@@ -290,4 +292,62 @@ export const authApi = {
 
   logout: (token: string) =>
     apiFetch('/auth/logout', { method: 'POST', token }),
+}
+
+// ─── Referral & Rewards ─────────────────────────────────────────
+
+export interface ReferralStats {
+  referralCode: string
+  referralReward: number
+  minWithdrawal: number
+  availableBalance: number
+  totalEarned: number
+  totalWithdrawn: number
+  potentialPending: number
+  totalReferrals: number
+  activeReferrals: number
+  pendingReferrals: number
+  rejectedReferrals: number
+  canWithdraw: boolean
+  remainingAmount: number
+  remainingActiveReferrals: number
+  progressPercent: number
+}
+
+export interface ReferralHistoryItem {
+  id: string
+  referredUserLabel: string
+  status: 'PENDING' | 'QUALIFIED' | 'REJECTED'
+  createdAt: string
+  qualifiedAt: string | null
+  rewardAmount: number
+  rewardStatus: string | null
+}
+
+export interface ReferralWithdrawalItem {
+  id: string
+  amount: number
+  paymentMethod: string
+  status: 'PENDING' | 'APPROVED' | 'REJECTED' | 'PAID'
+  requestedAt: string
+  processedAt: string | null
+  rejectionReason: string | null
+}
+
+export const referralsApi = {
+  me: (token: string) =>
+    apiFetch<{ data: ReferralStats }>('/referrals/me', { token }),
+
+  history: (token: string, page = 1) =>
+    apiFetch<{ data: ReferralHistoryItem[]; meta: { total: number; totalPages: number } }>(
+      `/referrals/me/history?page=${page}`, { token },
+    ),
+
+  withdrawals: (token: string) =>
+    apiFetch<{ data: ReferralWithdrawalItem[] }>('/referrals/me/withdrawals', { token }),
+
+  withdraw: (token: string, data: { amount: number; paymentMethod: string; paymentDetails: string }) =>
+    apiFetch<{ data: ReferralWithdrawalItem; message: string }>('/referrals/withdraw', {
+      method: 'POST', token, body: JSON.stringify(data),
+    }),
 }

@@ -49,6 +49,14 @@ const envSchema = z.object({
   R2_SECRET_KEY: z.string().default(''),
   R2_BUCKET: z.string().default('bilimon-media'),
   R2_PUBLIC_URL: z.string().default('https://media.bilimon.uz'),
+
+  // ── Referral & Rewards — biznes qoidalari (bitta manba: backend) ────────
+  // Har bir ACTIVE USER bo'lgan referral uchun mukofot (so'm)
+  REFERRAL_REWARD_UZS: z.coerce.number().int().positive().default(500),
+  // Minimal yechib olish summasi (so'm)
+  MIN_WITHDRAWAL_UZS: z.coerce.number().int().positive().default(100_000),
+  // Dastur butunlay o'chirilsa ('false') — yangi referral yaratilmaydi
+  REFERRAL_PROGRAM_ENABLED: z.enum(['true', 'false']).default('true'),
 })
 
 const parsed = envSchema.safeParse(process.env)

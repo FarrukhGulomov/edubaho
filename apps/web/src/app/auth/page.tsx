@@ -46,6 +46,18 @@ function readNextParam(): string | null {
   return n && n.startsWith('/') && !n.startsWith('//') ? n : null
 }
 
+/**
+ * Referral kodi (?ref=ABC12345) — do'st havolasi orqali kelganda.
+ * Faqat YANGI hisob yaratilganda backend tomonidan ishlatiladi (mavjud
+ * userga hech qanday ta'siri yo'q), shuning uchun bu yerda qat'iy
+ * validatsiya shart emas — backend o'zi kodni tekshiradi.
+ */
+function readRefParam(): string | null {
+  if (typeof window === 'undefined') return null
+  const r = new URLSearchParams(window.location.search).get('ref')
+  return r && /^[A-Za-z0-9]{4,20}$/.test(r) ? r.toUpperCase() : null
+}
+
 export default function AuthPage() {
   const { lang, setLang } = useLang()
   const [step, setStep]       = useState<Step>('phone')
@@ -57,6 +69,7 @@ export default function AuthPage() {
   // Foydalanuvchi qayerdan kelgan — login'dan keyin o'sha yerga qaytariladi.
   // Telegram redirect'i URL'ni almashtirgani uchun boshidayoq saqlab olamiz.
   const [nextUrl] = useState(readNextParam)
+  const [refCode] = useState(readRefParam)
   const [isNewUser, setIsNewUser] = useState(false)
   // Telegram widget haqiqatan render bo'ldimi — bo'lmasa bo'sh joy va
   // "yoki" ajratgichni ko'rsatmaymiz (sahifa buzilgandek ko'rinmasligi uchun)
@@ -103,7 +116,7 @@ export default function AuthPage() {
       hash,
     }
 
-    authApi.telegramLogin(tgUser)
+    authApi.telegramLogin(tgUser, refCode)
       .then((result) => {
         const r = result as { accessToken: string; isNewUser: boolean; user: { phone: string | null } }
         localStorage.setItem('accessToken', r.accessToken)
@@ -158,10 +171,14 @@ export default function AuthPage() {
     script.setAttribute('data-size', 'large')
     script.setAttribute('data-radius', '12')
     // Redirect mode: Telegram /auth?id=...&hash=... ga qaytadi.
-    // next param'ni auth-url'da saqlaymiz — redirect'dan keyin ham yo'qolmasin
+    // next/ref parametrlarini auth-url'da saqlaymiz — redirect'dan keyin ham yo'qolmasin
+    const authUrlParams = new URLSearchParams()
+    if (nextUrl) authUrlParams.set('next', nextUrl)
+    if (refCode) authUrlParams.set('ref', refCode)
+    const authUrlQuery = authUrlParams.toString()
     script.setAttribute(
       'data-auth-url',
-      window.location.origin + '/auth' + (nextUrl ? `?next=${encodeURIComponent(nextUrl)}` : ''),
+      window.location.origin + '/auth' + (authUrlQuery ? `?${authUrlQuery}` : ''),
     )
     script.setAttribute('data-request-access', 'write')
     script.async = true
@@ -198,7 +215,7 @@ export default function AuthPage() {
         callback: (response) => {
           setLoading(true)
           setError('')
-          authApi.googleLogin(response.credential)
+          authApi.googleLogin(response.credential, refCode)
             .then((result) => {
               const r = result as { accessToken: string; isNewUser: boolean }
               localStorage.setItem('accessToken', r.accessToken)
@@ -313,7 +330,7 @@ export default function AuthPage() {
     setError('')
     setLoading(true)
     try {
-      const result = await authApi.verifyOtp(phone.replace(/\s/g, ''), otp) as {
+      const result = await authApi.verifyOtp(phone.replace(/\s/g, ''), otp, refCode) as {
         accessToken: string; isNewUser: boolean
       }
       localStorage.setItem('accessToken', result.accessToken)

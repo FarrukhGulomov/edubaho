@@ -92,6 +92,25 @@ enum MediaType {
   VIRTUAL_TOUR
 }
 
+// Referral & Rewards: taklif qilingan foydalanuvchining holati
+enum ReferralStatus {
+  PENDING   // ro'yxatdan o'tgan, lekin hali ACTIVE USER bo'lmagan
+  QUALIFIED // ACTIVE USER bo'ldi — referrer mukofot oldi
+  REJECTED  // yaroqsiz (o'zini-o'zi taklif, mavjud user va h.k.)
+}
+
+enum ReferralRewardStatus {
+  CONFIRMED // referral QUALIFIED bo'lgach darhol shu holatda yaratiladi
+  CANCELLED // admin tomonidan bekor qilingan (masalan firibgarlik aniqlansa)
+}
+
+enum ReferralWithdrawalStatus {
+  PENDING
+  APPROVED
+  REJECTED
+  PAID
+}
+
 // ─────────────────────────────────────────────────
 // GEOGRAPHY
 // ─────────────────────────────────────────────────
@@ -163,6 +182,10 @@ model User {
   leadStatus          LeadStatus @default(NEW)
   leadStatusUpdatedAt DateTime?
 
+  // Referral & Rewards: doimiy, ommaga ochiq kod (ichki id emas) —
+  // birinchi marta /referrals/me chaqirilganda "lazy" generatsiya qilinadi
+  referralCode String? @unique
+
   city              City?              @relation(fields: [cityId], references: [id])
   reviews           Review[]
   reviewVotes       ReviewVote[]
@@ -175,9 +198,14 @@ model User {
   trialBookings     TrialBooking[]
   savedComparisons  SavedComparison[]
   adminAuditLogs    AdminAuditLog[]
+  referralsMade       Referral[]           @relation("ReferralsMade")
+  referredBy          Referral?            @relation("ReferralsReceived")
+  referralRewards     ReferralReward[]
+  referralWithdrawals ReferralWithdrawal[]
 
   @@index([phone])
   @@index([telegramId])
+  @@index([referralCode])
   @@index([telegramUsername])
   @@index([googleId])
   @@index([role, leadStatus])
@@ -622,6 +650,68 @@ model Notification {
 
   @@index([userId, isRead])
   @@index([createdAt])
+}
+
+// ─────────────────────────────────────────────────
+// REFERRAL & REWARDS — do'stlarni taklif qilish tizimi
+//
+// Mukofot FAQAT referral ACTIVE USER bo'lgandagina beriladi (ro'yxatdan
+// o'tishning o'zi yetarli emas — apps/api/src/services/referralService.ts
+// da "Active User" ta'rifi va to'liq oqim izohlangan).
+// ─────────────────────────────────────────────────
+
+model Referral {
+  id             String         @id @default(cuid())
+  referrerId     String
+  // Bitta foydalanuvchi umrbod faqat BITTA referrerga tegishli bo'ladi —
+  // referral allaqachon PENDING/QUALIFIED bo'lsa, referrer o'zgartirib bo'lmaydi
+  referredUserId String         @unique
+  referralCode   String
+  status         ReferralStatus @default(PENDING)
+  rejectionReason String?
+  createdAt      DateTime       @default(now())
+  qualifiedAt    DateTime?
+
+  referrer     User            @relation("ReferralsMade", fields: [referrerId], references: [id])
+  referredUser User            @relation("ReferralsReceived", fields: [referredUserId], references: [id])
+  reward       ReferralReward?
+
+  @@index([referrerId, status])
+  @@index([status, createdAt])
+}
+
+model ReferralReward {
+  id          String                @id @default(cuid())
+  // Bitta referral = ko'pi bilan BITTA mukofot (idempotentlik shu bilan kafolatlanadi)
+  referralId  String                @unique
+  userId      String
+  amount      Int
+  status      ReferralRewardStatus  @default(CONFIRMED)
+  createdAt   DateTime              @default(now())
+
+  referral Referral @relation(fields: [referralId], references: [id])
+  user     User     @relation(fields: [userId], references: [id])
+
+  @@index([userId, status])
+  @@index([createdAt])
+}
+
+model ReferralWithdrawal {
+  id              String                    @id @default(cuid())
+  userId          String
+  amount          Int
+  paymentMethod   String
+  paymentDetails  String
+  status          ReferralWithdrawalStatus  @default(PENDING)
+  requestedAt     DateTime                  @default(now())
+  processedAt     DateTime?
+  processedBy     String?
+  rejectionReason String?
+
+  user User @relation(fields: [userId], references: [id])
+
+  @@index([userId, status])
+  @@index([status, requestedAt])
 }
 
 // ─────────────────────────────────────────────────

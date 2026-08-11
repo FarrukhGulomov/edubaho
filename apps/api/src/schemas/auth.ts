@@ -14,6 +14,9 @@ export const sendOtpSchema = z.object({
 export const verifyOtpSchema = z.object({
   phone: uzPhoneSchema,
   otp: z.string().length(6, 'OTP 6 ta raqamdan iborat bo\'lishi kerak').regex(/^\d+$/, 'OTP faqat raqamlardan iborat'),
+  // Referral havolasi orqali kelgan bo'lsa (?ref=CODE) — faqat YANGI
+  // foydalanuvchi yaratilganda ishlatiladi, mavjud userga ta'sir qilmaydi
+  referralCode: z.string().min(4).max(20).optional(),
 })
 
 export const updateProfileSchema = z.object({

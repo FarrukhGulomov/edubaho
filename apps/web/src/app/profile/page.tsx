@@ -7,11 +7,12 @@ import {
   Pencil, Phone, CheckCircle2, AlertCircle, Star, ArrowLeftRight, PencilLine,
   ShieldCheck, ClipboardList, School, Plus, Search, Laptop, GraduationCap,
   Send, LogOut, MessageCircle, Calendar, Globe2, Palette, Dumbbell, Trophy,
-  Bookmark, Trash2, Sparkles, UserCog,
+  Bookmark, Trash2, Sparkles, UserCog, Gift,
 } from 'lucide-react'
 import StarRating, { RatingHint } from '@/components/shared/StarRating'
 import Header from '@/components/shared/Header'
 import RecommendationDashboard from '@/components/profile/RecommendationDashboard'
+import ReferralDashboard from '@/components/profile/ReferralDashboard'
 import { useAuth } from '@/hooks/useAuth'
 import { useSaved, useCompare } from '@/hooks/useCompare'
 import { useLang, t } from '@/contexts/LangContext'
@@ -77,7 +78,7 @@ export default function ProfilePage() {
   const [comparisonsLoading, setComparisonsLoading] = useState(false)
   // Profil ochilganda avval shaxsiy tavsiyalar paneli ko'rsatiladi —
   // Sozlamalar endi ikkinchi darajali, tab orqali qo'lda ochiladi
-  const [view, setView] = useState<'dashboard' | 'settings'>('dashboard')
+  const [view, setView] = useState<'dashboard' | 'referrals' | 'settings'>('dashboard')
 
   const uz = lang === 'uz'
   const API = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:3001/api/v1'
@@ -210,8 +211,9 @@ export default function ProfilePage() {
         {/* ══ Tab: Tavsiyalar / Sozlamalar ═══════════════════════ */}
         <div className="flex gap-1 rounded-2xl bg-gray-100 p-1">
           {([
-            { key: 'dashboard' as const, Icon: Sparkles, uz: 'Tavsiyalar', ru: 'Рекомендации' },
-            { key: 'settings' as const,  Icon: UserCog,  uz: 'Sozlamalar', ru: 'Настройки' },
+            { key: 'dashboard' as const,  Icon: Sparkles, uz: 'Tavsiyalar', ru: 'Рекомендации' },
+            { key: 'referrals' as const,  Icon: Gift,     uz: 'Bonuslar',   ru: 'Бонусы' },
+            { key: 'settings' as const,   Icon: UserCog,  uz: 'Sozlamalar', ru: 'Настройки' },
           ]).map(tab => (
             <button
               key={tab.key}
@@ -228,6 +230,10 @@ export default function ProfilePage() {
 
         {view === 'dashboard' && (
           <RecommendationDashboard onGoToSettings={() => setView('settings')} />
+        )}
+
+        {view === 'referrals' && (
+          <ReferralDashboard token={localStorage.getItem('accessToken') ?? ''} />
         )}
 
         {view === 'settings' && (
