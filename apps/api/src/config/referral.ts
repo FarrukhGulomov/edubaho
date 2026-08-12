@@ -27,5 +27,9 @@ export const REFERRAL_PROGRAM_ENABLED = env.REFERRAL_PROGRAM_ENABLED === 'true'
  * qiymatini ifodalovchi harakat kerak. "Menga mosini top" (EduFit)
  * wizard'ini tugatish platformaning asosiy va eng ma'noli harakati —
  * tasodifan bosilmaydi, 5 ta savolga astoydil javob berishni talab qiladi.
+ *
+ * ESLATMA: bu — UCHTA qalifikatsiya shartidan FAQAT bittasi (referralService.ts
+ * tryQualifyReferral). Qolgan ikkitasi: ism-familiya kiritilgan va telefon
+ * Telegram orqali tasdiqlangan (User.phoneVerifiedAt) bo'lishi shart.
  */
 export const ACTIVE_USER_QUALIFYING_EVENTS = ['match_completed'] as const

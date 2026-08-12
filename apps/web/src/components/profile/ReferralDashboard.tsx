@@ -3,7 +3,7 @@
 import { useState, useEffect, useCallback } from 'react'
 import {
   Gift, Copy, Send, Share2, CheckCircle2, Users, Wallet, TrendingUp,
-  Clock, XCircle, AlertCircle, ChevronDown, ChevronUp,
+  Clock, XCircle, AlertCircle, ChevronDown, ChevronUp, ShieldAlert,
 } from 'lucide-react'
 import { useLang, t } from '@/contexts/LangContext'
 import { referralsApi, type ReferralStats, type ReferralHistoryItem, type ReferralWithdrawalItem } from '@/lib/api'
@@ -27,7 +27,17 @@ const STATUS_STYLE: Record<string, { bg: string; Icon: typeof Clock; label: { uz
   PAID:      { bg: 'bg-emerald-50 text-emerald-700', Icon: CheckCircle2, label: { uz: "To'langan", ru: 'Оплачено' } },
 }
 
-export default function ReferralDashboard({ token }: { token: string }) {
+interface Props {
+  token: string
+  // Joriy foydalanuvchining O'ZI (bu ekrandagi referrallar emas) telefonini
+  // Telegram orqali tasdiqlaganmi. Agar bu foydalanuvchini KIMDIR taklif
+  // qilgan bo'lsa — o'sha taklif qiluvchiga bonus berilishi aynan shu
+  // userning (ya'ni joriy foydalanuvchining) faollashuviga bog'liq
+  phoneVerified: boolean
+  onGoToVerify: () => void
+}
+
+export default function ReferralDashboard({ token, phoneVerified, onGoToVerify }: Props) {
   const { lang } = useLang()
   const uz = lang === 'uz'
 
@@ -152,6 +162,26 @@ export default function ReferralDashboard({ token }: { token: string }) {
           </p>
         </div>
       </div>
+
+      {/* Sizni kimdir taklif qilgan bo'lsa — bonusni faollashtirish uchun eslatma */}
+      {!phoneVerified && (
+        <button
+          onClick={onGoToVerify}
+          className="flex w-full items-start gap-3 rounded-2xl border border-blue-200 bg-blue-50 p-4 text-left transition-colors hover:bg-blue-100"
+        >
+          <ShieldAlert className="mt-0.5 h-5 w-5 shrink-0 text-blue-600" strokeWidth={1.75} />
+          <span className="min-w-0 flex-1">
+            <span className="block text-sm font-semibold text-blue-900">
+              {uz ? "Sizni kimdir taklif qilgan bo'lsa..." : 'Если вас кто-то пригласил...'}
+            </span>
+            <span className="block text-xs text-blue-700">
+              {uz
+                ? "Taklif qiluvchiga bonus berilishi uchun telefon raqamingizni Sozlamalar bo'limida Telegram orqali tasdiqlang →"
+                : 'Чтобы пригласившему начислился бонус, подтвердите свой номер через Telegram в разделе Настройки →'}
+            </span>
+          </span>
+        </button>
+      )}
 
       {/* Balans + progress */}
       <div className="rounded-2xl border border-amber-200 bg-gradient-to-br from-amber-50 to-white p-5">

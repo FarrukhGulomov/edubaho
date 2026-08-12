@@ -287,6 +287,11 @@ export const authApi = {
   me: (token: string) =>
     apiFetch('/auth/me', { token }),
 
+  // Telefonni Telegram bot orqali tasdiqlash jarayonini boshlaydi —
+  // bir martalik bot deep-link qaytaradi (login usulidan qat'i nazar ishlaydi)
+  startTelegramPhoneVerify: (token: string) =>
+    apiFetch<{ deepLink: string; expiresIn: number }>('/auth/telegram/verify-phone', { method: 'POST', token }),
+
   updateProfile: (token: string, data: { name?: string; email?: string; cityId?: string; phone?: string; matchOnboardingCompletedAt?: string }) =>
     apiFetch('/auth/profile', { method: 'PATCH', token, body: JSON.stringify(data) }),
 

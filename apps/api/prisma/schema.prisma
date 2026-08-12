@@ -186,6 +186,13 @@ model User {
   // birinchi marta /referrals/me chaqirilganda "lazy" generatsiya qilinadi
   referralCode String? @unique
 
+  // Telegram bot orqali "raqamni ulashish" (request_contact) tugmasi bilan
+  // TASDIQLANGAN telefon — Google Login Widget/Mini App hech qachon haqiqiy
+  // raqam bermaydi, shuning uchun bu maydon `phone`dan alohida: `phone` shunchaki
+  // kiritilgan qiymat, `phoneVerifiedAt` esa aynan shu qiymat Telegram tomonidan
+  // tasdiqlangan ekanini bildiradi (referral "Active User" mezoni uchun ishlatiladi)
+  phoneVerifiedAt DateTime?
+
   city              City?              @relation(fields: [cityId], references: [id])
   reviews           Review[]
   reviewVotes       ReviewVote[]
@@ -628,6 +635,7 @@ model LeadEvent {
   @@index([sessionId, createdAt])
   @@index([event, createdAt])
   @@index([userId, createdAt])
+  @@index([userId, event])
   @@index([institutionId, event])
   @@index([category, createdAt])
 }

@@ -69,6 +69,8 @@ Hech narsa qo'shimcha sozlash shart emas — connection stringlar avtomatik yara
    | `ADMIN_PIN` | kuchli PIN (kamida 6 belgi; `1234`/`147258` bilan server ishga tushmaydi) |
    | `SMS_LOGIN` / `SMS_PASSWORD` | Playmobile hisobingiz (bo'lmasa OTP faqat logda) |
    | `TELEGRAM_BOT_TOKEN` | @BotFather'dan (ixtiyoriy) |
+   | `TELEGRAM_BOT_USERNAME` | Botning @username'i (11-qadam uchun, ixtiyoriy) |
+   | `TELEGRAM_WEBHOOK_SECRET` | `openssl rand -hex 24` (11-qadam uchun, ixtiyoriy) |
    | `GOOGLE_CLIENT_ID` | Google Cloud Console'dan (ixtiyoriy) |
 
    `PORT`ni **qo'lda kiritmang** — Railway uni avtomatik beradi, server
@@ -190,6 +192,31 @@ Sayt Telegram ichida to'liq ishlaydi: foydalanuvchi **avtomatik tizimga kiradi**
 
 Qo'shimcha sozlama kerak emas — `TELEGRAM_BOT_TOKEN` allaqachon `/auth/telegram-webapp`
 uchun ham ishlatiladi.
+
+## 11-qadam (ixtiyoriy). Telefonni Telegram orqali tasdiqlash (Referral uchun)
+
+Google/Telegram Login hech qachon haqiqiy telefon raqamini bermaydi. Referral
+dasturida foydalanuvchi "Active User" bo'lishi uchun ism-familiya + Telegram
+orqali TASDIQLANGAN telefon (SMS/OTP shart emas) kerak — bu bot suhbati orqali
+amalga oshadi (`services/telegram.ts` + `routes/telegramWebhook.ts`).
+
+1. `api` servisiga `TELEGRAM_BOT_USERNAME` (bot @username, `@` belgisisiz) va
+   `TELEGRAM_WEBHOOK_SECRET` (`openssl rand -hex 24`) qo'shing, redeploy qiling.
+2. Bir martalik: Telegram'ga webhook manzilini bering (o'z kompyuteringizdan
+   yoki terminaldan bajarish kifoya, faqat bitta marta):
+
+   ```bash
+   curl "https://api.telegram.org/bot<TELEGRAM_BOT_TOKEN>/setWebhook" \
+     -d "url=https://<api-domeningiz>/api/v1/telegram/webhook" \
+     -d "secret_token=<TELEGRAM_WEBHOOK_SECRET bilan bir xil qiymat>"
+   ```
+
+3. Tekshirish: `curl "https://api.telegram.org/bot<TOKEN>/getWebhookInfo"` —
+   `"url"` maydoni yuqoridagi manzilga teng bo'lishi kerak.
+
+Shundan keyin foydalanuvchi profilida (Sozlamalar) "Telegram orqali tasdiqlash"
+tugmasi ishlay boshlaydi. `TELEGRAM_WEBHOOK_SECRET` sozlanmagan bo'lsa, bu
+funksiya jim o'chiq turadi (503) — saytning qolgan qismiga ta'sir qilmaydi.
 
 ---
 
