@@ -11,6 +11,9 @@ export interface AuthUser {
   avatar?: string
   // null/undefined — "Mos Edu'ni top" onboarding'ni hali ko'rmagan
   matchOnboardingCompletedAt?: string | null
+  // Telefon Telegram bot orqali (request_contact) tasdiqlangan vaqt —
+  // null bo'lsa referral bonusi hali faollashmaydi (referralService.ts)
+  phoneVerifiedAt?: string | null
 }
 
 export function useAuth() {

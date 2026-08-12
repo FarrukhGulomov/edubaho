@@ -30,6 +30,12 @@ const envSchema = z.object({
 
   // ── Telegram Login Widget — ixtiyoriy, yo'q bo'lsa Telegram kirish o'chiq ─
   TELEGRAM_BOT_TOKEN: z.string().default(''),
+  // Botning @username'i (deep-link yaratish uchun, masalan t.me/<username>)
+  TELEGRAM_BOT_USERNAME: z.string().default(''),
+  // Telegram'ning webhook'ga yuboradigan so'rovlarini tekshirish uchun
+  // (setWebhook chaqirilganda shu bilan bir xil secret_token beriladi) —
+  // bo'sh bo'lsa /telegram/webhook butunlay yopiq (503)
+  TELEGRAM_WEBHOOK_SECRET: z.string().default(''),
 
   // ── Google OAuth (Gmail orqali kirish) — ixtiyoriy ──────────────────────
   GOOGLE_CLIENT_ID: z.string().default(''),

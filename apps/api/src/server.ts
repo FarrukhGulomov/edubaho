@@ -31,6 +31,7 @@ import superAdminRoutes from './routes/super-admin/index'
 import superAdminAnalytics from './routes/super-admin/analytics'
 import superAdminAuditLog from './routes/super-admin/audit-log'
 import trackRoutes from './routes/track'
+import telegramWebhookRoutes from './routes/telegramWebhook'
 import compareRoutes from './routes/compare'
 import dashboardRoutes from './routes/dashboard'
 import dashboardReviewRoutes from './routes/dashboard/reviews'
@@ -135,6 +136,9 @@ async function buildApp() {
 
       // Analytics / Lead tracking (auth shart emas)
       await api.register(trackRoutes)
+
+      // Telegram bot webhook (secret_token bilan himoyalangan, JWT shart emas)
+      await api.register(telegramWebhookRoutes)
 
       // B2B Dashboard routes
       await api.register(dashboardRoutes)

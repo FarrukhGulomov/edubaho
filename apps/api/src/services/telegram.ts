@@ -136,3 +136,61 @@ export async function sendTelegramMessage(
     return false
   }
 }
+
+// ─────────────────────────────────────────────────────────────
+// Telefon raqamni Telegram orqali tasdiqlash — bot "request_contact"
+// tugmasi. Google/Telegram Login Widget hech qachon haqiqiy telefon
+// bermaydi, shuning uchun tasdiqlangan raqam FAQAT shu yo'l bilan olinadi.
+// https://core.telegram.org/bots/api#keyboardbutton
+// ─────────────────────────────────────────────────────────────
+
+/** Foydalanuvchidan "raqamni ulashish" tugmasi bilan xabar so'raydi */
+export async function sendTelegramContactRequest(
+  botToken: string,
+  chatId: string,
+  text: string,
+): Promise<boolean> {
+  if (!botToken || !chatId) return false
+  try {
+    const res = await fetch(`https://api.telegram.org/bot${botToken}/sendMessage`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        chat_id: chatId,
+        text,
+        reply_markup: {
+          keyboard: [[{ text: '📱 Raqamni ulashish', request_contact: true }]],
+          resize_keyboard: true,
+          one_time_keyboard: true,
+        },
+      }),
+    })
+    return res.ok
+  } catch {
+    return false
+  }
+}
+
+/** Tasdiqlangandan/rad etilgandan keyin klaviaturani olib tashlab xabar yuboradi */
+export async function sendTelegramMessageNoKeyboard(
+  botToken: string,
+  chatId: string,
+  text: string,
+): Promise<boolean> {
+  if (!botToken || !chatId) return false
+  try {
+    const res = await fetch(`https://api.telegram.org/bot${botToken}/sendMessage`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        chat_id: chatId,
+        text,
+        parse_mode: 'HTML',
+        reply_markup: { remove_keyboard: true },
+      }),
+    })
+    return res.ok
+  } catch {
+    return false
+  }
+}

@@ -1,15 +1,26 @@
 import type { PrismaClient } from '@prisma/client'
 import { randomBytes } from 'crypto'
 import { notifyUser } from './notify'
-import { REFERRAL_REWARD_UZS, MIN_WITHDRAWAL_UZS, REFERRAL_PROGRAM_ENABLED } from '../config/referral'
+import {
+  REFERRAL_REWARD_UZS, MIN_WITHDRAWAL_UZS, REFERRAL_PROGRAM_ENABLED,
+  ACTIVE_USER_QUALIFYING_EVENTS,
+} from '../config/referral'
 
 /**
  * Referral & Rewards — asosiy biznes mantiq.
  *
  * OQIM:
  *   Referral havola → Yangi user → Ro'yxatdan o'tish → Referral(PENDING)
- *   → "Menga mosini top" wizard'ini tugatish (match_completed) →
- *   Referral(QUALIFIED) → ReferralReward(CONFIRMED, +500 so'm)
+ *   → "ACTIVE USER" bo'lish uchun UCHALASI ham bajarilishi kerak:
+ *     1) Ism-familiya kiritilgan
+ *     2) Telefon Telegram orqali TASDIQLANGAN (phoneVerifiedAt)
+ *     3) "Menga mosini top" wizard'ini tugatgan (match_completed)
+ *   → Referral(QUALIFIED) → ReferralReward(CONFIRMED, +500 so'm)
+ *
+ * Bu uchta shart ikkita mustaqil joydan tekshiriladi (track.ts'da
+ * match_completed kelganda, telegramWebhook.ts'da telefon tasdiqlanganda)
+ * — qaysi biri OXIRGI bo'lib bajarilsa, referral o'sha yerda qalifikatsiya
+ * qiladi (tartib muhim emas, har chaqiriqda uchala shart ham qayta tekshiriladi).
  *
  * MUHIM (fraud-himoya):
  * - Ro'yxatdan o'tishning o'zi HECH QACHON mukofot bermaydi
@@ -109,6 +120,22 @@ export async function tryQualifyReferral(prisma: PrismaClient, referredUserId: s
     select: { id: true, status: true, referrerId: true },
   })
   if (!referral || referral.status !== 'PENDING') return
+
+  // "ACTIVE USER" — uchala shart ham bajarilgan bo'lishi kerak. Bu funksiya
+  // ikkita mustaqil chaqiruv nuqtasidan (match_completed va telefon
+  // tasdiqlash) ishlaydi — tartibdan qat'i nazar, har safar hammasi qayta
+  // tekshiriladi, faqat uchalasi ham to'g'ri bo'lganda qalifikatsiya bo'ladi
+  const referredUser = await prisma.user.findUnique({
+    where: { id: referredUserId },
+    select: { name: true, phone: true, phoneVerifiedAt: true },
+  })
+  if (!referredUser?.name || !referredUser.phone || !referredUser.phoneVerifiedAt) return
+
+  const qualifyingActivity = await prisma.leadEvent.findFirst({
+    where: { userId: referredUserId, event: { in: [...ACTIVE_USER_QUALIFYING_EVENTS] } },
+    select: { id: true },
+  })
+  if (!qualifyingActivity) return
 
   // Mukofotdan OLDINGI balansni bilib olamiz — "100 000 so'mga yetdi" xabari
   // faqat chegaradan AYNAN shu mukofot bilan o'tganda yuborilishi uchun

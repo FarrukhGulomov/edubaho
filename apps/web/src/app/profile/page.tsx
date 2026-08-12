@@ -13,10 +13,11 @@ import StarRating, { RatingHint } from '@/components/shared/StarRating'
 import Header from '@/components/shared/Header'
 import RecommendationDashboard from '@/components/profile/RecommendationDashboard'
 import ReferralDashboard from '@/components/profile/ReferralDashboard'
+import TelegramPhoneVerify, { VerifiedBadge } from '@/components/profile/TelegramPhoneVerify'
 import { useAuth } from '@/hooks/useAuth'
 import { useSaved, useCompare } from '@/hooks/useCompare'
 import { useLang, t } from '@/contexts/LangContext'
-import { compareApi, type SavedComparison } from '@/lib/api'
+import { compareApi, authApi, type SavedComparison } from '@/lib/api'
 
 interface MyReview {
   id: string
@@ -126,6 +127,15 @@ export default function ProfilePage() {
       .finally(() => setComparisonsLoading(false))
   }, [user])
 
+  async function refreshUserAfterPhoneVerify() {
+    const token = localStorage.getItem('accessToken')
+    if (!token) return
+    try {
+      const me = await authApi.me(token) as { data: typeof user }
+      if (me.data) setUser(me.data)
+    } catch { /* keyingi normal refresh'da o'zi tuzatiladi */ }
+  }
+
   async function handleDeleteComparison(id: string) {
     const token = localStorage.getItem('accessToken')
     if (!token) return
@@ -233,7 +243,11 @@ export default function ProfilePage() {
         )}
 
         {view === 'referrals' && (
-          <ReferralDashboard token={localStorage.getItem('accessToken') ?? ''} />
+          <ReferralDashboard
+            token={localStorage.getItem('accessToken') ?? ''}
+            phoneVerified={!!user.phoneVerifiedAt}
+            onGoToVerify={() => setView('settings')}
+          />
         )}
 
         {view === 'settings' && (
@@ -325,8 +339,9 @@ export default function ProfilePage() {
                   {user.name ?? <span className="text-gray-400 italic">{uz ? 'Ism kiritilmagan' : 'Имя не указано'}</span>}
                 </h1>
                 {user.phone ? (
-                  <p className="mt-1 flex items-center gap-1.5 text-base text-gray-500">
+                  <p className="mt-1 flex items-center gap-2 text-base text-gray-500">
                     <Phone className="h-4 w-4 shrink-0" strokeWidth={1.75} /> {user.phone}
+                    {user.phoneVerifiedAt && <VerifiedBadge lang={lang} />}
                   </p>
                 ) : (
                   <button
@@ -389,6 +404,14 @@ export default function ProfilePage() {
               {uz ? "Qo'shish" : 'Добавить'}
             </button>
           </div>
+        )}
+
+        {/* ══ Telegram orqali tasdiqlash — referral bonusi uchun shart ══ */}
+        {!editing && !user.phoneVerifiedAt && (
+          <TelegramPhoneVerify
+            token={localStorage.getItem('accessToken') ?? ''}
+            onVerified={refreshUserAfterPhoneVerify}
+          />
         )}
 
         {/* ══ Admin panel — faqat adminlar uchun ═════════════════ */}

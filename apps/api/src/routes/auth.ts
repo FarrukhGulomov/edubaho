@@ -1,4 +1,5 @@
 import type { FastifyInstance, FastifyReply } from 'fastify'
+import { randomBytes } from 'crypto'
 import { z } from 'zod'
 import { env } from '../utils/env'
 import { sendOtpSchema, verifyOtpSchema, updateProfileSchema } from '../schemas/auth'
@@ -251,6 +252,7 @@ export default async function authRoutes(fastify: FastifyInstance) {
           avatarUrl: true,
           role: true,
           isVerified: true,
+          phoneVerifiedAt: true,
           createdAt: true,
           matchOnboardingCompletedAt: true,
           city: { select: { id: true, nameUz: true, nameRu: true } },
@@ -559,6 +561,36 @@ export default async function authRoutes(fastify: FastifyInstance) {
       accessToken,
     })
   })
+
+  // ─────────────────────────────────────────────
+  // POST /auth/telegram/verify-phone
+  // Telefon raqamni Telegram bot orqali TASDIQLASH jarayonini boshlaydi
+  // (login usulidan qat'i nazar — Google orqali kirganlar uchun ham ishlaydi).
+  // Bir martalik token yaratadi, bot deep-link'ini qaytaradi. Haqiqiy
+  // tasdiqlash telegramWebhook.ts'da (bot suhbatida) sodir bo'ladi.
+  // ─────────────────────────────────────────────
+
+  fastify.post(
+    '/auth/telegram/verify-phone',
+    {
+      preHandler: [fastify.authenticate],
+      config: { rateLimit: { max: 5, timeWindow: '1 minute' } },
+    },
+    async (request, reply) => {
+      if (!env.TELEGRAM_BOT_TOKEN || !env.TELEGRAM_WEBHOOK_SECRET || !env.TELEGRAM_BOT_USERNAME) {
+        return reply.status(503).send({ error: 'Telegram orqali tasdiqlash hali sozlanmagan' })
+      }
+      const { id: userId } = request.user as { id: string }
+
+      const token = randomBytes(16).toString('hex')
+      await redis.set(`tg_verify:${token}`, userId, 'EX', 600)
+
+      return reply.send({
+        deepLink: `https://t.me/${env.TELEGRAM_BOT_USERNAME}?start=verify_${token}`,
+        expiresIn: 600,
+      })
+    },
+  )
 
   // ─────────────────────────────────────────────
   // POST /auth/google
