@@ -611,6 +611,17 @@ export default function MatchPage() {
                   </Link>
                 )}
 
+                {results.length > 0 && (
+                  <div className="flex items-start gap-2.5 rounded-xl bg-blue-50 px-4 py-3 text-xs text-blue-800">
+                    <Info className="mt-0.5 h-4 w-4 shrink-0" strokeWidth={2} />
+                    <p>
+                      {uz
+                        ? "Muassasa bilan bog'lanish uchun ma'lumotlaringiz (ism, telefon) siz qiziqish bildirgan ta'lim muassasasiga taqdim etilishi mumkin."
+                        : 'Для связи с учреждением ваши данные (имя, телефон) могут быть переданы выбранному учебному заведению.'}
+                    </p>
+                  </div>
+                )}
+
                 {results.length === 0 && (
                   <div className="rounded-2xl border border-gray-200 bg-white p-10 text-center">
                     <div className="mb-3 flex justify-center">
