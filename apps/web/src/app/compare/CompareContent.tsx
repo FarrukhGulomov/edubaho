@@ -4,10 +4,9 @@ import { useState, useEffect, useMemo } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import {
-  ArrowLeft, Star, Wallet, Info, Phone, Laptop, GraduationCap, School,
-  Palette, Globe2, PencilLine, Dumbbell, Trophy, Landmark, UserCheck,
+  ArrowLeft, Star, Wallet, Info, Phone, School, Globe2,
   Users2, Award, ChevronDown, Share2, Printer, Bookmark, BookmarkCheck,
-  X, Plus, Crown, Check, ExternalLink, SlidersHorizontal, Clock,
+  X, Plus, Crown, Check, ExternalLink, SlidersHorizontal,
 } from 'lucide-react'
 import { useLang, t } from '@/contexts/LangContext'
 import { useCompare, useSaved, MAX_COMPARE } from '@/hooks/useCompare'
@@ -72,12 +71,6 @@ const TYPE_LABELS: Record<string, { uz: string; ru: string }> = {
   TUTORING:        { uz: 'Repetitor',      ru: 'Репетитор' },
   SPORTS_SCHOOL:   { uz: 'Sport maktabi',  ru: 'Спортшкола' },
   ARTS_SCHOOL:     { uz: "San'at maktabi", ru: 'Школа искусств' },
-}
-
-const TYPE_ICONS: Record<string, typeof School> = {
-  IT_SCHOOL: Laptop, UNIVERSITY: GraduationCap, SCHOOL: School, KINDERGARTEN: Palette,
-  LANGUAGE_CENTER: Globe2, COURSE_CENTER: PencilLine, SPORTS_SCHOOL: Dumbbell, LYCEUM: Trophy,
-  COLLEGE: Landmark, TUTORING: UserCheck, ARTS_SCHOOL: Palette,
 }
 
 type SortKey = 'recommended' | 'price' | 'rating' | 'popular' | 'reviews' | 'alpha' | 'newest'
@@ -418,20 +411,22 @@ export default function CompareContent({ institutions }: { institutions: Compare
 
       {/* Muassasa nomi/ma'lumoti — STATIK (slaydersiz), pastdagi har bir
           qatorning ustuni bilan bir xil grid: qaysi ustun qaysi muassasaga
-          tegishli ekani doim aniq, gorizontal scroll qilish shart emas */}
-      <div className="sticky top-16 z-20 -mx-4 mb-6 bg-gray-50/95 px-2 py-3 backdrop-blur-sm sm:mx-0 sm:rounded-2xl sm:border sm:border-gray-100 sm:px-3">
-        <div className="grid gap-1.5 sm:gap-3" style={{ gridTemplateColumns: `repeat(${cols}, minmax(0,1fr))` }}>
+          tegishli ekani doim aniq, gorizontal scroll qilish shart emas.
+          Ixcham dizayn: dekorativ katta ikonka olib tashlangan, saqlash/
+          olib tashlash tugmalari burchaklarda (alohida qator egallamaydi),
+          reyting va narx bitta qatorda — balandlik ~40% kamaydi */}
+      <div className="sticky top-16 z-20 -mx-4 mb-6 bg-gray-50/95 px-2 py-2.5 backdrop-blur-sm sm:mx-0 sm:rounded-2xl sm:border sm:border-gray-100 sm:px-3">
+        <div className="grid gap-1.5 sm:gap-2.5" style={{ gridTemplateColumns: `repeat(${cols}, minmax(0,1fr))` }}>
           {sorted.map((inst) => {
             const badges = highlights.get(inst.id) ?? []
             const name = lang === 'ru' && inst.nameRu ? inst.nameRu : inst.nameUz
-            const TypeIcon = TYPE_ICONS[inst.type] ?? School
             const fav = isSaved(inst.id)
             const isWinner = recommendation?.winnerId === inst.id
 
             return (
               <div
                 key={inst.id}
-                className={`relative flex min-w-0 flex-col items-center rounded-xl border-2 bg-white px-1 py-2.5 shadow-sm sm:rounded-2xl sm:px-2 sm:py-4 ${
+                className={`relative flex min-w-0 flex-col items-center rounded-xl border-2 bg-white px-1.5 pb-2 pt-5 shadow-sm sm:rounded-2xl sm:px-2 sm:pb-2.5 sm:pt-7 ${
                   isWinner ? 'border-amber-300' : 'border-gray-100'
                 }`}
               >
@@ -441,52 +436,54 @@ export default function CompareContent({ institutions }: { institutions: Compare
                     <span className="hidden sm:inline">{t(lang, { uz: 'Tavsiya etilgan', ru: 'Рекомендуем' })}</span>
                   </span>
                 )}
-                <button
-                  onClick={() => remove(inst.id)}
-                  className="no-print absolute right-0 top-0 flex h-5 w-5 shrink-0 items-center justify-center rounded-full text-gray-300 transition-colors hover:bg-red-50 hover:text-red-500 sm:h-6 sm:w-6"
-                  aria-label={t(lang, { uz: `${name}ni solishtirishdan olib tashlash`, ru: `Убрать ${name} из сравнения` })}
-                >
-                  <X className="h-3 w-3 sm:h-3.5 sm:w-3.5" strokeWidth={2.25} />
-                </button>
 
-                <TypeIcon className="mb-1 h-4 w-4 shrink-0 text-primary-300 sm:h-7 sm:w-7" strokeWidth={1.5} />
-                <Link
-                  href={`/institutions/${inst.slug}`}
-                  className="mb-0.5 line-clamp-2 w-full text-center text-[10px] font-bold leading-tight text-gray-900 hover:text-primary-600 sm:text-sm"
-                  title={name}
-                >
-                  {name}
-                </Link>
-                {inst.avgRating ? (
-                  <span className="mb-0.5 flex items-center gap-0.5 text-[9px] text-gray-500 sm:text-xs">
-                    <Star className="h-2.5 w-2.5 shrink-0 fill-amber-400 text-amber-400 sm:h-3 sm:w-3" strokeWidth={0} />
-                    {inst.avgRating.toFixed(1)}
-                  </span>
-                ) : (
-                  <span className="mb-0.5 text-[9px] text-gray-300 sm:text-xs">—</span>
-                )}
-                <p className="mb-1 whitespace-nowrap text-center text-[10px] font-black leading-tight text-primary-700 sm:text-base">
-                  {formatUzs(inst.pricing?.monthlyMin) ?? '—'}
-                </p>
-
-                {badges[0] && (
-                  <span className="mb-1.5 max-w-full truncate rounded-full bg-primary-50 px-1 py-0.5 text-[7px] font-semibold leading-none text-primary-700 sm:px-2 sm:py-0.5 sm:text-[10px]">
-                    {t(lang, BADGE_LABELS[badges[0]])}
-                  </span>
-                )}
-
+                {/* Burchak tugmalari — saqlash (chap) va olib tashlash (o'ng),
+                    ikkalasi ham normal oqimdan tashqarida, alohida qator olmaydi */}
                 <button
                   onClick={() => toggleSave({
                     id: inst.id, slug: inst.slug, nameUz: inst.nameUz, nameRu: inst.nameRu,
                     type: inst.type, avgRating: inst.avgRating, pricing: inst.pricing,
                   })}
-                  className={`no-print flex h-5 w-5 shrink-0 items-center justify-center rounded-lg border transition-colors sm:h-8 sm:w-8 sm:rounded-xl ${
-                    fav ? 'border-amber-300 bg-amber-50 text-amber-600' : 'border-gray-200 text-gray-400 hover:border-amber-200 hover:text-amber-500'
+                  className={`no-print absolute left-0.5 top-0.5 flex h-4 w-4 shrink-0 items-center justify-center rounded-full transition-colors sm:left-1 sm:top-1 sm:h-5 sm:w-5 ${
+                    fav ? 'text-amber-500' : 'text-gray-300 hover:text-amber-500'
                   }`}
                   aria-label={t(lang, { uz: 'Saqlash', ru: 'Сохранить' })}
                 >
-                  <Star className="h-2.5 w-2.5 sm:h-3.5 sm:w-3.5" fill={fav ? 'currentColor' : 'none'} strokeWidth={2} />
+                  <Star className="h-2.5 w-2.5 sm:h-3 sm:w-3" fill={fav ? 'currentColor' : 'none'} strokeWidth={2} />
                 </button>
+                <button
+                  onClick={() => remove(inst.id)}
+                  className="no-print absolute right-0.5 top-0.5 flex h-4 w-4 shrink-0 items-center justify-center rounded-full text-gray-300 transition-colors hover:bg-red-50 hover:text-red-500 sm:right-1 sm:top-1 sm:h-5 sm:w-5"
+                  aria-label={t(lang, { uz: `${name}ni solishtirishdan olib tashlash`, ru: `Убрать ${name} из сравнения` })}
+                >
+                  <X className="h-2.5 w-2.5 sm:h-3 sm:w-3" strokeWidth={2.25} />
+                </button>
+
+                <Link
+                  href={`/institutions/${inst.slug}`}
+                  className="line-clamp-2 w-full text-center text-[10px] font-bold leading-tight text-gray-900 hover:text-primary-600 sm:text-[13px]"
+                  title={name}
+                >
+                  {name}
+                </Link>
+
+                <div className="mt-1 flex flex-wrap items-center justify-center gap-x-1.5 gap-y-0.5">
+                  {inst.avgRating ? (
+                    <span className="flex items-center gap-0.5 text-[9px] text-gray-500 sm:text-xs">
+                      <Star className="h-2.5 w-2.5 shrink-0 fill-amber-400 text-amber-400 sm:h-3 sm:w-3" strokeWidth={0} />
+                      {inst.avgRating.toFixed(1)}
+                    </span>
+                  ) : null}
+                  <span className="whitespace-nowrap text-[10px] font-black leading-tight text-primary-700 sm:text-sm">
+                    {formatUzs(inst.pricing?.monthlyMin) ?? '—'}
+                  </span>
+                </div>
+
+                {badges[0] && (
+                  <span className="mt-1 max-w-full truncate rounded-full bg-primary-50 px-1 py-0.5 text-[7px] font-semibold leading-none text-primary-700 sm:px-2 sm:py-0.5 sm:text-[9px]">
+                    {t(lang, BADGE_LABELS[badges[0]])}
+                  </span>
+                )}
               </div>
             )
           })}
