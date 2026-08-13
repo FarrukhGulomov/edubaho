@@ -135,7 +135,7 @@ export default async function authRoutes(fastify: FastifyInstance) {
     // true bo'lishi mumkin, bu esa mavjud userni referralga aylantirib
     // qo'yardi (texnik topshiriq item #38'ni buzardi)
     if (referralCode && user.createdAt.getTime() === user.updatedAt.getTime()) {
-      await attributeReferral(prisma, { referralCode, referredUserId: user.id })
+      await attributeReferral(prisma, { referralCode, referredUserId: user.id, ip: request.ip })
     }
     const institutionId = user.institutionClaims[0]?.institutionId
 
@@ -476,7 +476,7 @@ export default async function authRoutes(fastify: FastifyInstance) {
 
     const isNewUser = !user.phone && !user.name
     if (tgData.referralCode && user.createdAt.getTime() === user.updatedAt.getTime()) {
-      await attributeReferral(prisma, { referralCode: tgData.referralCode, referredUserId: user.id })
+      await attributeReferral(prisma, { referralCode: tgData.referralCode, referredUserId: user.id, ip: request.ip })
     }
     const institutionId = user.institutionClaims[0]?.institutionId
     const { accessToken, refreshToken } = await generateTokens(
@@ -544,7 +544,7 @@ export default async function authRoutes(fastify: FastifyInstance) {
 
     const isNewUser = !user.phone && !user.name
     if (referralCode && user.createdAt.getTime() === user.updatedAt.getTime()) {
-      await attributeReferral(prisma, { referralCode, referredUserId: user.id })
+      await attributeReferral(prisma, { referralCode, referredUserId: user.id, ip: request.ip })
     }
     const institutionId = user.institutionClaims[0]?.institutionId
     const { accessToken, refreshToken } = await generateTokens(
@@ -660,7 +660,7 @@ export default async function authRoutes(fastify: FastifyInstance) {
     }
 
     if (referralCode && justCreated) {
-      await attributeReferral(prisma, { referralCode, referredUserId: user.id })
+      await attributeReferral(prisma, { referralCode, referredUserId: user.id, ip: request.ip })
     }
 
     const isNewUser = !user.phone

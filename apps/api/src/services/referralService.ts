@@ -1,6 +1,7 @@
 import type { PrismaClient } from '@prisma/client'
 import { randomBytes } from 'crypto'
 import { notifyUser } from './notify'
+import { incrementAttempts } from '../utils/redis'
 import {
   REFERRAL_REWARD_UZS, MIN_WITHDRAWAL_UZS, REFERRAL_PROGRAM_ENABLED,
   ACTIVE_USER_QUALIFYING_EVENTS,
@@ -32,6 +33,25 @@ import {
  */
 
 const CODE_CHARS = 'ABCDEFGHJKMNPQRSTUVWXYZ23456789' // chalkash belgilar (0/O, 1/I/L) olib tashlangan
+
+// ─── Fraud himoyasi: IP asosida referral atributsiyasini cheklash ─────────
+// Maqsad: bitta odam ko'plab akkaunt ochib (masalan turli Gmail/Telegram
+// bilan), hammasini o'ziga referral qilib pul "ishlab olishi"ning oldini
+// olish. Ikki qatlam: (1) bitta IP'dan kuniga umumiy referral soni,
+// (2) bitta referrer bitta IP orqali kuniga necha marta "faollashishi"
+// mumkinligi — aynan shu ikkinchisi sim-farming'ni ushlaydi, chunki oddiy
+// foydalanuvchi turli do'stlarini turli joylardan taklif qiladi, lekin
+// firibgar bitta joydan (uy/ofis) o'ziga ko'p marta referral yaratadi.
+const MAX_REFERRALS_PER_IP_DAILY = 5
+const MAX_REFERRALS_PER_REFERRER_IP_DAILY = 2
+
+async function withinReferralIpLimits(ip: string, referrerId: string): Promise<boolean> {
+  const [globalCount, referrerCount] = await Promise.all([
+    incrementAttempts(`ref_ip:${ip}`, 86400),
+    incrementAttempts(`ref_ip_ref:${ip}:${referrerId}`, 86400),
+  ])
+  return globalCount <= MAX_REFERRALS_PER_IP_DAILY && referrerCount <= MAX_REFERRALS_PER_REFERRER_IP_DAILY
+}
 
 function generateCode(): string {
   const bytes = randomBytes(8)
@@ -68,9 +88,9 @@ export async function getOrCreateReferralCode(prisma: PrismaClient, userId: stri
  */
 export async function attributeReferral(
   prisma: PrismaClient,
-  params: { referralCode?: string | null; referredUserId: string },
+  params: { referralCode?: string | null; referredUserId: string; ip?: string },
 ): Promise<void> {
-  const { referralCode, referredUserId } = params
+  const { referralCode, referredUserId, ip } = params
   if (!REFERRAL_PROGRAM_ENABLED || !referralCode) return
 
   try {
@@ -80,6 +100,14 @@ export async function attributeReferral(
     })
     // Kod topilmasa yoki o'zini-o'zi taklif qilishga urinsa — jim o'tkaziladi
     if (!referrer || referrer.id === referredUserId) return
+
+    // Fraud himoyasi: IP kunlik limitidan oshsa, referral bog'lanmaydi
+    // (foydalanuvchi ro'yxatdan o'tishda hech qanday xato ko'rmaydi —
+    // faqat referrer mukofot ololmaydi)
+    if (ip && !(await withinReferralIpLimits(ip, referrer.id))) {
+      console.warn(`Referral fraud himoyasi: IP limiti oshdi (ip=${ip}, referrer=${referrer.id})`)
+      return
+    }
 
     await prisma.referral.create({
       data: {
