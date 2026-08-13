@@ -50,6 +50,10 @@ export const metadata: Metadata = {
     index: true,
     follow: true,
   },
+  icons: {
+    icon: '/brand/favicon-32.png',
+    apple: '/brand/bilimon-app-icon-192.png',
+  },
 }
 
 export default function RootLayout({
