@@ -71,6 +71,9 @@ export default function AuthPage() {
   const [nextUrl] = useState(readNextParam)
   const [refCode] = useState(readRefParam)
   const [isNewUser, setIsNewUser] = useState(false)
+  // Shaxsiy ma'lumotlarni qayta ishlashga rozilik — Telegram/Google
+  // tugmalari shu belgilanmaguncha faollashmaydi (implicit emas, explicit rozilik)
+  const [consentChecked, setConsentChecked] = useState(false)
   // Telegram widget haqiqatan render bo'ldimi — bo'lmasa bo'sh joy va
   // "yoki" ajratgichni ko'rsatmaymiz (sahifa buzilgandek ko'rinmasligi uchun)
   const [tgReady, setTgReady] = useState(false)
@@ -441,8 +444,50 @@ export default function AuthPage() {
             {step === 'phone' && (
               <div className="space-y-4">
 
-                {/* Telegram + Google — bir bosishda kirish */}
-                <div className="space-y-3">
+                {/* Rozilik checkbox — ma'lumotlarning tanlangan ta'lim
+                    muassasalariga uzatilishi haqida aniq va oldindan rozilik
+                    (implicit "davom etish orqali roziman" emas) */}
+                <div className="flex items-start gap-2.5 rounded-xl bg-gray-50 px-3.5 py-3 text-xs leading-relaxed text-gray-600">
+                  <input
+                    id="consent-checkbox"
+                    type="checkbox"
+                    checked={consentChecked}
+                    onChange={(e) => setConsentChecked(e.target.checked)}
+                    className="mt-0.5 h-4 w-4 shrink-0 rounded border-gray-300 text-primary-600 focus:ring-primary-500"
+                  />
+                  <label htmlFor="consent-checkbox" className="cursor-pointer select-none">
+                    {lang === 'uz' ? (
+                      <>
+                        Men{' '}
+                        <Link href="/privacy" target="_blank" className="font-semibold text-primary-600 hover:underline">
+                          Maxfiylik siyosati
+                        </Link>{' '}
+                        va{' '}
+                        <Link href="/terms" target="_blank" className="font-semibold text-primary-600 hover:underline">
+                          foydalanish shartlari
+                        </Link>
+                        ga tanishdim, shaxsiy ma&apos;lumotlarim (ism, telefon) tanlagan ta&apos;lim
+                        muassasalariga uzatilishiga roziman.
+                      </>
+                    ) : (
+                      <>
+                        Я ознакомлен(а) с{' '}
+                        <Link href="/privacy" target="_blank" className="font-semibold text-primary-600 hover:underline">
+                          Политикой конфиденциальности
+                        </Link>{' '}
+                        и{' '}
+                        <Link href="/terms" target="_blank" className="font-semibold text-primary-600 hover:underline">
+                          условиями использования
+                        </Link>
+                        , и даю согласие на передачу моих данных (имя, телефон) выбранным учебным заведениям.
+                      </>
+                    )}
+                  </label>
+                </div>
+
+                {/* Telegram + Google — bir bosishda kirish. Rozilik
+                    belgilanmaguncha bloklangan (pointer-events-none) */}
+                <div className={`space-y-3 transition-opacity ${consentChecked ? '' : 'pointer-events-none opacity-40'}`}>
                   {loading ? (
                     <div className="flex justify-center py-3">
                       <div className="h-6 w-6 animate-spin rounded-full border-2 border-primary-200 border-t-primary-600" />

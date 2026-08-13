@@ -35,9 +35,13 @@ export default function TermsPage() {
           <section>
             <h2 className="mb-3 text-xl font-bold text-gray-900">2. Foydalanuvchi ma&apos;lumotlari</h2>
             <p className="text-gray-600 leading-relaxed">
-              Ro&apos;yxatdan o&apos;tish uchun Telegram yoki Google hisobingiz orqali kirasiz. Biz sizning
-              shaxsiy ma&apos;lumotlaringizni uchinchi shaxslarga bermayiz. Ma&apos;lumotlar faqat platformani
-              yaxshilash maqsadida ishlatiladi.
+              Ro&apos;yxatdan o&apos;tish uchun Telegram yoki Google hisobingiz orqali kirasiz. Shaxsiy
+              ma&apos;lumotlaringiz qanday yig&apos;ilishi, ishlatilishi va tanlagan ta&apos;lim
+              muassasalariga qanday uzatilishi haqida to&apos;liq ma&apos;lumot uchun{' '}
+              <Link href="/privacy" className="text-primary-600 hover:underline">
+                Maxfiylik siyosati
+              </Link>
+              ga qarang.
             </p>
           </section>
 

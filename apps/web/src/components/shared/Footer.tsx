@@ -18,6 +18,7 @@ export default function Footer() {
           <Link href="/compare" className="shrink-0 whitespace-nowrap transition-colors hover:text-white">{uz ? "Solishtirish" : "Сравнение"}</Link>
           <Link href="/auth"    className="shrink-0 whitespace-nowrap transition-colors hover:text-white">{uz ? "Kirish" : "Войти"}</Link>
           <Link href="/terms"   className="shrink-0 whitespace-nowrap transition-colors hover:text-white">{uz ? "Shartlar" : "Условия"}</Link>
+          <Link href="/privacy" className="shrink-0 whitespace-nowrap transition-colors hover:text-white">{uz ? "Maxfiylik" : "Конфиденциальность"}</Link>
           <a href="https://t.me/TrustboxInc" target="_blank" rel="noopener noreferrer"
             className="shrink-0 whitespace-nowrap font-bold text-[#7DD3F8] transition-colors hover:text-white">
             @TrustboxInc
