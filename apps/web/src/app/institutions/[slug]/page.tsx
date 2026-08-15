@@ -3,8 +3,16 @@ import { notFound } from 'next/navigation'
 import Header from '@/components/shared/Header'
 import Footer from '@/components/shared/Footer'
 import InstitutionDetail from './InstitutionDetail'
+import { institutionSchema, breadcrumbSchema } from '@/lib/structuredData'
 
 const API = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:3001/api/v1'
+const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://bilimon.uz'
+
+const TYPE_LABELS_UZ: Record<string, string> = {
+  KINDERGARTEN: "bog'cha", SCHOOL: 'maktab', LYCEUM: 'litsey', COLLEGE: 'kollej',
+  UNIVERSITY: 'universitet', COURSE_CENTER: 'kurs markazi', LANGUAGE_CENTER: 'til markazi',
+  IT_SCHOOL: 'IT maktab', TUTORING: 'repetitor', SPORTS_SCHOOL: 'sport maktabi', ARTS_SCHOOL: "san'at maktabi",
+}
 
 async function getInstitution(slug: string) {
   const res = await fetch(`${API}/institutions/${slug}`, {
@@ -20,10 +28,26 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { slug } = await params
   const inst = await getInstitution(slug)
   if (!inst) return { title: 'Topilmadi' }
+
+  const typeLabel = TYPE_LABELS_UZ[inst.type] ?? "ta'lim muassasasi"
+  const cityPart = inst.city?.nameUz ? ` — ${inst.city.nameUz}` : ''
+  const title = `${inst.nameUz}${cityPart} | narxi, sharhlar`
+  // descriptionUz to'ldirilmagan bo'lsa ham meta description HECH QACHON
+  // bo'sh qolmasin — qidiruv natijasida snippet ko'rinishi uchun muhim
+  const description = inst.details?.descriptionUz?.slice(0, 160)
+    ?? `${inst.nameUz} — ${typeLabel}${inst.city?.nameUz ? ` (${inst.city.nameUz})` : ''}. ` +
+       `${inst.avgRating ? `Reyting: ${inst.avgRating.toFixed(1)}/5, ` : ''}` +
+       `${inst.reviewCount} ta sharh. Narxlar, aloqa va batafsil ma'lumot BilimOn'da.`
+  const url = `${SITE_URL}/institutions/${inst.slug}`
+
   return {
-    title: inst.nameUz,
-    description: inst.details?.descriptionUz?.slice(0, 160),
-    openGraph: { title: inst.nameUz, type: 'website' },
+    title,
+    description,
+    alternates: { canonical: url },
+    openGraph: {
+      title, description, url, type: 'website', siteName: 'BilimOn',
+    },
+    twitter: { card: 'summary', title, description },
   }
 }
 
@@ -34,8 +58,24 @@ export default async function InstitutionPage({ params }: Props) {
   const inst = await getInstitution(slug)
   if (!inst) notFound()
 
+  const jsonLd = [
+    institutionSchema(inst),
+    breadcrumbSchema([
+      { name: 'BilimOn', url: SITE_URL },
+      { name: inst.nameUz, url: `${SITE_URL}/institutions/${inst.slug}` },
+    ]),
+  ]
+
   return (
     <div className="flex min-h-screen flex-col">
+      {jsonLd.map((schema, idx) => (
+        <script
+          key={idx}
+          type="application/ld+json"
+          // eslint-disable-next-line react/no-danger -- JSON.stringify chiqishi, foydalanuvchi kiritmasi emas — XSS xavfi yo'q
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(schema) }}
+        />
+      ))}
       <Header />
       <InstitutionDetail inst={inst} />
       <Footer />
