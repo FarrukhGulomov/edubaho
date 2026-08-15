@@ -13,7 +13,11 @@ async function apiFetch<T>(path: string, options: FetchOptions = {}): Promise<T>
   const { token, ...init } = options
 
   const headers: Record<string, string> = {
-    'Content-Type': 'application/json',
+    // Faqat body bor so'rovlarda qo'yiladi — aks holda Fastify
+    // FST_ERR_CTP_EMPTY_JSON_BODY xatosini beradi (Content-Type: json
+    // header'i bor, lekin body bo'sh bo'lgan POST so'rovlarda, masalan
+    // logout/refresh/verify-phone kabi ma'lumotsiz endpoint'larda)
+    ...(init.body ? { 'Content-Type': 'application/json' } : {}),
     // ngrok free tier interstitial sahifasini o'tkazib yuborish
     'ngrok-skip-browser-warning': '1',
     ...(init.headers as Record<string, string> | undefined),
