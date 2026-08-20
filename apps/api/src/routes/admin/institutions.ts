@@ -1,9 +1,83 @@
 import type { FastifyInstance } from 'fastify'
+import type { PrismaClient } from '@prisma/client'
 import { z } from 'zod'
 import { InstitutionType, InstitutionStatus, DeliveryMode } from '@prisma/client'
 import { indexInstitution, removeFromIndex } from '../../services/searchService'
 import { notifyUser } from '../../services/notify'
 import { logAdminAction } from '../../services/auditLog'
+import { normalizeInstitutionName } from '../../utils/normalizeName'
+import { mergeInstitutions } from '../../services/mergeInstitutionService'
+
+/**
+ * `nameUz` bo'yicha (normallashtirilgan `nameKey` orqali) takroriy
+ * muassasa yaratilishining oldini oladi — bir xil muassasaning turli
+ * shaharlardagi filiallari alohida-alohida Institution sifatida emas,
+ * InstitutionBranch orqali BITTA yozuvga bog'lanishi kerak.
+ */
+async function checkNameKeyConflict(prisma: PrismaClient, nameUz: string, excludeId?: string) {
+  const nameKey = normalizeInstitutionName(nameUz)
+  const conflict = await prisma.institution.findFirst({
+    where: { nameKey, ...(excludeId ? { id: { not: excludeId } } : {}) },
+    select: { id: true, nameUz: true, slug: true },
+  })
+  return { nameKey, conflict }
+}
+
+function nameConflictResponse(conflict: { id: string; nameUz: string; slug: string }) {
+  return {
+    error: `"${conflict.nameUz}" nomli muassasa allaqachon mavjud. Agar bu — shu muassasaning boshqa shahardagi filiali bo'lsa, uni alohida qo'shmang, "${conflict.nameUz}" muassasasini tahrirlab "Filiallar" bo'limiga qo'shing.`,
+    existingInstitution: conflict,
+  }
+}
+
+const branchInputSchema = z.object({
+  // Mavjud filialni tahrirlashda beriladi — bo'lmasa yangi filial deb hisoblanadi
+  id:      z.string().optional(),
+  nameUz:  z.string().optional().or(z.literal('')),
+  nameRu:  z.string().optional().or(z.literal('')),
+  cityId:  z.string().min(1, 'Filial shahri majburiy'),
+  address: z.string().optional().or(z.literal('')),
+  phone:   z.string().optional().or(z.literal('')),
+  lat:     z.coerce.number().min(-90).max(90).optional().or(z.literal('')),
+  lng:     z.coerce.number().min(-180).max(180).optional().or(z.literal('')),
+  isMain:  z.boolean().optional().default(false),
+})
+type BranchInput = z.infer<typeof branchInputSchema>
+
+/**
+ * Filiallar ro'yxatidagi har bir shahar haqiqatda mavjudligini tekshiradi
+ * va InstitutionBranch uchun majburiy regionId'ni City'dan oladi
+ * (branch formasida faqat shahar tanlanadi, viloyat avtomatik olinadi).
+ */
+async function resolveBranchCreateData(prisma: PrismaClient, branches: BranchInput[]) {
+  const cityIds = [...new Set(branches.map((b) => b.cityId))]
+  const cities = await prisma.city.findMany({ where: { id: { in: cityIds } }, select: { id: true, regionId: true } })
+  const regionByCity = new Map(cities.map((c) => [c.id, c.regionId]))
+
+  for (const b of branches) {
+    if (!regionByCity.has(b.cityId)) {
+      return { data: null, error: "Filiallardan biri uchun noto'g'ri shahar tanlangan" }
+    }
+  }
+
+  return {
+    data: branches.map((b) => ({
+      // Mavjud filialni tahrirlashda beriladi (yangilashda ishlatiladi,
+      // yaratishda Prisma buni e'tiborsiz qoldiradi — cuid o'zi hosil bo'ladi)
+      id:       b.id,
+      nameUz:   b.nameUz  || undefined,
+      nameRu:   b.nameRu  || undefined,
+      cityId:   b.cityId,
+      regionId: regionByCity.get(b.cityId)!,
+      address:  b.address || undefined,
+      phone:    b.phone   || undefined,
+      lat:      b.lat === '' || b.lat === undefined ? undefined : Number(b.lat),
+      lng:      b.lng === '' || b.lng === undefined ? undefined : Number(b.lng),
+      isMain:   b.isMain ?? false,
+    })),
+    error: null,
+  }
+}
 
 /**
  * Admin muassasalar CRUD routes
@@ -119,6 +193,9 @@ export default async function adminInstitutionRoutes(fastify: FastifyInstance) {
     monthlyMin:    z.coerce.number().int().min(0).optional().or(z.literal('')),
     monthlyMax:    z.coerce.number().int().min(0).optional().or(z.literal('')),
     paymentMethods: z.array(z.string()).optional().default([]),
+    // Filiallar — barchasi shu muassasaga tegishli, alohida Institution
+    // sifatida EMAS (masalan "PDP academy" Buxoro/Farg'ona/Toshkent filiallari)
+    branches: z.array(branchInputSchema).optional().default([]),
   })
 
   fastify.post('/admin/institutions', async (request, reply) => {
@@ -130,16 +207,29 @@ export default async function adminInstitutionRoutes(fastify: FastifyInstance) {
       return reply.status(409).send({ error: 'Bu slug allaqachon mavjud' })
     }
 
+    // Nom takrorlanmasligini tekshirish (bir xil muassasa turli shaharlar
+    // uchun alohida-alohida yaratilmasligi kerak — filiallar orqali bog'lanadi)
+    const { nameKey, conflict } = await checkNameKeyConflict(prisma, body.nameUz)
+    if (conflict) {
+      return reply.status(409).send(nameConflictResponse(conflict))
+    }
+
+    const { data: branchData, error: branchError } = await resolveBranchCreateData(prisma, body.branches)
+    if (branchError) {
+      return reply.status(400).send({ error: branchError })
+    }
+
     const {
       descriptionUz, descriptionRu, foundedYear, studentCount, teacherCount,
       languages, programs, specializations, shifts, achievements, categories,
-      monthlyMin, monthlyMax, paymentMethods,
+      monthlyMin, monthlyMax, paymentMethods, branches,
       cityId, email, website, lat, lng, ...main
     } = body
 
     const institution = await prisma.institution.create({
       data: {
         ...main,
+        nameKey,
         email:   email   || undefined,
         website: website || undefined,
         cityId:  cityId  || undefined,
@@ -168,6 +258,7 @@ export default async function adminInstitutionRoutes(fastify: FastifyInstance) {
             paymentMethods: paymentMethods ?? [],
           },
         } : undefined,
+        branches: branchData && branchData.length > 0 ? { create: branchData } : undefined,
       },
       include: {
         city:    { select: { nameUz: true } },
@@ -205,6 +296,10 @@ export default async function adminInstitutionRoutes(fastify: FastifyInstance) {
         details:  true,
         pricing:  true,
         city:     { select: { id: true, nameUz: true } },
+        branches: {
+          orderBy: [{ isMain: 'desc' }, { createdAt: 'asc' }],
+          include: { city: { select: { id: true, nameUz: true, nameRu: true } } },
+        },
       },
     })
 
@@ -238,10 +333,29 @@ export default async function adminInstitutionRoutes(fastify: FastifyInstance) {
       }
     }
 
+    // Nom o'zgarsa — takrorlanishini tekshirish
+    let nameKey: string | undefined
+    if (body.nameUz !== undefined && body.nameUz !== institution.nameUz) {
+      const check = await checkNameKeyConflict(prisma, body.nameUz, id)
+      if (check.conflict) {
+        return reply.status(409).send(nameConflictResponse(check.conflict))
+      }
+      nameKey = check.nameKey
+    }
+
+    let branchData: Awaited<ReturnType<typeof resolveBranchCreateData>>['data'] | undefined
+    if (body.branches !== undefined) {
+      const resolved = await resolveBranchCreateData(prisma, body.branches)
+      if (resolved.error) {
+        return reply.status(400).send({ error: resolved.error })
+      }
+      branchData = resolved.data
+    }
+
     const {
       descriptionUz, descriptionRu, foundedYear, studentCount, teacherCount,
       languages, programs, specializations, shifts, achievements, categories,
-      monthlyMin, monthlyMax, paymentMethods,
+      monthlyMin, monthlyMax, paymentMethods, branches,
       cityId, email, website, lat, lng, ...main
     } = body
 
@@ -250,6 +364,7 @@ export default async function adminInstitutionRoutes(fastify: FastifyInstance) {
       where: { id },
       data: {
         ...main,
+        nameKey,
         email:   email   !== undefined ? (email   || null) : undefined,
         website: website !== undefined ? (website || null) : undefined,
         cityId:  cityId  !== undefined ? (cityId  || null) : undefined,
@@ -257,6 +372,27 @@ export default async function adminInstitutionRoutes(fastify: FastifyInstance) {
         lng:     lng !== undefined ? (lng === '' ? null : Number(lng)) : undefined,
       },
     })
+
+    // Filiallar — butun ro'yxat "Saqlash"da almashtiriladi (formadagi
+    // qatorlar bilan sinxron): o'chirilganlar o'chiriladi, id'siz yangilari
+    // yaratiladi, mavjud id'lilar yangilanadi
+    if (branches !== undefined && branchData) {
+      const existingBranches = await prisma.institutionBranch.findMany({
+        where: { institutionId: id }, select: { id: true },
+      })
+      const existingIds = new Set(existingBranches.map((b) => b.id))
+      const incomingIds = new Set(branchData.filter((b) => b.id).map((b) => b.id!))
+      const toDelete = [...existingIds].filter((bid) => !incomingIds.has(bid))
+
+      await prisma.$transaction([
+        ...(toDelete.length > 0 ? [prisma.institutionBranch.deleteMany({ where: { id: { in: toDelete } } })] : []),
+        ...branchData.map(({ id: branchId, ...data }) =>
+          branchId && existingIds.has(branchId)
+            ? prisma.institutionBranch.update({ where: { id: branchId }, data })
+            : prisma.institutionBranch.create({ data: { ...data, institutionId: id } }),
+        ),
+      ])
+    }
 
     // Details upsert
     if (descriptionUz !== undefined || descriptionRu !== undefined ||
@@ -474,5 +610,75 @@ export default async function adminInstitutionRoutes(fastify: FastifyInstance) {
     })
 
     return reply.send({ isVerified, message: isVerified ? 'Muassasa tasdiqlandi' : 'Tasdiq bekor qilindi' })
+  })
+
+  // ─────────────────────────────────────────────
+  // GET /admin/institutions/search — "Birlashtirish" uchun nishonni tanlash
+  // ─────────────────────────────────────────────
+
+  const mergeSearchSchema = z.object({
+    q: z.string().min(2, 'Kamida 2 belgi kiriting'),
+  })
+
+  fastify.get('/admin/institutions/search', async (request, reply) => {
+    const { q } = mergeSearchSchema.parse(request.query)
+
+    const institutions = await prisma.institution.findMany({
+      where: {
+        OR: [
+          { nameUz: { contains: q, mode: 'insensitive' } },
+          { nameRu: { contains: q, mode: 'insensitive' } },
+        ],
+      },
+      select: { id: true, nameUz: true, nameRu: true, slug: true, type: true, city: { select: { nameUz: true } } },
+      take: 10,
+    })
+
+    return reply.send({ data: institutions })
+  })
+
+  // ─────────────────────────────────────────────
+  // POST /admin/institutions/:id/merge-into — takroriy yozuvni filialga aylantirish
+  // ─────────────────────────────────────────────
+
+  const mergeSchema = z.object({
+    // :id (duplicate) shu asosiy muassasaga FILIAL sifatida qo'shiladi va o'chiriladi
+    targetId: z.string().min(1, "Asosiy muassasa tanlanmagan"),
+  })
+
+  fastify.post<{ Params: { id: string } }>('/admin/institutions/:id/merge-into', async (request, reply) => {
+    const { id } = request.params
+    const { targetId } = mergeSchema.parse(request.body)
+
+    if (id === targetId) {
+      return reply.status(400).send({ error: "Muassasani o'ziga birlashtirib bo'lmaydi" })
+    }
+
+    const [duplicate, primary] = await Promise.all([
+      prisma.institution.findUnique({ where: { id }, select: { nameUz: true } }),
+      prisma.institution.findUnique({ where: { id: targetId }, select: { nameUz: true } }),
+    ])
+    if (!duplicate) return reply.status(404).send({ error: 'Birlashtiriladigan muassasa topilmadi' })
+    if (!primary) return reply.status(404).send({ error: 'Asosiy muassasa topilmadi' })
+
+    try {
+      const result = await mergeInstitutions(prisma, targetId, id)
+
+      logAdminAction(prisma, request, {
+        action: 'institution.merge',
+        entityType: 'Institution',
+        entityId: targetId,
+        entityLabel: `${duplicate.nameUz} → ${primary.nameUz}`,
+        after: result,
+      })
+
+      return reply.send({
+        message: `"${duplicate.nameUz}" muassasasi "${primary.nameUz}" ga filial sifatida birlashtirildi`,
+        data: result,
+      })
+    } catch (err) {
+      fastify.log.error(err, 'Muassasalarni birlashtirishda xato')
+      return reply.status(500).send({ error: 'Birlashtirishda xatolik yuz berdi' })
+    }
   })
 }

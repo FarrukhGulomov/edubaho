@@ -4,6 +4,7 @@
  */
 import { PrismaClient, InstitutionType, InstitutionStatus } from '@prisma/client'
 import { generateSlug } from './utils/slug'
+import { normalizeInstitutionName } from './utils/normalizeName'
 
 const prisma = new PrismaClient()
 
@@ -2383,6 +2384,7 @@ async function main() {
       create: {
         nameUz:   inst.nameUz,
         nameRu:   inst.nameRu,
+        nameKey:  normalizeInstitutionName(inst.nameUz),
         slug,
         type:     inst.type,
         status:   inst.status ?? InstitutionStatus.ACTIVE,

@@ -6,7 +6,7 @@ import {
   ChevronRight, MapPin, BadgeCheck, Sparkles, Lock, BookOpen, Trophy,
   Users2, GraduationCap, Palette, Laptop, Globe2, UserCheck, Dumbbell,
   PencilLine, Wallet, Info, BarChart3, MessageCircle, Phone, Send,
-  Instagram, Globe, Clock, ThumbsUp, Star, Award,
+  Instagram, Globe, Clock, ThumbsUp, Star, Award, Building2,
 } from 'lucide-react'
 import StarRating, { RatingHint } from '@/components/shared/StarRating'
 import InstActions from '@/components/institutions/InstActions'
@@ -320,6 +320,8 @@ export default function InstitutionDetail({ inst }: { inst: Institution }) {
     ratingTitle:     { uz: 'Reyting taqsimoti',        ru: 'Распределение оценок' },
     about:           { uz: 'Muassasa haqida',          ru: 'Об учреждении' },
     address:         { uz: 'Manzil',                   ru: 'Адрес' },
+    branches:        { uz: 'Filiallar',                ru: 'Филиалы' },
+    mainBranch:      { uz: 'Asosiy',                   ru: 'Основной' },
     noDescription:   { uz: "Ta'rif kiritilmagan.",     ru: 'Описание не добавлено.' },
     programs:        { uz: "O'qitiladigan fanlar",     ru: 'Преподаваемые предметы' },
     specializations: { uz: 'Ixtisosliklar',            ru: 'Специализации' },
@@ -575,7 +577,7 @@ export default function InstitutionDetail({ inst }: { inst: Institution }) {
             {/* ════════════════════════════════════════
                 6. JOYLASHUV VA FORMAT
                 ════════════════════════════════════════ */}
-            {(inst.address || inst.phone || inst.phone2 || inst.website) && (
+            {(inst.address || inst.phone || inst.phone2 || inst.website || (inst.branches?.length ?? 0) > 0) && (
               <div className="card p-6">
                 <h2 className="mb-4 flex items-center gap-3 text-lg font-semibold text-gray-900">
                   <span className="icon-chip"><MapPin className="h-[18px] w-[18px]" strokeWidth={1.75} /></span>
@@ -612,6 +614,35 @@ export default function InstitutionDetail({ inst }: { inst: Institution }) {
                       </span>
                     )}
                   </div>
+
+                  {/* Filiallar — bir xil muassasaning boshqa shaharlardagi bo'limlari */}
+                  {inst.branches && inst.branches.length > 0 && (
+                    <div className="mt-1">
+                      <p className="mb-2 text-xs font-semibold text-gray-400">{t(lang, ui.branches)}</p>
+                      <div className="space-y-2">
+                        {inst.branches.map((b) => (
+                          <div key={b.id} className="flex items-start gap-3 rounded-xl bg-gray-50 px-4 py-3">
+                            <Building2 className="mt-0.5 h-4 w-4 shrink-0 text-gray-400" strokeWidth={1.75} />
+                            <div className="min-w-0">
+                              <p className="flex items-center gap-1.5 text-sm font-semibold text-gray-800">
+                                {(lang === 'ru' ? b.nameRu : b.nameUz) || b.city.nameUz}
+                                {b.isMain && (
+                                  <span className="rounded-full bg-primary-100 px-2 py-0.5 text-[11px] font-semibold text-primary-700">
+                                    {t(lang, ui.mainBranch)}
+                                  </span>
+                                )}
+                              </p>
+                              <p className="truncate text-sm text-gray-500">
+                                {(lang === 'ru' ? b.city.nameRu : b.city.nameUz) ?? b.city.nameUz}
+                                {b.address ? ` — ${b.address}` : ''}
+                              </p>
+                              {b.phone && <p className="text-sm text-gray-500">{b.phone}</p>}
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
                 </div>
               </div>
             )}

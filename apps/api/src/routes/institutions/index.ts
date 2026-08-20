@@ -111,17 +111,26 @@ export default async function institutionRoutes(fastify: FastifyInstance) {
         ]
       : []
 
-    const where = {
+    // Shahar/viloyat bo'yicha filtr — muassasaning O'ZI shu shaharda/viloyatda
+    // bo'lishi SHART emas, filiallaridan BIRI ham yetarli (masalan "PDP
+    // Academy" markazi Toshkentda ro'yxatdan o'tgan bo'lsa-yu, Buxoro
+    // filiali bo'lsa, "Buxoro" bo'yicha qidirilganda ham topilishi kerak).
+    // Qidiruv matni bilan bir vaqtda ishlatilishi mumkin bo'lgani uchun
+    // ikkalasi ham alohida AND shartlari sifatida qo'shiladi — bitta `OR`
+    // kalitiga yozib qo'yilsa, biri ikkinchisini bosib ketardi.
+    const andConditions: Prisma.InstitutionWhereInput[] = []
+    if (cityId)   andConditions.push({ OR: [{ cityId }, { branches: { some: { cityId } } }] })
+    if (regionId) andConditions.push({ OR: [{ regionId }, { branches: { some: { regionId } } }] })
+    // Nom, manzil, va program bo'yicha qisman qidiruv (katta-kichik harf farqsiz)
+    // Kirill yozuvida yozilgan so'rovlar ham lotin yozuvidagi ma'lumotlarda topiladi
+    if (qTrimmed) andConditions.push({ OR: nameOrConditions })
+
+    const where: Prisma.InstitutionWhereInput = {
       status: { in: ['ACTIVE', 'PREMIUM'] as InstitutionStatus[] },
       ...(type       && { type }),
-      ...(cityId     && { cityId }),
-      ...(regionId   && { regionId }),
       ...(minRating  && { avgRating: { gte: minRating } }),
       ...(monthlyMax && { pricing: { monthlyMin: { lte: monthlyMax } } }),
-
-      // Nom, manzil, va program bo'yicha qisman qidiruv (katta-kichik harf farqsiz)
-      // Kirill yozuvida yozilgan so'rovlar ham lotin yozuvidagi ma'lumotlarda topiladi
-      ...(qTrimmed && { OR: nameOrConditions }),
+      ...(andConditions.length > 0 && { AND: andConditions }),
 
       // Fan bo'yicha exact filter (chip orqali tanlanadi)
       ...(subject?.trim() && {
@@ -351,6 +360,13 @@ export default async function institutionRoutes(fastify: FastifyInstance) {
           reviewCount: true,
           viewCount: true,
           city: { select: { id: true, nameUz: true, nameRu: true } },
+          branches: {
+            orderBy: [{ isMain: 'desc' }, { createdAt: 'asc' }],
+            select: {
+              id: true, nameUz: true, nameRu: true, address: true, phone: true, isMain: true,
+              city: { select: { id: true, nameUz: true, nameRu: true } },
+            },
+          },
           details: {
             select: {
               descriptionUz: true,
