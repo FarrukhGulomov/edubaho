@@ -118,8 +118,11 @@ export default function HomePage() {
   // wizard'ga o'tishning foydasi yo'q)
   const heroZeroMatch = !!heroGoal.trim() && heroInsights?.matchingCount === 0
 
-  function goToMatch() {
-    const goal = heroGoal.trim()
+  // goalOverride — pill bosilganda heroGoal state hali yangilanmagan bo'ladi
+  // (React setState darhol qo'llanmaydi), shuning uchun aniq qiymat
+  // parametr sifatida uzatiladi (stale-closure xatosining oldi olinadi)
+  function goToMatch(goalOverride?: string) {
+    const goal = (goalOverride ?? heroGoal).trim()
     router.push(goal ? `/match?type=COURSE_CENTER&goal=${encodeURIComponent(goal)}` : '/match?type=COURSE_CENTER')
   }
 
@@ -147,8 +150,11 @@ export default function HomePage() {
           </p>
 
           {/* EduFit wizard'ining "maqsad" qadami — hero'ning asosiy vidjeti.
-              Tanlangan yo'nalish bo'yicha hech qanday muassasa topilmasa
-              (heroZeroMatch) — davom etishning ma'nosi yo'q, tugma disabled */}
+              Tugma yo'q: erkin matn kiritilganda Enter orqali, pastdagi
+              tavsiya pilllari bosilganda esa darhol /match'ga o'tiladi
+              (mos muassasa topilmasa — heroZeroMatch — Enter orqali
+              o'tkazilmaydi, pilllar bu tekshiruvdan mustasno, chunki
+              ular oldindan tekshirilgan aniq yo'nalishlar) */}
           <div className="mb-3 flex items-center gap-2 rounded-xl border border-gray-200 bg-white p-2 shadow-sm focus-within:border-primary-400">
             <div className="flex min-w-0 flex-1 items-center gap-2 px-2">
               <Sparkles className="h-5 w-5 shrink-0 text-primary-500" strokeWidth={1.75} />
@@ -162,13 +168,6 @@ export default function HomePage() {
                 className="min-w-0 flex-1 bg-transparent py-2 text-base text-gray-900 outline-none placeholder:text-gray-400"
               />
             </div>
-            <button
-              onClick={goToMatch}
-              disabled={heroZeroMatch}
-              className="btn-primary shrink-0 whitespace-nowrap px-5 py-2.5 text-sm"
-            >
-              {uz ? 'Davom etish →' : 'Продолжить →'}
-            </button>
           </div>
 
           {/* Real DB'dan hisoblangan live son — soxta statistika emas */}
@@ -184,7 +183,8 @@ export default function HomePage() {
             {(GOAL_SUGGESTIONS.COURSE_CENTER ?? []).map((g) => (
               <button
                 key={g.label}
-                onClick={() => setHeroGoal(g.value)}
+                // Pill bosilishi — o'zi to'liq tanlov, darhol /match'ga o'tadi
+                onClick={() => { setHeroGoal(g.value); goToMatch(g.value) }}
                 className={`rounded-full border px-3.5 py-1.5 text-xs font-semibold transition-colors ${
                   heroGoal === g.value
                     ? 'border-primary-500 bg-primary-600 text-white'
