@@ -4,10 +4,10 @@ import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import {
-  Target, PencilLine, School, Palette, Sunrise, Sun, Sunset, Calendar,
+  Target, PencilLine, School, Palette,
   Clock, Wallet, Globe, MapPin, BadgeCheck, Lightbulb, AlertCircle,
   Search, RotateCcw, Medal, Lock, ArrowRight, Info, Building2, Shuffle,
-  Languages, Crown, Wifi, Sparkles, Star,
+  Wifi, Sparkles, Star,
 } from 'lucide-react'
 import Header from '@/components/shared/Header'
 import Footer from '@/components/shared/Footer'
@@ -21,11 +21,11 @@ import { GOAL_SUGGESTIONS } from '@/lib/matchConstants'
 /**
  * EduFit — "Menga mosini top" wizard'i
  *
- * 5 qadamli anketa → har bir muassasa uchun shaxsiy moslik balli (0-100)
+ * 4 qadamli anketa → har bir muassasa uchun shaxsiy moslik balli (0-100)
  * va NEGA mos kelishining shaffof sabablari.
  */
 
-type Step = 'goal' | 'format' | 'city' | 'budget' | 'time' | 'results'
+type Step = 'goal' | 'format' | 'city' | 'budget' | 'results'
 
 interface CityOption {
   id: string
@@ -52,13 +52,6 @@ const FORMAT_OPTIONS = [
   { value: '',        Icon: Clock,     uz: 'Farqi yo\'q',                ru: 'Не важно' },
 ]
 
-const LANGUAGE_OPTIONS = [
-  { value: 'uz', uz: "O'zbek tilida",  ru: 'На узбекском' },
-  { value: 'ru', uz: 'Rus tilida',     ru: 'На русском' },
-  { value: 'en', uz: 'Ingliz tilida',  ru: 'На английском' },
-  { value: '',   uz: 'Farqi yo\'q',    ru: 'Не важно' },
-]
-
 const BUDGET_OPTIONS = [
   { value: 500_000,    uz: "500 ming so'mgacha",   ru: 'До 500 тыс. сум' },
   { value: 1_000_000,  uz: "1 mln so'mgacha",      ru: 'До 1 млн сум' },
@@ -67,15 +60,7 @@ const BUDGET_OPTIONS = [
   { value: 0,          uz: 'Farqi yo\'q',           ru: 'Не важно' },
 ]
 
-const SHIFT_OPTIONS = [
-  { value: 'morning',   Icon: Sunrise, uz: 'Ertalab',      ru: 'Утром' },
-  { value: 'afternoon', Icon: Sun,     uz: 'Tushdan keyin', ru: 'Днём' },
-  { value: 'evening',   Icon: Sunset,  uz: 'Kechqurun',    ru: 'Вечером' },
-  { value: 'weekend',   Icon: Calendar, uz: 'Hafta oxiri',  ru: 'Выходные' },
-  { value: '',          Icon: Clock,   uz: 'Farqi yo\'q',   ru: 'Не важно' },
-]
-
-const STEPS: Step[] = ['goal', 'format', 'city', 'budget', 'time']
+const STEPS: Step[] = ['goal', 'format', 'city', 'budget']
 
 /** UZS format: 1 500 000 so'm (loyiha standarti — bo'shliq ajratuvchi) */
 function fmtUzs(n: number) {
@@ -98,10 +83,6 @@ export default function MatchPage() {
   const [cityId, setCityId]     = useState('')
   const [cities, setCities]     = useState<CityOption[]>([])
   const [budget, setBudget]     = useState<number | null>(null)
-  const [shift, setShift]       = useState<string | null>(null)
-  const [age, setAge]           = useState('')
-  const [language, setLanguage] = useState<string | null>(null)
-  const [preferPremium, setPreferPremium] = useState(false)
   const [results, setResults]   = useState<MatchItem[]>([])
   const [resultsMeta, setResultsMeta] = useState<{
     total?: number
@@ -191,7 +172,7 @@ export default function MatchPage() {
   const activeSteps = format === 'online' ? STEPS.filter((s) => s !== 'city') : STEPS
   const stepIndex = activeSteps.indexOf(step)
 
-  async function runMatch(finalShift: string | null) {
+  async function runMatch(finalBudget: number | null) {
     setLoading(true)
     setError('')
     setStep('results')
@@ -200,28 +181,20 @@ export default function MatchPage() {
         type,
         goal:   goal || undefined,
         cityId: cityId || undefined,
-        budget: budget || undefined,
-        shift:  finalShift || undefined,
-        age:    age ? Number(age) : undefined,
+        budget: finalBudget || undefined,
         format: format || undefined,
-        language: language || undefined,
-        preferPremium: preferPremium || undefined,
       }
       const res = await matchApi.find(prefs)
       setResults(res.data)
       setResultsMeta(res.meta)
       haptic('success')
       // Admin Lead CRM'da "Ta'lim profili" bo'limi shu voqeaning eng
-      // so'nggisidan o'qiladi (apps/api/src/services/leadService.ts) —
-      // shuning uchun barcha afzalliklar to'liq yuboriladi, faqat
-      // type/goal/budget/shift emas
+      // so'nggisidan o'qiladi (apps/api/src/services/leadService.ts)
       track('match_completed', {
         category: 'engagement',
         properties: {
-          type, goal, budget, shift: finalShift, resultCount: res.data.length,
-          cityId: cityId || undefined, age: age ? Number(age) : undefined,
-          format: format || undefined, language: language || undefined,
-          preferPremium: preferPremium || undefined,
+          type, goal, budget: finalBudget, resultCount: res.data.length,
+          cityId: cityId || undefined, format: format || undefined,
         },
       })
       // Oxirgi ishlatilgan afzalliklarni saqlaymiz — Profil sahifasidagi
@@ -245,17 +218,13 @@ export default function MatchPage() {
 
   const ui = {
     title:     { uz: 'Menga mosini top', ru: 'Подобрать для меня' },
-    subtitle:  { uz: '5 ta savolga javob bering — sizga eng mos muassasalarni hisoblab beramiz', ru: 'Ответьте на 5 вопросов — мы рассчитаем самые подходящие для вас заведения' },
+    subtitle:  { uz: '4 ta savolga javob bering — sizga eng mos muassasalarni hisoblab beramiz', ru: 'Ответьте на 4 вопроса — мы рассчитаем самые подходящие для вас заведения' },
     qType:     { uz: 'Nima qidiryapsiz?', ru: 'Что вы ищете?' },
     qGoal:     { uz: 'Maqsadingiz nima?', ru: 'Какая у вас цель?' },
     qGoalHint: { uz: 'Masalan: IELTS, Frontend, matematika... (ixtiyoriy)', ru: 'Например: IELTS, Frontend, математика... (необязательно)' },
     qFormat:   { uz: "Qanday formatda o'qishni istaysiz?", ru: 'В каком формате хотите учиться?' },
     qCity:     { uz: 'Qaysi shaharda?', ru: 'В каком городе?' },
     qBudget:   { uz: 'Oylik byudjetingiz?', ru: 'Ваш месячный бюджет?' },
-    qTime:     { uz: 'Qachon o\'qiy olasiz?', ru: 'Когда вы можете учиться?' },
-    qAge:      { uz: "O'quvchi yoshi (ixtiyoriy)", ru: 'Возраст ученика (необязательно)' },
-    qLanguage: { uz: "O'qitish tili (ixtiyoriy)", ru: 'Язык обучения (необязательно)' },
-    premiumLabel: { uz: 'Premium tasdiqlangan markazlarga ustunlik berish', ru: 'Отдавать предпочтение Premium-центрам' },
     next:      { uz: 'Keyingisi →', ru: 'Далее →' },
     skip:      { uz: "O'tkazib yuborish", ru: 'Пропустить' },
     back:      { uz: '← Orqaga', ru: '← Назад' },
@@ -284,7 +253,7 @@ export default function MatchPage() {
   }
 
   function goBack() {
-    if (step === 'results') { setStep('time'); return }
+    if (step === 'results') { setStep('budget'); return }
     const i = activeSteps.indexOf(step)
     if (i > 0) setStep(activeSteps[i - 1])
   }
@@ -448,7 +417,7 @@ export default function MatchPage() {
               {BUDGET_OPTIONS.map((b) => (
                 <button
                   key={b.value}
-                  onClick={() => { setBudget(b.value || null); setStep('time') }}
+                  onClick={() => { const val = b.value || null; setBudget(val); runMatch(val) }}
                   className={`flex w-full items-center gap-2.5 rounded-xl border bg-white px-5 py-3.5 text-left font-semibold shadow-sm transition-colors hover:border-primary-300 ${
                     budget === (b.value || null) ? 'border-primary-500 bg-primary-50' : 'border-gray-200'
                   }`}
@@ -458,92 +427,6 @@ export default function MatchPage() {
               ))}
             </div>
             <WizardNav onBack={goBack} backLabel={t(lang, ui.back)} />
-          </div>
-        )}
-
-        {/* ── 5. Vaqt + yosh ── */}
-        {step === 'time' && (
-          <div className="space-y-5">
-            <h2 className="text-lg font-bold text-gray-900">{t(lang, ui.qTime)}</h2>
-            <div className="grid grid-cols-2 gap-2.5">
-              {SHIFT_OPTIONS.map((s) => {
-                // '' qiymati "Farqi yo'q" degani — 'any' sifatida saqlanadi
-                const val = s.value || 'any'
-                return (
-                  <button
-                    key={val}
-                    onClick={() => setShift(val)}
-                    className={`flex items-center gap-2.5 rounded-xl border bg-white px-4 py-3 font-semibold shadow-sm transition-colors hover:border-primary-300 ${
-                      shift === val ? 'border-primary-500 bg-primary-50' : 'border-gray-200'
-                    }`}
-                  >
-                    <s.Icon className="h-5 w-5 shrink-0 text-primary-500" strokeWidth={1.75} />
-                    <span className="text-sm">{uz ? s.uz : s.ru}</span>
-                  </button>
-                )
-              })}
-            </div>
-
-            <div>
-              <label className="mb-1.5 block text-sm font-semibold text-gray-600">{t(lang, ui.qAge)}</label>
-              <input
-                type="number"
-                min={1}
-                max={99}
-                value={age}
-                onChange={(e) => setAge(e.target.value)}
-                placeholder="18"
-                className="input w-32 px-4 py-2.5"
-              />
-            </div>
-
-            <div>
-              <label className="mb-1.5 flex items-center gap-1.5 text-sm font-semibold text-gray-600">
-                <Languages className="h-4 w-4 shrink-0" strokeWidth={1.75} /> {t(lang, ui.qLanguage)}
-              </label>
-              <div className="flex flex-wrap gap-2">
-                {LANGUAGE_OPTIONS.map((l) => {
-                  const val = l.value || 'any'
-                  return (
-                    <button
-                      key={val}
-                      onClick={() => setLanguage(l.value || null)}
-                      className={`rounded-full border px-4 py-1.5 text-sm font-semibold transition-colors ${
-                        (language ?? '') === l.value
-                          ? 'border-primary-500 bg-primary-600 text-white'
-                          : 'border-gray-300 bg-white text-gray-600 hover:border-primary-400'
-                      }`}
-                    >
-                      {uz ? l.uz : l.ru}
-                    </button>
-                  )
-                })}
-              </div>
-            </div>
-
-            <label className="flex cursor-pointer items-center gap-3 rounded-xl border border-gray-200 bg-white px-4 py-3 shadow-sm hover:border-primary-300">
-              <div
-                onClick={() => setPreferPremium(!preferPremium)}
-                className={`relative h-6 w-11 shrink-0 rounded-full transition-colors ${preferPremium ? 'bg-primary-600' : 'bg-gray-200'}`}
-              >
-                <div className={`absolute top-0.5 h-5 w-5 rounded-full bg-white shadow transition-transform ${preferPremium ? 'translate-x-5' : 'translate-x-0.5'}`} />
-              </div>
-              <span className="flex items-center gap-1.5 text-sm font-semibold text-gray-700">
-                <Crown className="h-4 w-4 shrink-0 text-amber-500" strokeWidth={1.75} /> {t(lang, ui.premiumLabel)}
-              </span>
-            </label>
-
-            <div className="flex items-center justify-between">
-              <button onClick={goBack} className="text-sm font-semibold text-gray-500 hover:text-gray-700">
-                {t(lang, ui.back)}
-              </button>
-              <button
-                onClick={() => runMatch(shift === 'any' ? null : shift)}
-                className="btn-primary inline-flex items-center gap-2 px-8"
-              >
-                <Target className="h-4 w-4 shrink-0" strokeWidth={1.75} /> {uz ? 'Natijani ko\'rish' : 'Показать результат'}
-              </button>
-            </div>
           </div>
         )}
 
@@ -590,10 +473,6 @@ export default function MatchPage() {
                       setFormat(null)
                       setCityId('')
                       setBudget(null)
-                      setShift(null)
-                      setAge('')
-                      setLanguage(null)
-                      setPreferPremium(false)
                     }}
                     className="flex items-center gap-1.5 text-sm font-semibold text-primary-600 hover:underline"
                   >
