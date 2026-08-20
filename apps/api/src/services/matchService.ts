@@ -14,7 +14,7 @@
  */
 
 import { expandSearchTerms } from '../utils/subjectSynonyms'
-import { classifyGoalCategory, getCategoryDef } from '../utils/educationCategories'
+import { classifyGoalCategory, expandCategoryGroup, getCategoryDef } from '../utils/educationCategories'
 import { hasWordMatch } from '../utils/textMatch'
 
 // ─── Kirish ma'lumotlari ──────────────────────────────────────
@@ -38,6 +38,15 @@ export interface MatchPreferences {
   format?: string
   /** Faqat Premium (tekshirilgan, kengaytirilgan profilli) markazlarni afzal ko'rish */
   preferPremium?: boolean
+  /**
+   * Route darajasida so'rov boshida BIR MARTA hisoblangan `goal` toifasi
+   * (kalit-so'z va zarur bo'lsa AI fallback orqali) — har bir nomzod uchun
+   * qayta klassifikatsiya qilinmasligi uchun shu yerga "keshlanadi".
+   * `undefined` — hali hisoblanmagan (evaluateGoal o'zi sinxron
+   * classifyGoalCategory bilan aniqlaydi). `null` — hisoblangan, lekin
+   * toifa topilmagan.
+   */
+  resolvedGoalCategory?: string | null
 }
 
 /** Baholanadigan muassasa (Prisma'dan keladigan minimal shakl) */
@@ -249,8 +258,23 @@ function computeCourseMatch(inst: MatchCandidate, goal: string): { ratio: number
  * 3) Ikkalasi ham topilmasa — mos kelmaydi (qattiq chetlab o'tiladi,
  *    faqat yaqin joyda joylashgani yoki reytingi yaxshi bo'lgani uchun
  *    ko'rsatilmaydi).
+ *
+ * @param resolvedCategory — route darajasida so'rov boshida BIR MARTA
+ * (kalit-so'z, zarur bo'lsa AI fallback bilan) hisoblangan toifa.
+ * `undefined` uzatilsa — bu yerning o'zida sinxron `classifyGoalCategory`
+ * bilan aniqlanadi (AI ishlatilmaydi, orqaga moslik uchun). `null` —
+ * allaqachon hisoblangan, lekin hech qanday toifa topilmagan degani.
+ *
+ * Toifa "guruh" (masalan GENERAL_COURSES) bo'lishi mumkin —
+ * `expandCategoryGroup` orqali a'zo kodlarga yoyiladi va muassasada
+ * ULARDAN BIRI bo'lsa yetarli (masalan "O'quv kurslari" — OTMga
+ * tayyorlov YOKI til kurslaridan biri bo'lsa mos hisoblanadi).
  */
-export function evaluateGoal(inst: MatchCandidate, goal: string): GoalEvaluation {
+export function evaluateGoal(
+  inst: MatchCandidate,
+  goal: string,
+  resolvedCategory?: string | null,
+): GoalEvaluation {
   const trimmed = goal.trim()
   if (!trimmed) return { matched: true, matchType: 'none', ratio: 0 }
 
@@ -259,10 +283,11 @@ export function evaluateGoal(inst: MatchCandidate, goal: string): GoalEvaluation
     return { matched: true, matchType: 'course', ratio, matchedProgram }
   }
 
-  const category = classifyGoalCategory(trimmed)
+  const category = resolvedCategory !== undefined ? resolvedCategory : classifyGoalCategory(trimmed)
   if (category) {
     const categories = inst.details?.categories ?? []
-    return { matched: categories.includes(category), matchType: 'category', category, ratio: 0 }
+    const memberCodes = expandCategoryGroup(category)
+    return { matched: memberCodes.some((c) => categories.includes(c)), matchType: 'category', category, ratio: 0 }
   }
 
   return { matched: false, matchType: 'none', ratio: 0 }
@@ -279,7 +304,7 @@ function scoreGoal(inst: MatchCandidate, prefs: MatchPreferences): ScoreComponen
     }
   }
 
-  const ev = evaluateGoal(inst, prefs.goal)
+  const ev = evaluateGoal(inst, prefs.goal, prefs.resolvedGoalCategory)
 
   // Nazariy jihatdan bu yerga yetib kelmasligi kerak — match.ts allaqachon
   // mos kelmagan nomzodlarni qattiq filtrlab tashlaydi. Xavfsizlik uchun
