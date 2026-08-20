@@ -225,8 +225,6 @@ export default function MatchPage() {
     qFormat:   { uz: "Qanday formatda o'qishni istaysiz?", ru: 'В каком формате хотите учиться?' },
     qCity:     { uz: 'Qaysi shaharda?', ru: 'В каком городе?' },
     qBudget:   { uz: 'Oylik byudjetingiz?', ru: 'Ваш месячный бюджет?' },
-    next:      { uz: 'Keyingisi →', ru: 'Далее →' },
-    skip:      { uz: "O'tkazib yuborish", ru: 'Пропустить' },
     back:      { uz: '← Orqaga', ru: '← Назад' },
     results:   { uz: 'Sizga mos natijalar', ru: 'Подходящие вам результаты' },
     matchPct:  { uz: 'moslik', ru: 'совпадение' },
@@ -317,6 +315,15 @@ export default function MatchPage() {
               type="text"
               value={goal}
               onChange={(e) => setGoal(e.target.value)}
+              onKeyDown={(e) => {
+                // Erkin matn kiritilganda Enter — tugma yo'q, shuning uchun
+                // davom etishning yagona yo'li. Tanlangan yo'nalish bo'yicha
+                // hech qanday muassasa topilmasa (heroZeroMatch kabi) o'tkazilmaydi
+                if (e.key === 'Enter' && !(goal.trim() && insights?.matchingCount === 0)) {
+                  e.preventDefault()
+                  setStep('format')
+                }
+              }}
               placeholder={t(lang, ui.qGoalHint)}
               maxLength={100}
               className="input"
@@ -326,7 +333,9 @@ export default function MatchPage() {
                 {(GOAL_SUGGESTIONS[type] ?? []).map((g) => (
                   <button
                     key={g.label}
-                    onClick={() => setGoal(g.value)}
+                    // Pill bosilishi — o'zi to'liq va aniq tanlov, qo'shimcha
+                    // "Davom etish" tugmasi kerak emas, darhol keyingi qadamga o'tadi
+                    onClick={() => { setGoal(g.value); setStep('format') }}
                     className={`rounded-full border px-4 py-1.5 text-sm font-semibold transition-colors ${
                       goal === g.value
                         ? 'border-primary-500 bg-primary-600 text-white'
@@ -338,11 +347,6 @@ export default function MatchPage() {
                 ))}
               </div>
             )}
-            <WizardNav
-              onNext={() => setStep('format')}
-              nextLabel={t(lang, goal ? ui.next : ui.skip)}
-              nextDisabled={!!goal.trim() && insights?.matchingCount === 0}
-            />
           </div>
         )}
 
