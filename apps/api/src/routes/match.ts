@@ -78,6 +78,9 @@ const candidateSelect = {
   reviewCount: true,
   cityId: true,
   regionId: true,
+  // Asosiy manzil mos kelmasa ham FILIALLARDAN biri mos kelsa yetarli
+  // (masalan "PDP academy" Toshkentda ro'yxatdan o'tgan, Buxoroda filiali bor)
+  branches: { select: { cityId: true, regionId: true } },
   phone: true,
   address: true,
   city:   { select: { nameUz: true, nameRu: true } },
@@ -144,7 +147,7 @@ export default async function matchRoutes(fastify: FastifyInstance) {
     let cityCount: number | null = null
     let locationRelaxed = false
     if (q.cityId) {
-      const inCity = goalFiltered.filter((c) => c.cityId === q.cityId)
+      const inCity = goalFiltered.filter((c) => c.cityId === q.cityId || c.branches.some((b) => b.cityId === q.cityId))
       cityCount = inCity.length
       if (inCity.length > 0) {
         locationPool = inCity
@@ -254,8 +257,10 @@ export default async function matchRoutes(fastify: FastifyInstance) {
       !hasGoal || evaluateGoal(c as MatchCandidate, prefs.goal!, resolvedCategory).matched
     const goalFiltered = candidates.filter(goalHit)
 
-    const inCity = (c: (typeof candidates)[number]) => c.cityId === prefs.cityId
-    const inRegion = (c: (typeof candidates)[number]) => !!selectedRegionId && c.regionId === selectedRegionId
+    const inCity = (c: (typeof candidates)[number]) =>
+      c.cityId === prefs.cityId || c.branches.some((b) => b.cityId === prefs.cityId)
+    const inRegion = (c: (typeof candidates)[number]) =>
+      !!selectedRegionId && (c.regionId === selectedRegionId || c.branches.some((b) => b.regionId === selectedRegionId))
 
     interface Attempt {
       pool: typeof candidates

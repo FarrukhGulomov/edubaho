@@ -62,6 +62,8 @@ export interface MatchCandidate {
   reviewCount: number
   cityId: string | null
   regionId: string | null
+  /** Filiallar — asosiy manzil mos kelmasa ham, ULARDAN BIRI mos kelsa yetarli */
+  branches?: { cityId: string; regionId: string }[]
   phone: string | null
   deliveryMode: string
   details: {
@@ -433,10 +435,13 @@ function scoreLocation(inst: MatchCandidate, prefs: MatchPreferences): ScoreComp
   if (!prefs.cityId && !prefs.regionId) {
     return { ...base, score: 60, hasData: false, reasonUz: 'Shahar tanlanmagan', reasonRu: 'Город не выбран' }
   }
-  if (prefs.cityId && inst.cityId === prefs.cityId) {
+  // Asosiy manzil mos kelmasa ham — FILIALLARDAN biri mos kelsa yetarli
+  // (masalan markaz Toshkentda ro'yxatdan o'tgan, lekin Buxoro filiali bor)
+  const branches = inst.branches ?? []
+  if (prefs.cityId && (inst.cityId === prefs.cityId || branches.some((b) => b.cityId === prefs.cityId))) {
     return { ...base, score: 100, hasData: true, reasonUz: 'Shahringizda joylashgan', reasonRu: 'Находится в вашем городе' }
   }
-  if (prefs.regionId && inst.regionId === prefs.regionId) {
+  if (prefs.regionId && (inst.regionId === prefs.regionId || branches.some((b) => b.regionId === prefs.regionId))) {
     return { ...base, score: 70, hasData: true, reasonUz: 'Viloyatingizda joylashgan', reasonRu: 'Находится в вашей области' }
   }
   return { ...base, score: 25, hasData: true, reasonUz: 'Boshqa hududda', reasonRu: 'В другом регионе' }

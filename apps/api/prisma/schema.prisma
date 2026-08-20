@@ -273,6 +273,12 @@ model Institution {
   id          String            @id @default(cuid())
   nameUz      String
   nameRu      String?
+  // nameUz'ning normallashtirilgan shakli (trim + kichik harf + ortiqcha
+  // bo'shliqlar yig'ilgan) — bir xil muassasa ikki marta (masalan turli
+  // shaharlardagi filiallar uchun alohida-alohida) qo'shilib qolmasligi
+  // uchun UNIQUE. Filiallar InstitutionBranch orqali BITTA muassasaga
+  // bog'lanishi kerak, alohida Institution sifatida EMAS (normalizeName.ts).
+  nameKey     String            @unique
   slug        String            @unique
   type        InstitutionType
   status      InstitutionStatus @default(PENDING)

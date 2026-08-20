@@ -1,11 +1,11 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import {
   ClipboardList, Phone, Info, Wallet, AlertCircle, BookOpen, Target,
   Clock, Trophy, ChevronLeft, ChevronRight, CheckCircle2, CalendarCheck, ChevronDown,
-  Search, MapPin, Star, Sparkles,
+  Search, MapPin, Star, Sparkles, Building2, Plus, X,
 } from 'lucide-react'
 
 const API = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:3001/api/v1'
@@ -59,6 +59,28 @@ const EDUCATION_CATEGORIES = [
   { value: 'CAREER_CHANGE', label: 'Kasb almashtirish' },
 ]
 
+interface CityOption {
+  id: string
+  nameUz: string
+  nameRu: string
+}
+
+// Bitta muassasaning boshqa shahardagi filiali — masalan "PDP Academy"
+// Toshkentda ro'yxatdan o'tgan bo'lsa-yu, Buxoro/Farg'onada ham filiali
+// bo'lsa, ULARNI ALOHIDA muassasa sifatida EMAS, shu ro'yxatga qo'shing
+// (bir xil muassasa nomi ikki marta yaratilishi endi taqiqlangan).
+export interface BranchFormData {
+  id?: string
+  nameUz: string
+  nameRu: string
+  cityId: string
+  address: string
+  phone: string
+  isMain: boolean
+}
+
+const EMPTY_BRANCH: BranchFormData = { nameUz: '', nameRu: '', cityId: '', address: '', phone: '', isMain: false }
+
 interface PlaceSearchResult {
   placeId: string
   name: string
@@ -110,6 +132,7 @@ export interface InstitutionFormData {
   monthlyMin: string
   monthlyMax: string
   paymentMethods: string[]
+  branches: BranchFormData[]
 }
 
 const EMPTY: InstitutionFormData = {
@@ -121,13 +144,15 @@ const EMPTY: InstitutionFormData = {
   languages: [], programs: '', specializations: '', shifts: [], achievements: '',
   categories: [],
   monthlyMin: '', monthlyMax: '', paymentMethods: [],
+  branches: [],
 }
 
 const TABS = [
-  { id: 'main',    label: 'Asosiy',   Icon: ClipboardList },
-  { id: 'contact', label: 'Aloqa',    Icon: Phone },
-  { id: 'details', label: 'Batafsil', Icon: Info },
-  { id: 'pricing', label: 'Narx',     Icon: Wallet },
+  { id: 'main',     label: 'Asosiy',    Icon: ClipboardList },
+  { id: 'contact',  label: 'Aloqa',     Icon: Phone },
+  { id: 'details',  label: 'Batafsil',  Icon: Info },
+  { id: 'branches', label: 'Filiallar', Icon: Building2 },
+  { id: 'pricing',  label: 'Narx',      Icon: Wallet },
 ]
 
 interface Props {
@@ -155,8 +180,27 @@ export default function InstitutionForm({ initialData, institutionId, mode }: Pr
   const [placesError, setPlacesError] = useState('')
   const [imported, setImported] = useState(false)
 
-  function set(field: keyof InstitutionFormData, value: string | boolean | string[]) {
+  // Filiallar bo'limida shahar tanlash uchun
+  const [cities, setCities] = useState<CityOption[]>([])
+  useEffect(() => {
+    fetch(`${API}/geo/cities`)
+      .then((r) => r.json())
+      .then((d) => setCities(d.data ?? []))
+      .catch(() => {})
+  }, [])
+
+  function set(field: keyof InstitutionFormData, value: string | boolean | string[] | BranchFormData[]) {
     setForm((prev) => ({ ...prev, [field]: value }))
+  }
+
+  function addBranch() {
+    set('branches', [...form.branches, { ...EMPTY_BRANCH }])
+  }
+  function updateBranch(index: number, patch: Partial<BranchFormData>) {
+    set('branches', form.branches.map((b, i) => (i === index ? { ...b, ...patch } : b)))
+  }
+  function removeBranch(index: number) {
+    set('branches', form.branches.filter((_, i) => i !== index))
   }
 
   /** O'zbek nomdan avtomatik slug yaratish */
@@ -281,6 +325,8 @@ export default function InstitutionForm({ initialData, institutionId, mode }: Pr
           specializations: form.specializations
             ? form.specializations.split(',').map((s) => s.trim()).filter(Boolean)
             : [],
+          // Shahar tanlanmagan (bo'sh) qatorlar chala hisoblanadi va tashlab yuboriladi
+          branches: form.branches.filter((b) => b.cityId),
         }),
       })
 
@@ -733,6 +779,89 @@ export default function InstitutionForm({ initialData, institutionId, mode }: Pr
               </div>
             </div>
           </div>
+        </div>
+      )}
+
+      {/* ── TAB: FILIALLAR ── */}
+      {tab === 'branches' && (
+        <div className="space-y-4">
+          <div className="rounded-xl border border-primary-100 bg-primary-50/40 p-4">
+            <p className="flex items-center gap-1.5 text-sm font-semibold text-gray-800">
+              <Building2 className="h-4 w-4 shrink-0 text-primary-600" strokeWidth={1.75} /> Filiallar
+            </p>
+            <p className="mt-1 text-xs text-gray-500">
+              Bir xil muassasaning boshqa shaharlardagi filiallarini shu yerga qo'shing — masalan "PDP Academy"ning
+              Toshkentdagi bosh markazi yuqoridagi "Asosiy" bo'limda, Buxoro/Farg'ona filiallari esa shu ro'yxatda
+              bo'lishi kerak. Har biri UCHUN ALOHIDA muassasa YARATMANG (nom takrorlansa xato chiqadi).
+            </p>
+          </div>
+
+          {form.branches.length === 0 && (
+            <p className="rounded-xl border border-dashed border-gray-200 px-4 py-6 text-center text-sm text-gray-400">
+              Hali filial qo'shilmagan
+            </p>
+          )}
+
+          <div className="space-y-3">
+            {form.branches.map((b, i) => (
+              <div key={i} className="rounded-xl border border-gray-200 p-4">
+                <div className="mb-3 flex items-center justify-between">
+                  <p className="text-sm font-semibold text-gray-700">Filial {i + 1}</p>
+                  <button
+                    type="button"
+                    onClick={() => removeBranch(i)}
+                    className="flex items-center gap-1 text-xs font-semibold text-red-500 hover:text-red-700"
+                  >
+                    <X className="h-3.5 w-3.5 shrink-0" strokeWidth={2} /> Olib tashlash
+                  </button>
+                </div>
+                <div className="grid gap-3 sm:grid-cols-2">
+                  <div>
+                    <label className="mb-1 block text-xs font-semibold text-gray-600">
+                      Shahar <span className="text-red-500">*</span>
+                    </label>
+                    <SelectField
+                      value={b.cityId}
+                      onChange={(v) => updateBranch(i, { cityId: v })}
+                      options={[{ value: '', label: 'Shahar tanlang' }, ...cities.map((c) => ({ value: c.id, label: c.nameUz }))]}
+                    />
+                  </div>
+                  <div>
+                    <label className="mb-1 block text-xs font-semibold text-gray-600">Telefon</label>
+                    <input type="tel" value={b.phone} onChange={(e) => updateBranch(i, { phone: e.target.value })}
+                      placeholder="+998 90 123 45 67" className={INPUT_CLS} />
+                  </div>
+                </div>
+                <div className="mt-3">
+                  <label className="mb-1 block text-xs font-semibold text-gray-600">Manzil</label>
+                  <input type="text" value={b.address} onChange={(e) => updateBranch(i, { address: e.target.value })}
+                    placeholder="Ko'cha, uy raqami..." className={INPUT_CLS} />
+                </div>
+                <div className="mt-3 grid gap-3 sm:grid-cols-2">
+                  <div>
+                    <label className="mb-1 block text-xs font-semibold text-gray-600">
+                      Filial nomi <span className="font-normal text-gray-400">(ixtiyoriy)</span>
+                    </label>
+                    <input type="text" value={b.nameUz} onChange={(e) => updateBranch(i, { nameUz: e.target.value })}
+                      placeholder={form.nameUz || 'Bo\'sh qolsa asosiy nom ishlatiladi'} className={INPUT_CLS} />
+                  </div>
+                  <label className="mt-5 flex cursor-pointer items-center gap-2">
+                    <input type="checkbox" checked={b.isMain} onChange={(e) => updateBranch(i, { isMain: e.target.checked })}
+                      className="h-4 w-4 rounded border-gray-300 text-primary-600" />
+                    <span className="text-xs font-semibold text-gray-600">Asosiy filial (bosh ofis)</span>
+                  </label>
+                </div>
+              </div>
+            ))}
+          </div>
+
+          <button
+            type="button"
+            onClick={addBranch}
+            className="flex items-center gap-1.5 whitespace-nowrap rounded-xl border border-dashed border-gray-300 px-4 py-2.5 text-sm font-semibold text-gray-600 transition-colors hover:border-primary-300 hover:text-primary-700"
+          >
+            <Plus className="h-4 w-4 shrink-0" strokeWidth={2} /> Filial qo'shish
+          </button>
         </div>
       )}
 
