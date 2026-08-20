@@ -162,9 +162,7 @@ export default function Header() {
             <div className="mb-3 flex flex-col gap-1">
               {[
                 { href: '/',                            Icon: Home,           label: { uz: 'Bosh sahifa',    ru: 'Главная' } },
-                { href: '/search',                      Icon: Search,         label: { uz: 'Qidirish',       ru: 'Поиск' } },
                 { href: '/search?type=COURSE_CENTER',   Icon: PencilLine,     label: { uz: "O'quv markazlar", ru: 'Учебные центры' } },
-                { href: '/search?type=SCHOOL',          Icon: BookOpen,       label: { uz: 'Maktablar',      ru: 'Школы' } },
                 { href: '/match',                       Icon: Target,         label: { uz: 'Menga mosini top', ru: 'Подобрать для меня' } },
               ].map(link => (
                 <Link
