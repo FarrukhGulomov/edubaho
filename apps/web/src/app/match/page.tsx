@@ -311,23 +311,35 @@ export default function MatchPage() {
         {step === 'goal' && (
           <div className="space-y-4">
             <h2 className="text-lg font-bold text-gray-900">{t(lang, ui.qGoal)}</h2>
-            <input
-              type="text"
-              value={goal}
-              onChange={(e) => setGoal(e.target.value)}
-              onKeyDown={(e) => {
-                // Erkin matn kiritilganda Enter — tugma yo'q, shuning uchun
-                // davom etishning yagona yo'li. Tanlangan yo'nalish bo'yicha
-                // hech qanday muassasa topilmasa (heroZeroMatch kabi) o'tkazilmaydi
-                if (e.key === 'Enter' && !(goal.trim() && insights?.matchingCount === 0)) {
-                  e.preventDefault()
-                  setStep('format')
-                }
-              }}
-              placeholder={t(lang, ui.qGoalHint)}
-              maxLength={100}
-              className="input"
-            />
+            <div className="flex items-center gap-2">
+              <input
+                type="text"
+                value={goal}
+                onChange={(e) => setGoal(e.target.value)}
+                onKeyDown={(e) => {
+                  // Erkin matn kiritilganda Enter — pastdagi ko'rinadigan
+                  // tugma bilan bir xil vazifa. Tanlangan yo'nalish bo'yicha
+                  // hech qanday muassasa topilmasa o'tkazilmaydi
+                  if (e.key === 'Enter' && !(goal.trim() && insights?.matchingCount === 0)) {
+                    e.preventDefault()
+                    setStep('format')
+                  }
+                }}
+                placeholder={t(lang, ui.qGoalHint)}
+                maxLength={100}
+                className="input flex-1"
+              />
+              {goal.trim() && (
+                <button
+                  onClick={() => setStep('format')}
+                  disabled={insights?.matchingCount === 0}
+                  aria-label={uz ? 'Davom etish' : 'Продолжить'}
+                  className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-primary-600 text-white transition-colors hover:bg-primary-700 disabled:cursor-not-allowed disabled:bg-gray-200 disabled:text-gray-400"
+                >
+                  <ArrowRight className="h-4 w-4 shrink-0" strokeWidth={2.25} />
+                </button>
+              )}
+            </div>
             {(GOAL_SUGGESTIONS[type] ?? []).length > 0 && (
               <div className="flex flex-wrap gap-2">
                 {(GOAL_SUGGESTIONS[type] ?? []).map((g) => (
