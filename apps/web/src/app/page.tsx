@@ -214,7 +214,7 @@ export default function HomePage() {
           onClick={scrollToPopular}
           aria-label={uz ? 'Pastga o\'tish' : 'Прокрутить вниз'}
           tabIndex={showScrollHint ? 0 : -1}
-          className={`absolute inset-x-0 bottom-1.5 mx-auto flex h-8 w-8 items-center justify-center rounded-full text-gray-300 transition-opacity duration-300 hover:text-primary-500 sm:bottom-2.5 sm:h-9 sm:w-9 ${
+          className={`absolute inset-x-0 bottom-1.5 mx-auto flex h-8 w-8 items-center justify-center rounded-full text-primary-400 transition-colors transition-opacity duration-300 hover:text-primary-600 sm:bottom-2.5 sm:h-9 sm:w-9 ${
             showScrollHint ? 'opacity-100' : 'pointer-events-none opacity-0'
           }`}
         >
