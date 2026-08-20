@@ -150,11 +150,12 @@ export default function HomePage() {
           </p>
 
           {/* EduFit wizard'ining "maqsad" qadami — hero'ning asosiy vidjeti.
-              Tugma yo'q: erkin matn kiritilganda Enter orqali, pastdagi
-              tavsiya pilllari bosilganda esa darhol /match'ga o'tiladi
-              (mos muassasa topilmasa — heroZeroMatch — Enter orqali
-              o'tkazilmaydi, pilllar bu tekshiruvdan mustasno, chunki
-              ular oldindan tekshirilgan aniq yo'nalishlar) */}
+              Pastdagi tavsiya pilllari bosilganda darhol /match'ga o'tiladi.
+              Erkin matn kiritilganda esa Enter YOKI input ichidagi kichik
+              strelka-tugma orqali davom etiladi — oddiy foydalanuvchi
+              Enter haqida bilmasligi mumkin, shuning uchun ko'rinadigan
+              tugma ham kerak (mos muassasa topilmasa — heroZeroMatch —
+              ikkalasi ham bloklanadi) */}
           <div className="mb-3 flex items-center gap-2 rounded-xl border border-gray-200 bg-white p-2 shadow-sm focus-within:border-primary-400">
             <div className="flex min-w-0 flex-1 items-center gap-2 px-2">
               <Sparkles className="h-5 w-5 shrink-0 text-primary-500" strokeWidth={1.75} />
@@ -168,6 +169,16 @@ export default function HomePage() {
                 className="min-w-0 flex-1 bg-transparent py-2 text-base text-gray-900 outline-none placeholder:text-gray-400"
               />
             </div>
+            {heroGoal.trim() && (
+              <button
+                onClick={() => goToMatch()}
+                disabled={heroZeroMatch}
+                aria-label={uz ? 'Davom etish' : 'Продолжить'}
+                className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-primary-600 text-white transition-colors hover:bg-primary-700 disabled:cursor-not-allowed disabled:bg-gray-200 disabled:text-gray-400"
+              >
+                <ArrowRight className="h-4 w-4 shrink-0" strokeWidth={2.25} />
+              </button>
+            )}
           </div>
 
           {/* Real DB'dan hisoblangan live son — soxta statistika emas */}
