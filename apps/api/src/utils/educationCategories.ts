@@ -189,12 +189,46 @@ export const EDUCATION_CATEGORIES: EducationCategoryDef[] = [
       'qayta tayyorlov', 'переквалификация', 'career change', 'retraining',
     ],
   },
+  {
+    // Faqat "Menga mosini top" wizard'idagi "O'quv kurslari" pilli
+    // uchun — foydalanuvchi bilan ANIQLASHTIRILGAN: bu keng, lekin
+    // CHEKSIZ tushuncha EMAS. O'z ichiga OTMga tayyorlov va til
+    // kurslarini oladi, lekin IT/Dizayn/Marketing kabi allaqachon
+    // alohida pilli bor yo'nalishlarni QAMRAB OLMAYDI. Shuning uchun
+    // muassasalarga bu kod hech qachon to'g'ridan-to'g'ri
+    // tayinlanmaydi — faqat GOAL matnini CATEGORY_GROUPS orqali
+    // UNIVERSITY_PREP+LANGUAGES birlashmasiga "tarjima qilish" uchun.
+    code: 'GENERAL_COURSES',
+    labelUz: "O'quv kurslari",
+    labelRu: 'Учебные курсы',
+    reasonUz: "O'quv kurslari mavjud",
+    reasonRu: 'Есть учебные курсы',
+    keywords: ["o'quv kurslari", 'учебные курсы', 'study courses'],
+  },
 ]
 
 const CATEGORY_BY_CODE = new Map(EDUCATION_CATEGORIES.map((d) => [d.code, d]))
 
 export function getCategoryDef(code: string): EducationCategoryDef | undefined {
   return CATEGORY_BY_CODE.get(code)
+}
+
+/**
+ * Ba'zi GOAL qiymatlari bitta aniq toifaga emas, balki bir nechta
+ * toifaning BIRLASHMASIGA ishora qiladi (masalan GENERAL_COURSES —
+ * "O'quv kurslari" — OTMga tayyorlov VA til kurslarini o'z ichiga
+ * oladi). Bu FAQAT goal matnini muassasa toifalariga bog'lashda
+ * ishlatiladi (evaluateGoal) — muassasalarning o'ziga bu "guruh" kodi
+ * hech qachon tayinlanmaydi, faqat haqiqiy a'zo kodlar (masalan
+ * UNIVERSITY_PREP) tayinlanadi.
+ */
+export const CATEGORY_GROUPS: Record<string, string[]> = {
+  GENERAL_COURSES: ['UNIVERSITY_PREP', 'LANGUAGES'],
+}
+
+/** Guruh kodini a'zo kodlarga yoyadi; oddiy kod bo'lsa o'zini qaytaradi */
+export function expandCategoryGroup(code: string): string[] {
+  return CATEGORY_GROUPS[code] ?? [code]
 }
 
 function defMatches(text: string, def: EducationCategoryDef): boolean {

@@ -2,6 +2,7 @@ import type { FastifyInstance } from 'fastify'
 import { z } from 'zod'
 import { computeMatchScore, evaluateGoal, DEFAULT_MIN_MATCH_SCORE, type MatchCandidate } from '../services/matchService'
 import { getCategoryDef } from '../utils/educationCategories'
+import { resolveGoalCategory } from '../services/goalClassifier'
 
 /**
  * POST 🔓 /match — EduFit: shaxsiy moslik bo'yicha tavsiya
@@ -114,12 +115,15 @@ export default async function matchRoutes(fastify: FastifyInstance) {
     const totalInThisType = candidates.length
 
     const hasGoal = !!q.goal?.trim()
+    // So'rov boshida BIR MARTA aniqlanadi (kalit-so'z, zarur bo'lsa AI
+    // fallback) — har bir nomzod uchun qayta hisoblanmaydi
+    const resolvedCategory = hasGoal ? await resolveGoalCategory(q.goal!) : undefined
     const matchedPrograms: string[] = []
     let matchedCategory: { code: string; labelUz: string; labelRu: string } | null = null
 
     const goalFiltered = candidates.filter((c) => {
       if (!hasGoal) return true
-      const ev = evaluateGoal(c as MatchCandidate, q.goal!)
+      const ev = evaluateGoal(c as MatchCandidate, q.goal!, resolvedCategory)
       if (ev.matched) {
         if (ev.matchedProgram && matchedPrograms.length < 5 && !matchedPrograms.includes(ev.matchedProgram)) {
           matchedPrograms.push(ev.matchedProgram)
@@ -241,7 +245,13 @@ export default async function matchRoutes(fastify: FastifyInstance) {
     // muassasa reytingi/joylashuvi qanchalik yaxshi bo'lishidan qat'i
     // nazar natijaga chiqmaydi.
     const hasGoal = !!prefs.goal?.trim()
-    const goalHit = (c: (typeof candidates)[number]) => !hasGoal || evaluateGoal(c as MatchCandidate, prefs.goal!).matched
+    // So'rov boshida BIR MARTA aniqlanadi (kalit-so'z, zarur bo'lsa AI
+    // fallback) — keyin har bir nomzod uchun (shu yerdagi filtrda va
+    // pastroqda computeMatchScore→scoreGoal ichida) qayta ishlatiladi,
+    // qayta klassifikatsiya qilinmaydi
+    const resolvedCategory = hasGoal ? await resolveGoalCategory(prefs.goal!) : undefined
+    const goalHit = (c: (typeof candidates)[number]) =>
+      !hasGoal || evaluateGoal(c as MatchCandidate, prefs.goal!, resolvedCategory).matched
     const goalFiltered = candidates.filter(goalHit)
 
     const inCity = (c: (typeof candidates)[number]) => c.cityId === prefs.cityId
@@ -305,7 +315,7 @@ export default async function matchRoutes(fastify: FastifyInstance) {
           ...c,
           mediaCount: c._count.media,
         }
-        const match = computeMatchScore(candidate, prefs, globalAvg)
+        const match = computeMatchScore(candidate, { ...prefs, resolvedGoalCategory: resolvedCategory }, globalAvg)
         return {
           institution: {
             id: c.id,

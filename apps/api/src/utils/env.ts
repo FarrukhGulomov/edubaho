@@ -56,6 +56,17 @@ const envSchema = z.object({
   R2_BUCKET: z.string().default('bilimon-media'),
   R2_PUBLIC_URL: z.string().default('https://media.bilimon.uz'),
 
+  // ── LLM (maqsad matnini AI orqali tahlil qilish) — ixtiyoriy, bo'sh
+  // bo'lsa faqat kalit-so'z tizimi ishlaydi (AI fallback o'chiq) ──────────
+  // OpenRouter — bitta API orqali ko'plab provayder (Gemini/Claude/OpenAI
+  // va h.k.) modellariga kirish imkonini beradi, shuning uchun boshlang'ich
+  // integratsiya sifatida tanlandi (llm/ papkasi provayderdan mustaqil
+  // interfeys bilan qurilgan — kelajakda to'g'ridan-to'g'ri Anthropic/
+  // Google/OpenAI klientlarini ham qo'shish mumkin, chaqiruvchi kod
+  // o'zgarmaydi)
+  OPENROUTER_API_KEY: z.string().default(''),
+  OPENROUTER_MODEL: z.string().default('google/gemini-2.0-flash-001'),
+
   // ── Referral & Rewards — biznes qoidalari (bitta manba: backend) ────────
   // Har bir ACTIVE USER bo'lgan referral uchun mukofot (so'm)
   REFERRAL_REWARD_UZS: z.coerce.number().int().positive().default(500),

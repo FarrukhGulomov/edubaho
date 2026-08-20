@@ -6,12 +6,12 @@
  * `label` — tugmada ko'rinadigan matn, `value` — bosilganda maqsad
  * maydoniga yoziladigan qidiruv matni. Ko'p hollarda ikkalasi bir xil,
  * lekin masalan "O'quv kurslari" — aniq bitta yo'nalishga emas, balki
- * KENG tushunchaga ishora qiladi (o'zida OTMga tayyorlov, fan kurslari,
- * til kurslari va h.k.ni qamrab oladi), shuning uchun `value: ''`
- * (bo'sh) — bosilganda hech qanday yo'nalish filtri qo'yilmaydi va
- * barcha faol o'quv markazlar ko'rsatiladi. Aks holda (aniq matn bilan
- * qidirilsa) qattiq filtr (matchService.ts) hech qanday kategoriyaga
- * mos kelmagan umumiy iborani "natija yo'q" deb rad etardi.
+ * OTMga tayyorlov VA til kurslari BIRLASHMASIGA ishora qiladi (backendda
+ * GENERAL_COURSES → [UNIVERSITY_PREP, LANGUAGES] guruhi orqali). Bu
+ * BARCHA yo'nalishlarni qamrab oluvchi umumiy tushuncha EMAS — IT,
+ * Dizayn, Marketing kabi allaqachon alohida pilli bor yo'nalishlar
+ * bunga kirmaydi (matchService.ts → evaluateGoal, educationCategories.ts
+ * → CATEGORY_GROUPS).
  */
 export interface GoalSuggestion {
   label: string
@@ -27,7 +27,7 @@ export const GOAL_SUGGESTIONS: Record<string, GoalSuggestion[]> = {
     { label: 'Marketing', value: 'Marketing' },
     { label: 'Tadbirkorlik', value: 'Tadbirkorlik' },
     { label: 'Buxgalteriya', value: 'Buxgalteriya' },
-    { label: "O'quv kurslari", value: '' },
+    { label: "O'quv kurslari", value: "O'quv kurslari" },
     { label: 'Shaxsiy rivojlanish', value: 'Shaxsiy rivojlanish' },
   ],
   SCHOOL: [
