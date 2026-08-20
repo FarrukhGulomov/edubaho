@@ -4,8 +4,8 @@ import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { useState, useEffect } from 'react'
 import {
-  PencilLine, BookOpen, Palette, School, BadgeCheck, Sparkles,
-  MapPin, Users2, UserCheck, Star, ArrowLeftRight, ArrowRight, Lock,
+  BadgeCheck, Sparkles, ChevronDown,
+  MapPin, Users2, UserCheck, Star, ArrowLeftRight, ArrowRight,
 } from 'lucide-react'
 import Header from '@/components/shared/Header'
 import Footer from '@/components/shared/Footer'
@@ -47,16 +47,6 @@ const TYPE_LABELS: Record<string, { uz: string; ru: string }> = {
   ARTS_SCHOOL:     { uz: "San'at",        ru: 'Искусство' },
 }
 
-// Tezkor kategoriya havolalari — endi filtrlashni o'zi qilmaydi, balki
-// yagona katalog sahifasiga (/search) yo'naltiradi (duplikatsiyani oldini olish).
-// MVP doirasida faqat O'quv markaz aktiv — qolganlari disable.
-const QUICK_CATEGORIES = [
-  { type: '',              Icon: School,     uz: 'Barchasi',        ru: 'Все',                disabled: false },
-  { type: 'COURSE_CENTER', Icon: PencilLine, uz: "O'quv markazlar", ru: 'Учебные центры',      disabled: false },
-  { type: 'SCHOOL',        Icon: BookOpen,   uz: 'Maktablar',       ru: 'Школы',               disabled: true },
-  { type: 'KINDERGARTEN',  Icon: Palette,    uz: "Bog'chalar",      ru: 'Детские сады',        disabled: true },
-]
-
 function fmtNum(n: number) { return n.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ' ') }
 function fmtUzs(n: number) { return `${fmtNum(n)} so'm` }
 
@@ -77,6 +67,24 @@ export default function HomePage() {
 
   const { toggle: toggleCompare, isSelected: isCompared } = useCompare()
   const { toggleSave, isSaved } = useSaved()
+
+  // Pastga aylantirish ishorasi — foydalanuvchi scroll boshlagach yo'qoladi
+  // (hero'dan uzoqlashganda ekranni band qilib turmasligi uchun)
+  const [showScrollHint, setShowScrollHint] = useState(true)
+  useEffect(() => {
+    function onScroll() { setShowScrollHint(window.scrollY < 60) }
+    window.addEventListener('scroll', onScroll, { passive: true })
+    return () => window.removeEventListener('scroll', onScroll)
+  }, [])
+
+  function scrollToPopular() {
+    const el = document.getElementById('popular-institutions')
+    if (!el) return
+    // Sticky header balandligini hisobga olib, sarlavha header ostida
+    // "yashirinib" qolmasligi uchun kichik offset qo'shiladi
+    const top = el.getBoundingClientRect().top + window.scrollY - 72
+    window.scrollTo({ top, behavior: 'smooth' })
+  }
 
   const API = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:3001/api/v1'
 
@@ -125,7 +133,7 @@ export default function HomePage() {
              ishlaymiz, shuning uchun tur tanlash qadami olib tashlandi —
              foydalanuvchi darhol maqsadini kiritadi va /match wizard'iga
              formatdan (tur/maqsad allaqachon ma'lum) davom etadi. ── */}
-      <div className="border-b border-gray-200 bg-white px-4 py-8 sm:py-12">
+      <div className="relative border-b border-gray-200 bg-white px-4 pb-12 pt-8 sm:pb-16 sm:pt-12">
         <div className="mx-auto max-w-2xl">
           <div className="mb-1.5 flex items-center justify-center gap-2 text-primary-600">
             <BrandMark size={20} className="shrink-0" />
@@ -191,41 +199,32 @@ export default function HomePage() {
           {/* Ikkinchi qidiruv qutisi olib tashlandi — hero'da yuqorida
               allaqachon maqsad-input mavjud, bitta oynada 2 ta qidiruv
               chalkash edi. Umumiy qidiruv Header navigatsiyasida ("Qidirish")
-              va pastdagi tezkor kategoriyalarda mavjud bo'lib qoladi. */}
-
-          {/* Tezkor kategoriyalar — to'g'ridan-to'g'ri /search'ga yo'naltiradi.
-              MVP: disable qilinganlari ko'rinadi, lekin bosilmaydi. */}
-          <div className="mt-4 flex flex-nowrap justify-center gap-1.5 overflow-x-auto" style={{ scrollbarWidth: 'none' }}>
-            {QUICK_CATEGORIES.map(f => (
-              f.disabled ? (
-                <span
-                  key={f.type}
-                  aria-disabled="true"
-                  title={uz ? 'Tez orada' : 'Скоро'}
-                  className="flex h-9 shrink-0 cursor-not-allowed items-center gap-1.5 whitespace-nowrap rounded-xl bg-gray-50 px-3.5 text-sm font-semibold text-gray-300"
-                >
-                  <f.Icon className="h-4 w-4 shrink-0" strokeWidth={1.75} />
-                  <span>{uz ? f.uz : f.ru}</span>
-                  <Lock className="h-3 w-3 shrink-0" strokeWidth={2} />
-                </span>
-              ) : (
-                <Link
-                  key={f.type}
-                  href={f.type ? `/search?type=${f.type}` : '/search'}
-                  className="flex h-9 shrink-0 items-center gap-1.5 whitespace-nowrap rounded-xl bg-gray-50 px-3.5 text-sm font-semibold text-gray-600 transition-colors hover:bg-gray-100 hover:text-gray-900"
-                >
-                  <f.Icon className="h-4 w-4 shrink-0" strokeWidth={1.75} />
-                  <span>{uz ? f.uz : f.ru}</span>
-                </Link>
-              )
-            ))}
-          </div>
+              orqali mavjud. Tezkor tur-filtri (Barchasi/O'quv markazlar/
+              Maktablar/Bog'chalar) ham olib tashlandi — MVP'da faqat
+              O'quv markaz aktiv, qolganlari qulflangan holda ortiqcha
+              bo'sh joy va chalg'ituvchi ko'rinardi. */}
         </div>
+
+        {/* Pastga aylantirish ishorasi — hero balandligi katta bo'lgani
+            uchun, pastda yana kontent (Ommabop muassasalar) borligini
+            ko'rsatadi. Scroll boshlanishi bilan yo'qoladi (chalg'itmasligi
+            uchun), bosilsa keyingi bo'limga silliq o'tadi. Barcha
+            device'larda ko'rinadi (faqat desktop emas). */}
+        <button
+          onClick={scrollToPopular}
+          aria-label={uz ? 'Pastga o\'tish' : 'Прокрутить вниз'}
+          tabIndex={showScrollHint ? 0 : -1}
+          className={`absolute inset-x-0 bottom-1.5 mx-auto flex h-8 w-8 items-center justify-center rounded-full text-gray-300 transition-opacity duration-300 hover:text-primary-500 sm:bottom-2.5 sm:h-9 sm:w-9 ${
+            showScrollHint ? 'opacity-100' : 'pointer-events-none opacity-0'
+          }`}
+        >
+          <ChevronDown className="h-6 w-6 animate-bounce sm:h-7 sm:w-7" strokeWidth={2} />
+        </button>
       </div>
 
       {/* ── Eng yaxshi baholangan muassasalar — qisqa preview, to'liq
              katalog emas. Filtrlash/saralash/pagination faqat /search'da. ── */}
-      <div className="mx-auto w-full max-w-6xl flex-1 px-4 py-8">
+      <div id="popular-institutions" className="mx-auto w-full max-w-6xl flex-1 px-4 py-8">
         <div className="mb-4 flex items-center justify-between gap-3">
           <h2 className="flex items-center gap-2 text-lg font-bold text-gray-900">
             <Sparkles className="h-5 w-5 shrink-0 text-amber-500" strokeWidth={1.75} />
