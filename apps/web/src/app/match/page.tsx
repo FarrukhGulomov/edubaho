@@ -325,15 +325,15 @@ export default function MatchPage() {
               <div className="flex flex-wrap gap-2">
                 {(GOAL_SUGGESTIONS[type] ?? []).map((g) => (
                   <button
-                    key={g}
-                    onClick={() => setGoal(g)}
+                    key={g.label}
+                    onClick={() => setGoal(g.value)}
                     className={`rounded-full border px-4 py-1.5 text-sm font-semibold transition-colors ${
-                      goal === g
+                      goal === g.value
                         ? 'border-primary-500 bg-primary-600 text-white'
                         : 'border-gray-300 bg-white text-gray-600 hover:border-primary-400'
                     }`}
                   >
-                    {g}
+                    {g.label}
                   </button>
                 ))}
               </div>

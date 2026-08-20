@@ -59,6 +59,7 @@ const SUBJECT_GROUPS: string[][] = [
   [
     'informatika', 'информатика', 'it', 'dasturlash', 'programming',
     'coding', 'kompyuter', 'computer', 'it texnologiyalari', 'программирование',
+    'frontend', 'backend', 'fullstack', 'full-stack', 'dasturchi',
   ],
 
   // ── Adabiyot ──────────────────────────────────────────────────────────────

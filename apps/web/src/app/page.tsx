@@ -183,15 +183,15 @@ export default function HomePage() {
           <div className="mb-6 flex flex-wrap justify-center gap-1.5">
             {(GOAL_SUGGESTIONS.COURSE_CENTER ?? []).map((g) => (
               <button
-                key={g}
-                onClick={() => setHeroGoal(g)}
+                key={g.label}
+                onClick={() => setHeroGoal(g.value)}
                 className={`rounded-full border px-3.5 py-1.5 text-xs font-semibold transition-colors ${
-                  heroGoal === g
+                  heroGoal === g.value
                     ? 'border-primary-500 bg-primary-600 text-white'
                     : 'border-gray-300 bg-white text-gray-600 hover:border-primary-400'
                 }`}
               >
-                {g}
+                {g.label}
               </button>
             ))}
           </div>
