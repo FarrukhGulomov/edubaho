@@ -1,6 +1,7 @@
 'use client'
 
 import Link from 'next/link'
+import Image from 'next/image'
 import { useEffect, useRef, useState } from 'react'
 import {
   ChevronRight, MapPin, BadgeCheck, Sparkles, Lock, BookOpen, Trophy,
@@ -418,6 +419,53 @@ export default function InstitutionDetail({ inst }: { inst: Institution }) {
 
           {/* ── Left column ─── */}
           <div className="lg:col-span-2 space-y-4">
+
+            {/* ════════════════════════════════════════
+                0. RASMLAR — Photo gallery
+                ════════════════════════════════════════ */}
+            {inst.media && inst.media.length > 0 && (() => {
+              const extraThumbs = inst.media.slice(1, 5)
+              const extraCount = inst.media.length - 5
+              return (
+                <div className="flex gap-1.5 overflow-hidden rounded-2xl" style={{ height: '320px' }}>
+                  <div className="relative h-full flex-1">
+                    <Image
+                      src={inst.media[0].url}
+                      alt={displayName}
+                      fill
+                      sizes="(max-width: 640px) 100vw, 50vw"
+                      priority
+                      className="object-cover"
+                    />
+                  </div>
+                  {/* Qo'shimcha rasmlar — flex ustun, sonidan qat'i nazar (1-4 ta)
+                      bo'sh joy qoldirmasdan barobar taqsimlanadi */}
+                  {extraThumbs.length > 0 && (
+                    <div className="hidden h-full w-64 shrink-0 flex-col gap-1.5 sm:flex">
+                      {extraThumbs.map((m, i) => {
+                        const isLast = i === extraThumbs.length - 1
+                        return (
+                          <div key={m.id} className="relative flex-1">
+                            <Image
+                              src={m.thumbnailUrl || m.url}
+                              alt={m.caption || `${displayName} — ${i + 2}`}
+                              fill
+                              sizes="256px"
+                              className="object-cover"
+                            />
+                            {isLast && extraCount > 0 && (
+                              <div className="absolute inset-0 flex items-center justify-center bg-black/50 text-lg font-bold text-white">
+                                +{extraCount}
+                              </div>
+                            )}
+                          </div>
+                        )
+                      })}
+                    </div>
+                  )}
+                </div>
+              )
+            })()}
 
             {/* ════════════════════════════════════════
                 1. YO'NALISHLAR — Programs & Specializations

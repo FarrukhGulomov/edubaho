@@ -7,6 +7,9 @@ import { notifyUser } from '../../services/notify'
 import { logAdminAction } from '../../services/auditLog'
 import { normalizeInstitutionName } from '../../utils/normalizeName'
 import { mergeInstitutions } from '../../services/mergeInstitutionService'
+import { isStorageConfigured, uploadImage, deleteImage, keyFromPublicUrl } from '../../services/storageService'
+import sharp from 'sharp'
+import { randomUUID } from 'crypto'
 
 /**
  * `nameUz` bo'yicha (normallashtirilgan `nameKey` orqali) takroriy
@@ -299,6 +302,11 @@ export default async function adminInstitutionRoutes(fastify: FastifyInstance) {
         branches: {
           orderBy: [{ isMain: 'desc' }, { createdAt: 'asc' }],
           include: { city: { select: { id: true, nameUz: true, nameRu: true } } },
+        },
+        media: {
+          where: { type: 'IMAGE' },
+          orderBy: { sortOrder: 'asc' },
+          select: { id: true, url: true, thumbnailUrl: true },
         },
       },
     })
@@ -681,4 +689,126 @@ export default async function adminInstitutionRoutes(fastify: FastifyInstance) {
       return reply.status(500).send({ error: 'Birlashtirishda xatolik yuz berdi' })
     }
   })
+
+  // ─────────────────────────────────────────────
+  // POST /admin/institutions/:id/media — rasm yuklash
+  // ─────────────────────────────────────────────
+
+  const ALLOWED_IMAGE_MIME = new Set(['image/jpeg', 'image/png', 'image/webp', 'image/gif'])
+  const MAX_PHOTOS_PER_INSTITUTION = 20
+
+  fastify.post<{ Params: { id: string } }>('/admin/institutions/:id/media', async (request, reply) => {
+    const { id } = request.params
+
+    if (!isStorageConfigured()) {
+      return reply.status(503).send({
+        error: "Rasm saqlash xizmati sozlanmagan (Cloudflare R2). Serverga R2_* muhit o'zgaruvchilarini qo'shing.",
+      })
+    }
+
+    const institution = await prisma.institution.findUnique({ where: { id }, select: { id: true, nameUz: true } })
+    if (!institution) return reply.status(404).send({ error: 'Muassasa topilmadi' })
+
+    const existingCount = await prisma.institutionMedia.count({ where: { institutionId: id } })
+    if (existingCount >= MAX_PHOTOS_PER_INSTITUTION) {
+      return reply.status(400).send({ error: `Ko'pi bilan ${MAX_PHOTOS_PER_INSTITUTION} ta rasm yuklash mumkin` })
+    }
+
+    const created: { id: string; url: string; thumbnailUrl: string | null }[] = []
+    const warnings: string[] = []
+    let sortOrder = existingCount
+
+    try {
+      // Bir nechta fayl bitta so'rovda kelishi mumkin (multipart/form-data)
+      for await (const part of request.files()) {
+        if (existingCount + created.length >= MAX_PHOTOS_PER_INSTITUTION) break
+
+        if (!ALLOWED_IMAGE_MIME.has(part.mimetype)) {
+          warnings.push(`${part.filename}: qo'llab-quvvatlanmaydigan fayl turi`)
+          continue
+        }
+
+        const raw = await part.toBuffer()
+
+        // Katta original o'rniga optimallashtirilgan WebP + kichik thumbnail —
+        // sahifa yuklanish tezligi (Core Web Vitals) uchun muhim: rasmsiz
+        // sahifa qanchalik yomon bo'lsa, og'ir, optimallashtirilmagan
+        // rasm ham xuddi shunday zarar keltiradi.
+        let optimized: Buffer
+        let thumb: Buffer
+        try {
+          optimized = await sharp(raw).rotate().resize({ width: 1600, withoutEnlargement: true }).webp({ quality: 82 }).toBuffer()
+          thumb = await sharp(raw).rotate().resize({ width: 480, withoutEnlargement: true }).webp({ quality: 75 }).toBuffer()
+        } catch {
+          warnings.push(`${part.filename}: rasm sifatida o'qib bo'lmadi`)
+          continue
+        }
+
+        const uid = randomUUID()
+        const [url, thumbnailUrl] = await Promise.all([
+          uploadImage(optimized, `institutions/${id}/${uid}.webp`, 'image/webp'),
+          uploadImage(thumb, `institutions/${id}/${uid}-thumb.webp`, 'image/webp'),
+        ])
+
+        const media = await prisma.institutionMedia.create({
+          data: { institutionId: id, url, thumbnailUrl, type: 'IMAGE', sortOrder },
+        })
+        sortOrder++
+        created.push({ id: media.id, url: media.url, thumbnailUrl: media.thumbnailUrl })
+      }
+    } catch (err) {
+      fastify.log.error(err, 'Rasm yuklashda xato')
+      return reply.status(500).send({ error: 'Rasm yuklashda xatolik yuz berdi' })
+    }
+
+    if (created.length === 0) {
+      return reply.status(400).send({ error: warnings[0] ?? 'Hech qanday rasm yuklanmadi' })
+    }
+
+    logAdminAction(prisma, request, {
+      action: 'institution.media_upload',
+      entityType: 'Institution',
+      entityId: id,
+      entityLabel: institution.nameUz,
+      after: { uploaded: created.length },
+    })
+
+    return reply.status(201).send({ data: created, warnings: warnings.length > 0 ? warnings : undefined })
+  })
+
+  // ─────────────────────────────────────────────
+  // DELETE /admin/institutions/:id/media/:mediaId
+  // ─────────────────────────────────────────────
+
+  fastify.delete<{ Params: { id: string; mediaId: string } }>(
+    '/admin/institutions/:id/media/:mediaId',
+    async (request, reply) => {
+      const { id, mediaId } = request.params
+
+      const media = await prisma.institutionMedia.findUnique({ where: { id: mediaId } })
+      if (!media || media.institutionId !== id) {
+        return reply.status(404).send({ error: 'Rasm topilmadi' })
+      }
+
+      const key = keyFromPublicUrl(media.url)
+      const thumbKey = media.thumbnailUrl ? keyFromPublicUrl(media.thumbnailUrl) : null
+
+      await prisma.institutionMedia.delete({ where: { id: mediaId } })
+
+      if (isStorageConfigured()) {
+        await Promise.all([
+          key ? deleteImage(key).catch((err) => fastify.log.warn(err, "R2 rasm o'chirishda xato")) : Promise.resolve(),
+          thumbKey ? deleteImage(thumbKey).catch((err) => fastify.log.warn(err, "R2 thumbnail o'chirishda xato")) : Promise.resolve(),
+        ])
+      }
+
+      logAdminAction(prisma, request, {
+        action: 'institution.media_delete',
+        entityType: 'Institution',
+        entityId: id,
+      })
+
+      return reply.send({ message: "Rasm o'chirildi" })
+    },
+  )
 }

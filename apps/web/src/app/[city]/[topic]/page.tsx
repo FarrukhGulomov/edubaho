@@ -37,6 +37,38 @@ function findTopic(slug: string): Topic | null {
   return TOPICS.find(t => t.slug === slug) ?? null
 }
 
+// Natija shu sondan kam bo'lsa sahifa "yupqa kontent" hisoblanadi — Google
+// indeksiga taqdim etilmaydi (robots: noindex), lekin foydalanuvchiga
+// normal ko'rsatiladi (404 emas — ichki navigatsiya orqali kelishi mumkin).
+// Ko'plab shunday sahifa to'planib qolsa, butun domenning sifat signaliga
+// salbiy ta'sir qiladi (audit: "TOPILMA — B").
+const MIN_RESULTS_FOR_INDEX = 3
+
+async function fetchResults(cityId: string, topicTerm: string) {
+  const searchParams: Record<string, string> = { cityId, q: topicTerm, sortBy: 'value' }
+  const query = new URLSearchParams(searchParams).toString()
+
+  let institutions: InstitutionCard[] = []
+  let meta = { total: 0, page: 1, limit: 20, totalPages: 0 }
+
+  try {
+    // 30 daqiqalik ISR cache — bu asosiy organik trafik (SEO landing)
+    // sahifasi, har so'rovda qayta hisoblash TTFB'ni keraksiz sekinlashtiradi.
+    // generateMetadata va sahifa komponenti bir xil URL bilan chaqirgani
+    // uchun Next.js buni bitta so'rovga birlashtiradi (fetch dedupe).
+    const res = await fetch(`${API}/institutions?${query}`, { next: { revalidate: 1800 } })
+    if (res.ok) {
+      const data = await res.json()
+      institutions = data.data
+      meta = data.meta
+    }
+  } catch {
+    // API ishlamasa bo'sh natija bilan davom etamiz
+  }
+
+  return { institutions, meta, searchParams }
+}
+
 export async function generateMetadata({
   params,
 }: {
@@ -50,6 +82,8 @@ export async function generateMetadata({
     return { title: 'BilimOn' }
   }
 
+  const { meta } = await fetchResults(city.id, topic.term)
+
   const title = `${topic.labelUz} — ${city.nameUz} | BilimOn`
   const description = `${city.nameUz}dagi eng yaxshi ${topic.labelUz.toLowerCase()}. ${topic.descUz}`
   const url = `${SITE_URL}/${citySlug}/${topicSlug}`
@@ -59,6 +93,7 @@ export async function generateMetadata({
     description,
     alternates: { canonical: url },
     openGraph: { title, description, url, type: 'website', siteName: 'BilimOn' },
+    ...(meta.total < MIN_RESULTS_FOR_INDEX ? { robots: { index: false, follow: true } } : {}),
   }
 }
 
@@ -75,30 +110,16 @@ export default async function CityTopicPage({
   const city = await resolveCity(citySlug)
   if (!city) notFound()
 
-  const searchParams: Record<string, string> = {
-    cityId: city.id,
-    q: topic.term,
-    sortBy: 'value',
-  }
-  const query = new URLSearchParams(searchParams).toString()
-
-  let institutions: InstitutionCard[] = []
-  let meta = { total: 0, page: 1, limit: 20, totalPages: 0 }
-
-  try {
-    // 30 daqiqalik ISR cache — bu asosiy organik trafik (SEO landing)
-    // sahifasi, har so'rovda qayta hisoblash TTFB'ni keraksiz sekinlashtiradi
-    const res = await fetch(`${API}/institutions?${query}`, { next: { revalidate: 1800 } })
-    if (res.ok) {
-      const data = await res.json()
-      institutions = data.data
-      meta = data.meta
-    }
-  } catch {
-    // API ishlamasa bo'sh natija bilan davom etamiz
-  }
+  const { institutions, meta, searchParams } = await fetchResults(city.id, topic.term)
 
   const pageUrl = `${SITE_URL}/${citySlug}/${topicSlug}`
+
+  // Har bir shahar uchun BIR XIL shablon matn o'rniga — shahar nomi va
+  // haqiqiy natija soni bilan to'qilgan noyob kirish gapi (audit: "TOPILMA — B",
+  // shablon takrorlanishi "yupqa kontent" xavfini oshiradi)
+  const introText = meta.total > 0
+    ? `${city.nameUz}da ${meta.total} ta ${topic.labelUz.toLowerCase()} topildi. ${topic.descUz}`
+    : `${city.nameUz}da hozircha ${topic.labelUz.toLowerCase()} ro'yxatga olinmagan — boshqa shahar yoki yo'nalishni sinab ko'ring.`
   const jsonLd = [
     breadcrumbSchema([
       { name: 'BilimOn', url: SITE_URL },
@@ -124,7 +145,7 @@ export default async function CityTopicPage({
         <h1 className="text-2xl font-bold text-gray-900 sm:text-3xl">
           {city.nameUz} — {topic.labelUz}
         </h1>
-        <p className="mt-1.5 max-w-2xl text-gray-500">{topic.descUz}</p>
+        <p className="mt-1.5 max-w-2xl text-gray-500">{introText}</p>
       </div>
       <SearchResults institutions={institutions} meta={meta} params={searchParams} />
       <Footer />

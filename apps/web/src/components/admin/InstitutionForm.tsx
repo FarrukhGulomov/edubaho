@@ -2,10 +2,11 @@
 
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
+import Image from 'next/image'
 import {
   ClipboardList, Phone, Info, Wallet, AlertCircle, BookOpen, Target,
   Clock, Trophy, ChevronLeft, ChevronRight, CheckCircle2, CalendarCheck, ChevronDown,
-  Search, MapPin, Star, Sparkles, Building2, Plus, X,
+  Search, MapPin, Star, Sparkles, Building2, Plus, X, Images, Upload,
 } from 'lucide-react'
 
 const API = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:3001/api/v1'
@@ -147,27 +148,46 @@ const EMPTY: InstitutionFormData = {
   branches: [],
 }
 
-const TABS = [
+const BASE_TABS = [
   { id: 'main',     label: 'Asosiy',    Icon: ClipboardList },
   { id: 'contact',  label: 'Aloqa',     Icon: Phone },
   { id: 'details',  label: 'Batafsil',  Icon: Info },
   { id: 'branches', label: 'Filiallar', Icon: Building2 },
   { id: 'pricing',  label: 'Narx',      Icon: Wallet },
 ]
+// Rasmlar bo'limi faqat tahrirlashda ko'rinadi — rasm yuklash uchun
+// muassasa avval saqlangan (ID mavjud) bo'lishi kerak
+const EDIT_ONLY_TABS = [
+  { id: 'photos', label: 'Rasmlar', Icon: Images },
+]
+
+export interface PhotoData {
+  id: string
+  url: string
+  thumbnailUrl: string | null
+}
 
 interface Props {
   initialData?: Partial<InstitutionFormData>
   institutionId?: string   // set when editing
   mode: 'create' | 'edit'
+  initialPhotos?: PhotoData[]
 }
 
-export default function InstitutionForm({ initialData, institutionId, mode }: Props) {
+export default function InstitutionForm({ initialData, institutionId, mode, initialPhotos }: Props) {
   const router = useRouter()
+  const TABS = mode === 'edit' ? [...BASE_TABS, ...EDIT_ONLY_TABS] : BASE_TABS
   const [tab, setTab] = useState('main')
   const [form, setForm] = useState<InstitutionFormData>({ ...EMPTY, ...initialData })
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
   const [success, setSuccess] = useState('')
+
+  // Rasmlar — alohida endpoint orqali boshqariladi (institution.create/update
+  // JSON tanasidan mustaqil, chunki fayl yuklash multipart/form-data talab qiladi)
+  const [photos, setPhotos] = useState<PhotoData[]>(initialPhotos ?? [])
+  const [photoUploading, setPhotoUploading] = useState(false)
+  const [photoError, setPhotoError] = useState('')
 
   // Admin Import Yordamchisi (Google Places) — faqat yangi muassasa
   // qo'shishda, nom/manzil/koordinata/telefonni qo'lda kiritish o'rniga
@@ -201,6 +221,56 @@ export default function InstitutionForm({ initialData, institutionId, mode }: Pr
   }
   function removeBranch(index: number) {
     set('branches', form.branches.filter((_, i) => i !== index))
+  }
+
+  async function handlePhotoUpload(files: FileList | null) {
+    if (!files || files.length === 0 || !institutionId) return
+    setPhotoUploading(true)
+    setPhotoError('')
+    const token = localStorage.getItem('accessToken')
+    const body = new FormData()
+    Array.from(files).forEach((f) => body.append('file', f))
+    try {
+      const res = await fetch(`${API}/admin/institutions/${institutionId}/media`, {
+        method: 'POST',
+        headers: { Authorization: `Bearer ${token}`, 'ngrok-skip-browser-warning': '1' },
+        body,
+      })
+      const data = await res.json()
+      if (!res.ok) throw new Error(data.error ?? 'Rasm yuklashda xatolik')
+      setPhotos((prev) => [...prev, ...(data.data as PhotoData[])])
+      if (data.warnings?.length) setPhotoError(data.warnings.join(', '))
+    } catch (err) {
+      setPhotoError(err instanceof Error ? err.message : 'Rasm yuklashda xatolik yuz berdi')
+    } finally {
+      setPhotoUploading(false)
+    }
+  }
+
+  async function handlePhotoDelete(photoId: string) {
+    if (!institutionId) return
+    const token = localStorage.getItem('accessToken')
+    setPhotos((prev) => prev.filter((p) => p.id !== photoId))
+    try {
+      const res = await fetch(`${API}/admin/institutions/${institutionId}/media/${photoId}`, {
+        method: 'DELETE',
+        headers: { Authorization: `Bearer ${token}`, 'ngrok-skip-browser-warning': '1' },
+      })
+      if (!res.ok) {
+        const data = await res.json()
+        throw new Error(data.error ?? "O'chirishda xatolik")
+      }
+    } catch (err) {
+      setPhotoError(err instanceof Error ? err.message : "Rasmni o'chirishda xatolik yuz berdi")
+      // Muvaffaqiyatsiz bo'lsa ro'yxatga qaytarib qo'yamiz
+      if (institutionId) {
+        fetch(`${API}/admin/institutions/${institutionId}`, {
+          headers: { Authorization: `Bearer ${token}`, 'ngrok-skip-browser-warning': '1' },
+        }).then((r) => r.json()).then((d) => {
+          if (d.data?.media) setPhotos(d.data.media)
+        }).catch(() => {})
+      }
+    }
   }
 
   /** O'zbek nomdan avtomatik slug yaratish */
@@ -335,7 +405,10 @@ export default function InstitutionForm({ initialData, institutionId, mode }: Pr
 
       setSuccess(mode === 'create' ? 'Muassasa yaratildi!' : 'Muassasa yangilandi!')
       if (mode === 'create') {
-        setTimeout(() => router.push('/admin/institutions'), 1200)
+        // Rasm qo'shish uchun to'g'ridan-to'g'ri tahrirlash sahifasiga o'tamiz
+        // (yangi yaratilgan muassasa ID'si endi mavjud)
+        const newId = data.data?.id as string | undefined
+        setTimeout(() => router.push(newId ? `/admin/institutions/${newId}/edit` : '/admin/institutions'), 1200)
       }
     } catch (err: unknown) {
       setError(err instanceof Error ? err.message : 'Xatolik yuz berdi')
@@ -862,6 +935,79 @@ export default function InstitutionForm({ initialData, institutionId, mode }: Pr
           >
             <Plus className="h-4 w-4 shrink-0" strokeWidth={2} /> Filial qo'shish
           </button>
+        </div>
+      )}
+
+      {/* ── TAB: RASMLAR ── */}
+      {tab === 'photos' && mode === 'edit' && (
+        <div className="space-y-4">
+          <div className="rounded-xl border border-primary-100 bg-primary-50/40 p-4">
+            <p className="flex items-center gap-1.5 text-sm font-semibold text-gray-800">
+              <Images className="h-4 w-4 shrink-0 text-primary-600" strokeWidth={1.75} /> Muassasa rasmlari
+            </p>
+            <p className="mt-1 text-xs text-gray-500">
+              Birinchi rasm qidiruv natijalarida asosiy (muqova) surat sifatida ko'rsatiladi. Yaxshi
+              yoritilgan, sinf/o'quv jarayoni haqiqiy suratlari eng katta ishonch uyg'otadi.
+            </p>
+          </div>
+
+          <label className="flex cursor-pointer flex-col items-center justify-center gap-2 rounded-xl border-2 border-dashed border-gray-300 px-4 py-8 text-center transition-colors hover:border-primary-300 hover:bg-primary-50/30">
+            <input
+              type="file"
+              accept="image/jpeg,image/png,image/webp,image/gif"
+              multiple
+              disabled={photoUploading}
+              onChange={(e) => { handlePhotoUpload(e.target.files); e.target.value = '' }}
+              className="hidden"
+            />
+            {photoUploading ? (
+              <>
+                <div className="h-6 w-6 animate-spin rounded-full border-2 border-primary-200 border-t-primary-600" />
+                <span className="text-sm font-semibold text-gray-500">Yuklanmoqda...</span>
+              </>
+            ) : (
+              <>
+                <Upload className="h-6 w-6 shrink-0 text-gray-400" strokeWidth={1.75} />
+                <span className="text-sm font-semibold text-gray-700">Rasm tanlash uchun bosing</span>
+                <span className="text-xs text-gray-400">JPEG, PNG, WebP, GIF — har biri 5 MB gacha</span>
+              </>
+            )}
+          </label>
+
+          {photoError && (
+            <p className="flex items-start gap-1.5 text-xs font-medium text-red-600">
+              <AlertCircle className="mt-0.5 h-3.5 w-3.5 shrink-0" strokeWidth={2} /> {photoError}
+            </p>
+          )}
+
+          {photos.length > 0 && (
+            <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
+              {photos.map((p, i) => (
+                <div key={p.id} className="group relative aspect-square overflow-hidden rounded-xl border border-gray-200 bg-gray-50">
+                  <Image
+                    src={p.thumbnailUrl || p.url}
+                    alt=""
+                    fill
+                    sizes="200px"
+                    className="object-cover"
+                  />
+                  {i === 0 && (
+                    <span className="absolute left-1.5 top-1.5 rounded-lg bg-primary-600 px-2 py-0.5 text-[11px] font-semibold text-white shadow-sm">
+                      Muqova
+                    </span>
+                  )}
+                  <button
+                    type="button"
+                    onClick={() => handlePhotoDelete(p.id)}
+                    aria-label="Rasmni o'chirish"
+                    className="absolute right-1.5 top-1.5 flex h-6 w-6 items-center justify-center rounded-full bg-black/60 text-white opacity-0 transition-opacity hover:bg-black/80 group-hover:opacity-100"
+                  >
+                    <X className="h-3.5 w-3.5 shrink-0" strokeWidth={2.5} />
+                  </button>
+                </div>
+              ))}
+            </div>
+          )}
         </div>
       )}
 

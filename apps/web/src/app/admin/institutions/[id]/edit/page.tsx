@@ -7,7 +7,7 @@ import { useAuth } from '@/hooks/useAuth'
 import { useRouter, useParams } from 'next/navigation'
 import { useEffect, useState } from 'react'
 import InstitutionForm from '@/components/admin/InstitutionForm'
-import type { InstitutionFormData } from '@/components/admin/InstitutionForm'
+import type { InstitutionFormData, PhotoData } from '@/components/admin/InstitutionForm'
 
 const API = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:3001/api/v1'
 
@@ -176,6 +176,7 @@ export default function EditInstitutionPage() {
   const { id } = useParams<{ id: string }>()
 
   const [initialData, setInitialData] = useState<Partial<InstitutionFormData> | null>(null)
+  const [initialPhotos, setInitialPhotos] = useState<PhotoData[]>([])
   const [instName, setInstName] = useState('')
   const [fetchError, setFetchError] = useState('')
 
@@ -192,6 +193,7 @@ export default function EditInstitutionPage() {
         if (d.error) { setFetchError(d.error); return }
         const inst = d.data
         setInstName(inst.nameUz)
+        setInitialPhotos(inst.media ?? [])
         // API javobini form formatiga moslashtirish
         setInitialData({
           nameUz:        inst.nameUz        ?? '',
@@ -320,6 +322,7 @@ export default function EditInstitutionPage() {
                 mode="edit"
                 institutionId={id}
                 initialData={initialData}
+                initialPhotos={initialPhotos}
               />
             </div>
             <MergePanel id={id} instName={instName} />

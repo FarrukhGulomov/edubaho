@@ -11,6 +11,7 @@ import Header from '@/components/shared/Header'
 import Footer from '@/components/shared/Footer'
 import BrandMark from '@/components/shared/BrandMark'
 import { RatingHint } from '@/components/shared/StarRating'
+import InstitutionCoverImage from '@/components/shared/InstitutionCoverImage'
 import { useLang, t } from '@/contexts/LangContext'
 import { useCompare, useSaved } from '@/hooks/useCompare'
 import { matchApi, type MatchInsights } from '@/lib/api'
@@ -26,6 +27,7 @@ interface InstCard {
   reviewCount: number
   isVerified: boolean
   city?: { nameUz: string; nameRu?: string }
+  media?: { url: string; thumbnailUrl?: string | null }[]
   pricing?: { monthlyMin?: number }
   details?: {
     studentCount?: number | null
@@ -271,6 +273,12 @@ export default function HomePage() {
 
               return (
                 <div key={inst.id} className="group card flex flex-col p-0">
+                  <InstitutionCoverImage
+                    media={inst.media}
+                    type={inst.type}
+                    name={name}
+                    className="aspect-[16/10] w-full rounded-t-2xl"
+                  />
                   {/* Karta tanasi */}
                   <Link href={`/institutions/${inst.slug}`} className="flex flex-1 flex-col p-4 pb-0">
                     {/* Tur + status teglar */}
