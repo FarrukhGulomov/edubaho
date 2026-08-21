@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef } from 'react'
 import Link from 'next/link'
-import { Star, PencilLine, ArrowLeftRight, Smartphone, AlertCircle, CheckCircle2, Send } from 'lucide-react'
+import { Star, PencilLine, ArrowLeftRight, Smartphone, AlertCircle, CheckCircle2, Send, ShieldCheck } from 'lucide-react'
 import { authApi } from '@/lib/api'
 import { useLang, t } from '@/contexts/LangContext'
 import { authTrack } from '@/lib/analytics'
@@ -229,7 +229,7 @@ export default function AuthPage() {
         },
       })
       window.google.accounts.id.renderButton(googleRef.current, {
-        theme: 'outline', size: 'large', shape: 'pill', width: 280,
+        theme: 'outline', size: 'large', shape: 'pill', width: 296,
       })
     }
 
@@ -270,6 +270,9 @@ export default function AuthPage() {
     termsLink:  { uz: 'foydalanish shartlari', ru: 'условиями использования' },
     termsEnd:   { uz: 'ga rozilik bildirasiz', ru: '' },
     orDivider:  { uz: 'yoki', ru: 'или' },
+    quickLogin: { uz: 'Bir bosishda kiring', ru: 'Войдите в один клик' },
+    noPassword: { uz: "Parol kerak emas — Telegram yoki Google orqali", ru: 'Без пароля — через Telegram или Google' },
+    trustBadge: { uz: "Ma'lumotlaringiz xavfsiz saqlanadi", ru: 'Ваши данные надёжно защищены' },
     benefits: [
       { Icon: Star,           uz: 'Muassasalarni saqlang', ru: 'Сохраняйте учреждения' },
       { Icon: PencilLine,     uz: 'Sharh yozing',           ru: 'Оставляйте отзывы' },
@@ -344,27 +347,45 @@ export default function AuthPage() {
     <div className="flex min-h-screen bg-gray-50">
 
       {/* Left panel — desktop only */}
-      <div className="hidden lg:flex lg:w-1/2 flex-col items-center justify-center bg-primary-700 px-12 text-white">
-        <Link href="/" className="mb-8 flex items-center justify-center">
-          <Logo size={52} inverted />
-        </Link>
-        <h2 className="mb-3 text-2xl font-bold text-center leading-snug">
-          {t(lang, ui.title)}
-        </h2>
-        <p className="mb-10 text-primary-200 text-center">
-          {t(lang, { uz: "O'zbekiston ta'lim muassasalari — bir joyda", ru: 'Учебные заведения Узбекистана — в одном месте' })}
-        </p>
-        <div className="w-full space-y-3">
-          {ui.benefits.map((b) => (
-            <div key={b.uz} className="flex items-center gap-3 rounded-xl border border-white/15 bg-white/5 px-5 py-3.5">
-              <b.Icon className="h-5 w-5 shrink-0" strokeWidth={1.75} />
-              <span className="font-semibold">{lang === 'uz' ? b.uz : b.ru}</span>
-            </div>
-          ))}
+      <div className="relative hidden lg:flex lg:w-1/2 flex-col items-center justify-center overflow-hidden bg-gradient-to-br from-primary-800 via-primary-700 to-primary-900 px-12 text-white">
+        {/* Decorative glow orbs */}
+        <div className="pointer-events-none absolute -left-20 -top-20 h-72 w-72 animate-float-slow rounded-full bg-primary-400/30 blur-3xl" />
+        <div className="pointer-events-none absolute -right-16 top-1/3 h-64 w-64 animate-float-delay rounded-full bg-sky-300/20 blur-3xl" />
+        <div className="pointer-events-none absolute -bottom-24 left-1/4 h-80 w-80 animate-float rounded-full bg-primary-500/25 blur-3xl" />
+        {/* Subtle dot grid texture */}
+        <div
+          className="pointer-events-none absolute inset-0 opacity-[0.06]"
+          style={{ backgroundImage: 'radial-gradient(circle, white 1px, transparent 1px)', backgroundSize: '26px 26px' }}
+        />
+
+        <div className="relative z-10 flex w-full max-w-sm flex-col items-center">
+          <Link href="/" className="mb-10 flex items-center justify-center">
+            <Logo size={52} inverted />
+          </Link>
+          <h2 className="mb-3 text-center text-3xl font-bold leading-snug tracking-tight">
+            {t(lang, ui.title)}
+          </h2>
+          <p className="mb-10 text-center text-primary-100/90">
+            {t(lang, { uz: "O'zbekiston ta'lim muassasalari — bir joyda", ru: 'Учебные заведения Узбекистана — в одном месте' })}
+          </p>
+          <div className="w-full space-y-3">
+            {ui.benefits.map((b) => (
+              <div
+                key={b.uz}
+                className="flex items-center gap-3.5 rounded-2xl border border-white/10 bg-white/[0.07] px-5 py-4 backdrop-blur-sm transition-colors hover:bg-white/[0.12]"
+              >
+                <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-white/15 ring-1 ring-white/20">
+                  <b.Icon className="h-5 w-5" strokeWidth={1.75} />
+                </span>
+                <span className="font-semibold">{lang === 'uz' ? b.uz : b.ru}</span>
+              </div>
+            ))}
+          </div>
+          <div className="mt-10 flex items-center gap-2 rounded-full border border-white/15 bg-white/5 px-4 py-2 text-xs font-medium text-primary-100">
+            <ShieldCheck className="h-3.5 w-3.5 shrink-0" strokeWidth={2} />
+            {t(lang, { uz: 'Telegram yoki Google — parol kerak emas', ru: 'Telegram или Google — без пароля' })}
+          </div>
         </div>
-        <p className="mt-10 text-xs text-primary-300">
-          {t(lang, { uz: 'Telegram yoki Google — parol kerak emas', ru: 'Telegram или Google — без пароля' })}
-        </p>
       </div>
 
       {/* Right panel — form */}
@@ -380,14 +401,14 @@ export default function AuthPage() {
 
           {/* Lang toggle */}
           <div className="mb-6 flex justify-center">
-            <div className="flex rounded-xl border border-gray-200 bg-white p-1">
+            <div className="flex rounded-full border border-gray-200 bg-white p-1 shadow-sm">
               {(['uz', 'ru'] as const).map((l) => (
                 <button
                   key={l}
                   onClick={() => setLang(l)}
-                  className={`rounded-lg px-5 py-2 text-sm font-semibold transition-colors ${
+                  className={`rounded-full px-5 py-2 text-sm font-semibold transition-colors ${
                     lang === l
-                      ? 'bg-primary-600 text-white'
+                      ? 'bg-primary-600 text-white shadow-sm'
                       : 'text-gray-500 hover:text-gray-700'
                   }`}
                 >
@@ -397,7 +418,9 @@ export default function AuthPage() {
             </div>
           </div>
 
-          <div className="rounded-2xl border border-gray-200 bg-white p-8 shadow-sm">
+          <div className="animate-slide-up relative overflow-hidden rounded-3xl border border-gray-100 bg-white p-8 shadow-xl shadow-gray-900/[0.04]">
+            <div className="absolute inset-x-0 top-0 h-1 bg-gradient-to-r from-primary-500 via-sky-400 to-primary-600" />
+
             <div className="mb-6 text-center">
               <h1 className="text-xl font-bold text-gray-900">
                 {step === 'done'
@@ -406,6 +429,9 @@ export default function AuthPage() {
                   ? t(lang, ui.otpSub)
                   : t(lang, ui.subtitle)}
               </h1>
+              {step === 'phone' && (
+                <p className="mt-1.5 text-sm text-gray-400">{t(lang, ui.noPassword)}</p>
+              )}
             </div>
 
             {/* ── Phone step ── */}
@@ -415,13 +441,13 @@ export default function AuthPage() {
                 {/* Rozilik checkbox — ma'lumotlarning tanlangan ta'lim
                     muassasalariga uzatilishi haqida aniq va oldindan rozilik
                     (implicit "davom etish orqali roziman" emas) */}
-                <div className="flex items-start gap-2.5 rounded-xl bg-gray-50 px-3.5 py-3 text-xs leading-relaxed text-gray-600">
+                <div className="flex items-start gap-2.5 rounded-2xl border border-gray-200 bg-gray-50/70 px-4 py-3.5 text-xs leading-relaxed text-gray-600">
                   <input
                     id="consent-checkbox"
                     type="checkbox"
                     checked={consentChecked}
                     onChange={(e) => setConsentChecked(e.target.checked)}
-                    className="mt-0.5 h-4 w-4 shrink-0 rounded border-gray-300 text-primary-600 focus:ring-primary-500"
+                    className="mt-0.5 h-[18px] w-[18px] shrink-0 rounded-md border-gray-300 text-primary-600 accent-primary-600 focus:ring-2 focus:ring-primary-200"
                   />
                   <label htmlFor="consent-checkbox" className="cursor-pointer select-none">
                     {lang === 'uz' ? (
@@ -456,16 +482,24 @@ export default function AuthPage() {
                 {/* Telegram + Google — bir bosishda kirish. Rozilik
                     belgilanmaguncha bloklangan (pointer-events-none) */}
                 <div className={`space-y-3 transition-opacity ${consentChecked ? '' : 'pointer-events-none opacity-40'}`}>
+                  <p className="px-1 text-xs font-semibold uppercase tracking-wide text-gray-400">
+                    {t(lang, ui.quickLogin)}
+                  </p>
                   {loading ? (
                     <div className="flex justify-center py-3">
                       <div className="h-6 w-6 animate-spin rounded-full border-2 border-primary-200 border-t-primary-600" />
                     </div>
                   ) : (
                     <>
-                      {/* min-h yo'q — widget chiqmasa joy egallamaydi */}
-                      <div ref={tgRef} className="flex items-center justify-center" />
+                      {BOT_USERNAME && (
+                        <div className="flex min-h-[52px] items-center justify-center rounded-2xl border border-gray-200 bg-white p-1.5 shadow-sm transition-all hover:border-primary-200 hover:shadow-md">
+                          <div ref={tgRef} className="flex items-center justify-center" />
+                        </div>
+                      )}
                       {GOOGLE_CLIENT_ID && (
-                        <div ref={googleRef} className="flex justify-center min-h-[44px] items-center" />
+                        <div className="flex min-h-[52px] items-center justify-center rounded-2xl border border-gray-200 bg-white p-1.5 shadow-sm transition-all hover:border-primary-200 hover:shadow-md">
+                          <div ref={googleRef} className="flex items-center justify-center" />
+                        </div>
                       )}
                     </>
                   )}
@@ -520,8 +554,10 @@ export default function AuthPage() {
             {/* ── OTP step ── */}
             {step === 'otp' && (
               <form onSubmit={handleVerifyOtp} className="space-y-4">
-                <div className="flex items-center gap-2 rounded-xl bg-blue-50 px-4 py-3 text-sm text-blue-800">
-                  <Smartphone className="h-5 w-5 shrink-0" strokeWidth={1.75} />
+                <div className="flex items-center gap-3 rounded-2xl border border-primary-100 bg-primary-50/70 px-4 py-3.5 text-sm text-primary-800">
+                  <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-primary-100">
+                    <Smartphone className="h-4 w-4" strokeWidth={1.75} />
+                  </span>
                   <span>
                     <strong>{phone}</strong> {t(lang, ui.otpInfo)}
                   </span>
@@ -547,14 +583,14 @@ export default function AuthPage() {
                       }
                     }}
                     placeholder="• • • • • •"
-                    className="w-full rounded-xl border border-gray-300 px-4 py-3.5 text-center text-2xl font-mono font-bold tracking-[0.4em] text-gray-900 outline-none focus:border-primary-500 sm:text-3xl sm:tracking-[0.5em]"
+                    className="w-full rounded-2xl border border-gray-300 px-4 py-3.5 text-center text-2xl font-mono font-bold tracking-[0.4em] text-gray-900 shadow-sm outline-none transition-all focus:border-primary-500 focus:ring-4 focus:ring-primary-100 sm:text-3xl sm:tracking-[0.5em]"
                   />
-                  <div className="mt-2 flex justify-center gap-2">
+                  <div className="mt-2.5 flex justify-center gap-2">
                     {Array.from({ length: 6 }).map((_, i) => (
                       <div
                         key={i}
                         className={`h-2 w-2 rounded-full transition-all ${
-                          i < otp.length ? 'bg-primary-600 scale-125' : 'bg-gray-200'
+                          i < otp.length ? 'scale-125 bg-primary-600' : 'bg-gray-200'
                         }`}
                       />
                     ))}
@@ -575,20 +611,20 @@ export default function AuthPage() {
                   <button
                     type="button"
                     onClick={() => { setStep('phone'); setOtp(''); setError('') }}
-                    className="text-gray-500 hover:text-gray-700"
+                    className="font-medium text-gray-500 transition-colors hover:text-gray-700"
                   >
                     {t(lang, ui.back)}
                   </button>
                   {countdown > 0 ? (
                     <span className="text-gray-400">
-                      {t(lang, ui.resendIn)}: <strong>{countdown}s</strong>
+                      {t(lang, ui.resendIn)}: <strong className="text-gray-600">{countdown}s</strong>
                     </span>
                   ) : (
                     <button
                       type="button"
                       onClick={handleResend}
                       disabled={loading}
-                      className="font-semibold text-primary-600 hover:underline disabled:opacity-50"
+                      className="font-semibold text-primary-600 transition-colors hover:text-primary-700 hover:underline disabled:opacity-50"
                     >
                       {t(lang, ui.resend)}
                     </button>
@@ -599,9 +635,11 @@ export default function AuthPage() {
 
             {/* ── Done ── */}
             {step === 'done' && (
-              <div className="text-center py-4">
+              <div className="animate-fade-in py-4 text-center">
                 <div className="mb-4 flex justify-center">
-                  <CheckCircle2 className="h-14 w-14 text-emerald-500" strokeWidth={1.5} />
+                  <span className="flex h-16 w-16 items-center justify-center rounded-full bg-emerald-50 ring-8 ring-emerald-50/60">
+                    <CheckCircle2 className="h-9 w-9 text-emerald-500" strokeWidth={1.75} />
+                  </span>
                 </div>
                 <p className="text-gray-600">
                   {t(lang, nextUrl ? ui.doneSubBack : isNewUser ? ui.doneSubMatch : ui.doneSub)}
@@ -613,7 +651,14 @@ export default function AuthPage() {
             )}
           </div>
 
-          <p className="mt-4 text-center text-xs text-gray-400">
+          {step === 'phone' && (
+            <div className="mt-4 flex items-center justify-center gap-1.5 text-xs text-gray-400">
+              <ShieldCheck className="h-3.5 w-3.5 shrink-0" strokeWidth={1.75} />
+              {t(lang, ui.trustBadge)}
+            </div>
+          )}
+
+          <p className="mt-3 text-center text-xs text-gray-400">
             {t(lang, ui.terms)}
             <Link href="/terms" className="text-primary-600 hover:underline">
               {t(lang, ui.termsLink)}
