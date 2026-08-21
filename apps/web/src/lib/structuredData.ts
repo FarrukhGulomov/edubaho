@@ -19,6 +19,7 @@ interface InstitutionForSchema {
   reviewCount: number
   city?: { nameUz: string } | null
   details?: { descriptionUz?: string }
+  media?: { url: string }[]
 }
 
 /**
@@ -50,6 +51,7 @@ export function institutionSchema(inst: InstitutionForSchema) {
       },
     } : {}),
     ...(sameAs.length ? { sameAs } : {}),
+    ...(inst.media?.length ? { image: inst.media.map((m) => m.url) } : {}),
     ...(inst.avgRating && inst.reviewCount > 0 ? {
       aggregateRating: {
         '@type': 'AggregateRating',

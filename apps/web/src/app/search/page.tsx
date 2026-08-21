@@ -53,6 +53,7 @@ export interface InstitutionCard {
   isVerified: boolean
   address?: string
   telegram?: string
+  media?: { url: string; thumbnailUrl?: string | null }[]
   city?:   { id: string; nameUz: string; nameRu?: string }
   region?: { id: string; nameUz: string; nameRu?: string }
   pricing?: { monthlyMin?: number }
