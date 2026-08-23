@@ -21,6 +21,8 @@ const envSchema = z.object({
 
   ALLOWED_ORIGINS: z.string().default('http://localhost:3000'),
   ADMIN_PIN: z.string().min(4, "ADMIN_PIN kamida 4 ta belgi").default('1234'),
+  // Bot xabarlaridagi "Saytga o'tish" kabi tugmalar uchun (deep-link'lar)
+  SITE_URL: z.string().default('https://bilimon.uz'),
 
   // ── SMS (Playmobile) — ixtiyoriy, yo'q bo'lsa OTP faqat logga chiqadi ────
   SMS_LOGIN: z.string().default(''),

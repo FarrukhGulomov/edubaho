@@ -171,6 +171,63 @@ export async function sendTelegramContactRequest(
   }
 }
 
+// ─────────────────────────────────────────────────────────────
+// Bot menyusi — /start bosilganda saytga/funksiyalarga undovchi tugmalar
+// ─────────────────────────────────────────────────────────────
+
+/** Inline tugma: URL (saytga o'tish) yoki callback (bot ichida amal) */
+export type InlineButton =
+  | { text: string; url: string }
+  | { text: string; callback_data: string }
+
+/** Bir nechta qatorli inline klaviatura bilan xabar yuboradi (masalan /start menyusi) */
+export async function sendTelegramMessageWithButtons(
+  botToken: string,
+  chatId: string,
+  text: string,
+  buttonRows: InlineButton[][],
+): Promise<boolean> {
+  if (!botToken || !chatId) return false
+  try {
+    const res = await fetch(`https://api.telegram.org/bot${botToken}/sendMessage`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        chat_id: chatId,
+        text,
+        parse_mode: 'HTML',
+        disable_web_page_preview: true,
+        reply_markup: { inline_keyboard: buttonRows },
+      }),
+    })
+    return res.ok
+  } catch {
+    return false
+  }
+}
+
+/**
+ * Callback tugma bosilganini Telegram'ga "qabul qilindi" deb bildiradi —
+ * busiz tugma cheksiz "yuklanmoqda" holatida (soat belgisi) qolib ketadi.
+ * `text` berilsa, foydalanuvchiga qisqa pop-up ko'rinadi (ixtiyoriy).
+ */
+export async function answerCallbackQuery(
+  botToken: string,
+  callbackQueryId: string,
+  text?: string,
+): Promise<void> {
+  if (!botToken || !callbackQueryId) return
+  try {
+    await fetch(`https://api.telegram.org/bot${botToken}/answerCallbackQuery`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ callback_query_id: callbackQueryId, ...(text ? { text } : {}) }),
+    })
+  } catch {
+    // jim — bu faqat UI feedback, asosiy oqimni to'xtatmasligi kerak
+  }
+}
+
 /** Tasdiqlangandan/rad etilgandan keyin klaviaturani olib tashlab xabar yuboradi */
 export async function sendTelegramMessageNoKeyboard(
   botToken: string,
