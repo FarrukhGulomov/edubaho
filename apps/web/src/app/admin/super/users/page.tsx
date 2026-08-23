@@ -2,7 +2,7 @@
 
 import Link from 'next/link'
 import { useEffect, useState, useCallback } from 'react'
-import { Crown, Ban, Users2, Search, BadgeCheck, Lock, CheckCircle2, Trash2, AlertTriangle } from 'lucide-react'
+import { Crown, Ban, Users2, Search, BadgeCheck, Lock, CheckCircle2, Trash2, AlertTriangle, Coins } from 'lucide-react'
 import BrandMark from '@/components/shared/BrandMark'
 import { useAuth } from '@/hooks/useAuth'
 import { useRouter } from 'next/navigation'
@@ -343,6 +343,14 @@ export default function SuperAdminUsersPage() {
                           </td>
                           <td className="px-4 py-3">
                             <div className="flex items-center justify-end gap-1.5">
+                              {/* BilimCoin balansini boshqarish — istalgan foydalanuvchi uchun */}
+                              <Link
+                                href={`/admin/super/users/${u.id}/bcn`}
+                                title="BilimCoin balansini boshqarish"
+                                className="flex items-center gap-1 whitespace-nowrap rounded-lg border border-amber-200 px-2.5 py-1.5 text-xs font-semibold text-amber-700 transition-colors hover:bg-amber-50"
+                              >
+                                <Coins className="h-3 w-3 shrink-0" strokeWidth={1.75} /> BCN
+                              </Link>
                               {!isSelf && !isSuperAdmin && (
                                 <>
                                   {/* Aktiv / Deaktiv toggle */}

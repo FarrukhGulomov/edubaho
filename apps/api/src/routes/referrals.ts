@@ -1,6 +1,7 @@
 import type { FastifyInstance } from 'fastify'
 import { z } from 'zod'
 import { getOrCreateReferralCode, getReferralStats, getAvailableBalance } from '../services/referralService'
+import { formatBcn } from '../utils/currency'
 import { MIN_WITHDRAWAL_UZS, REFERRAL_REWARD_UZS } from '../config/referral'
 
 // Loyihaning to'lov usullari (packages/shared'dagi PAYMENT_METHOD_LABELS
@@ -110,7 +111,7 @@ export default async function referralRoutes(fastify: FastifyInstance) {
     // qachon ishonchli manba emas (texnik topshiriq #43)
     if (amount < MIN_WITHDRAWAL_UZS) {
       return reply.status(400).send({
-        error: `Minimal yechib olish summasi — ${fmtUzs(MIN_WITHDRAWAL_UZS)}`,
+        error: `Minimal yechib olish summasi — ${formatBcn(MIN_WITHDRAWAL_UZS)}`,
       })
     }
 
@@ -137,8 +138,4 @@ function maskPhone(phone: string | null): string {
   if (!phone) return 'Foydalanuvchi'
   const digits = phone.replace(/\D/g, '')
   return `+998 •• ••• •• ${digits.slice(-2)}`
-}
-
-function fmtUzs(n: number): string {
-  return `${n.toLocaleString('ru-RU').replace(/,/g, ' ')} so'm`
 }

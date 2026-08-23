@@ -209,6 +209,9 @@ model User {
   referredBy          Referral?            @relation("ReferralsReceived")
   referralRewards     ReferralReward[]
   referralWithdrawals ReferralWithdrawal[]
+  enrollmentClaims    EnrollmentClaim[]
+  enrollmentRewards   EnrollmentReward[]
+  bcnAdjustments      BcnAdjustment[]
 
   @@index([phone])
   @@index([telegramId])
@@ -322,6 +325,7 @@ model Institution {
   leadEvents      LeadEvent[]
   branches        InstitutionBranch[]
   trialBookings   TrialBooking[]
+  enrollmentClaims EnrollmentClaim[]
 
   @@index([type, status, cityId])
   @@index([status, avgRating])
@@ -726,6 +730,97 @@ model ReferralWithdrawal {
 
   @@index([userId, status])
   @@index([status, requestedAt])
+}
+
+// ─────────────────────────────────────────────────
+// ENROLLMENT CLAIM — "Men kurs sotib oldim" (foydalanuvchi o'z-o'zidan
+// bildirishi)
+//
+// NEGA KERAK: Bilimon o'quv markazlarga bepul lid beradi, lekin real
+// sotib olgan (enrollment) uchun markazdan to'lov oladi. Agar bu
+// hisob-kitob FAQAT markazning o'z hisobotiga tayansa — markaz kam
+// ko'rsatishi mumkin (masalan 10 tadan faqat 1 tasini "sotib oldi" deb
+// aytishi). Shuning uchun manba markaz EMAS, balki HAQIQIY, telefon
+// orqali tasdiqlangan (yoki hech bo'lmasa hisobga ega) foydalanuvchining
+// o'zi — u "sotib oldim" deb e'lon qiladi, Bilimon buni admin orqali
+// tekshiradi, va FAQAT shundan keyin: (1) foydalanuvchiga 10 000 so'm
+// bonus, (2) shu APPROVED claim markazga hisob-kitob (invoice) uchun
+// hisoblanadi. Markazning o'z raqami endi hisobga olinmaydi — har bir
+// APPROVED claim alohida, real foydalanuvchiga bog'langan dalil.
+// ─────────────────────────────────────────────────
+
+enum EnrollmentClaimStatus {
+  PENDING  // yuborilgan, admin ko'rib chiqmagan
+  APPROVED // admin tasdiqladi — bonus berildi, markazga hisoblanadi
+  REJECTED // admin rad etdi (masalan: dalil yetarli emas, firibgarlik)
+}
+
+model EnrollmentClaim {
+  id            String                 @id @default(cuid())
+  userId        String
+  institutionId String
+  // Qaysi kurs/yo'nalishni sotib olgani — erkin matn, ixtiyoriy
+  courseNote    String?
+  // Chek/skrinshot — ixtiyoriy, lekin tasdiqlash ehtimolini oshiradi (R2)
+  receiptUrl    String?
+  status        EnrollmentClaimStatus @default(PENDING)
+  reviewedBy    String?
+  reviewedAt    DateTime?
+  reviewNote    String?
+  createdAt     DateTime               @default(now())
+
+  user        User              @relation(fields: [userId], references: [id])
+  institution Institution       @relation(fields: [institutionId], references: [id])
+  reward      EnrollmentReward?
+
+  @@index([institutionId, status])
+  @@index([userId, status])
+  @@index([status, createdAt])
+}
+
+model EnrollmentReward {
+  id        String               @id @default(cuid())
+  // Bitta claim = ko'pi bilan BITTA mukofot (idempotentlik shu bilan kafolatlanadi)
+  claimId   String               @unique
+  userId    String
+  amount    Int
+  // ReferralReward bilan bir xil enum — ikkalasi ham bitta hamyon
+  // (wallet) balansiga qo'shiladi, referralService.getAvailableBalance
+  status    ReferralRewardStatus @default(CONFIRMED)
+  createdAt DateTime             @default(now())
+
+  claim EnrollmentClaim @relation(fields: [claimId], references: [id])
+  user  User            @relation(fields: [userId], references: [id])
+
+  @@index([userId, status])
+}
+
+// ─────────────────────────────────────────────────
+// BCN ADJUSTMENT — Super admin BilimCoin balansini qo'lda boshqarishi
+//
+// Referral va enrollment mukofotlaridan TASHQARI, super admin har qanday
+// foydalanuvchining hamyoniga to'g'ridan-to'g'ri BilimCoin qo'shishi yoki
+// ayirishi mumkin (masalan xato/qo'lda berilgan mablag'ni bekor qilish,
+// yoki balansni butunlay 0 ga tushirish). `amount` musbat (qo'shish) yoki
+// manfiy (ayirish) bo'lishi mumkin — referralService.getAvailableBalance
+// bu jadvalning yig'indisini ham hisobga oladi (bitta umumiy hamyon).
+// ─────────────────────────────────────────────────
+
+model BcnAdjustment {
+  id        String   @id @default(cuid())
+  userId    String
+  // Musbat = balansga qo'shiladi, manfiy = balansdan ayiriladi
+  amount    Int
+  // Har doim majburiy — bu to'g'ridan-to'g'ri, tasdiqlashsiz moliyaviy
+  // amal, shuning uchun sababsiz qilib bo'lmaydi (audit uchun)
+  reason    String
+  adminId   String
+  createdAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id])
+
+  @@index([userId])
+  @@index([createdAt])
 }
 
 // ─────────────────────────────────────────────────

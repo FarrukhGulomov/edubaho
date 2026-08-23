@@ -2,6 +2,7 @@ import type { PrismaClient } from '@prisma/client'
 import { randomBytes } from 'crypto'
 import { notifyUser } from './notify'
 import { incrementAttempts } from '../utils/redis'
+import { formatBcn } from '../utils/currency'
 import {
   REFERRAL_REWARD_UZS, MIN_WITHDRAWAL_UZS, REFERRAL_PROGRAM_ENABLED,
   ACTIVE_USER_QUALIFYING_EVENTS,
@@ -16,7 +17,7 @@ import {
  *     1) Ism-familiya kiritilgan
  *     2) Telefon Telegram orqali TASDIQLANGAN (phoneVerifiedAt)
  *     3) "Menga mosini top" wizard'ini tugatgan (match_completed)
- *   → Referral(QUALIFIED) → ReferralReward(CONFIRMED, +500 so'm)
+ *   → Referral(QUALIFIED) → ReferralReward(CONFIRMED, +500 BCN — BilimCoin)
  *
  * Bu uchta shart ikkita mustaqil joydan tekshiriladi (track.ts'da
  * match_completed kelganda, telegramWebhook.ts'da telefon tasdiqlanganda)
@@ -122,7 +123,7 @@ export async function attributeReferral(
       type: 'referral_registered',
       title: uzTitle('registered'),
       body: "👤 Yangi do'stingiz platformaga qo'shildi. U hali aktiv emas. Aktiv foydalanuvchiga aylanganda sizga " +
-        fmtUzs(REFERRAL_REWARD_UZS) + ' bonus beriladi.',
+        formatBcn(REFERRAL_REWARD_UZS) + ' bonus beriladi.',
     })
   } catch (err) {
     // P2002: referredUserId allaqachon boshqa referralga bog'langan
@@ -165,7 +166,7 @@ export async function tryQualifyReferral(prisma: PrismaClient, referredUserId: s
   })
   if (!qualifyingActivity) return
 
-  // Mukofotdan OLDINGI balansni bilib olamiz — "100 000 so'mga yetdi" xabari
+  // Mukofotdan OLDINGI balansni bilib olamiz — "100 000 BCNga yetdi" xabari
   // faqat chegaradan AYNAN shu mukofot bilan o'tganda yuborilishi uchun
   const balanceBefore = await getAvailableBalance(prisma, referral.referrerId)
 
@@ -194,7 +195,7 @@ export async function tryQualifyReferral(prisma: PrismaClient, referredUserId: s
     userId: referral.referrerId,
     type: 'referral_qualified',
     title: uzTitle('qualified'),
-    body: `🎉 Tabriklaymiz! Referalingiz aktiv foydalanuvchiga aylandi. Balansingizga ${fmtUzs(REFERRAL_REWARD_UZS)} bonus qo'shildi.`,
+    body: `🎉 Tabriklaymiz! Referalingiz aktiv foydalanuvchiga aylandi. Balansingizga ${formatBcn(REFERRAL_REWARD_UZS)} bonus qo'shildi.`,
     data: { referralId: referral.id, amount: REFERRAL_REWARD_UZS },
   })
 
@@ -204,16 +205,35 @@ export async function tryQualifyReferral(prisma: PrismaClient, referredUserId: s
       userId: referral.referrerId,
       type: 'referral_threshold_reached',
       title: uzTitle('threshold'),
-      body: `🎉 Referral balansingiz ${fmtUzs(MIN_WITHDRAWAL_UZS)}ga yetdi. Endi bonusni yechib olishingiz mumkin.`,
+      body: `🎉 Referral balansingiz ${formatBcn(MIN_WITHDRAWAL_UZS)}ga yetdi. Endi bonusni yechib olishingiz mumkin.`,
     })
   }
 }
 
-/** Yechib olish uchun mavjud balans: tasdiqlangan mukofotlar − band qilingan/to'langan yechib olishlar */
+/**
+ * Yechib olish uchun mavjud balans: tasdiqlangan mukofotlar − band
+ * qilingan/to'langan yechib olishlar.
+ *
+ * MUHIM: bu ENDI faqat referral emas — EnrollmentReward ("Men kurs
+ * sotib oldim" bonuslari, apps/api/src/services/enrollmentClaimService.ts)
+ * VA BcnAdjustment (super admin qo'lda qo'shgan/ayirgan BilimCoin,
+ * apps/api/src/services/bcnAdminService.ts) ham SHU BIR XIL hamyon
+ * balansiga qo'shiladi. Barchasi ReferralWithdrawal orqali yechib
+ * olinadi (u userId+amount asosida ishlaydi, manbadan mustaqil) —
+ * foydalanuvchi uchun bitta umumiy balans, alohida "hamyon"lar emas.
+ */
 export async function getAvailableBalance(prisma: PrismaClient, userId: string): Promise<number> {
-  const [earned, reserved] = await Promise.all([
+  const [referralEarned, enrollmentEarned, adjustments, reserved] = await Promise.all([
     prisma.referralReward.aggregate({
       where: { userId, status: 'CONFIRMED' },
+      _sum: { amount: true },
+    }),
+    prisma.enrollmentReward.aggregate({
+      where: { userId, status: 'CONFIRMED' },
+      _sum: { amount: true },
+    }),
+    prisma.bcnAdjustment.aggregate({
+      where: { userId },
       _sum: { amount: true },
     }),
     prisma.referralWithdrawal.aggregate({
@@ -221,13 +241,15 @@ export async function getAvailableBalance(prisma: PrismaClient, userId: string):
       _sum: { amount: true },
     }),
   ])
-  return (earned._sum.amount ?? 0) - (reserved._sum.amount ?? 0)
+  return (referralEarned._sum.amount ?? 0) + (enrollmentEarned._sum.amount ?? 0)
+    + (adjustments._sum.amount ?? 0) - (reserved._sum.amount ?? 0)
 }
 
 /** Foydalanuvchining to'liq referral statistikasi — profil paneli va admin uchun bir xil manba */
 export async function getReferralStats(prisma: PrismaClient, userId: string) {
-  const [earned, withdrawn, counts, availableBalance] = await Promise.all([
+  const [earned, enrollmentEarned, withdrawn, counts, availableBalance] = await Promise.all([
     prisma.referralReward.aggregate({ where: { userId, status: 'CONFIRMED' }, _sum: { amount: true } }),
+    prisma.enrollmentReward.aggregate({ where: { userId, status: 'CONFIRMED' }, _sum: { amount: true } }),
     prisma.referralWithdrawal.aggregate({ where: { userId, status: 'PAID' }, _sum: { amount: true } }),
     prisma.referral.groupBy({ by: ['status'], where: { referrerId: userId }, _count: true }),
     getAvailableBalance(prisma, userId),
@@ -246,7 +268,10 @@ export async function getReferralStats(prisma: PrismaClient, userId: string) {
     referralReward: REFERRAL_REWARD_UZS,
     minWithdrawal: MIN_WITHDRAWAL_UZS,
     availableBalance,
-    totalEarned: earned._sum.amount ?? 0,
+    // Referral va enrollment bonuslarining yig'indisi — bitta umumiy balans
+    totalEarned: (earned._sum.amount ?? 0) + (enrollmentEarned._sum.amount ?? 0),
+    totalReferralEarned: earned._sum.amount ?? 0,
+    totalEnrollmentEarned: enrollmentEarned._sum.amount ?? 0,
     totalWithdrawn: withdrawn._sum.amount ?? 0,
     // "Potensial" — hali aktiv bo'lmagan referallar aktiv bo'lsa qo'shiladigan miqdor
     // (haqiqiy balans emas, faqat gamifikatsiya ko'rsatkichi)
@@ -260,10 +285,6 @@ export async function getReferralStats(prisma: PrismaClient, userId: string) {
     remainingActiveReferrals,
     progressPercent: Math.min(100, Math.round((availableBalance / MIN_WITHDRAWAL_UZS) * 100)),
   }
-}
-
-function fmtUzs(n: number): string {
-  return `${n.toLocaleString('ru-RU').replace(/,/g, ' ')} so'm`
 }
 
 function uzTitle(kind: 'registered' | 'qualified' | 'threshold'): string {

@@ -7,6 +7,7 @@ import {
 } from 'lucide-react'
 import { useLang, t } from '@/contexts/LangContext'
 import { referralsApi, type ReferralStats, type ReferralHistoryItem, type ReferralWithdrawalItem } from '@/lib/api'
+import { formatBcn } from '@/lib/currency'
 
 const PAYMENT_METHODS = [
   { value: 'payme',  uz: 'Payme',  ru: 'Payme' },
@@ -14,10 +15,6 @@ const PAYMENT_METHODS = [
   { value: 'uzcard', uz: 'Uzcard', ru: 'Uzcard' },
   { value: 'humo',   uz: 'Humo',   ru: 'Humo' },
 ]
-
-function fmtUzs(n: number): string {
-  return `${n.toLocaleString('ru-RU').replace(/,/g, ' ')} so'm`
-}
 
 const STATUS_STYLE: Record<string, { bg: string; Icon: typeof Clock; label: { uz: string; ru: string } }> = {
   PENDING:   { bg: 'bg-amber-50 text-amber-700',   Icon: Clock,        label: { uz: 'Kutilmoqda', ru: 'Ожидание' } },
@@ -157,8 +154,8 @@ export default function ReferralDashboard({ token, phoneVerified, onGoToVerify }
           </h2>
           <p className="text-sm text-gray-500">
             {uz
-              ? `Har bir aktiv do'st uchun ${fmtUzs(stats.referralReward)} bonus oling`
-              : `Получайте ${fmtUzs(stats.referralReward)} за каждого активного друга`}
+              ? `Har bir aktiv do'st uchun ${formatBcn(stats.referralReward)} bonus oling`
+              : `Получайте ${formatBcn(stats.referralReward)} за каждого активного друга`}
           </p>
         </div>
       </div>
@@ -190,10 +187,10 @@ export default function ReferralDashboard({ token, phoneVerified, onGoToVerify }
             <p className="text-xs font-semibold uppercase tracking-wide text-amber-700">
               {uz ? 'Mavjud balans' : 'Доступный баланс'}
             </p>
-            <p className="text-3xl font-bold text-gray-900">{fmtUzs(stats.availableBalance)}</p>
+            <p className="text-3xl font-bold text-gray-900">{formatBcn(stats.availableBalance)}</p>
           </div>
           <p className="text-sm font-semibold text-gray-400">
-            {fmtUzs(stats.availableBalance)} / {fmtUzs(stats.minWithdrawal)}
+            {formatBcn(stats.availableBalance)} / {formatBcn(stats.minWithdrawal)}
           </p>
         </div>
 
@@ -208,8 +205,8 @@ export default function ReferralDashboard({ token, phoneVerified, onGoToVerify }
           {stats.canWithdraw
             ? (uz ? "🎉 Yechib olishga tayyor!" : '🎉 Готово к выводу!')
             : uz
-              ? `${fmtUzs(stats.minWithdrawal)} yig'ish uchun: yana ${fmtUzs(stats.remainingAmount)} yoki ${stats.remainingActiveReferrals} ta aktiv do'st kerak`
-              : `Чтобы собрать ${fmtUzs(stats.minWithdrawal)}: ещё ${fmtUzs(stats.remainingAmount)} или ${stats.remainingActiveReferrals} активных друзей`}
+              ? `${formatBcn(stats.minWithdrawal)} yig'ish uchun: yana ${formatBcn(stats.remainingAmount)} yoki ${stats.remainingActiveReferrals} ta aktiv do'st kerak`
+              : `Чтобы собрать ${formatBcn(stats.minWithdrawal)}: ещё ${formatBcn(stats.remainingAmount)} или ${stats.remainingActiveReferrals} активных друзей`}
         </p>
 
         <button
@@ -222,7 +219,7 @@ export default function ReferralDashboard({ token, phoneVerified, onGoToVerify }
 
         {!stats.canWithdraw && (
           <p className="mt-1.5 text-center text-xs text-gray-400">
-            {uz ? `Minimal yechib olish summasi — ${fmtUzs(stats.minWithdrawal)}` : `Минимальная сумма вывода — ${fmtUzs(stats.minWithdrawal)}`}
+            {uz ? `Minimal yechib olish summasi — ${formatBcn(stats.minWithdrawal)}` : `Минимальная сумма вывода — ${formatBcn(stats.minWithdrawal)}`}
           </p>
         )}
 
@@ -282,8 +279,8 @@ export default function ReferralDashboard({ token, phoneVerified, onGoToVerify }
       {/* Statistika grid */}
       <div className="grid grid-cols-2 gap-3">
         {[
-          { Icon: TrendingUp, value: fmtUzs(stats.totalEarned), label: { uz: 'Jami ishlangan', ru: 'Всего заработано' } },
-          { Icon: Wallet,     value: fmtUzs(stats.totalWithdrawn), label: { uz: 'Yechib olingan', ru: 'Выведено' } },
+          { Icon: TrendingUp, value: formatBcn(stats.totalEarned), label: { uz: 'Jami ishlangan', ru: 'Всего заработано' } },
+          { Icon: Wallet,     value: formatBcn(stats.totalWithdrawn), label: { uz: 'Yechib olingan', ru: 'Выведено' } },
           { Icon: Users,      value: String(stats.totalReferrals), label: { uz: 'Jami do\'stlar', ru: 'Всего друзей' } },
           { Icon: CheckCircle2, value: String(stats.activeReferrals), label: { uz: 'Aktiv do\'stlar', ru: 'Активных друзей' } },
         ].map((s) => (
@@ -347,7 +344,7 @@ export default function ReferralDashboard({ token, phoneVerified, onGoToVerify }
                   </div>
                   <div className="flex shrink-0 items-center gap-2">
                     {h.rewardAmount > 0 && (
-                      <span className="text-sm font-bold text-emerald-600">+{fmtUzs(h.rewardAmount)}</span>
+                      <span className="text-sm font-bold text-emerald-600">+{formatBcn(h.rewardAmount)}</span>
                     )}
                     <span className={`flex items-center gap-1 whitespace-nowrap rounded-full px-2.5 py-1 text-[11px] font-bold ${st?.bg ?? 'bg-gray-100 text-gray-500'}`}>
                       {st ? t(lang, st.label) : h.status}
@@ -367,7 +364,7 @@ export default function ReferralDashboard({ token, phoneVerified, onGoToVerify }
                   return (
                     <div key={w.id} className="flex items-center justify-between gap-3 rounded-xl border border-gray-100 px-3.5 py-2.5">
                       <div className="min-w-0">
-                        <p className="text-sm font-semibold text-gray-800">{fmtUzs(w.amount)}</p>
+                        <p className="text-sm font-semibold text-gray-800">{formatBcn(w.amount)}</p>
                         <p className="text-xs text-gray-400">{new Date(w.requestedAt).toLocaleDateString(uz ? 'uz-UZ' : 'ru-RU')}</p>
                         {w.rejectionReason && <p className="text-xs text-red-500">{w.rejectionReason}</p>}
                       </div>
