@@ -93,7 +93,7 @@ export default function Header() {
               title={lang === 'uz' ? 'Переключить на русский' : "O'zbekchaga o'tish"}
               aria-label={lang === 'uz' ? 'Переключить на русский' : "O'zbekchaga o'tish"}
             >
-              <span className="text-lg leading-none" aria-hidden>{lang === 'uz' ? '🇷🇺' : '🇺🇿'}</span>
+              <span className="text-lg leading-none" aria-hidden>{lang === 'uz' ? '🇺🇿' : '🇷🇺'}</span>
             </button>
 
             {/* Auth — desktop */}
@@ -191,7 +191,7 @@ export default function Header() {
                 onClick={() => { setLang(lang === 'uz' ? 'ru' : 'uz'); setMenuOpen(false) }}
                 className="flex flex-1 items-center justify-center gap-2 rounded-xl border border-gray-200 py-3 text-sm font-semibold text-gray-600"
               >
-                {lang === 'uz' ? '🇷🇺 Русский' : "🇺🇿 O'zbek"}
+                {lang === 'uz' ? "🇺🇿 O'zbek" : '🇷🇺 Русский'}
               </button>
               {user ? (
                 <button
