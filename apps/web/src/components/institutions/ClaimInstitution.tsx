@@ -8,8 +8,10 @@ import { useLang, t } from '@/contexts/LangContext'
 
 interface Props {
   institutionId: string
-  // Muassasa allaqachon tasdiqlangan egaga ega bo'lsa kartani ko'rsatmaymiz
-  isVerified?: boolean
+  // Muassasa allaqachon egasi tomonidan da'vo qilingan (CLAIMED yoki
+  // VERIFIED) bo'lsa kartani ko'rsatmaymiz — POST /claim baribir 409
+  // qaytaradi, lekin CTA'ni oldindan yashirish tozaroq UX beradi
+  isClaimed?: boolean
 }
 
 /**
@@ -18,7 +20,7 @@ interface Props {
  * Korporativ email talab qilinmaydi: foydalanuvchi telefon, Telegram yoki
  * Gmail orqali kirgan bo'lsa yetarli — tasdiqlash moderatsiya orqali bo'ladi.
  */
-export default function ClaimInstitution({ institutionId, isVerified }: Props) {
+export default function ClaimInstitution({ institutionId, isClaimed }: Props) {
   const { lang } = useLang()
   const router = useRouter()
   const [open, setOpen]         = useState(false)
@@ -45,8 +47,8 @@ export default function ClaimInstitution({ institutionId, isVerified }: Props) {
     loginFirst: { uz: 'Avval tizimga kiring — Telegram yoki Google orqali', ru: 'Сначала войдите — через Telegram или Google' },
   }
 
-  // Egasi tasdiqlangan muassasada karta ko'rsatilmaydi
-  if (isVerified) return null
+  // Egasi allaqachon da'vo qilib olgan muassasada karta ko'rsatilmaydi
+  if (isClaimed) return null
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()

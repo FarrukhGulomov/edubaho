@@ -6,6 +6,7 @@ import type { InstitutionStatus } from '@prisma/client'
 import { normalizeQuery } from '../../utils/transliterate'
 import { expandSearchTerms } from '../../utils/subjectSynonyms'
 import { notifyUser } from '../../services/notify'
+import { approvedClaimSelect, withVerificationLevel } from '../../utils/verification'
 
 /**
  * Institutions routes
@@ -33,6 +34,7 @@ export default async function institutionRoutes(fastify: FastifyInstance) {
     reviewCount: true,
     viewCount: true,
     isVerified: true,
+    claims: approvedClaimSelect,
     address: true,
     lat: true,
     lng: true,
@@ -171,7 +173,7 @@ export default async function institutionRoutes(fastify: FastifyInstance) {
       const paged = withScore.slice(skip, skip + limit)
 
       return reply.send({
-        data: paged,
+        data: paged.map(withVerificationLevel),
         meta: { total, page, limit, totalPages: Math.ceil(total / limit) },
       })
     }
@@ -184,7 +186,7 @@ export default async function institutionRoutes(fastify: FastifyInstance) {
     ])
 
     return reply.send({
-      data: institutions,
+      data: institutions.map(withVerificationLevel),
       meta: { total, page, limit, totalPages: Math.ceil(total / limit) },
     })
   })
@@ -252,7 +254,7 @@ export default async function institutionRoutes(fastify: FastifyInstance) {
     const sorted = ids
       .map((id) => {
         const inst = details.find((d) => d.id === id)
-        return inst ? { ...inst, distance: distanceMap.get(id) } : null
+        return inst ? { ...withVerificationLevel(inst), distance: distanceMap.get(id) } : null
       })
       .filter(Boolean)
 
@@ -281,6 +283,7 @@ export default async function institutionRoutes(fastify: FastifyInstance) {
         reviewCount: true,
         viewCount: true,
         isVerified: true,
+        claims: approvedClaimSelect,
         address: true,
         phone: true,
         telegram: true,
@@ -322,7 +325,7 @@ export default async function institutionRoutes(fastify: FastifyInstance) {
     const order = new Map(ids.map((id, i) => [id, i]))
     const sorted = institutions.sort((a, b) => (order.get(a.id) ?? 0) - (order.get(b.id) ?? 0))
 
-    return reply.send({ data: sorted })
+    return reply.send({ data: sorted.map(withVerificationLevel) })
   })
 
   // ─────────────────────────────────────────────
@@ -354,6 +357,7 @@ export default async function institutionRoutes(fastify: FastifyInstance) {
           lat: true,
           lng: true,
           isVerified: true,
+          claims: approvedClaimSelect,
           trialLessonEnabled: true,
           deliveryMode: true,
           avgRating: true,
@@ -439,7 +443,7 @@ export default async function institutionRoutes(fastify: FastifyInstance) {
 
       // Anonymous sharhlar uchun user ma'lumotlarini yashirish
       const data = {
-        ...institution,
+        ...withVerificationLevel(institution),
         reviews: institution.reviews.map((r) => ({
           ...r,
           user: r.isAnonymous ? null : r.user,

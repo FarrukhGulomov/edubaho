@@ -15,6 +15,8 @@ import ClaimInstitution from '@/components/institutions/ClaimInstitution'
 import TrialBookingWidget from '@/components/institutions/TrialBookingWidget'
 import WriteReview from '@/components/institutions/WriteReview'
 import GuestLeadWidget from '@/components/shared/GuestLeadWidget'
+import VerificationBadge from '@/components/shared/VerificationBadge'
+import { formatStudentRange } from '@/lib/studentRange'
 import { useLang, t } from '@/contexts/LangContext'
 import { authHref } from '@/lib/authHref'
 import {
@@ -367,10 +369,11 @@ export default function InstitutionDetail({ inst }: { inst: Institution }) {
                   <span className="inline-flex items-center rounded-full bg-gray-100 px-2.5 py-1 text-xs font-medium text-gray-600">
                     {typeLabel ? t(lang, typeLabel) : inst.type}
                   </span>
-                  {inst.isVerified && (
-                    <span className="inline-flex items-center gap-1 rounded-full bg-emerald-50 px-2.5 py-1 text-xs font-semibold text-emerald-700">
-                      <BadgeCheck className="h-3.5 w-3.5" strokeWidth={2} />
-                      {t(lang, ui.verified)}
+                  <VerificationBadge level={inst.verificationLevel} lang={lang} size="sm" />
+                  {(inst.accreditations?.length ?? 0) > 0 && (
+                    <span className="inline-flex items-center gap-1 rounded-full bg-indigo-50 px-2.5 py-1 text-xs font-semibold text-indigo-700">
+                      <Award className="h-3.5 w-3.5" strokeWidth={2} />
+                      {lang === 'ru' ? 'Есть лицензия/документы' : 'Litsenziya/hujjatlar mavjud'}
                     </span>
                   )}
                   {inst.subscription?.plan === 'PREMIUM' && (
@@ -611,12 +614,21 @@ export default function InstitutionDetail({ inst }: { inst: Institution }) {
                 </h2>
                 <div className="flex items-end gap-2">
                   <span className="text-4xl font-bold text-gray-900">
-                    {formatNum(inst.details.studentCount)}+
+                    {formatStudentRange(inst.details.studentCount)}
                   </span>
                   <span className="mb-1 text-base text-gray-500">
                     {lang === 'ru' ? 'учеников обучается' : "o'quvchi tahsil olmoqda"}
                   </span>
                 </div>
+                {/* Bu ko'rsatkich markazning o'zi taqdim etadi — davlat reestridan
+                    tekshirib bo'lmaydi, shuning uchun aniq raqam emas, oraliq
+                    sifatida ko'rsatiladi va manbasi ochiq aytiladi (foydalanuvchi
+                    ishonchini yolg'ondan oshirmaslik uchun) */}
+                <p className="mt-1.5 text-xs text-gray-400">
+                  {lang === 'ru'
+                    ? '* данные предоставлены самим учебным центром'
+                    : "* ma'lumot o'quv markazining o'zi tomonidan taqdim etilgan"}
+                </p>
               </div>
             )}
 
@@ -944,7 +956,7 @@ export default function InstitutionDetail({ inst }: { inst: Institution }) {
             {isGuest && <RegisterBanner lang={lang} next={instPath} />}
 
             {/* Hamkorlar uchun: muassasa egaligi so'rovi */}
-            <ClaimInstitution institutionId={inst.id} isVerified={inst.isVerified} />
+            <ClaimInstitution institutionId={inst.id} isClaimed={inst.verificationLevel !== 'UNVERIFIED'} />
 
             {/* Price card — faqat auth bo'lganda */}
             {!isGuest && inst.pricing?.monthlyMin && (

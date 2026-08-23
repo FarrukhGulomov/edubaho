@@ -8,6 +8,7 @@ import { logAdminAction } from '../../services/auditLog'
 import { normalizeInstitutionName } from '../../utils/normalizeName'
 import { mergeInstitutions } from '../../services/mergeInstitutionService'
 import { isStorageConfigured, uploadImage, deleteImage, keyFromPublicUrl } from '../../services/storageService'
+import { approvedClaimSelect, withVerificationLevel } from '../../utils/verification'
 import sharp from 'sharp'
 import { randomUUID } from 'crypto'
 
@@ -134,6 +135,7 @@ export default async function adminInstitutionRoutes(fastify: FastifyInstance) {
         select: {
           id: true, nameUz: true, nameRu: true, slug: true,
           type: true, status: true, isVerified: true,
+          claims: approvedClaimSelect,
           avgRating: true, reviewCount: true, viewCount: true,
           phone: true, telegram: true, createdAt: true,
           city: { select: { nameUz: true } },
@@ -146,7 +148,7 @@ export default async function adminInstitutionRoutes(fastify: FastifyInstance) {
     ])
 
     return reply.send({
-      data: institutions,
+      data: institutions.map(withVerificationLevel),
       meta: { total, page, limit, totalPages: Math.ceil(total / limit) },
     })
   })
@@ -601,7 +603,10 @@ export default async function adminInstitutionRoutes(fastify: FastifyInstance) {
   fastify.patch<{ Params: { id: string } }>('/admin/institutions/:id/verify', async (request, reply) => {
     const { id } = request.params
 
-    const institution = await prisma.institution.findUnique({ where: { id }, select: { isVerified: true } })
+    const institution = await prisma.institution.findUnique({
+      where: { id },
+      select: { isVerified: true, claims: approvedClaimSelect },
+    })
     if (!institution) {
       return reply.status(404).send({ error: 'Muassasa topilmadi' })
     }
@@ -617,7 +622,8 @@ export default async function adminInstitutionRoutes(fastify: FastifyInstance) {
       after: { isVerified },
     })
 
-    return reply.send({ isVerified, message: isVerified ? 'Muassasa tasdiqlandi' : 'Tasdiq bekor qilindi' })
+    const { verificationLevel } = withVerificationLevel({ isVerified, claims: institution.claims })
+    return reply.send({ isVerified, verificationLevel, message: isVerified ? 'Muassasa tasdiqlandi' : 'Tasdiq bekor qilindi' })
   })
 
   // ─────────────────────────────────────────────
