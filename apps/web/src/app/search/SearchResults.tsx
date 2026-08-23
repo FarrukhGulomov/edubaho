@@ -399,7 +399,6 @@ function InstitutionCardComp({
       >
         <InstitutionCoverImage
           media={i.media}
-          type={i.type}
           name={name}
           className="aspect-[16/10] w-full rounded-t-2xl"
           priority={position <= 3}
