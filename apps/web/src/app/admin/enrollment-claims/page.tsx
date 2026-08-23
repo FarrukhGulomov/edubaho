@@ -83,7 +83,9 @@ export default function AdminEnrollmentClaimsPage() {
     try {
       const res = await fetch(`${API}/admin/enrollment-claims/${id}/${action}`, {
         method: 'POST',
-        headers: { ...authHeaders(), 'Content-Type': 'application/json' },
+        // Content-Type faqat body bor so'rovlarda qo'yiladi — aks holda Fastify
+        // FST_ERR_CTP_EMPTY_JSON_BODY xatosini beradi (masalan "approve"da body yo'q)
+        headers: action === 'reject' ? { ...authHeaders(), 'Content-Type': 'application/json' } : authHeaders(),
         body: action === 'reject' ? JSON.stringify({ reason }) : undefined,
       })
       const data = await res.json()
