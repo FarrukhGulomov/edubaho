@@ -13,6 +13,7 @@ import StarRating, { RatingHint } from '@/components/shared/StarRating'
 import Header from '@/components/shared/Header'
 import RecommendationDashboard from '@/components/profile/RecommendationDashboard'
 import ReferralDashboard from '@/components/profile/ReferralDashboard'
+import EnrollmentClaimSection from '@/components/profile/EnrollmentClaimSection'
 import TelegramPhoneVerify, { VerifiedBadge } from '@/components/profile/TelegramPhoneVerify'
 import { useAuth } from '@/hooks/useAuth'
 import { useSaved, useCompare } from '@/hooks/useCompare'
@@ -243,11 +244,14 @@ export default function ProfilePage() {
         )}
 
         {view === 'referrals' && (
-          <ReferralDashboard
-            token={localStorage.getItem('accessToken') ?? ''}
-            phoneVerified={!!user.phoneVerifiedAt}
-            onGoToVerify={() => setView('settings')}
-          />
+          <div className="space-y-6">
+            <ReferralDashboard
+              token={localStorage.getItem('accessToken') ?? ''}
+              phoneVerified={!!user.phoneVerifiedAt}
+              onGoToVerify={() => setView('settings')}
+            />
+            <EnrollmentClaimSection token={localStorage.getItem('accessToken') ?? ''} />
+          </div>
         )}
 
         {view === 'settings' && (

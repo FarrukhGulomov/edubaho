@@ -209,10 +209,24 @@ export async function tryQualifyReferral(prisma: PrismaClient, referredUserId: s
   }
 }
 
-/** Yechib olish uchun mavjud balans: tasdiqlangan mukofotlar − band qilingan/to'langan yechib olishlar */
+/**
+ * Yechib olish uchun mavjud balans: tasdiqlangan mukofotlar − band
+ * qilingan/to'langan yechib olishlar.
+ *
+ * MUHIM: bu ENDI faqat referral emas — EnrollmentReward ("Men kurs
+ * sotib oldim" bonuslari, apps/api/src/services/enrollmentClaimService.ts)
+ * ham SHU BIR XIL hamyon balansiga qo'shiladi. Ikkalasi ham ReferralWithdrawal
+ * orqali yechib olinadi (u userId+amount asosida ishlaydi, manbadan
+ * mustaqil) — foydalanuvchi uchun bitta umumiy balans, ikkita alohida
+ * "hamyon" emas.
+ */
 export async function getAvailableBalance(prisma: PrismaClient, userId: string): Promise<number> {
-  const [earned, reserved] = await Promise.all([
+  const [referralEarned, enrollmentEarned, reserved] = await Promise.all([
     prisma.referralReward.aggregate({
+      where: { userId, status: 'CONFIRMED' },
+      _sum: { amount: true },
+    }),
+    prisma.enrollmentReward.aggregate({
       where: { userId, status: 'CONFIRMED' },
       _sum: { amount: true },
     }),
@@ -221,13 +235,14 @@ export async function getAvailableBalance(prisma: PrismaClient, userId: string):
       _sum: { amount: true },
     }),
   ])
-  return (earned._sum.amount ?? 0) - (reserved._sum.amount ?? 0)
+  return (referralEarned._sum.amount ?? 0) + (enrollmentEarned._sum.amount ?? 0) - (reserved._sum.amount ?? 0)
 }
 
 /** Foydalanuvchining to'liq referral statistikasi — profil paneli va admin uchun bir xil manba */
 export async function getReferralStats(prisma: PrismaClient, userId: string) {
-  const [earned, withdrawn, counts, availableBalance] = await Promise.all([
+  const [earned, enrollmentEarned, withdrawn, counts, availableBalance] = await Promise.all([
     prisma.referralReward.aggregate({ where: { userId, status: 'CONFIRMED' }, _sum: { amount: true } }),
+    prisma.enrollmentReward.aggregate({ where: { userId, status: 'CONFIRMED' }, _sum: { amount: true } }),
     prisma.referralWithdrawal.aggregate({ where: { userId, status: 'PAID' }, _sum: { amount: true } }),
     prisma.referral.groupBy({ by: ['status'], where: { referrerId: userId }, _count: true }),
     getAvailableBalance(prisma, userId),
@@ -246,7 +261,10 @@ export async function getReferralStats(prisma: PrismaClient, userId: string) {
     referralReward: REFERRAL_REWARD_UZS,
     minWithdrawal: MIN_WITHDRAWAL_UZS,
     availableBalance,
-    totalEarned: earned._sum.amount ?? 0,
+    // Referral va enrollment bonuslarining yig'indisi — bitta umumiy balans
+    totalEarned: (earned._sum.amount ?? 0) + (enrollmentEarned._sum.amount ?? 0),
+    totalReferralEarned: earned._sum.amount ?? 0,
+    totalEnrollmentEarned: enrollmentEarned._sum.amount ?? 0,
     totalWithdrawn: withdrawn._sum.amount ?? 0,
     // "Potensial" — hali aktiv bo'lmagan referallar aktiv bo'lsa qo'shiladigan miqdor
     // (haqiqiy balans emas, faqat gamifikatsiya ko'rsatkichi)

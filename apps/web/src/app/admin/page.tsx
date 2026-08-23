@@ -4,7 +4,7 @@ import Link from 'next/link'
 import { useEffect, useState } from 'react'
 import {
   Crown, ShieldCheck, ClipboardList, School, CalendarCheck,
-  Building2, Clock, Sparkles, Users, Gift, type LucideIcon,
+  Building2, Clock, Sparkles, Users, Gift, ReceiptText, type LucideIcon,
 } from 'lucide-react'
 import { useAuth } from '@/hooks/useAuth'
 import { useRouter } from 'next/navigation'
@@ -19,6 +19,7 @@ interface DashboardStats {
   pendingBookings: number
   leadsNeedContact: number
   pendingReferralWithdrawals: number
+  pendingEnrollmentClaims: number
 }
 
 export default function AdminPage() {
@@ -69,8 +70,9 @@ export default function AdminPage() {
       fetch(`${API}/admin/trial-bookings?status=PENDING&limit=1`, { headers }).then(r => r.json()),
       fetch(`${API}/admin/leads?status=CONTACT_REQUIRED&limit=1`, { headers }).then(r => r.json()),
       fetch(`${API}/admin/referral-withdrawals?status=PENDING&limit=1`, { headers }).then(r => r.json()),
+      fetch(`${API}/admin/enrollment-claims?status=PENDING&limit=1`, { headers }).then(r => r.json()),
     ])
-      .then(([institutions, pending, reviews, bookings, leads, refWithdrawals]) => {
+      .then(([institutions, pending, reviews, bookings, leads, refWithdrawals, enrollmentClaims]) => {
         setStats({
           totalInstitutions:   institutions.meta?.total ?? 0,
           pendingInstitutions: pending.meta?.total ?? 0,
@@ -78,6 +80,7 @@ export default function AdminPage() {
           pendingBookings:     bookings.meta?.total ?? 0,
           leadsNeedContact:    leads.meta?.total ?? 0,
           pendingReferralWithdrawals: refWithdrawals.meta?.total ?? 0,
+          pendingEnrollmentClaims: enrollmentClaims.meta?.total ?? 0,
         })
       })
       .catch(() => {}) // statistika ixtiyoriy — muvaffaqiyatsiz bo'lsa jim o'tkaziladi
@@ -208,6 +211,20 @@ export default function AdminPage() {
               <p className="text-sm text-amber-700">Referallar, yechib olish so&apos;rovlari</p>
             </div>
             <NavBadge count={stats?.pendingReferralWithdrawals} className="bg-amber-600" />
+          </Link>
+
+          <Link
+            href="/admin/enrollment-claims"
+            className="relative flex items-center gap-4 rounded-2xl border border-teal-200 bg-teal-50 p-6 transition-colors hover:border-teal-400"
+          >
+            <span className="icon-chip h-14 w-14 shrink-0 bg-teal-500 text-white">
+              <ReceiptText className="h-6 w-6" strokeWidth={1.75} />
+            </span>
+            <div>
+              <h2 className="text-lg font-bold text-teal-900">Kurs sotib olish xabarlari</h2>
+              <p className="text-sm text-teal-700">Foydalanuvchi &quot;sotib oldim&quot; xabarlari + muassasa bo&apos;yicha hisob-kitob</p>
+            </div>
+            <NavBadge count={stats?.pendingEnrollmentClaims} className="bg-teal-600" />
           </Link>
 
           {user.role === 'SUPER_ADMIN' && (

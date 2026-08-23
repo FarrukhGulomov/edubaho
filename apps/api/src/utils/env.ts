@@ -76,6 +76,10 @@ const envSchema = z.object({
   MIN_WITHDRAWAL_UZS: z.coerce.number().int().positive().default(100_000),
   // Dastur butunlay o'chirilsa ('false') — yangi referral yaratilmaydi
   REFERRAL_PROGRAM_ENABLED: z.enum(['true', 'false']).default('true'),
+
+  // ── Enrollment Claims — "Men kurs sotib oldim" bonus tizimi ─────────────
+  // Admin tasdiqlagan har bir claim uchun foydalanuvchiga beriladigan bonus (so'm)
+  ENROLLMENT_REWARD_UZS: z.coerce.number().int().positive().default(10_000),
 })
 
 const parsed = envSchema.safeParse(process.env)

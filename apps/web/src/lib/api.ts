@@ -311,6 +311,8 @@ export interface ReferralStats {
   minWithdrawal: number
   availableBalance: number
   totalEarned: number
+  totalReferralEarned?: number
+  totalEnrollmentEarned?: number
   totalWithdrawn: number
   potentialPending: number
   totalReferrals: number
@@ -357,6 +359,29 @@ export const referralsApi = {
 
   withdraw: (token: string, data: { amount: number; paymentMethod: string; paymentDetails: string }) =>
     apiFetch<{ data: ReferralWithdrawalItem; message: string }>('/referrals/withdraw', {
+      method: 'POST', token, body: JSON.stringify(data),
+    }),
+}
+
+// ─── Enrollment Claims ("Men kurs sotib oldim") ─────────────────
+
+export interface EnrollmentClaimItem {
+  id: string
+  courseNote: string | null
+  status: 'PENDING' | 'APPROVED' | 'REJECTED'
+  reviewNote: string | null
+  createdAt: string
+  reviewedAt: string | null
+  institution: { id: string; nameUz: string; slug: string }
+  reward: { amount: number; status: string } | null
+}
+
+export const enrollmentClaimsApi = {
+  listMine: (token: string) =>
+    apiFetch<{ data: EnrollmentClaimItem[]; meta: { rewardAmount: number } }>('/enrollment-claims/me', { token }),
+
+  create: (token: string, data: { institutionId: string; courseNote?: string; receiptUrl?: string }) =>
+    apiFetch<{ data: EnrollmentClaimItem; message: string }>('/enrollment-claims', {
       method: 'POST', token, body: JSON.stringify(data),
     }),
 }
