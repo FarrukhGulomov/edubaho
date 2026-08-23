@@ -524,8 +524,8 @@ export default async function institutionRoutes(fastify: FastifyInstance) {
         // Anonymous ko'rish
       }
 
-      // Fire and forget — client kutmasin
-      void prisma.$transaction([
+      // Fire and forget — client kutmasin, lekin xato serverni yiqitmasligi uchun tutib olinadi
+      prisma.$transaction([
         prisma.analyticsEvent.create({
           data: {
             institutionId,
@@ -540,7 +540,7 @@ export default async function institutionRoutes(fastify: FastifyInstance) {
           where: { id: institutionId },
           data: { viewCount: { increment: 1 } },
         }),
-      ])
+      ]).catch((err) => fastify.log.warn(err, 'view analytics yozishda xato'))
 
       return reply.send({ success: true })
     },

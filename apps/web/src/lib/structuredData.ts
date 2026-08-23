@@ -91,3 +91,14 @@ export function itemListSchema(items: { name: string; url: string }[]) {
     })),
   }
 }
+
+/**
+ * JSON-LD obyektini `<script>` teg ichiga xavfsiz joylash uchun serializatsiya
+ * qiladi. `JSON.stringify` o'zi `<` belgisini escape qilmaydi — schema ichidagi
+ * maydonlar (masalan muassasa nomi/tavsifi) admin tomonidan tahrirlanadigan
+ * erkin matn bo'lgani uchun, ular `</script>`ni o'z ichiga olsa, script blokini
+ * muddatidan oldin yopib, keyingi HTML/JS'ni inject qilishi mumkin edi.
+ */
+export function safeJsonLd(schema: unknown): string {
+  return JSON.stringify(schema).replace(/</g, '\\u003c')
+}

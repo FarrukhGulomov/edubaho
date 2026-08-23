@@ -1,6 +1,7 @@
 import type { FastifyInstance } from 'fastify'
 import { z } from 'zod'
 import { subDays, startOfDay, format } from 'date-fns'
+import { isStorageConfigured, deleteImage, keyFromPublicUrl } from '../../services/storageService'
 
 /**
  * Dashboard (B2B) main routes
@@ -300,9 +301,17 @@ export default async function dashboardRoutes(fastify: FastifyInstance) {
         return reply.status(404).send({ error: 'Fayl topilmadi' })
       }
 
+      const key = keyFromPublicUrl(media.url)
+      const thumbKey = media.thumbnailUrl ? keyFromPublicUrl(media.thumbnailUrl) : null
+
       await prisma.institutionMedia.delete({ where: { id: mediaId } })
 
-      // TODO: R2'dan ham o'chirish (storage.ts orqali)
+      if (isStorageConfigured()) {
+        await Promise.all([
+          key ? deleteImage(key).catch((err) => fastify.log.warn(err, "R2 rasm o'chirishda xato")) : Promise.resolve(),
+          thumbKey ? deleteImage(thumbKey).catch((err) => fastify.log.warn(err, "R2 thumbnail o'chirishda xato")) : Promise.resolve(),
+        ])
+      }
 
       return reply.send({ success: true, message: 'Fayl o\'chirildi' })
     },
