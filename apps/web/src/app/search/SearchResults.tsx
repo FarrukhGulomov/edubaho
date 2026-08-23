@@ -8,6 +8,7 @@ import {
   ArrowLeftRight, Check, PencilLine, School, Palette, Lock, Award, ChevronDown,
 } from 'lucide-react'
 import { RatingHint } from '@/components/shared/StarRating'
+import InstitutionCoverImage from '@/components/shared/InstitutionCoverImage'
 import { useCompare, useSaved } from '@/hooks/useCompare'
 import { useLang, t } from '@/contexts/LangContext'
 import { track, trackSearch, trackSearchClick } from '@/lib/analytics'
@@ -391,9 +392,17 @@ function InstitutionCardComp({
       )}
       <Link
         href={`/institutions/${i.slug}`}
-        className="flex flex-1 flex-col p-6"
+        className="flex flex-1 flex-col"
         onClick={() => trackSearchClick(i.id, position, query)}
       >
+        <InstitutionCoverImage
+          media={i.media}
+          type={i.type}
+          name={name}
+          className="aspect-[16/10] w-full rounded-t-2xl"
+          priority={position <= 3}
+        />
+        <div className="flex flex-1 flex-col p-6">
         {/* Tur + tasdiqlangan — bosh sahifa kartasi bilan bir xil ixcham badge'lar */}
         <div className="mb-2 flex flex-wrap items-center gap-1.5">
           <span className="badge-sm bg-primary-50 text-primary-700">
@@ -459,6 +468,7 @@ function InstitutionCardComp({
               {formatUzs(i.pricing.monthlyMin)}
             </span>
           )}
+        </div>
         </div>
       </Link>
 

@@ -107,6 +107,7 @@ export interface Institution {
   avgRating?: number
   reviewCount: number
   city?: { id?: string; nameUz: string; nameRu?: string | null } | null
+  media?: Array<{ id: string; url: string; thumbnailUrl?: string | null; type: string; caption?: string | null }>
   // Filiallar — bir xil muassasaning boshqa shaharlardagi bo'limlari
   branches?: Array<{
     id: string
