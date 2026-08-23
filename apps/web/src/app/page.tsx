@@ -278,7 +278,6 @@ export default function HomePage() {
                 <div key={inst.id} className="group card flex flex-col p-0">
                   <InstitutionCoverImage
                     media={inst.media}
-                    type={inst.type}
                     name={name}
                     className="aspect-[16/10] w-full rounded-t-2xl"
                   />
