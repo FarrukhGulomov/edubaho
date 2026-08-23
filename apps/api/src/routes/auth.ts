@@ -180,6 +180,7 @@ export default async function authRoutes(fastify: FastifyInstance) {
           phone: true,
           name: true,
           role: true,
+          isActive: true,
           institutionClaims: {
             where: { status: 'APPROVED' },
             select: { institutionId: true },
@@ -190,6 +191,12 @@ export default async function authRoutes(fastify: FastifyInstance) {
 
       if (!user) {
         return reply.status(401).send({ error: 'Foydalanuvchi topilmadi' })
+      }
+
+      if (!user.isActive) {
+        // Deaktiv qilingan hisob — eski refresh token'ni ham darhol bekor qilamiz
+        await revokeRefreshToken(payload.sub, payload.jti)
+        return reply.status(403).send({ error: 'Hisobingiz faol emas' })
       }
 
       // Eski refresh token'ni bekor qilish (rotation)

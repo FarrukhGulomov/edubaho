@@ -1,5 +1,6 @@
 import fp from 'fastify-plugin'
 import type { FastifyInstance, FastifyRequest, FastifyReply } from 'fastify'
+import { redis } from '../utils/redis'
 
 declare module 'fastify' {
   interface FastifyInstance {
@@ -7,6 +8,17 @@ declare module 'fastify' {
     requireSuperAdmin: (req: FastifyRequest, reply: FastifyReply) => Promise<void>
     requireB2B: (req: FastifyRequest, reply: FastifyReply) => Promise<void>
   }
+}
+
+/**
+ * Admin PIN (ikkinchi faktor) Redis'da tasdiqlanganmi — tekshiradi.
+ * /auth/admin-pin muvaffaqiyatli chaqirilganda `admin_verified:${userId}`
+ * 1 soatga o'rnatiladi. Bu tekshiruv YO'Q bo'lsa, o'g'irlangan/oqib chiqqan
+ * JWT o'zi orqali PIN'siz to'g'ridan-to'g'ri admin API'ga kirish mumkin
+ * bo'lib qolar edi — PIN faqat frontend UX qadami bo'lib qolardi.
+ */
+async function isPinVerified(userId: string): Promise<boolean> {
+  return (await redis.get(`admin_verified:${userId}`)) === '1'
 }
 
 /**
@@ -22,9 +34,12 @@ export default fp(async (fastify: FastifyInstance) => {
   fastify.decorate(
     'requireAdmin',
     async (request: FastifyRequest, reply: FastifyReply) => {
-      const { role } = request.user
+      const { id, role } = request.user
       if (role !== 'ADMIN' && role !== 'SUPER_ADMIN') {
         return reply.status(403).send({ error: 'Bu amalni bajarish uchun admin huquqi kerak' })
+      }
+      if (!(await isPinVerified(id))) {
+        return reply.status(403).send({ error: 'Admin PIN tasdiqlanishi kerak', code: 'ADMIN_PIN_REQUIRED' })
       }
     },
   )
@@ -32,9 +47,12 @@ export default fp(async (fastify: FastifyInstance) => {
   fastify.decorate(
     'requireSuperAdmin',
     async (request: FastifyRequest, reply: FastifyReply) => {
-      const { role } = request.user
+      const { id, role } = request.user
       if (role !== 'SUPER_ADMIN') {
         return reply.status(403).send({ error: 'Bu amal faqat super admin uchun' })
+      }
+      if (!(await isPinVerified(id))) {
+        return reply.status(403).send({ error: 'Admin PIN tasdiqlanishi kerak', code: 'ADMIN_PIN_REQUIRED' })
       }
     },
   )

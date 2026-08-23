@@ -37,6 +37,11 @@ async function apiFetch<T>(path: string, options: FetchOptions = {}): Promise<T>
   const data = await res.json()
 
   if (!res.ok) {
+    // Backend admin PIN tasdiqlanmaganini aniqladi (server-side enforcement) —
+    // foydalanuvchini PIN kiritish sahifasiga yo'naltiramiz
+    if (data.code === 'ADMIN_PIN_REQUIRED' && typeof window !== 'undefined') {
+      window.location.href = '/admin/login'
+    }
     throw new ApiError(data.error ?? "Noma'lum xato", res.status, data.code)
   }
 

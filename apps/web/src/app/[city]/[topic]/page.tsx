@@ -5,7 +5,7 @@ import Footer from '@/components/shared/Footer'
 import SearchResults from '../../search/SearchResults'
 import type { InstitutionCard } from '../../search/page'
 import { TOPICS, type Topic } from '@/lib/seoTopics'
-import { breadcrumbSchema, itemListSchema } from '@/lib/structuredData'
+import { breadcrumbSchema, itemListSchema, safeJsonLd } from '@/lib/structuredData'
 
 const API = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:3001/api/v1'
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://bilimon.uz'
@@ -136,8 +136,8 @@ export default async function CityTopicPage({
         <script
           key={idx}
           type="application/ld+json"
-          // eslint-disable-next-line react/no-danger -- JSON.stringify chiqishi, foydalanuvchi kiritmasi emas — XSS xavfi yo'q
-          dangerouslySetInnerHTML={{ __html: JSON.stringify(schema) }}
+          // eslint-disable-next-line react/no-danger -- safeJsonLd `<` belgisini escape qiladi, script breakout xavfi yo'q
+          dangerouslySetInnerHTML={{ __html: safeJsonLd(schema) }}
         />
       ))}
       <Header />

@@ -3,7 +3,7 @@ import { notFound } from 'next/navigation'
 import Header from '@/components/shared/Header'
 import Footer from '@/components/shared/Footer'
 import InstitutionDetail from './InstitutionDetail'
-import { institutionSchema, breadcrumbSchema } from '@/lib/structuredData'
+import { institutionSchema, breadcrumbSchema, safeJsonLd } from '@/lib/structuredData'
 
 const API = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:3001/api/v1'
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://bilimon.uz'
@@ -72,8 +72,8 @@ export default async function InstitutionPage({ params }: Props) {
         <script
           key={idx}
           type="application/ld+json"
-          // eslint-disable-next-line react/no-danger -- JSON.stringify chiqishi, foydalanuvchi kiritmasi emas — XSS xavfi yo'q
-          dangerouslySetInnerHTML={{ __html: JSON.stringify(schema) }}
+          // eslint-disable-next-line react/no-danger -- safeJsonLd `<` belgisini escape qiladi, script breakout xavfi yo'q
+          dangerouslySetInnerHTML={{ __html: safeJsonLd(schema) }}
         />
       ))}
       <Header />

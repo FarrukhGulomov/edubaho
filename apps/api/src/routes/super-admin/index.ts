@@ -2,6 +2,7 @@ import type { FastifyInstance } from 'fastify'
 import { z } from 'zod'
 import { indexInstitution, setupSearchIndex } from '../../services/searchService'
 import { logAdminAction } from '../../services/auditLog'
+import { revokeAllTokens } from '../../services/tokens'
 
 /**
  * Super Admin routes — faqat SUPER_ADMIN roli uchun
@@ -105,6 +106,12 @@ export default async function superAdminRoutes(fastify: FastifyInstance) {
     }
 
     await prisma.user.update({ where: { id }, data: { isActive } })
+
+    // Deaktiv qilinganda barcha refresh token'lar bekor qilinadi — foydalanuvchi
+    // eski access token muddati tugagach (~15 daq) qayta kira olmaydi
+    if (!isActive) {
+      await revokeAllTokens(id)
+    }
 
     logAdminAction(prisma, request, {
       action: isActive ? 'user.activate' : 'user.deactivate',
