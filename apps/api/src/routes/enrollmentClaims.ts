@@ -4,6 +4,7 @@ import { randomUUID } from 'crypto'
 import sharp from 'sharp'
 import { createEnrollmentClaim, DuplicatePendingClaimError } from '../services/enrollmentClaimService'
 import { isStorageConfigured, uploadImage } from '../services/storageService'
+import { formatBcn } from '../utils/currency'
 import { ENROLLMENT_REWARD_UZS } from '../config/enrollment'
 
 const ALLOWED_RECEIPT_MIME = new Set(['image/jpeg', 'image/png', 'image/webp'])
@@ -86,7 +87,7 @@ export default async function enrollmentClaimRoutes(fastify: FastifyInstance) {
       const claim = await createEnrollmentClaim(prisma, { userId, institutionId, courseNote, receiptUrl })
       return reply.status(201).send({
         data: claim,
-        message: `Xabaringiz qabul qilindi! Admin tasdiqlagach, balansingizga ${fmtUzs(ENROLLMENT_REWARD_UZS)} bonus qo'shiladi.`,
+        message: `Xabaringiz qabul qilindi! Admin tasdiqlagach, balansingizga ${formatBcn(ENROLLMENT_REWARD_UZS)} bonus qo'shiladi.`,
       })
     } catch (err) {
       if (err instanceof DuplicatePendingClaimError) {
@@ -123,8 +124,4 @@ export default async function enrollmentClaimRoutes(fastify: FastifyInstance) {
 
     return reply.send({ data: claims, meta: { rewardAmount: ENROLLMENT_REWARD_UZS } })
   })
-}
-
-function fmtUzs(n: number): string {
-  return `${n.toLocaleString('ru-RU').replace(/,/g, ' ')} so'm`
 }

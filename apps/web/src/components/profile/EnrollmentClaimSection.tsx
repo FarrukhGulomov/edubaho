@@ -6,6 +6,7 @@ import {
 } from 'lucide-react'
 import { useLang } from '@/contexts/LangContext'
 import { enrollmentClaimsApi, type EnrollmentClaimItem } from '@/lib/api'
+import { formatBcn } from '@/lib/currency'
 
 const API = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:3001/api/v1'
 
@@ -14,10 +15,6 @@ interface InstitutionOption {
   nameUz: string
   nameRu?: string
   city?: { nameUz: string; nameRu?: string } | null
-}
-
-function fmtUzs(n: number): string {
-  return `${n.toLocaleString('ru-RU').replace(/,/g, ' ')} so'm`
 }
 
 const STATUS_STYLE: Record<string, { bg: string; Icon: typeof Clock; label: { uz: string; ru: string } }> = {
@@ -171,8 +168,8 @@ export default function EnrollmentClaimSection({ token }: Props) {
           </h2>
           <p className="text-sm text-gray-500">
             {uz
-              ? `Xabar bering va tasdiqlangach ${fmtUzs(rewardAmount)} bonus oling`
-              : `Сообщите и получите ${fmtUzs(rewardAmount)} бонус после подтверждения`}
+              ? `Xabar bering va tasdiqlangach ${formatBcn(rewardAmount)} bonus oling`
+              : `Сообщите и получите ${formatBcn(rewardAmount)} бонус после подтверждения`}
           </p>
         </div>
       </div>
@@ -335,7 +332,7 @@ export default function EnrollmentClaimSection({ token }: Props) {
                     </div>
                     <div className="flex shrink-0 items-center gap-2">
                       {c.status === 'APPROVED' && c.reward && (
-                        <span className="text-xs font-bold text-emerald-600">+{fmtUzs(c.reward.amount)}</span>
+                        <span className="text-xs font-bold text-emerald-600">+{formatBcn(c.reward.amount)}</span>
                       )}
                       <span className={`flex items-center gap-1 whitespace-nowrap rounded-full px-2.5 py-1 text-xs font-semibold ${style.bg}`}>
                         <StatusIcon className="h-3 w-3 shrink-0" strokeWidth={2} />

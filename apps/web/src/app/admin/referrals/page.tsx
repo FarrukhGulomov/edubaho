@@ -9,6 +9,7 @@ import {
 import { useAuth } from '@/hooks/useAuth'
 import { useRouter } from 'next/navigation'
 import BrandMark from '@/components/shared/BrandMark'
+import { formatBcn } from '@/lib/currency'
 
 const API = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:3001/api/v1'
 
@@ -47,7 +48,6 @@ interface Stats {
   activeReferrersCount: number
 }
 
-function fmtUzs(n: number) { return `${n.toLocaleString('ru-RU').replace(/,/g, ' ')} so'm` }
 function fmtDate(d: string) { return new Date(d).toLocaleString('uz-UZ', { dateStyle: 'medium', timeStyle: 'short' }) }
 function userLabel(u: { name: string | null; phone: string | null }) { return u.name ?? u.phone ?? "Noma'lum" }
 
@@ -162,8 +162,8 @@ export default function AdminReferralsPage() {
           <div className="mb-6 grid grid-cols-2 gap-3 sm:grid-cols-4">
             <StatTile Icon={Users} label="Jami referal" value={stats.totalReferrals} accent="text-primary-600 bg-primary-50" />
             <StatTile Icon={CheckCircle2} label="Aktiv" value={stats.activeReferrals} accent="text-emerald-600 bg-emerald-50" />
-            <StatTile Icon={TrendingUp} label="Berilgan mukofot" value={fmtUzs(stats.totalRewardsIssued)} accent="text-amber-600 bg-amber-50" />
-            <StatTile Icon={Wallet} label="Kutayotgan so'rovlar" value={`${stats.pendingWithdrawalsCount} (${fmtUzs(stats.pendingWithdrawalsAmount)})`} accent="text-rose-600 bg-rose-50" urgent={stats.pendingWithdrawalsCount > 0} />
+            <StatTile Icon={TrendingUp} label="Berilgan mukofot" value={formatBcn(stats.totalRewardsIssued)} accent="text-amber-600 bg-amber-50" />
+            <StatTile Icon={Wallet} label="Kutayotgan so'rovlar" value={`${stats.pendingWithdrawalsCount} (${formatBcn(stats.pendingWithdrawalsAmount)})`} accent="text-rose-600 bg-rose-50" urgent={stats.pendingWithdrawalsCount > 0} />
           </div>
         )}
 
@@ -226,7 +226,7 @@ export default function AdminReferralsPage() {
                   <div>
                     <p className="font-semibold text-gray-900">{userLabel(w.user)}</p>
                     <p className="text-sm text-gray-500">{w.user.phone}</p>
-                    <p className="mt-1 text-lg font-bold text-primary-700">{fmtUzs(w.amount)}</p>
+                    <p className="mt-1 text-lg font-bold text-primary-700">{formatBcn(w.amount)}</p>
                     <p className="text-xs text-gray-400">
                       {w.paymentMethod.toUpperCase()} • {w.paymentDetails}
                     </p>
@@ -303,7 +303,7 @@ export default function AdminReferralsPage() {
                       </span>
                     </td>
                     <td className="px-4 py-3 font-semibold text-emerald-600">
-                      {r.reward ? `+${fmtUzs(r.reward.amount)}` : '—'}
+                      {r.reward ? `+${formatBcn(r.reward.amount)}` : '—'}
                     </td>
                   </tr>
                 ))}

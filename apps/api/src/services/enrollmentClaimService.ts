@@ -1,5 +1,6 @@
 import type { PrismaClient } from '@prisma/client'
 import { notifyUser } from './notify'
+import { formatBcn } from '../utils/currency'
 import { ENROLLMENT_REWARD_UZS } from '../config/enrollment'
 
 /**
@@ -8,8 +9,8 @@ import { ENROLLMENT_REWARD_UZS } from '../config/enrollment'
  * OQIM:
  *   Foydalanuvchi profilida "Kurs sotib oldim" → EnrollmentClaim(PENDING)
  *   → Admin ko'rib chiqadi → APPROVED bo'lsa: EnrollmentReward(CONFIRMED,
- *     +10 000 so'm) — bu ReferralReward bilan BIR XIL hamyon balansiga
- *     qo'shiladi (referralService.getAvailableBalance)
+ *     +10 000 BCN — BilimCoin) — bu ReferralReward bilan BIR XIL hamyon
+ *     balansiga qo'shiladi (referralService.getAvailableBalance)
  *
  * MUHIM (fraud-himoya, ikkala yo'nalishda):
  * - Bitta claim = ko'pi bilan BITTA mukofot (EnrollmentReward.claimId
@@ -80,7 +81,7 @@ export async function approveEnrollmentClaim(
     userId: claim.userId,
     type: 'enrollment_claim_approved',
     title: "Kurs sotib olganingiz tasdiqlandi!",
-    body: `🎉 "${claim.institution.nameUz}" markazida kurs sotib olganingiz tasdiqlandi. Balansingizga ${fmtUzs(ENROLLMENT_REWARD_UZS)} bonus qo'shildi.`,
+    body: `🎉 "${claim.institution.nameUz}" markazida kurs sotib olganingiz tasdiqlandi. Balansingizga ${formatBcn(ENROLLMENT_REWARD_UZS)} bonus qo'shildi.`,
     data: { claimId, amount: ENROLLMENT_REWARD_UZS },
   })
 
@@ -113,8 +114,4 @@ export async function rejectEnrollmentClaim(
   })
 
   return { ok: true }
-}
-
-function fmtUzs(n: number): string {
-  return `${n.toLocaleString('ru-RU').replace(/,/g, ' ')} so'm`
 }

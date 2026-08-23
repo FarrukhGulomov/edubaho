@@ -211,6 +211,7 @@ model User {
   referralWithdrawals ReferralWithdrawal[]
   enrollmentClaims    EnrollmentClaim[]
   enrollmentRewards   EnrollmentReward[]
+  bcnAdjustments      BcnAdjustment[]
 
   @@index([phone])
   @@index([telegramId])
@@ -792,6 +793,34 @@ model EnrollmentReward {
   user  User            @relation(fields: [userId], references: [id])
 
   @@index([userId, status])
+}
+
+// ─────────────────────────────────────────────────
+// BCN ADJUSTMENT — Super admin BilimCoin balansini qo'lda boshqarishi
+//
+// Referral va enrollment mukofotlaridan TASHQARI, super admin har qanday
+// foydalanuvchining hamyoniga to'g'ridan-to'g'ri BilimCoin qo'shishi yoki
+// ayirishi mumkin (masalan xato/qo'lda berilgan mablag'ni bekor qilish,
+// yoki balansni butunlay 0 ga tushirish). `amount` musbat (qo'shish) yoki
+// manfiy (ayirish) bo'lishi mumkin — referralService.getAvailableBalance
+// bu jadvalning yig'indisini ham hisobga oladi (bitta umumiy hamyon).
+// ─────────────────────────────────────────────────
+
+model BcnAdjustment {
+  id        String   @id @default(cuid())
+  userId    String
+  // Musbat = balansga qo'shiladi, manfiy = balansdan ayiriladi
+  amount    Int
+  // Har doim majburiy — bu to'g'ridan-to'g'ri, tasdiqlashsiz moliyaviy
+  // amal, shuning uchun sababsiz qilib bo'lmaydi (audit uchun)
+  reason    String
+  adminId   String
+  createdAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id])
+
+  @@index([userId])
+  @@index([createdAt])
 }
 
 // ─────────────────────────────────────────────────

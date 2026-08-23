@@ -29,7 +29,6 @@ interface SummaryRow {
   approvedCount: number
 }
 
-function fmtUzs(n: number) { return `${n.toLocaleString('ru-RU').replace(/,/g, ' ')} so'm` }
 function fmtDate(d: string) { return new Date(d).toLocaleString('uz-UZ', { dateStyle: 'medium', timeStyle: 'short' }) }
 function userLabel(u: { name: string | null; phone: string | null }) { return u.name ?? u.phone ?? "Noma'lum" }
 

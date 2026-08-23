@@ -9,10 +9,10 @@ import { env } from '../utils/env'
  * REFERRAL_REWARD_UZS oshirilishi mumkin, kodga tegmasdan.
  */
 
-/** Har bir ACTIVE USER bo'lgan referral uchun referrerga beriladigan mukofot (so'm) */
+/** Har bir ACTIVE USER bo'lgan referral uchun referrerga beriladigan mukofot (BCN — BilimCoin) */
 export const REFERRAL_REWARD_UZS = env.REFERRAL_REWARD_UZS
 
-/** Minimal yechib olish summasi (so'm) */
+/** Minimal yechib olish summasi (BCN) */
 export const MIN_WITHDRAWAL_UZS = env.MIN_WITHDRAWAL_UZS
 
 /** Dastur butunlay o'chirilgan bo'lsa — yangi referral yaratilmaydi */

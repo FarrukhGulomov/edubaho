@@ -9,5 +9,5 @@ import { env } from '../utils/env'
  * referral va enrollment bonuslari bitta umumiy balans sifatida ko'rinadi.
  */
 
-/** Admin tasdiqlagan har bir enrollment claim uchun foydalanuvchiga beriladigan bonus (so'm) */
+/** Admin tasdiqlagan har bir enrollment claim uchun foydalanuvchiga beriladigan bonus (BCN — BilimCoin) */
 export const ENROLLMENT_REWARD_UZS = env.ENROLLMENT_REWARD_UZS

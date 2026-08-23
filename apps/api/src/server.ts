@@ -32,6 +32,7 @@ import adminEnrollmentClaimRoutes from './routes/admin/enrollmentClaims'
 import superAdminRoutes from './routes/super-admin/index'
 import superAdminAnalytics from './routes/super-admin/analytics'
 import superAdminAuditLog from './routes/super-admin/audit-log'
+import superAdminBcnRoutes from './routes/super-admin/bcn'
 import trackRoutes from './routes/track'
 import telegramWebhookRoutes from './routes/telegramWebhook'
 import compareRoutes from './routes/compare'
@@ -137,6 +138,7 @@ async function buildApp() {
       await api.register(superAdminRoutes)
       await api.register(superAdminAnalytics)
       await api.register(superAdminAuditLog)
+      await api.register(superAdminBcnRoutes)
 
       // Analytics / Lead tracking (auth shart emas)
       await api.register(trackRoutes)
