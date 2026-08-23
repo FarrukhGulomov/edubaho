@@ -90,11 +90,14 @@ export default async function adminClaimRoutes(fastify: FastifyInstance) {
           data: { role: 'INSTITUTION_OWNER' },
         })
 
-        // Egasi tasdiqlangan muassasa "verified" belgisini oladi
-        await tx.institution.update({
-          where: { id: claim.institutionId },
-          data: { isVerified: true },
-        })
+        // MUHIM: bu yerda `isVerified: true` ATAYLAB o'rnatilmaydi.
+        // Egalik so'rovi tasdiqlanishi faqat "Claimed" (🔵) holatini beradi —
+        // muassasa profilini endi shu foydalanuvchi boshqaradi, lekin
+        // Bilimon hali ma'lumotlarni shaxsan tekshirmagan. "Verified" (🟢)
+        // belgisi FAQAT admin panelidagi alohida tekshiruvdan keyin, qo'lda
+        // (`PATCH /admin/institutions/:id/verify`) beriladi. Ikkalasini bir
+        // xil deb hisoblash foydalanuvchi ishonchini yolg'ondan oshiradi —
+        // shuning uchun ataylab ajratilgan (verificationLevel — verification.ts).
       })
 
       logAdminAction(prisma, request, {
@@ -104,7 +107,10 @@ export default async function adminClaimRoutes(fastify: FastifyInstance) {
         after: { userId: claim.userId, institutionId: claim.institutionId },
       })
 
-      return reply.send({ success: true, message: "So'rov tasdiqlandi — foydalanuvchi endi muassasa egasi" })
+      return reply.send({
+        success: true,
+        message: "So'rov tasdiqlandi — foydalanuvchi endi muassasa egasi (holat: \"Da'vo qilingan\"). To'liq \"Tasdiqlangan\" belgisi uchun ma'lumotlarni shaxsan tekshirib, muassasa profilida alohida faollashtiring.",
+      })
     },
   )
 

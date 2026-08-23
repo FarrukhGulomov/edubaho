@@ -4,11 +4,13 @@ import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { useState, useEffect, useRef } from 'react'
 import {
-  Search, X, MapPin, Globe2, Users2, UserCheck, BadgeCheck, Star,
+  Search, X, MapPin, Globe2, Users2, UserCheck, Star,
   ArrowLeftRight, Check, PencilLine, School, Palette, Lock, Award, ChevronDown,
 } from 'lucide-react'
 import { RatingHint } from '@/components/shared/StarRating'
 import InstitutionCoverImage from '@/components/shared/InstitutionCoverImage'
+import VerificationBadge from '@/components/shared/VerificationBadge'
+import { formatStudentRange } from '@/lib/studentRange'
 import { useCompare, useSaved } from '@/hooks/useCompare'
 import { useLang, t } from '@/contexts/LangContext'
 import { track, trackSearch, trackSearchClick } from '@/lib/analytics'
@@ -408,11 +410,7 @@ function InstitutionCardComp({
           <span className="badge-sm bg-primary-50 text-primary-700">
             {typeInfo ? t(lang, typeInfo) : i.type}
           </span>
-          {i.isVerified && (
-            <span className="flex items-center gap-1 rounded-full bg-emerald-50 px-2 py-0.5 text-[11px] font-semibold text-emerald-700">
-              <BadgeCheck className="h-3 w-3 shrink-0" strokeWidth={2} /> {t(lang, ui.verified)}
-            </span>
-          )}
+          <VerificationBadge level={i.verificationLevel} lang={lang} size="xs" />
         </div>
 
         {/* Nom */}
@@ -430,7 +428,7 @@ function InstitutionCardComp({
           )}
           {i.details?.studentCount && (
             <span className="flex items-center gap-1 font-semibold text-primary-600">
-              <Users2 className="h-3.5 w-3.5 shrink-0" strokeWidth={2} /> {formatNum(i.details.studentCount)}+
+              <Users2 className="h-3.5 w-3.5 shrink-0" strokeWidth={2} /> {formatStudentRange(i.details.studentCount)}
             </span>
           )}
           {i.details?.teacherCount && (

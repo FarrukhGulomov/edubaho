@@ -11,6 +11,7 @@ import {
 import { useAuth } from '@/hooks/useAuth'
 import { useRouter } from 'next/navigation'
 import BrandMark from '@/components/shared/BrandMark'
+import VerificationBadge from '@/components/shared/VerificationBadge'
 import type React from 'react'
 
 const API = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:3001/api/v1'
@@ -23,6 +24,7 @@ interface Institution {
   type: string
   status: string
   isVerified: boolean
+  verificationLevel: 'UNVERIFIED' | 'CLAIMED' | 'VERIFIED'
   avgRating?: number
   reviewCount: number
   viewCount: number
@@ -125,7 +127,7 @@ export default function AdminInstitutionsPage() {
       })
       if (res.ok) {
         const data = await res.json()
-        setInstitutions((prev) => prev.map((i) => i.id === id ? { ...i, isVerified: data.isVerified } : i))
+        setInstitutions((prev) => prev.map((i) => i.id === id ? { ...i, isVerified: data.isVerified, verificationLevel: data.verificationLevel } : i))
         showToast(data.isVerified ? 'Tasdiqlandi' : 'Tasdiq bekor qilindi')
       }
     } finally {
@@ -300,11 +302,7 @@ export default function AdminInstitutionsPage() {
                     <div className="flex-1 min-w-0">
                       <div className="flex flex-wrap items-center gap-2 mb-0.5">
                         <span className="font-bold text-gray-900 leading-tight">{inst.nameUz}</span>
-                        {inst.isVerified && (
-                          <span className="flex items-center gap-1 whitespace-nowrap rounded-full bg-emerald-50 px-2 py-0.5 text-xs font-semibold text-emerald-700">
-                            <BadgeCheck className="h-3 w-3 shrink-0" strokeWidth={2} /> Tasdiqlangan
-                          </span>
-                        )}
+                        <VerificationBadge level={inst.verificationLevel} lang="uz" size="xs" />
                         <span className={`whitespace-nowrap rounded-full px-2.5 py-0.5 text-xs font-semibold ${STATUS_COLORS[inst.status] ?? 'bg-gray-100'}`}>
                           {inst.status}
                         </span>

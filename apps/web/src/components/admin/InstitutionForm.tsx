@@ -596,7 +596,11 @@ export default function InstitutionForm({ initialData, institutionId, mode, init
               <p className="flex items-center gap-1.5 text-sm font-semibold text-gray-700">
                 <CheckCircle2 className="h-4 w-4 shrink-0 text-emerald-500" strokeWidth={1.75} /> Tasdiqlangan muassasa
               </p>
-              <p className="text-xs text-gray-400">Qidiruv natijalarida "Tasdiqlangan" badge ko'rsatiladi</p>
+              <p className="text-xs text-gray-400">
+                Faqat ma'lumotlarni shaxsan tekshirgandan keyin yoqing — bu eng yuqori "🟢 Tasdiqlangan"
+                darajasi. Egalik so'rovi (claim) tasdiqlanishi buni AVTOMATIK yoqmaydi — u faqat "🔵 Da'vo
+                qilingan" holatini beradi.
+              </p>
             </div>
           </label>
 

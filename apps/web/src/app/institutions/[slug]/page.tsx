@@ -102,6 +102,7 @@ export interface Institution {
   lat?: number
   lng?: number
   isVerified: boolean
+  verificationLevel: 'UNVERIFIED' | 'CLAIMED' | 'VERIFIED'
   trialLessonEnabled?: boolean
   deliveryMode?: string
   avgRating?: number
@@ -119,6 +120,9 @@ export interface Institution {
     city: { id: string; nameUz: string; nameRu?: string | null }
   }>
   subscription?: { plan: string }
+  // Litsenziya/rasmiy hujjatlar — mavjud bo'lsa profilida qo'shimcha
+  // ishonch belgisi sifatida ko'rsatiladi (VerificationLevel'dan mustaqil)
+  accreditations?: Array<{ id: string; name: string; issuedBy?: string | null }>
   details?: {
     descriptionUz?: string
     descriptionRu?: string

@@ -4,7 +4,7 @@ import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { useState, useEffect } from 'react'
 import {
-  BadgeCheck, Sparkles, ChevronDown,
+  Sparkles, ChevronDown,
   MapPin, Users2, UserCheck, Star, ArrowLeftRight, ArrowRight,
 } from 'lucide-react'
 import Header from '@/components/shared/Header'
@@ -12,6 +12,8 @@ import Footer from '@/components/shared/Footer'
 import BrandMark from '@/components/shared/BrandMark'
 import { RatingHint } from '@/components/shared/StarRating'
 import InstitutionCoverImage from '@/components/shared/InstitutionCoverImage'
+import VerificationBadge from '@/components/shared/VerificationBadge'
+import { formatStudentRange } from '@/lib/studentRange'
 import { useLang, t } from '@/contexts/LangContext'
 import { useCompare, useSaved } from '@/hooks/useCompare'
 import { matchApi, type MatchInsights } from '@/lib/api'
@@ -26,6 +28,7 @@ interface InstCard {
   avgRating?: number
   reviewCount: number
   isVerified: boolean
+  verificationLevel: 'UNVERIFIED' | 'CLAIMED' | 'VERIFIED'
   city?: { nameUz: string; nameRu?: string }
   media?: { url: string; thumbnailUrl?: string | null }[]
   pricing?: { monthlyMin?: number }
@@ -286,11 +289,7 @@ export default function HomePage() {
                       <span className="badge-sm bg-primary-50 text-primary-700">
                         {info ? (uz ? info.uz : info.ru) : inst.type}
                       </span>
-                      {inst.isVerified && (
-                        <span className="flex items-center gap-1 rounded-full bg-emerald-50 px-2 py-0.5 text-[11px] font-semibold text-emerald-700">
-                          <BadgeCheck className="h-3 w-3" strokeWidth={2} /> {uz ? 'Tasdiqlangan' : 'Подтв.'}
-                        </span>
-                      )}
+                      <VerificationBadge level={inst.verificationLevel} lang={lang} size="xs" />
                       {inst.subscription?.plan === 'PREMIUM' && (
                         <span className="flex items-center gap-1 rounded-full bg-amber-50 px-2 py-0.5 text-[11px] font-semibold text-amber-700">
                           <Sparkles className="h-3 w-3" strokeWidth={2} /> Premium
@@ -329,7 +328,7 @@ export default function HomePage() {
                       )}
                       {inst.details?.studentCount && (
                         <span className="flex items-center gap-1 text-primary-600 font-semibold">
-                          <Users2 className="h-3.5 w-3.5" strokeWidth={2} /> {fmtNum(inst.details.studentCount)}+
+                          <Users2 className="h-3.5 w-3.5" strokeWidth={2} /> {formatStudentRange(inst.details.studentCount)}
                         </span>
                       )}
                       {inst.details?.teacherCount && (
