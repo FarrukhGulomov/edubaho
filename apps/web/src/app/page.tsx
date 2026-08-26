@@ -12,6 +12,7 @@ import Footer from '@/components/shared/Footer'
 import BrandMark from '@/components/shared/BrandMark'
 import { RatingHint } from '@/components/shared/StarRating'
 import InstitutionCoverImage from '@/components/shared/InstitutionCoverImage'
+import LiveStatsPill from '@/components/shared/LiveStatsPill'
 import VerificationBadge from '@/components/shared/VerificationBadge'
 import { formatStudentRange } from '@/lib/studentRange'
 import { useLang, t } from '@/contexts/LangContext'
@@ -147,6 +148,7 @@ export default function HomePage() {
             <BrandMark size={20} className="shrink-0" />
             <span className="text-sm font-bold uppercase tracking-wide">BilimOn</span>
           </div>
+          <LiveStatsPill />
           <h1 className="mb-2 text-center text-2xl font-bold leading-tight text-gray-900 sm:text-4xl">
             {uz ? 'Qaysi ta\'lim muassasasi senga mos?' : 'Какое учебное заведение вам подходит?'}
           </h1>

@@ -12,13 +12,29 @@ export function isStorageConfigured(): boolean {
   return !!(env.R2_ACCOUNT_ID && env.R2_ACCESS_KEY && env.R2_SECRET_KEY)
 }
 
+/**
+ * R2_ACCOUNT_ID sifatida to'liq endpoint URL kiritish odatiy xato —
+ * Cloudflare buni "S3 API" qatorida to'liq `https://<id>.r2.cloudflarestorage.com`
+ * shaklida ko'rsatadi va ID'ni ajratib olish oson unutiladi. Bunday holatda
+ * `https://${accountId}.r2.cloudflarestorage.com` shablonida ikkilangan
+ * protokol/domen hosil bo'lib, DNS xatosiga olib kelardi
+ * (masalan `getaddrinfo ENOTFOUND <bucket>.https`) — shuning uchun
+ * qo'shilib qolgan protokol/domen qismlarini tozalab tashlaymiz.
+ */
+function normalizeAccountId(raw: string): string {
+  return raw
+    .trim()
+    .replace(/^https?:\/\//, '')
+    .replace(/\.r2\.cloudflarestorage\.com\/?$/, '')
+}
+
 let cachedClient: S3Client | null = null
 
 function getClient(): S3Client {
   if (!cachedClient) {
     cachedClient = new S3Client({
       region: 'auto',
-      endpoint: `https://${env.R2_ACCOUNT_ID}.r2.cloudflarestorage.com`,
+      endpoint: `https://${normalizeAccountId(env.R2_ACCOUNT_ID)}.r2.cloudflarestorage.com`,
       credentials: {
         accessKeyId: env.R2_ACCESS_KEY,
         secretAccessKey: env.R2_SECRET_KEY,

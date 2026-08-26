@@ -192,3 +192,24 @@ export const authTrack = {
   completed:    (isNewUser: boolean) => track('auth_completed', { category: 'auth', properties: { isNewUser } }),
   abandoned:    (step: string) => track('auth_abandoned', { category: 'auth', properties: { step } }),
 }
+
+// ─── Live presence (haqiqiy "onlayn" hisoblagich) ──────────────
+
+/**
+ * Server'ga "men hali ham shu yerdaman" deb signal beradi (haqiqiy
+ * heartbeat — soxta/random son emas). Redis'da 90 soniyalik TTL bilan
+ * saqlanadi, shuning uchun useLiveStats() bu funksiyani ~45 soniyada
+ * bir marta chaqirib turadi.
+ */
+export async function sendHeartbeat(): Promise<void> {
+  if (typeof window === 'undefined') return
+  const sessionId = getOrCreateSession()
+  try {
+    await fetch(`${API}/track/heartbeat`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'ngrok-skip-browser-warning': '1' },
+      body: JSON.stringify({ sessionId }),
+      keepalive: true,
+    })
+  } catch { /* jim tarzda o'tkazib yuboramiz — kritik emas */ }
+}
