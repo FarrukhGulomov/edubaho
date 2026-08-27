@@ -33,6 +33,7 @@ import superAdminRoutes from './routes/super-admin/index'
 import superAdminAnalytics from './routes/super-admin/analytics'
 import superAdminAuditLog from './routes/super-admin/audit-log'
 import superAdminBcnRoutes from './routes/super-admin/bcn'
+import dataExportRoutes from './routes/super-admin/dataExport'
 import trackRoutes from './routes/track'
 import liveStatsRoutes from './routes/liveStats'
 import telegramWebhookRoutes from './routes/telegramWebhook'
@@ -57,6 +58,10 @@ async function buildApp() {
     origin: env.ALLOWED_ORIGINS.split(','),
     methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
     credentials: true,
+    // Content-Disposition CORS'da standart bo'yicha yashiringan — buni ochmasak,
+    // frontend fayl yuklab olishda (leads/institutions export) chin nom o'rniga
+    // umumiy zaxira nomidan foydalanishga majbur bo'ladi
+    exposedHeaders: ['Content-Disposition'],
   })
 
   // ─── Rate Limiting ───────────────────────────
@@ -140,6 +145,7 @@ async function buildApp() {
       await api.register(superAdminAnalytics)
       await api.register(superAdminAuditLog)
       await api.register(superAdminBcnRoutes)
+      await api.register(dataExportRoutes)
 
       // Analytics / Lead tracking (auth shart emas)
       await api.register(trackRoutes)

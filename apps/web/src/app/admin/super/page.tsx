@@ -1,8 +1,8 @@
 'use client'
 
 import Link from 'next/link'
-import { useEffect, useState } from 'react'
-import { Ban, Crown, ShieldCheck, Users2, BarChart3, Search, RefreshCw, ScrollText } from 'lucide-react'
+import { useEffect, useState, useRef } from 'react'
+import { Ban, Crown, ShieldCheck, Users2, BarChart3, Search, RefreshCw, ScrollText, Download, Upload, DatabaseBackup } from 'lucide-react'
 import BrandMark from '@/components/shared/BrandMark'
 import { useAuth } from '@/hooks/useAuth'
 import { useRouter } from 'next/navigation'
@@ -15,6 +15,65 @@ export default function SuperAdminPage() {
   const [stats, setStats] = useState({ totalUsers: 0, totalAdmins: 0 })
   const [reindexing, setReindexing] = useState(false)
   const [reindexMsg, setReindexMsg] = useState('')
+  const [exporting, setExporting] = useState(false)
+  const [importing, setImporting] = useState(false)
+  const [importResult, setImportResult] = useState<{ imported: number; failed: number; total: number; errors: { nameUz: string; slug: string; error: string }[] } | null>(null)
+  const [importError, setImportError] = useState('')
+  const fileInputRef = useRef<HTMLInputElement>(null)
+
+  async function handleExportInstitutions() {
+    const token = localStorage.getItem('accessToken')
+    if (!token) return
+    setExporting(true)
+    try {
+      const res = await fetch(`${API}/super-admin/export/institutions`, {
+        headers: { Authorization: `Bearer ${token}`, 'ngrok-skip-browser-warning': '1' },
+      })
+      if (!res.ok) return
+      const blob = await res.blob()
+      const disposition = res.headers.get('Content-Disposition') ?? ''
+      const filenameMatch = disposition.match(/filename="(.+)"/)
+      const filename = filenameMatch?.[1] ?? 'bilimon-institutions.json'
+      const url = URL.createObjectURL(blob)
+      const a = document.createElement('a')
+      a.href = url
+      a.download = filename
+      document.body.appendChild(a)
+      a.click()
+      a.remove()
+      URL.revokeObjectURL(url)
+    } finally {
+      setExporting(false)
+    }
+  }
+
+  async function handleImportInstitutions(file: File) {
+    const token = localStorage.getItem('accessToken')
+    if (!token) return
+    setImporting(true)
+    setImportResult(null)
+    setImportError('')
+    try {
+      const body = new FormData()
+      body.append('file', file)
+      const res = await fetch(`${API}/super-admin/import/institutions`, {
+        method: 'POST',
+        headers: { Authorization: `Bearer ${token}`, 'ngrok-skip-browser-warning': '1' },
+        body,
+      })
+      const data = await res.json()
+      if (!res.ok) {
+        setImportError(data.error ?? 'Import qilishda xatolik')
+        return
+      }
+      setImportResult(data)
+    } catch {
+      setImportError('Import qilishda xatolik yuz berdi')
+    } finally {
+      setImporting(false)
+      if (fileInputRef.current) fileInputRef.current.value = ''
+    }
+  }
 
   async function handleReindex() {
     const token = localStorage.getItem('accessToken')
@@ -193,6 +252,70 @@ export default function SuperAdminPage() {
               {reindexing ? 'Indexlanmoqda...' : 'Qayta indexlash'}
             </button>
           </div>
+        </div>
+
+        {/* Muassasalar bazasini zaxiralash (export/import) */}
+        <div className="mt-8 rounded-2xl border border-teal-100 bg-teal-50 p-5">
+          <h3 className="mb-1 font-bold text-teal-900 flex items-center gap-2">
+            <DatabaseBackup className="h-4 w-4 shrink-0" strokeWidth={1.75} /> Muassasalar zaxira nusxasi
+          </h3>
+          <p className="mb-4 text-sm text-teal-700">
+            Barcha muassasalar (tafsilotlar, narxlar, rasmlar, filiallar bilan birga) bitta JSON faylga
+            saqlanadi — loyiha kodi o&apos;zgartirilsa yoki qayta ishga tushirilsa ham ma&apos;lumot
+            yo&apos;qolmasligi uchun. Xuddi shu faylni qayta yuklab, ma&apos;lumotlarni tiklash mumkin.
+          </p>
+
+          <div className="flex flex-wrap items-center gap-3">
+            <button
+              onClick={handleExportInstitutions}
+              disabled={exporting}
+              className="flex items-center gap-2 whitespace-nowrap rounded-xl bg-teal-600 px-5 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-teal-700 disabled:opacity-50"
+            >
+              <Download className="h-4 w-4 shrink-0" strokeWidth={1.75} />
+              {exporting ? 'Yuklanmoqda...' : 'Export qilish (JSON)'}
+            </button>
+
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept="application/json,.json"
+              className="hidden"
+              onChange={(e) => {
+                const file = e.target.files?.[0]
+                if (file) handleImportInstitutions(file)
+              }}
+            />
+            <button
+              onClick={() => fileInputRef.current?.click()}
+              disabled={importing}
+              className="flex items-center gap-2 whitespace-nowrap rounded-xl border border-teal-300 bg-white px-5 py-2.5 text-sm font-semibold text-teal-700 transition-colors hover:border-teal-500 disabled:opacity-50"
+            >
+              <Upload className="h-4 w-4 shrink-0" strokeWidth={1.75} />
+              {importing ? 'Import qilinmoqda...' : 'Import qilish (JSON fayl tanlash)'}
+            </button>
+          </div>
+
+          {importError && (
+            <p className="mt-3 rounded-xl border border-red-200 bg-red-50 px-3 py-2 text-sm font-semibold text-red-700">
+              {importError}
+            </p>
+          )}
+
+          {importResult && (
+            <div className="mt-3 rounded-xl border border-teal-200 bg-white p-3 text-sm">
+              <p className="font-semibold text-teal-900">
+                {importResult.imported} / {importResult.total} ta muassasa muvaffaqiyatli import qilindi
+                {importResult.failed > 0 ? `, ${importResult.failed} tasi xato bilan yakunlandi` : ''}
+              </p>
+              {importResult.errors.length > 0 && (
+                <ul className="mt-2 space-y-1 text-xs text-red-600">
+                  {importResult.errors.map((e, i) => (
+                    <li key={i}>{e.nameUz} ({e.slug}): {e.error}</li>
+                  ))}
+                </ul>
+              )}
+            </div>
+          )}
         </div>
       </main>
     </div>
