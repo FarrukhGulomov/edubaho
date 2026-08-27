@@ -200,6 +200,7 @@ export default function EditInstitutionPage() {
           nameRu:        inst.nameRu        ?? '',
           slug:          inst.slug          ?? '',
           type:          inst.type          ?? 'IT_SCHOOL',
+          additionalTypes: inst.additionalTypes ?? [],
           status:        inst.status        ?? 'PENDING',
           isVerified:    inst.isVerified    ?? false,
           trialLessonEnabled: inst.trialLessonEnabled ?? false,

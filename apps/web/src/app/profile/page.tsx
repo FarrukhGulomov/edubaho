@@ -41,7 +41,7 @@ const TYPE_LABELS: Record<string, { uz: string; ru: string }> = {
   LYCEUM:          { uz: 'Litsey',       ru: 'Лицей' },
   COLLEGE:         { uz: 'Kollej',       ru: 'Колледж' },
   UNIVERSITY:      { uz: 'Universitet', ru: 'Университет' },
-  COURSE_CENTER:   { uz: 'Kurs',        ru: 'Учебный центр' },
+  COURSE_CENTER:   { uz: "O'quv",       ru: 'Учебный центр' },
   LANGUAGE_CENTER: { uz: 'Til markazi', ru: 'Языковой' },
   IT_SCHOOL:       { uz: 'IT maktab',   ru: 'IT школа' },
   TUTORING:        { uz: 'Repetitor',   ru: 'Репетитор' },

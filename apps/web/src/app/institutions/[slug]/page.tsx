@@ -10,7 +10,7 @@ const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://bilimon.uz'
 
 const TYPE_LABELS_UZ: Record<string, string> = {
   KINDERGARTEN: "bog'cha", SCHOOL: 'maktab', LYCEUM: 'litsey', COLLEGE: 'kollej',
-  UNIVERSITY: 'universitet', COURSE_CENTER: 'kurs markazi', LANGUAGE_CENTER: 'til markazi',
+  UNIVERSITY: 'universitet', COURSE_CENTER: "o'quv markaz", LANGUAGE_CENTER: 'til markazi',
   IT_SCHOOL: 'IT maktab', TUTORING: 'repetitor', SPORTS_SCHOOL: 'sport maktabi', ARTS_SCHOOL: "san'at maktabi",
 }
 
