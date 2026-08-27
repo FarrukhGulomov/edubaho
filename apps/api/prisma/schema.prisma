@@ -284,6 +284,12 @@ model Institution {
   nameKey     String            @unique
   slug        String            @unique
   type        InstitutionType
+  // Asosiy "type" — qidiruv/moslik (match) algoritmi va SEO sahifalar shu
+  // BITTA qiymatga tayanadi, o'zgarmaydi. Bu esa faqat qo'shimcha
+  // ko'rgazmali teglar (masalan "Kurs markazi" + "IT maktab") — qidiruv
+  // filtrlariga ta'sir qilmaydi, faqat muassasa profilida qo'shimcha
+  // belgi sifatida ko'rsatiladi.
+  additionalTypes InstitutionType[] @default([])
   status      InstitutionStatus @default(PENDING)
   phone       String?
   phone2      String?

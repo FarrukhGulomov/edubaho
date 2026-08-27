@@ -162,6 +162,10 @@ export default async function adminInstitutionRoutes(fastify: FastifyInstance) {
     nameRu:      z.string().optional(),
     slug:        z.string().min(2, 'Slug kamida 2 belgi').regex(/^[a-z0-9-]+$/, 'Slug faqat kichik harf, raqam va tire'),
     type:        z.nativeEnum(InstitutionType),
+    // Ko'rgazmali qo'shimcha teglar — asosiy "type"dan farqli, qidiruv va
+    // moslik (match) algoritmiga TA'SIR QILMAYDI, faqat profilda qo'shimcha
+    // belgi sifatida ko'rsatiladi (masalan "Til markazi" + "IT maktab")
+    additionalTypes: z.array(z.nativeEnum(InstitutionType)).optional().default([]),
     status:      z.nativeEnum(InstitutionStatus).optional().default(InstitutionStatus.PENDING),
     isVerified:  z.boolean().optional().default(false),
     // UTP#2: faqat probnoy dars xizmatini taklif qiladigan muassasalarda yoqiladi

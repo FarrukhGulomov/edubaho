@@ -17,7 +17,7 @@ const INSTITUTION_TYPES = [
   { value: 'SCHOOL',          label: 'Maktab' },
   { value: 'KINDERGARTEN',    label: "Bog'cha" },
   { value: 'LANGUAGE_CENTER', label: 'Til markazi' },
-  { value: 'COURSE_CENTER',   label: 'Kurs markazi' },
+  { value: 'COURSE_CENTER',   label: "O'quv markaz" },
   { value: 'SPORTS_SCHOOL',   label: 'Sport maktabi' },
   { value: 'LYCEUM',          label: 'Litsey' },
   { value: 'COLLEGE',         label: 'Kollej' },
@@ -106,6 +106,8 @@ export interface InstitutionFormData {
   nameRu: string
   slug: string
   type: string
+  /** Ko'rgazmali qo'shimcha teglar — qidiruv/moslik algoritmiga ta'sir qilmaydi */
+  additionalTypes: string[]
   status: string
   isVerified: boolean
   trialLessonEnabled: boolean
@@ -137,7 +139,7 @@ export interface InstitutionFormData {
 }
 
 const EMPTY: InstitutionFormData = {
-  nameUz: '', nameRu: '', slug: '', type: 'IT_SCHOOL', status: 'PENDING',
+  nameUz: '', nameRu: '', slug: '', type: 'IT_SCHOOL', additionalTypes: [], status: 'PENDING',
   isVerified: false, trialLessonEnabled: false, deliveryMode: 'OFFLINE', phone: '', phone2: '', email: '', website: '',
   telegram: '', instagram: '', address: '', lat: '', lng: '',
   descriptionUz: '', descriptionRu: '',
@@ -211,6 +213,12 @@ export default function InstitutionForm({ initialData, institutionId, mode, init
 
   function set(field: keyof InstitutionFormData, value: string | boolean | string[] | BranchFormData[]) {
     setForm((prev) => ({ ...prev, [field]: value }))
+  }
+
+  /** Asosiy "Tur" o'zgarsa — yangi qiymat qo'shimcha turlar ro'yxatida
+   * qolib ketmasligi uchun (ikkalasida ham bir xil bo'lmasligi kerak) */
+  function setType(v: string) {
+    setForm((prev) => ({ ...prev, type: v, additionalTypes: prev.additionalTypes.filter((t) => t !== v) }))
   }
 
   function addBranch() {
@@ -349,7 +357,7 @@ export default function InstitutionForm({ initialData, institutionId, mode, init
     }
   }
 
-  function toggleArray(field: 'languages' | 'paymentMethods' | 'shifts' | 'categories', val: string) {
+  function toggleArray(field: 'languages' | 'paymentMethods' | 'shifts' | 'categories' | 'additionalTypes', val: string) {
     const arr = form[field] as string[]
     set(field, arr.includes(val) ? arr.filter((x) => x !== val) : [...arr, val])
   }
@@ -569,11 +577,34 @@ export default function InstitutionForm({ initialData, institutionId, mode, init
               <label className="mb-1 block text-sm font-semibold text-gray-700">
                 Tur <span className="text-red-500">*</span>
               </label>
-              <SelectField value={form.type} onChange={(v) => set('type', v)} options={INSTITUTION_TYPES} />
+              <SelectField value={form.type} onChange={setType} options={INSTITUTION_TYPES} />
             </div>
             <div>
               <label className="mb-1 block text-sm font-semibold text-gray-700">Status</label>
               <SelectField value={form.status} onChange={(v) => set('status', v)} options={STATUSES} />
+            </div>
+          </div>
+
+          <div>
+            <label className="mb-1 block text-sm font-semibold text-gray-700">Qo'shimcha turlar</label>
+            <p className="mb-2 text-xs text-gray-400">
+              Muassasa yuqoridagi asosiy turdan tashqari yana boshqa yo'nalishlarda ham ishlaydimi? (ixtiyoriy, bir nechtasini tanlash mumkin)
+            </p>
+            <div className="flex flex-wrap gap-2">
+              {INSTITUTION_TYPES.filter((t) => t.value !== form.type).map((t) => (
+                <button
+                  key={t.value}
+                  type="button"
+                  onClick={() => toggleArray('additionalTypes', t.value)}
+                  className={`rounded-full border px-3.5 py-1.5 text-xs font-semibold transition-colors ${
+                    form.additionalTypes.includes(t.value)
+                      ? 'border-primary-500 bg-primary-600 text-white'
+                      : 'border-gray-300 bg-white text-gray-600 hover:border-primary-400'
+                  }`}
+                >
+                  {t.label}
+                </button>
+              ))}
             </div>
           </div>
 
