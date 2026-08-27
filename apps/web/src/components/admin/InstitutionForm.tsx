@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import Image from 'next/image'
+import { authApi } from '@/lib/api'
 import {
   ClipboardList, Phone, Info, Wallet, AlertCircle, BookOpen, Target,
   Clock, Trophy, ChevronLeft, ChevronRight, CheckCircle2, CalendarCheck, ChevronDown,
@@ -372,41 +373,58 @@ export default function InstitutionForm({ initialData, institutionId, mode, init
     if (!form.type)          { setError('Tur majburiy'); setTab('main'); return }
 
     setLoading(true)
-    const token = localStorage.getItem('accessToken')
     try {
       const url  = mode === 'create'
         ? `${API}/admin/institutions`
         : `${API}/admin/institutions/${institutionId}`
       const method = mode === 'create' ? 'POST' : 'PATCH'
 
-      const res = await fetch(url, {
+      const body = JSON.stringify({
+        ...form,
+        isVerified:      form.isVerified,
+        foundedYear:     form.foundedYear     || undefined,
+        studentCount:    form.studentCount    || undefined,
+        teacherCount:    form.teacherCount    || undefined,
+        monthlyMin:      form.monthlyMin      || undefined,
+        monthlyMax:      form.monthlyMax      || undefined,
+        email:           form.email           || undefined,
+        website:         form.website         || undefined,
+        achievements:    form.achievements    || undefined,
+        programs:        form.programs
+          ? form.programs.split(',').map((s) => s.trim()).filter(Boolean)
+          : [],
+        specializations: form.specializations
+          ? form.specializations.split(',').map((s) => s.trim()).filter(Boolean)
+          : [],
+        // Shahar tanlanmagan (bo'sh) qatorlar chala hisoblanadi va tashlab yuboriladi
+        branches: form.branches.filter((b) => b.cityId),
+      })
+
+      const attemptSave = (accessToken: string) => fetch(url, {
         method,
         headers: {
           'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`,
+          Authorization: `Bearer ${accessToken}`,
           'ngrok-skip-browser-warning': '1',
         },
-        body: JSON.stringify({
-          ...form,
-          isVerified:      form.isVerified,
-          foundedYear:     form.foundedYear     || undefined,
-          studentCount:    form.studentCount    || undefined,
-          teacherCount:    form.teacherCount    || undefined,
-          monthlyMin:      form.monthlyMin      || undefined,
-          monthlyMax:      form.monthlyMax      || undefined,
-          email:           form.email           || undefined,
-          website:         form.website         || undefined,
-          achievements:    form.achievements    || undefined,
-          programs:        form.programs
-            ? form.programs.split(',').map((s) => s.trim()).filter(Boolean)
-            : [],
-          specializations: form.specializations
-            ? form.specializations.split(',').map((s) => s.trim()).filter(Boolean)
-            : [],
-          // Shahar tanlanmagan (bo'sh) qatorlar chala hisoblanadi va tashlab yuboriladi
-          branches: form.branches.filter((b) => b.cityId),
-        }),
+        body,
       })
+
+      let token = localStorage.getItem('accessToken') ?? ''
+      let res = await attemptSave(token)
+
+      // Token muddati uzoq forma to'ldirish paytida tugagan bo'lishi mumkin —
+      // yozilgan ma'lumot YO'QOLMASDAN avtomatik yangilab bitta marta qayta
+      // urinamiz (useAuth fonda muntazam yangilasa ham, chekka holatlar uchun
+      // qo'shimcha himoya — masalan bir nechta tab yoki uzoq faolsizlik)
+      if (res.status === 401) {
+        try {
+          const refreshed = await authApi.refresh() as { accessToken: string }
+          token = refreshed.accessToken
+          localStorage.setItem('accessToken', token)
+          res = await attemptSave(token)
+        } catch { /* refresh ham muvaffaqiyatsiz — pastda haqiqiy xato ko'rsatiladi, forma ma'lumoti saqlanib qoladi */ }
+      }
 
       const data = await res.json()
       if (!res.ok) throw new Error(data.error ?? 'Xatolik')

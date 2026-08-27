@@ -51,6 +51,26 @@ export function useAuth() {
     return () => window.removeEventListener('twa-auth', loadUser)
   }, [])
 
+  // Access token 15 daqiqada eskiradi — uzoq forma to'ldirilayotganda
+  // (masalan admin muassasa ma'lumotlarini kiritayotganda) token eskirib,
+  // "Saqlash"da "Tizimga qayta kiring" xatosi bilan yozilgan ma'lumot
+  // yo'qolib qolmasligi uchun fonda muntazam (5 daqiqada) jim ravishda
+  // yangilab turamiz — refresh token httpOnly cookie'da, foydalanuvchi
+  // sahifani ochiq qoldirsa hech qachon "eskirmaydi"
+  useEffect(() => {
+    const REFRESH_INTERVAL = 5 * 60 * 1000
+    const timer = setInterval(() => {
+      if (!localStorage.getItem('accessToken')) return
+      authApi.refresh()
+        .then((data: unknown) => {
+          const token = (data as { accessToken?: string })?.accessToken
+          if (token) localStorage.setItem('accessToken', token)
+        })
+        .catch(() => { /* refresh token ham eskirgan bo'lsa — jim o'tkazamiz, keyingi haqiqiy so'rov 401 qaytaradi */ })
+    }, REFRESH_INTERVAL)
+    return () => clearInterval(timer)
+  }, [])
+
   function logout() {
     const token = localStorage.getItem('accessToken')
     if (token) authApi.logout(token).catch(() => {})
