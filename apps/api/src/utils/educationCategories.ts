@@ -179,17 +179,6 @@ export const EDUCATION_CATEGORIES: EducationCategoryDef[] = [
     ],
   },
   {
-    code: 'CAREER_CHANGE',
-    labelUz: 'Kasb almashtirish',
-    labelRu: 'Смена профессии',
-    reasonUz: "Kasb almashtirish dasturi mavjud",
-    reasonRu: 'Есть программа смены профессии',
-    keywords: [
-      'kasb almashtirish', "kasb o'zgartirish", 'смена профессии',
-      'qayta tayyorlov', 'переквалификация', 'career change', 'retraining',
-    ],
-  },
-  {
     // Faqat "Menga mosini top" wizard'idagi "O'quv kurslari" pilli
     // uchun — foydalanuvchi bilan ANIQLASHTIRILGAN: bu keng, lekin
     // CHEKSIZ tushuncha EMAS. O'z ichiga OTMga tayyorlov va til

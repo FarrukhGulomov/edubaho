@@ -10,15 +10,28 @@ declare module 'fastify' {
   }
 }
 
+/** PIN tasdig'i amal qilish muddati (soniya) */
+const PIN_TTL = 3600
+
 /**
  * Admin PIN (ikkinchi faktor) Redis'da tasdiqlanganmi — tekshiradi.
  * /auth/admin-pin muvaffaqiyatli chaqirilganda `admin_verified:${userId}`
  * 1 soatga o'rnatiladi. Bu tekshiruv YO'Q bo'lsa, o'g'irlangan/oqib chiqqan
  * JWT o'zi orqali PIN'siz to'g'ridan-to'g'ri admin API'ga kirish mumkin
  * bo'lib qolar edi — PIN faqat frontend UX qadami bo'lib qolardi.
+ *
+ * Muddat SIRPANUVCHI (sliding): har bir muvaffaqiyatli admin so'rovida
+ * qaytadan 1 soatga uzaytiriladi. Aks holda admin bir soatdan uzoq forma
+ * to'ldirsa (muassasa ma'lumotlarini kiritish odatda shuncha vaqt oladi),
+ * "Saqlash" bosgan payt PIN muddati tugab, yozgan ma'lumoti yo'qolardi.
+ * Faol ishlayotgan admin uzilmaydi, ishni to'xtatgandan 1 soat o'tib esa
+ * tasdiq baribir bekor bo'ladi.
  */
 async function isPinVerified(userId: string): Promise<boolean> {
-  return (await redis.get(`admin_verified:${userId}`)) === '1'
+  const key = `admin_verified:${userId}`
+  const verified = (await redis.get(key)) === '1'
+  if (verified) await redis.expire(key, PIN_TTL)
+  return verified
 }
 
 /**

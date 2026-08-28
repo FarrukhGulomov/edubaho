@@ -58,7 +58,6 @@ const EDUCATION_CATEGORIES = [
   { value: 'LANGUAGES', label: 'Chet tillari' },
   { value: 'KIDS_EDUCATION', label: "Bolalar ta'limi" },
   { value: 'PROFESSIONAL_CERTIFICATION', label: 'Kasbiy sertifikatlash' },
-  { value: 'CAREER_CHANGE', label: 'Kasb almashtirish' },
 ]
 
 interface CityOption {
