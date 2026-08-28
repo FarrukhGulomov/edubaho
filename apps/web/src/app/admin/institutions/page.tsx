@@ -10,7 +10,7 @@ import {
 } from 'lucide-react'
 import { useAuth } from '@/hooks/useAuth'
 import { useRouter } from 'next/navigation'
-import BrandMark from '@/components/shared/BrandMark'
+import AdminBreadcrumb from '@/components/admin/AdminBreadcrumb'
 import VerificationBadge from '@/components/shared/VerificationBadge'
 import type React from 'react'
 
@@ -187,17 +187,14 @@ export default function AdminInstitutionsPage() {
     <div className="min-h-screen bg-gray-50">
       {/* Header */}
       <header className="sticky top-0 z-10 border-b border-gray-200 bg-white shadow-sm">
-        <div className="mx-auto flex max-w-7xl items-center justify-between gap-3 px-4 py-3">
-          <div className="flex min-w-0 items-center gap-3 overflow-hidden">
-            <Link href="/" className="flex shrink-0 items-center gap-1.5 whitespace-nowrap font-bold text-primary-600">
-              <BrandMark size={16} className="shrink-0" /> BilimOn
-            </Link>
-            <span className="shrink-0 text-gray-300">›</span>
-            <Link href="/admin/reviews" className="shrink-0 whitespace-nowrap text-gray-500 hover:text-gray-700">Admin</Link>
-            <span className="shrink-0 text-gray-300">›</span>
-            <span className="truncate font-semibold text-gray-700">Muassasalar</span>
-          </div>
-          <div className="flex shrink-0 items-center gap-2">
+        {/* Tor telefonda uchta amal tugmasi yo'l ko'rsatkich bilan bitta
+            qatorga sig'maydi — o'ralib ikkinchi qatorga tushadi */}
+        <div className="mx-auto flex max-w-7xl flex-wrap items-center justify-between gap-3 px-4 py-3">
+          <AdminBreadcrumb items={[
+            { label: 'Admin', href: '/admin/reviews' },
+            { label: 'Muassasalar' },
+          ]} />
+          <div className="flex flex-wrap items-center gap-2">
             <Link
               href="/admin"
               className="whitespace-nowrap rounded-xl border border-gray-200 bg-white px-3 py-2 text-sm font-medium text-gray-600 transition-colors hover:border-gray-300 hover:bg-gray-50"

@@ -3,7 +3,7 @@
 import Link from 'next/link'
 import { useEffect, useState } from 'react'
 import { ShieldCheck, Ban, Pencil, Check, X, School, Crown, AlertTriangle } from 'lucide-react'
-import BrandMark from '@/components/shared/BrandMark'
+import AdminBreadcrumb from '@/components/admin/AdminBreadcrumb'
 import { useAuth } from '@/hooks/useAuth'
 import { useRouter } from 'next/navigation'
 
@@ -191,17 +191,11 @@ export default function SuperAdminAdminsPage() {
       {/* Header */}
       <header className="sticky top-0 z-10 border-b border-gray-200 bg-white shadow-sm">
         <div className="mx-auto flex max-w-5xl items-center justify-between gap-3 px-4 py-3">
-          <div className="flex min-w-0 items-center gap-2 overflow-hidden text-sm">
-            <Link href="/" className="flex shrink-0 items-center gap-1.5 whitespace-nowrap font-bold text-primary-600">
-              <BrandMark size={16} className="shrink-0" /> BilimOn
-            </Link>
-            <span className="shrink-0 text-gray-300">›</span>
-            <Link href="/admin" className="shrink-0 whitespace-nowrap text-gray-500 hover:text-gray-700">Admin</Link>
-            <span className="shrink-0 text-gray-300">›</span>
-            <Link href="/admin/super" className="shrink-0 whitespace-nowrap text-gray-500 hover:text-gray-700">Super Admin</Link>
-            <span className="shrink-0 text-gray-300">›</span>
-            <span className="truncate font-semibold text-gray-700">Adminlar</span>
-          </div>
+          <AdminBreadcrumb items={[
+            { label: 'Admin', href: '/admin' },
+            { label: 'Super Admin', href: '/admin/super' },
+            { label: 'Adminlar' },
+          ]} />
           <button
             onClick={() => { setShowCreate(true); setCreatePerms({ ...EMPTY_PERMS }) }}
             className="shrink-0 whitespace-nowrap rounded-xl bg-purple-600 px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-purple-700"

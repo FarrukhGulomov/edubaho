@@ -3,7 +3,7 @@
 import Link from 'next/link'
 import { useEffect, useState, useCallback } from 'react'
 import { Crown, Ban, ScrollText, Search, ChevronDown, ChevronUp } from 'lucide-react'
-import BrandMark from '@/components/shared/BrandMark'
+import AdminBreadcrumb from '@/components/admin/AdminBreadcrumb'
 import { useAuth } from '@/hooks/useAuth'
 import { useRouter } from 'next/navigation'
 
@@ -137,17 +137,11 @@ export default function AuditLogPage() {
     <div className="min-h-screen bg-gray-50">
       <header className="sticky top-0 z-10 border-b border-gray-200 bg-white shadow-sm">
         <div className="mx-auto flex max-w-7xl items-center justify-between gap-3 px-4 py-3">
-          <div className="flex min-w-0 items-center gap-2 overflow-hidden text-sm">
-            <Link href="/" className="flex shrink-0 items-center gap-1.5 whitespace-nowrap font-bold text-primary-600">
-              <BrandMark size={16} className="shrink-0" /> BilimOn
-            </Link>
-            <span className="shrink-0 text-gray-300">›</span>
-            <Link href="/admin" className="shrink-0 whitespace-nowrap text-gray-500 hover:text-gray-700">Admin</Link>
-            <span className="shrink-0 text-gray-300">›</span>
-            <Link href="/admin/super" className="shrink-0 whitespace-nowrap text-gray-500 hover:text-gray-700">Super Admin</Link>
-            <span className="shrink-0 text-gray-300">›</span>
-            <span className="truncate font-semibold text-gray-700">Audit jurnali</span>
-          </div>
+          <AdminBreadcrumb items={[
+            { label: 'Admin', href: '/admin' },
+            { label: 'Super Admin', href: '/admin/super' },
+            { label: 'Audit jurnali' },
+          ]} />
           <span className="flex shrink-0 items-center gap-1.5 whitespace-nowrap rounded-full bg-purple-50 px-3 py-1 text-sm font-semibold text-purple-700">
             <Crown className="h-3.5 w-3.5 shrink-0" strokeWidth={1.75} /> SUPER_ADMIN
           </span>

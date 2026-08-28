@@ -7,7 +7,7 @@ import {
   Phone, School, CalendarCheck,
 } from 'lucide-react'
 import { useAuth } from '@/hooks/useAuth'
-import BrandMark from '@/components/shared/BrandMark'
+import AdminBreadcrumb from '@/components/admin/AdminBreadcrumb'
 
 const API = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:3001/api/v1'
 
@@ -120,13 +120,9 @@ export default function AdminTrialBookingsPage() {
     <div className="min-h-screen bg-gray-50">
       <header className="sticky top-0 z-10 border-b border-gray-200 bg-white shadow-sm">
         <div className="mx-auto flex max-w-5xl items-center justify-between gap-3 px-4 py-3">
-          <div className="flex min-w-0 items-center gap-3 overflow-hidden">
-            <Link href="/" className="flex shrink-0 items-center gap-1.5 whitespace-nowrap font-bold text-primary-600">
-              <BrandMark size={16} className="shrink-0" /> BilimOn
-            </Link>
-            <span className="shrink-0 text-gray-300">›</span>
-            <span className="truncate font-semibold text-gray-700">Admin panel</span>
-          </div>
+          <AdminBreadcrumb items={[
+            { label: 'Admin panel' },
+          ]} />
           <div className="flex shrink-0 items-center gap-2">
             <Link
               href="/admin"

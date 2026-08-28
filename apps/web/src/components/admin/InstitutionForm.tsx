@@ -514,13 +514,17 @@ export default function InstitutionForm({ initialData, institutionId, mode, init
   return (
     <form onSubmit={handleSubmit} className="space-y-0">
       {/* Tabs */}
-      <div className="flex gap-1 rounded-2xl bg-gray-100 p-1 mb-6">
+      {/* Tor telefonda 6 ta tab qatorga sig'maydi — ilgari butun sahifa
+          yonga surilib ketardi. Endi faqat shu qatorning o'zi suriladi:
+          tugmalar tabiiy kengligini saqlaydi (shrink-0 basis-auto), joy
+          yetarli bo'lganda esa teng bo'linib kengayadi (grow). */}
+      <div className="mb-6 flex gap-1 overflow-x-auto rounded-2xl bg-gray-100 p-1">
         {TABS.map((t) => (
           <button
             key={t.id}
             type="button"
             onClick={() => setTab(t.id)}
-            className={`flex flex-1 items-center justify-center gap-1.5 whitespace-nowrap rounded-xl py-2.5 text-sm font-semibold transition-colors ${
+            className={`flex shrink-0 grow basis-auto items-center justify-center gap-1.5 whitespace-nowrap rounded-xl px-3 py-2.5 text-sm font-semibold transition-colors ${
               tab === t.id
                 ? 'bg-white shadow-sm text-primary-700'
                 : 'text-gray-500 hover:text-gray-800'
@@ -705,7 +709,7 @@ export default function InstitutionForm({ initialData, institutionId, mode, init
           <label className="flex cursor-pointer items-center gap-3 rounded-xl border border-gray-200 px-4 py-3 hover:bg-gray-50">
             <div
               onClick={() => set('isVerified', !form.isVerified)}
-              className={`relative h-6 w-11 rounded-full transition-colors ${form.isVerified ? 'bg-green-500' : 'bg-gray-200'}`}
+              className={`relative h-6 w-11 shrink-0 rounded-full transition-colors ${form.isVerified ? 'bg-green-500' : 'bg-gray-200'}`}
             >
               <div className={`absolute top-0.5 h-5 w-5 rounded-full bg-white shadow transition-transform ${form.isVerified ? 'translate-x-5' : 'translate-x-0.5'}`} />
             </div>
@@ -1194,9 +1198,11 @@ export default function InstitutionForm({ initialData, institutionId, mode, init
       )}
 
       {/* Navigation + Submit */}
-      <div className="mt-6 flex items-center justify-between gap-3">
+      {/* Tor telefonda tugmalar bitta qatorga sig'maydi — o'ralib
+          ikkinchi qatorga tushadi, sahifa yonga surilmaydi */}
+      <div className="mt-6 flex flex-wrap items-center justify-between gap-3">
         {/* Prev/Next tabs */}
-        <div className="flex gap-2">
+        <div className="flex flex-wrap gap-2">
           {TABS.findIndex((t) => t.id === tab) > 0 && (
             <button
               type="button"

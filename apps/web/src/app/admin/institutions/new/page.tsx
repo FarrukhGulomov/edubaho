@@ -3,7 +3,7 @@
 import Link from 'next/link'
 import { useEffect } from 'react'
 import { Ban } from 'lucide-react'
-import BrandMark from '@/components/shared/BrandMark'
+import AdminBreadcrumb from '@/components/admin/AdminBreadcrumb'
 import { useAuth } from '@/hooks/useAuth'
 import { useRouter } from 'next/navigation'
 import InstitutionForm from '@/components/admin/InstitutionForm'
@@ -40,15 +40,10 @@ export default function NewInstitutionPage() {
     <div className="min-h-screen bg-gray-50">
       <header className="sticky top-0 z-10 border-b border-gray-200 bg-white shadow-sm">
         <div className="mx-auto flex max-w-3xl items-center justify-between gap-3 px-4 py-3">
-          <div className="flex min-w-0 items-center gap-3 overflow-hidden text-sm">
-            <Link href="/" className="flex shrink-0 items-center gap-1.5 whitespace-nowrap font-bold text-primary-600">
-              <BrandMark size={16} className="shrink-0" /> BilimOn
-            </Link>
-            <span className="shrink-0 text-gray-300">›</span>
-            <Link href="/admin/institutions" className="shrink-0 whitespace-nowrap text-gray-500 hover:text-gray-700">Muassasalar</Link>
-            <span className="shrink-0 text-gray-300">›</span>
-            <span className="truncate font-semibold text-gray-700">Yangi qo'shish</span>
-          </div>
+          <AdminBreadcrumb items={[
+            { label: 'Muassasalar', href: '/admin/institutions' },
+            { label: "Yangi qo'shish" },
+          ]} />
           <Link
             href="/admin/institutions"
             className="shrink-0 whitespace-nowrap rounded-xl border border-gray-200 bg-white px-4 py-2 text-sm font-semibold text-gray-600 transition-colors hover:border-gray-300 hover:bg-gray-50"
