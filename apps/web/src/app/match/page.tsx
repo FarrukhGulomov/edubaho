@@ -271,7 +271,7 @@ export default function MatchPage() {
             </p>
             <button
               onClick={handleSkip}
-              className="shrink-0 whitespace-nowrap text-sm font-semibold text-primary-600 hover:underline"
+              className="tap-center shrink-0 whitespace-nowrap text-sm font-semibold text-primary-600 hover:underline"
             >
               {uz ? 'Keyinroq' : 'Позже'}
             </button>
@@ -348,7 +348,7 @@ export default function MatchPage() {
                     // Pill bosilishi — o'zi to'liq va aniq tanlov, qo'shimcha
                     // "Davom etish" tugmasi kerak emas, darhol keyingi qadamga o'tadi
                     onClick={() => { setGoal(g.value); setStep('format') }}
-                    className={`rounded-full border px-4 py-1.5 text-sm font-semibold transition-colors ${
+                    className={`tap-center rounded-full border px-4 py-1.5 text-sm font-semibold transition-colors ${
                       goal === g.value
                         ? 'border-primary-500 bg-primary-600 text-white'
                         : 'border-gray-300 bg-white text-gray-600 hover:border-primary-400'

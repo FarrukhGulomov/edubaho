@@ -9,7 +9,7 @@ import {
 } from 'lucide-react'
 import { useAuth } from '@/hooks/useAuth'
 import { useRouter } from 'next/navigation'
-import BrandMark from '@/components/shared/BrandMark'
+import AdminBreadcrumb from '@/components/admin/AdminBreadcrumb'
 
 const API = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:3001/api/v1'
 
@@ -197,19 +197,14 @@ export default function AdminLeadsPage() {
     <div className="min-h-screen bg-gray-50">
       <header className="sticky top-0 z-10 border-b border-gray-200 bg-white shadow-sm">
         <div className="mx-auto flex max-w-7xl items-center justify-between gap-3 px-4 py-3">
-          <div className="flex min-w-0 items-center gap-3 overflow-hidden">
-            <Link href="/" className="flex shrink-0 items-center gap-1.5 whitespace-nowrap font-bold text-primary-600">
-              <BrandMark size={16} className="shrink-0" /> BilimOn
-            </Link>
-            <span className="shrink-0 text-gray-300">›</span>
-            <Link href="/admin" className="shrink-0 whitespace-nowrap text-gray-500 hover:text-gray-700">Admin</Link>
-            <span className="shrink-0 text-gray-300">›</span>
-            <span className="truncate font-semibold text-gray-700">Lidlar</span>
-          </div>
+          <AdminBreadcrumb items={[
+            { label: 'Admin', href: '/admin' },
+            { label: 'Lidlar' },
+          ]} />
           <div className="flex shrink-0 items-center gap-2">
             <Link
               href="/admin"
-              className="whitespace-nowrap rounded-xl border border-gray-200 bg-white px-3 py-2 text-sm font-medium text-gray-600 transition-colors hover:border-gray-300 hover:bg-gray-50"
+              className="tap-center whitespace-nowrap rounded-xl border border-gray-200 bg-white px-3 py-2 text-sm font-medium text-gray-600 transition-colors hover:border-gray-300 hover:bg-gray-50"
             >
               ← Orqaga
             </Link>
@@ -217,7 +212,7 @@ export default function AdminLeadsPage() {
               <button
                 onClick={() => setExportMenuOpen((v) => !v)}
                 disabled={exporting || meta.total === 0}
-                className="flex items-center gap-1.5 whitespace-nowrap rounded-xl bg-primary-600 px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-primary-700 disabled:opacity-50"
+                className="flex items-center gap-1.5 tap-center whitespace-nowrap rounded-xl bg-primary-600 px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-primary-700 disabled:opacity-50"
               >
                 <Download className="h-4 w-4 shrink-0" strokeWidth={1.75} />
                 {exporting ? 'Yuklanmoqda...' : 'Eksport'}
@@ -259,7 +254,7 @@ export default function AdminLeadsPage() {
             />
             <button
               type="submit"
-              className="flex shrink-0 items-center gap-1.5 whitespace-nowrap rounded-xl bg-primary-600 px-5 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-primary-700"
+              className="flex shrink-0 items-center gap-1.5 tap-center whitespace-nowrap rounded-xl bg-primary-600 px-5 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-primary-700"
             >
               <Search className="h-4 w-4 shrink-0" strokeWidth={1.75} /> Qidirish
             </button>
@@ -293,7 +288,7 @@ export default function AdminLeadsPage() {
           <button
             onClick={() => fetchLeads(page)}
             disabled={fetching}
-            className="flex items-center gap-1.5 whitespace-nowrap rounded-xl border border-gray-200 bg-white px-4 py-2.5 text-sm font-medium text-gray-600 transition-colors hover:border-gray-300 hover:bg-gray-50 disabled:opacity-50"
+            className="flex items-center gap-1.5 tap-center whitespace-nowrap rounded-xl border border-gray-200 bg-white px-4 py-2.5 text-sm font-medium text-gray-600 transition-colors hover:border-gray-300 hover:bg-gray-50 disabled:opacity-50"
           >
             <RefreshCw className={`h-4 w-4 shrink-0 ${fetching ? 'animate-spin' : ''}`} strokeWidth={1.75} /> Yangilash
           </button>

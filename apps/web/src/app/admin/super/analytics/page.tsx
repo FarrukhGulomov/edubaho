@@ -1,6 +1,5 @@
 'use client'
 
-import Link from 'next/link'
 import { useEffect, useState, useCallback } from 'react'
 import {
   RefreshCw, BarChart3, Filter, Target, Zap, Lock,
@@ -11,7 +10,7 @@ import {
 } from 'lucide-react'
 import { useAuth } from '@/hooks/useAuth'
 import { useRouter } from 'next/navigation'
-import BrandMark from '@/components/shared/BrandMark'
+import AdminBreadcrumb from '@/components/admin/AdminBreadcrumb'
 
 const API = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:3001/api/v1'
 
@@ -272,15 +271,10 @@ export default function AnalyticsPage() {
       {/* Header */}
       <header className="sticky top-0 z-10 border-b border-gray-200 bg-white shadow-sm">
         <div className="mx-auto flex max-w-7xl items-center justify-between gap-3 px-4 py-3">
-          <div className="flex min-w-0 items-center gap-2 overflow-hidden text-sm">
-            <Link href="/" className="flex shrink-0 items-center gap-1.5 whitespace-nowrap font-bold text-primary-600">
-              <BrandMark size={16} className="shrink-0" /> BilimOn
-            </Link>
-            <span className="shrink-0 text-gray-300">›</span>
-            <Link href="/admin/super" className="shrink-0 whitespace-nowrap text-gray-500 hover:text-gray-700">Super Admin</Link>
-            <span className="shrink-0 text-gray-300">›</span>
-            <span className="truncate font-semibold text-gray-700">Analytics</span>
-          </div>
+          <AdminBreadcrumb items={[
+            { label: 'Super Admin', href: '/admin/super' },
+            { label: 'Analytics' },
+          ]} />
           <div className="flex shrink-0 items-center gap-2">
             {/* Kunlar filtr */}
             <select
@@ -320,7 +314,9 @@ export default function AnalyticsPage() {
         </div>
 
         {/* Tabs */}
-        <div className="mb-6 flex w-fit gap-1 rounded-2xl border border-gray-200 bg-white p-1 shadow-sm">
+        {/* Tor telefonda 5 ta bo'lim tugmasi qatorga sig'maydi — sahifani
+            yonga surish o'rniga shu qatorning o'zi suriladi */}
+        <div className="mb-6 flex w-fit max-w-full gap-1 overflow-x-auto rounded-2xl border border-gray-200 bg-white p-1 shadow-sm">
           {TABS.map(t => (
             <button
               key={t.id}

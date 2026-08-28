@@ -2,7 +2,7 @@
 
 import Link from 'next/link'
 import { Ban, PencilLine, AlertCircle, GitMerge, Search, X } from 'lucide-react'
-import BrandMark from '@/components/shared/BrandMark'
+import AdminBreadcrumb from '@/components/admin/AdminBreadcrumb'
 import { useAuth } from '@/hooks/useAuth'
 import { useRouter, useParams } from 'next/navigation'
 import { useEffect, useState } from 'react'
@@ -88,7 +88,9 @@ function MergePanel({ id, instName }: { id: string; instName: string }) {
       <button
         type="button"
         onClick={() => setOpen(true)}
-        className="mt-4 flex items-center gap-1.5 whitespace-nowrap text-sm font-semibold text-gray-400 transition-colors hover:text-amber-600"
+        /* Matn uzun — tor telefonda bitta qatorga sig'masin va sahifani
+           yonga surmasin, o'ralib ketaversin (shuning uchun nowrap yo'q) */
+        className="mt-4 flex items-center gap-1.5 text-left text-sm font-semibold text-gray-400 transition-colors hover:text-amber-600"
       >
         <GitMerge className="h-4 w-4 shrink-0" strokeWidth={1.75} /> Bu takroriy yozuvmi? Boshqa muassasaga birlashtirish
       </button>
@@ -272,18 +274,13 @@ export default function EditInstitutionPage() {
     <div className="min-h-screen bg-gray-50">
       <header className="sticky top-0 z-10 border-b border-gray-200 bg-white shadow-sm">
         <div className="mx-auto flex max-w-3xl items-center justify-between gap-3 px-4 py-3">
-          <div className="flex min-w-0 items-center gap-3 overflow-hidden text-sm">
-            <Link href="/" className="flex shrink-0 items-center gap-1.5 whitespace-nowrap font-bold text-primary-600">
-              <BrandMark size={16} className="shrink-0" /> BilimOn
-            </Link>
-            <span className="shrink-0 text-gray-300">›</span>
-            <Link href="/admin/institutions" className="shrink-0 whitespace-nowrap text-gray-500 hover:text-gray-700">Muassasalar</Link>
-            <span className="shrink-0 text-gray-300">›</span>
-            <span className="max-w-32 truncate font-semibold text-gray-700">{instName || 'Tahrirlash'}</span>
-          </div>
+          <AdminBreadcrumb items={[
+            { label: 'Muassasalar', href: '/admin/institutions' },
+            { label: instName || 'Tahrirlash' },
+          ]} />
           <Link
             href="/admin/institutions"
-            className="shrink-0 whitespace-nowrap rounded-xl border border-gray-200 bg-white px-4 py-2 text-sm font-semibold text-gray-600 transition-colors hover:border-gray-300 hover:bg-gray-50"
+            className="shrink-0 tap-center whitespace-nowrap rounded-xl border border-gray-200 bg-white px-4 py-2 text-sm font-semibold text-gray-600 transition-colors hover:border-gray-300 hover:bg-gray-50"
           >
             ← Orqaga
           </Link>

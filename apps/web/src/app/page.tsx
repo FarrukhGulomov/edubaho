@@ -203,7 +203,7 @@ export default function HomePage() {
                 key={g.label}
                 // Pill bosilishi — o'zi to'liq tanlov, darhol /match'ga o'tadi
                 onClick={() => { setHeroGoal(g.value); goToMatch(g.value) }}
-                className={`rounded-full border px-3.5 py-1.5 text-xs font-semibold transition-colors ${
+                className={`tap-center rounded-full border px-3.5 py-1.5 text-xs font-semibold transition-colors ${
                   heroGoal === g.value
                     ? 'border-primary-500 bg-primary-600 text-white'
                     : 'border-gray-300 bg-white text-gray-600 hover:border-primary-400'

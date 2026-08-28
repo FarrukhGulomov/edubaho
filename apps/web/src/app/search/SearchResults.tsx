@@ -155,7 +155,7 @@ export default function SearchResults({ institutions, meta, params }: Props) {
                 className="min-w-0 flex-1 bg-transparent py-3 text-base text-gray-900 outline-none placeholder:text-gray-400"
               />
               {q && (
-                <button type="button" onClick={() => setQ('')} aria-label="Qidiruvni tozalash" className="shrink-0 p-1 text-gray-400 hover:text-gray-600">
+                <button type="button" onClick={() => setQ('')} aria-label="Qidiruvni tozalash" className="tap-center shrink-0 p-1 text-gray-400 hover:text-gray-600">
                   <X className="h-5 w-5" strokeWidth={1.75} />
                 </button>
               )}
@@ -276,7 +276,7 @@ export default function SearchResults({ institutions, meta, params }: Props) {
             <span className="flex shrink-0 items-center gap-1.5 whitespace-nowrap rounded-full bg-primary-50 px-3 py-1 text-xs font-semibold text-primary-700">
               <MapPin className="h-3.5 w-3.5 shrink-0" strokeWidth={1.75} />
               {lang === 'ru' ? activeCity.nameRu : activeCity.nameUz}
-              <button onClick={() => setParam('cityId', '')} aria-label="Shahar filtrini olib tashlash" className="ml-0.5 text-primary-500 hover:text-primary-700">
+              <button onClick={() => setParam('cityId', '')} aria-label="Shahar filtrini olib tashlash" className="tap-center ml-0.5 text-primary-500 hover:text-primary-700">
                 <X className="h-3 w-3" strokeWidth={2.5} />
               </button>
             </span>
