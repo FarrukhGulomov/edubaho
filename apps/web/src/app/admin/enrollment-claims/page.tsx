@@ -114,7 +114,7 @@ export default function AdminEnrollmentClaimsPage() {
             { label: 'Admin', href: '/admin' },
             { label: 'Kurs sotib olish xabarlari' },
           ]} />
-          <button onClick={refreshAll} className="flex shrink-0 items-center gap-1.5 whitespace-nowrap rounded-xl border border-gray-200 bg-white px-3.5 py-2 text-sm font-semibold text-gray-600 hover:border-gray-300 hover:bg-gray-50">
+          <button onClick={refreshAll} className="flex shrink-0 items-center gap-1.5 tap-center whitespace-nowrap rounded-xl border border-gray-200 bg-white px-3.5 py-2 text-sm font-semibold text-gray-600 hover:border-gray-300 hover:bg-gray-50">
             <RefreshCw className={`h-4 w-4 shrink-0 ${fetching ? 'animate-spin' : ''}`} strokeWidth={1.75} /> Yangilash
           </button>
         </div>
@@ -139,7 +139,7 @@ export default function AdminEnrollmentClaimsPage() {
             <button
               key={t.key}
               onClick={() => setTab(t.key)}
-              className={`flex-1 rounded-xl py-2 text-sm font-semibold transition-colors ${
+              className={`flex-1 tap-center rounded-xl py-2 text-sm font-semibold transition-colors ${
                 tab === t.key ? 'bg-white text-primary-700 shadow-sm' : 'text-gray-500 hover:text-gray-800'
               }`}
             >

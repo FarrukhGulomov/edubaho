@@ -198,7 +198,7 @@ export default function SuperAdminAdminsPage() {
           ]} />
           <button
             onClick={() => { setShowCreate(true); setCreatePerms({ ...EMPTY_PERMS }) }}
-            className="shrink-0 whitespace-nowrap rounded-xl bg-purple-600 px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-purple-700"
+            className="tap-center shrink-0 whitespace-nowrap rounded-xl bg-purple-600 px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-purple-700"
           >
             + Admin tayinlash
           </button>

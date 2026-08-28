@@ -368,7 +368,7 @@ export default function SuperAdminUsersPage() {
                                   <button
                                     onClick={() => setDeleteTarget(u)}
                                     title="O'chirish"
-                                    className="rounded-lg border border-red-200 px-2.5 py-1.5 text-xs font-semibold text-red-600 hover:bg-red-50 transition-colors"
+                                    className="tap-center rounded-lg border border-red-200 px-2.5 py-1.5 text-xs font-semibold text-red-600 hover:bg-red-50 transition-colors"
                                   >
                                     <Trash2 className="h-3 w-3" strokeWidth={1.75} />
                                   </button>

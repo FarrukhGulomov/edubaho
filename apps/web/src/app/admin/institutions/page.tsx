@@ -197,19 +197,19 @@ export default function AdminInstitutionsPage() {
           <div className="flex flex-wrap items-center gap-2">
             <Link
               href="/admin"
-              className="whitespace-nowrap rounded-xl border border-gray-200 bg-white px-3 py-2 text-sm font-medium text-gray-600 transition-colors hover:border-gray-300 hover:bg-gray-50"
+              className="tap-center whitespace-nowrap rounded-xl border border-gray-200 bg-white px-3 py-2 text-sm font-medium text-gray-600 transition-colors hover:border-gray-300 hover:bg-gray-50"
             >
               ← Orqaga
             </Link>
             <Link
               href="/admin/reviews"
-              className="flex items-center gap-1.5 whitespace-nowrap rounded-xl border border-gray-200 bg-white px-3 py-2 text-sm font-medium text-gray-600 transition-colors hover:border-gray-300 hover:bg-gray-50"
+              className="flex items-center gap-1.5 tap-center whitespace-nowrap rounded-xl border border-gray-200 bg-white px-3 py-2 text-sm font-medium text-gray-600 transition-colors hover:border-gray-300 hover:bg-gray-50"
             >
               <ClipboardList className="h-4 w-4 shrink-0" strokeWidth={1.75} /> Sharhlar
             </Link>
             <Link
               href="/admin/institutions/new"
-              className="whitespace-nowrap rounded-xl bg-primary-600 px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-primary-700"
+              className="tap-center whitespace-nowrap rounded-xl bg-primary-600 px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-primary-700"
             >
               + Yangi muassasa
             </Link>
@@ -238,7 +238,7 @@ export default function AdminInstitutionsPage() {
             />
             <button
               type="submit"
-              className="flex shrink-0 items-center gap-1.5 whitespace-nowrap rounded-xl bg-primary-600 px-5 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-primary-700"
+              className="flex shrink-0 items-center gap-1.5 tap-center whitespace-nowrap rounded-xl bg-primary-600 px-5 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-primary-700"
             >
               <Search className="h-4 w-4 shrink-0" strokeWidth={1.75} /> Qidirish
             </button>
@@ -257,7 +257,7 @@ export default function AdminInstitutionsPage() {
           <button
             onClick={() => fetchList(q, statusFilter)}
             disabled={fetching}
-            className="flex items-center gap-1.5 whitespace-nowrap rounded-xl border border-gray-200 bg-white px-4 py-2.5 text-sm font-medium text-gray-600 transition-colors hover:border-gray-300 hover:bg-gray-50 disabled:opacity-50"
+            className="flex items-center gap-1.5 tap-center whitespace-nowrap rounded-xl border border-gray-200 bg-white px-4 py-2.5 text-sm font-medium text-gray-600 transition-colors hover:border-gray-300 hover:bg-gray-50 disabled:opacity-50"
           >
             <RefreshCw className={`h-4 w-4 shrink-0 ${fetching ? 'animate-spin' : ''}`} strokeWidth={1.75} /> Yangilash
           </button>

@@ -686,7 +686,7 @@ export default function InstitutionForm({ initialData, institutionId, mode, init
                   key={t.value}
                   type="button"
                   onClick={() => toggleArray('additionalTypes', t.value)}
-                  className={`rounded-full border px-3.5 py-1.5 text-xs font-semibold transition-colors ${
+                  className={`tap-center rounded-full border px-3.5 py-1.5 text-xs font-semibold transition-colors ${
                     form.additionalTypes.includes(t.value)
                       ? 'border-primary-500 bg-primary-600 text-white'
                       : 'border-gray-300 bg-white text-gray-600 hover:border-primary-400'

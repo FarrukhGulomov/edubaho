@@ -406,7 +406,7 @@ export default function AuthPage() {
                 <button
                   key={l}
                   onClick={() => setLang(l)}
-                  className={`rounded-full px-5 py-2 text-sm font-semibold transition-colors ${
+                  className={`tap-center rounded-full px-5 py-2 text-sm font-semibold transition-colors ${
                     lang === l
                       ? 'bg-primary-600 text-white shadow-sm'
                       : 'text-gray-500 hover:text-gray-700'

@@ -162,7 +162,7 @@ export default function AdminLeadDetailPage() {
             { label: 'Lidlar', href: '/admin/leads' },
             { label: lead?.name ?? id },
           ]} />
-          <Link href="/admin/leads" className="shrink-0 whitespace-nowrap rounded-xl border border-gray-200 bg-white px-4 py-2 text-sm font-semibold text-gray-600 transition-colors hover:border-gray-300 hover:bg-gray-50">
+          <Link href="/admin/leads" className="shrink-0 tap-center whitespace-nowrap rounded-xl border border-gray-200 bg-white px-4 py-2 text-sm font-semibold text-gray-600 transition-colors hover:border-gray-300 hover:bg-gray-50">
             ← Orqaga
           </Link>
         </div>

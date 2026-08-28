@@ -50,7 +50,13 @@
 
   p, li { @apply leading-relaxed; }
 
-  /* Katta touch targets — barcha foydalanuvchilar uchun qulay */
+  /* Katta touch targets — barcha foydalanuvchilar uchun qulay.
+   *
+   * ⚠️ DIQQAT: `min-height` o'zi matnni MARKAZLASHTIRMAYDI. Oddiy
+   * (block/inline) havolada matn 44px'lik qutining TEPASIDA qolib
+   * ketadi va yonidagi kichikroq elementlardan balandroq ko'rinadi.
+   * Bir qatorda turadigan matnli havola/tugmalarga shuning uchun
+   * `.tap-center` klassini qo'shing (yoki flex qiling). */
   button, a {
     min-height: 44px;
     min-width: 44px;
@@ -62,6 +68,16 @@
 }
 
 @layer components {
+
+  /* ─── Touch target ichida matnni markazlash ──────────────────── */
+  /* Yuqoridagi `button, a { min-height: 44px }` qoidasi matnni
+   * markazlashtirmaydi — matn qutining tepasida qoladi. Bir qatorda
+   * boshqa elementlar bilan yonma-yon turadigan matnli havola va
+   * tugmalarga shu klass beriladi: bosish maydoni 44px'ligicha
+   * qoladi, matn esa markazga tushadi. */
+  .tap-center {
+    @apply inline-flex items-center justify-center;
+  }
 
   /* ─── Kartochka ─────────────────────────────────────────────── */
   /* Minimalistik: kichikroq radius, yengil soya, harakatsiz hover — shovqinsiz */

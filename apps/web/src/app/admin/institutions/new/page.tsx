@@ -46,7 +46,7 @@ export default function NewInstitutionPage() {
           ]} />
           <Link
             href="/admin/institutions"
-            className="shrink-0 whitespace-nowrap rounded-xl border border-gray-200 bg-white px-4 py-2 text-sm font-semibold text-gray-600 transition-colors hover:border-gray-300 hover:bg-gray-50"
+            className="shrink-0 tap-center whitespace-nowrap rounded-xl border border-gray-200 bg-white px-4 py-2 text-sm font-semibold text-gray-600 transition-colors hover:border-gray-300 hover:bg-gray-50"
           >
             ← Orqaga
           </Link>

@@ -151,7 +151,7 @@ export default function GuestLeadWidget({ triggerOnMount = true }: Props) {
                     <h3 className="font-bold text-gray-900">{t(lang, ui.title)}</h3>
                     <p className="mt-0.5 text-xs text-gray-500">{t(lang, ui.subtitle)}</p>
                   </div>
-                  <button onClick={handleClose} className="shrink-0 p-1 text-gray-400 hover:text-gray-600">
+                  <button onClick={handleClose} className="tap-center shrink-0 p-1 text-gray-400 hover:text-gray-600">
                     <X className="h-5 w-5" strokeWidth={1.75} />
                   </button>
                 </div>
