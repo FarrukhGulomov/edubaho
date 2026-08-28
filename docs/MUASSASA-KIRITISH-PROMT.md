@@ -86,7 +86,6 @@ TA'LIM YO'NALISHLARI (kategoriyalar — bir nechta tanlanadi):
   LANGUAGES .................. Chet tillari
   KIDS_EDUCATION ............. Bolalar ta'limi
   PROFESSIONAL_CERTIFICATION . Kasbiy sertifikatlash
-  CAREER_CHANGE .............. Kasb almashtirish
 
 O'QITISH TILLARI (bir nechta): uz | ru | en | de | fr | ko | zh
 
