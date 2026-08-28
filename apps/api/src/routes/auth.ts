@@ -15,19 +15,49 @@ import { generateTokens, verifyRefreshToken, revokeRefreshToken, REFRESH_TTL } f
 import { attributeReferral } from '../services/referralService'
 
 const REFRESH_COOKIE = 'rt'
-// Faqat /auth/* yo'llariga yuboriladi — boshqa so'rovlarga tarqalmaydi.
-// JS o'qiy olmaydi (httpOnly) — XSS orqali refresh token o'g'irlanishining oldini oladi.
+
+/**
+ * Refresh cookie sozlamalari.
+ *
+ * `sameSite` production'da 'none' bo'lishi SHART. Sababi: web va api
+ * alohida domenlarda ishlaydi (masalan `edubaho-web-production.up.railway.app`
+ * va `edubaho-api-production.up.railway.app`), va `up.railway.app` Public
+ * Suffix List'da — ya'ni brauzer bu ikkalasini BOSHQA-BOSHQA sayt deb
+ * biladi. 'lax' bo'lsa brauzer cookie'ni fetch/XHR so'rovlarida UMUMAN
+ * YUBORMAYDI → /auth/refresh doim "token topilmadi" qaytaradi → access
+ * token 15 daqiqada eskirgach yangilanmaydi → admin uzoq forma
+ * to'ldirayotganda "Tizimga kirishingiz kerak" xatosi bilan barcha
+ * yozgan ma'lumotini yo'qotadi.
+ *
+ * 'none' + Secure — cross-site cookie uchun standart yechim. CSRF xavfi
+ * yo'q: begona sayt so'rov yubora olsa ham javobni O'QIY OLMAYDI, chunki
+ * CORS faqat ALLOWED_ORIGINS ro'yxatidagi domenlarga ruxsat beradi.
+ *
+ * Development'da (http://localhost) 'none' ishlamaydi — u majburiy Secure
+ * talab qiladi, HTTPS esa yo'q. Localhost'da web:3000 va api:3001 ayni
+ * saytda hisoblanadi, shuning uchun 'lax' bemalol ishlaydi.
+ *
+ * Faqat /auth/* yo'llariga yuboriladi — boshqa so'rovlarga tarqalmaydi.
+ * JS o'qiy olmaydi (httpOnly) — XSS orqali refresh token o'g'irlanishining oldini oladi.
+ */
+const isProd = env.NODE_ENV === 'production'
+const REFRESH_COOKIE_OPTS = {
+  httpOnly: true,
+  secure: isProd,
+  sameSite: (isProd ? 'none' : 'lax') as 'none' | 'lax',
+  path: '/api/v1/auth',
+}
+
 function setRefreshCookie(reply: FastifyReply, token: string) {
   reply.setCookie(REFRESH_COOKIE, token, {
-    httpOnly: true,
-    secure: env.NODE_ENV === 'production',
-    sameSite: 'lax',
-    path: '/api/v1/auth',
+    ...REFRESH_COOKIE_OPTS,
     maxAge: REFRESH_TTL,
   })
 }
 function clearRefreshCookie(reply: FastifyReply) {
-  reply.clearCookie(REFRESH_COOKIE, { path: '/api/v1/auth' })
+  // O'chirishda ham AYNAN o'sha atributlar berilishi kerak — sameSite/secure
+  // mos kelmasa brauzer cookie'ni o'chirmaydi (logout ishlamay qoladi)
+  reply.clearCookie(REFRESH_COOKIE, REFRESH_COOKIE_OPTS)
 }
 
 /**
