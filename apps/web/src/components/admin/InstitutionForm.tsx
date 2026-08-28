@@ -185,6 +185,16 @@ export default function InstitutionForm({ initialData, institutionId, mode, init
   const [error, setError] = useState('')
   const [success, setSuccess] = useState('')
 
+  // Admin PIN tasdig'i 1 soat amal qiladi. Forma uzoq to'ldirilib, o'rtada
+  // tanaffus bo'lsa muddat tugaydi va "Saqlash"da ADMIN_PIN_REQUIRED keladi.
+  // Ilgari bunda ish TO'XTAB QOLARDI — PINni qayta kiritish uchun boshqa
+  // sahifaga o'tish kerak edi, bu esa yozilgan ma'lumotni yo'qotardi.
+  // Endi shu yerning o'zida PIN so'raladi va saqlash avtomatik davom etadi.
+  const [pinRequired, setPinRequired] = useState(false)
+  const [pinValue, setPinValue] = useState('')
+  const [pinError, setPinError] = useState('')
+  const [pinLoading, setPinLoading] = useState(false)
+
   // Rasmlar — alohida endpoint orqali boshqariladi (institution.create/update
   // JSON tanasidan mustaqil, chunki fayl yuklash multipart/form-data talab qiladi)
   const [photos, setPhotos] = useState<PhotoData[]>(initialPhotos ?? [])
@@ -362,17 +372,11 @@ export default function InstitutionForm({ initialData, institutionId, mode, init
     set(field, arr.includes(val) ? arr.filter((x) => x !== val) : [...arr, val])
   }
 
-  async function handleSubmit(e: React.FormEvent) {
-    e.preventDefault()
-    setError('')
-    setSuccess('')
-
-    if (!form.nameUz.trim()) { setError("O'zbek nomi majburiy"); setTab('main'); return }
-    if (!form.slug.trim())   { setError('Slug majburiy'); setTab('main'); return }
-    if (!form.type)          { setError('Tur majburiy'); setTab('main'); return }
-
-    setLoading(true)
-    try {
+  /**
+   * Saqlash so'rovini yuboradi. Access token eskirgan bo'lsa (401) uni jim
+   * yangilab bitta marta qayta uradi — forma ma'lumoti yo'qolmaydi.
+   */
+  async function sendSave(): Promise<Response> {
       const url  = mode === 'create'
         ? `${API}/admin/institutions`
         : `${API}/admin/institutions/${institutionId}`
@@ -425,8 +429,30 @@ export default function InstitutionForm({ initialData, institutionId, mode, init
         } catch { /* refresh ham muvaffaqiyatsiz — pastda haqiqiy xato ko'rsatiladi, forma ma'lumoti saqlanib qoladi */ }
       }
 
+      return res
+  }
+
+  /**
+   * Saqlashni bajaradi va natijani ko'rsatadi.
+   * PIN muddati tugagan bo'lsa xato ko'rsatish o'rniga PIN oynasini ochadi —
+   * admin PINni kiritgach saqlash o'sha yerdan davom etadi.
+   */
+  async function performSave() {
+    setError('')
+    setLoading(true)
+    try {
+      const res  = await sendSave()
       const data = await res.json()
-      if (!res.ok) throw new Error(data.error ?? 'Xatolik')
+
+      if (!res.ok) {
+        if (data.code === 'ADMIN_PIN_REQUIRED') {
+          setPinRequired(true)
+          setPinValue('')
+          setPinError('')
+          return
+        }
+        throw new Error(data.error ?? 'Xatolik')
+      }
 
       setSuccess(mode === 'create' ? 'Muassasa yaratildi!' : 'Muassasa yangilandi!')
       if (mode === 'create') {
@@ -439,6 +465,49 @@ export default function InstitutionForm({ initialData, institutionId, mode, init
       setError(err instanceof Error ? err.message : 'Xatolik yuz berdi')
     } finally {
       setLoading(false)
+    }
+  }
+
+  async function handleSubmit(e: React.FormEvent) {
+    e.preventDefault()
+    setError('')
+    setSuccess('')
+
+    if (!form.nameUz.trim()) { setError("O'zbek nomi majburiy"); setTab('main'); return }
+    if (!form.slug.trim())   { setError('Slug majburiy'); setTab('main'); return }
+    if (!form.type)          { setError('Tur majburiy'); setTab('main'); return }
+
+    await performSave()
+  }
+
+  /** PIN oynasidagi tasdiqlash — muvaffaqiyatli bo'lsa saqlash davom etadi */
+  async function handlePinConfirm(e: React.FormEvent) {
+    e.preventDefault()
+    setPinError('')
+    setPinLoading(true)
+    try {
+      const res = await fetch(`${API}/auth/admin-pin`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${localStorage.getItem('accessToken') ?? ''}`,
+          'ngrok-skip-browser-warning': '1',
+        },
+        body: JSON.stringify({ pin: pinValue }),
+      })
+      const data = await res.json()
+      if (!res.ok) {
+        setPinError(data.error ?? "PIN noto'g'ri")
+        setPinValue('')
+        return
+      }
+      setPinRequired(false)
+      setPinValue('')
+      await performSave()
+    } catch {
+      setPinError("Server bilan aloqa yo'q")
+    } finally {
+      setPinLoading(false)
     }
   }
 
@@ -1158,6 +1227,53 @@ export default function InstitutionForm({ initialData, institutionId, mode, init
             : <><CheckCircle2 className="h-4 w-4 shrink-0" strokeWidth={1.75} /> {mode === 'create' ? 'Muassasa yaratish' : 'Saqlash'}</>}
         </button>
       </div>
+
+      {/* ── PIN muddati tugaganda: shu yerning o'zida qayta tasdiqlash ──
+          Forma yopilmaydi va hech qanday ma'lumot yo'qolmaydi — PIN
+          kiritilgach saqlash avtomatik davom etadi. */}
+      {pinRequired && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-gray-900/60 p-4">
+          <div className="w-full max-w-sm rounded-2xl bg-white p-6 shadow-xl">
+            <h3 className="text-lg font-bold text-gray-900">Admin PIN kiriting</h3>
+            <p className="mt-1.5 text-sm text-gray-500">
+              Xavfsizlik uchun PIN tasdig&apos;i muddati tugadi. PINni kiriting —
+              yozgan ma&apos;lumotlaringiz joyida, saqlash davom etadi.
+            </p>
+
+            <input
+              type="password"
+              value={pinValue}
+              onChange={(e) => setPinValue(e.target.value)}
+              onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); handlePinConfirm(e) } }}
+              placeholder="PIN"
+              autoFocus
+              className={INPUT_CLS + ' mt-4 text-center tracking-widest'}
+            />
+
+            {pinError && (
+              <p className="mt-2 text-sm font-medium text-red-600">{pinError}</p>
+            )}
+
+            <div className="mt-5 flex gap-2">
+              <button
+                type="button"
+                onClick={() => { setPinRequired(false); setPinValue(''); setPinError('') }}
+                className="flex-1 rounded-xl border border-gray-200 py-2.5 text-sm font-semibold text-gray-700 hover:bg-gray-50"
+              >
+                Bekor qilish
+              </button>
+              <button
+                type="button"
+                onClick={handlePinConfirm}
+                disabled={pinLoading || pinValue.length < 4}
+                className="flex-1 rounded-xl bg-primary-600 py-2.5 text-sm font-semibold text-white hover:bg-primary-700 disabled:opacity-50"
+              >
+                {pinLoading ? 'Tekshirilmoqda...' : 'Tasdiqlash va saqlash'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </form>
   )
 }
