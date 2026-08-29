@@ -3,10 +3,7 @@
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { useState, useEffect } from 'react'
-import {
-  Sparkles, ChevronDown,
-  MapPin, Users2, UserCheck, Star, ArrowLeftRight, ArrowRight,
-} from 'lucide-react'
+import { Sparkles, ChevronDown, Star, ArrowLeftRight, ArrowRight } from 'lucide-react'
 import Header from '@/components/shared/Header'
 import Footer from '@/components/shared/Footer'
 import BrandMark from '@/components/shared/BrandMark'
@@ -14,7 +11,8 @@ import { RatingHint } from '@/components/shared/StarRating'
 import InstitutionCoverImage from '@/components/shared/InstitutionCoverImage'
 import LiveStatsPill from '@/components/shared/LiveStatsPill'
 import VerificationBadge from '@/components/shared/VerificationBadge'
-import { formatStudentRange } from '@/lib/studentRange'
+import InstitutionMetrics from '@/components/shared/InstitutionMetrics'
+import { priceFrom } from '@/lib/price'
 import { useLang, t } from '@/contexts/LangContext'
 import { useCompare, useSaved } from '@/hooks/useCompare'
 import { matchApi, type MatchInsights } from '@/lib/api'
@@ -32,10 +30,11 @@ interface InstCard {
   verificationLevel: 'UNVERIFIED' | 'CLAIMED' | 'VERIFIED'
   city?: { nameUz: string; nameRu?: string }
   media?: { url: string; thumbnailUrl?: string | null }[]
-  pricing?: { monthlyMin?: number }
+  pricing?: { monthlyMin?: number; monthlyMax?: number; yearlyMin?: number; yearlyMax?: number }
   details?: {
     studentCount?: number | null
     teacherCount?: number
+    foundedYear?: number | null
     programs?: string[]
   }
   subscription?: { plan: string }
@@ -52,9 +51,6 @@ const TYPE_LABELS: Record<string, { uz: string; ru: string }> = {
   SPORTS_SCHOOL:   { uz: 'Sport',         ru: 'Спорт' },
   ARTS_SCHOOL:     { uz: "San'at",        ru: 'Искусство' },
 }
-
-function fmtNum(n: number) { return n.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ' ') }
-function fmtUzs(n: number) { return `${fmtNum(n)} so'm` }
 
 export default function HomePage() {
   const { lang } = useLang()
@@ -142,18 +138,28 @@ export default function HomePage() {
              ishlaymiz, shuning uchun tur tanlash qadami olib tashlandi —
              foydalanuvchi darhol maqsadini kiritadi va /match wizard'iga
              formatdan (tur/maqsad allaqachon ma'lum) davom etadi. ── */}
-      <div className="relative border-b border-gray-200 bg-white px-4 pb-12 pt-8 sm:pb-16 sm:pt-12">
+      {/* Vertikal bo'shliq qisqartirildi — asosiy amal (qidiruv maydoni)
+          birinchi ekranda darhol ko'rinishi uchun */}
+      <div className="relative border-b border-gray-200 bg-white px-4 pb-10 pt-6 sm:pb-12 sm:pt-8">
         <div className="mx-auto max-w-2xl">
           <div className="mb-1.5 flex items-center justify-center gap-2 text-primary-600">
             <BrandMark size={20} className="shrink-0" />
             <span className="text-sm font-bold uppercase tracking-wide">BilimOn</span>
           </div>
-          <LiveStatsPill />
+          {/* Sarlavha — hurmatli, izchil ohang ("senga" emas, "sizga").
+              Live hisoblagich pastga ko'chirildi: u sarlavha bilan
+              e'tibor uchun raqobatlashmasligi kerak. */}
           <h1 className="mb-2 text-center text-2xl font-bold leading-tight text-gray-900 sm:text-4xl">
-            {uz ? 'Qaysi ta\'lim muassasasi senga mos?' : 'Какое учебное заведение вам подходит?'}
+            {t(lang, {
+              uz: "Sizga qaysi ta'lim muassasasi mos?",
+              ru: 'Какое учебное заведение вам подходит?',
+            })}
           </h1>
-          <p className="mb-6 text-center text-sm text-gray-500 sm:text-base">
-            {uz ? 'Maqsadingiz nima?' : 'Какая у вас цель?'}
+          <p className="mb-5 text-center text-sm text-gray-500 sm:text-base">
+            {t(lang, {
+              uz: "Maqsadingizni kiriting va mos ta'lim muassasalarini toping.",
+              ru: 'Укажите вашу цель — и мы подберём подходящие учебные заведения.',
+            })}
           </p>
 
           {/* EduFit wizard'ining "maqsad" qadami — hero'ning asosiy vidjeti.
@@ -171,8 +177,12 @@ export default function HomePage() {
                 value={heroGoal}
                 onChange={(e) => setHeroGoal(e.target.value)}
                 onKeyDown={(e) => { if (e.key === 'Enter' && !heroZeroMatch) { e.preventDefault(); goToMatch() } }}
-                placeholder={uz ? 'Masalan: IELTS, Frontend, matematika...' : 'Например: IELTS, Frontend, математика...'}
+                placeholder={t(lang, {
+                  uz: 'Masalan: IELTS, Frontend yoki matematika',
+                  ru: 'Например: IELTS, Frontend или математика',
+                })}
                 maxLength={100}
+                aria-label={t(lang, { uz: "O'quv maqsadingiz", ru: 'Ваша учебная цель' })}
                 className="min-w-0 flex-1 bg-transparent py-2 text-base text-gray-900 outline-none placeholder:text-gray-400"
               />
             </div>
@@ -188,16 +198,33 @@ export default function HomePage() {
             )}
           </div>
 
-          {/* Real DB'dan hisoblangan live son — soxta statistika emas */}
-          <p className="mb-3 text-center text-xs font-semibold text-primary-600">
-            {heroInsights
-              ? (heroGoal.trim() && heroInsights.matchingCount === 0
-                  ? (uz ? "Bu yo'nalish bo'yicha hozircha muassasa yo'q — boshqa fan bilan sinab ko'ring" : 'По этому направлению пока нет учреждений')
-                  : (uz ? `${heroInsights.matchingCount} ta muassasa mos keladi` : `Подходит ${heroInsights.matchingCount} учреждений`))
-              : ' '}
+          {/* Real DB'dan hisoblangan live son — soxta statistika emas.
+              Faqat maqsad kiritilgandan KEYIN ko'rsatiladi: bo'sh maydon
+              ostida "0 ta muassasa mos keladi" turishi sayt ishlamayotgandek
+              taassurot qoldirardi. */}
+          <p
+            className="mb-3 min-h-[1.25rem] text-center text-xs font-semibold text-primary-600"
+            aria-live="polite"
+          >
+            {heroGoal.trim() && heroInsights
+              ? (heroInsights.matchingCount === 0
+                  ? t(lang, {
+                      uz: "Bu yo'nalish bo'yicha hozircha muassasa yo'q — boshqa fan bilan sinab ko'ring",
+                      ru: 'По этому направлению пока нет учреждений — попробуйте другой предмет',
+                    })
+                  : t(lang, {
+                      uz: `${heroInsights.matchingCount} ta muassasa mos keladi`,
+                      ru: `Подходит ${heroInsights.matchingCount} учреждений`,
+                    }))
+              : ''}
           </p>
 
-          <div className="mb-6 flex flex-wrap justify-center gap-1.5">
+          {/* Ommabop maqsadlar — qidiruv maydonidan keyingi ikkinchi qadam.
+              Sarlavhasi bor: ilgari bu pill'lar nima ekani izohsiz edi. */}
+          <h2 className="mb-2 text-center text-xs font-semibold uppercase tracking-wide text-gray-400">
+            {t(lang, { uz: 'Ommabop maqsadlar', ru: 'Популярные цели' })}
+          </h2>
+          <div className="mb-5 flex flex-wrap justify-center gap-1.5">
             {(GOAL_SUGGESTIONS.COURSE_CENTER ?? []).map((g) => (
               <button
                 key={g.label}
@@ -212,6 +239,13 @@ export default function HomePage() {
                 {g.label}
               </button>
             ))}
+          </div>
+
+          {/* Live hisoblagich — ikkinchi darajali o'rin. Sarlavha ustida
+              turganda asosiy xabardan chalg'itardi; bu yerda esa u
+              nima uchun kerak bo'lsa shuni qiladi: ishonch signali. */}
+          <div className="flex justify-center">
+            <LiveStatsPill />
           </div>
 
           {/* Ikkinchi qidiruv qutisi olib tashlandi — hero'da yuqorida
@@ -275,12 +309,14 @@ export default function HomePage() {
               const city     = inst.city ? (uz || !inst.city.nameRu ? inst.city.nameUz : inst.city.nameRu) : null
               const saved    = isSaved(inst.id)
               const compared = isCompared(inst.id)
+              const price    = priceFrom(inst.pricing, lang)
 
               return (
                 <div key={inst.id} className="group card flex flex-col p-0">
                   <InstitutionCoverImage
                     media={inst.media}
                     name={name}
+                    fallback="initials"
                     className="aspect-[16/10] w-full rounded-t-2xl"
                   />
                   {/* Karta tanasi */}
@@ -307,7 +343,7 @@ export default function HomePage() {
                     {(inst.details?.programs?.length ?? 0) > 0 && (
                       <div className="mb-2 flex flex-wrap gap-1">
                         {inst.details!.programs!.slice(0, 2).map(p => (
-                          <span key={p} className="rounded-lg bg-blue-50 px-2 py-0.5 text-xs font-medium text-blue-700">
+                          <span key={p} className="max-w-full truncate rounded-lg bg-blue-50 px-2 py-0.5 text-xs font-medium text-blue-700" title={p}>
                             {p}
                           </span>
                         ))}
@@ -319,37 +355,30 @@ export default function HomePage() {
                       </div>
                     )}
 
-                    {/* Shahar + statistika */}
-                    <div className="mb-2 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-gray-500">
-                      {city && (
-                        <span className="flex items-center gap-1">
-                          <MapPin className="h-3.5 w-3.5 shrink-0" strokeWidth={1.75} />
-                          {city}
-                        </span>
-                      )}
-                      {inst.details?.studentCount && (
-                        <span className="flex items-center gap-1 text-primary-600 font-semibold">
-                          <Users2 className="h-3.5 w-3.5" strokeWidth={2} /> {formatStudentRange(inst.details.studentCount)}
-                        </span>
-                      )}
-                      {inst.details?.teacherCount && (
-                        <span className="flex items-center gap-1 text-gray-500 font-semibold">
-                          <UserCheck className="h-3.5 w-3.5" strokeWidth={2} /> {inst.details.teacherCount}
-                        </span>
-                      )}
-                    </div>
+                    {/* Shahar + statistika — har bir son yonida yozuv bor
+                        (ilgari faqat ikonka edi: "500–1 000" nimani
+                        bildirishini bilib bo'lmasdi) */}
+                    <InstitutionMetrics
+                      lang={lang}
+                      className="mb-2"
+                      data={{
+                        city,
+                        studentCount: inst.details?.studentCount,
+                        teacherCount: inst.details?.teacherCount,
+                        foundedYear: inst.details?.foundedYear,
+                      }}
+                    />
 
-                    {/* Narx (asosiy) + reyting (tinch, taxminiy ko'rsatkich sifatida) */}
-                    <div className="mt-auto flex items-center justify-between gap-2 border-t border-gray-100 pt-3">
+                    {/* Narx + reyting. Narx davri ANIQ ko'rsatiladi
+                        ("Oyiga ...dan") — shunchaki "600 000 so'm" chalkash edi */}
+                    <div className="mt-auto flex flex-wrap items-center justify-between gap-x-2 gap-y-1.5 border-t border-gray-100 pt-3">
                       {inst.avgRating ? (
                         <RatingHint rating={inst.avgRating} count={inst.reviewCount} lang={lang} />
                       ) : (
-                        <span className="text-xs text-gray-400">{uz ? "Sharh yo'q" : "Нет отзывов"}</span>
+                        <span className="text-xs text-gray-400">{t(lang, { uz: "Sharh yo'q", ru: 'Нет отзывов' })}</span>
                       )}
-                      {inst.pricing?.monthlyMin && (
-                        <span className="price-badge text-xs">
-                          {fmtUzs(inst.pricing.monthlyMin)}
-                        </span>
+                      {price && (
+                        <span className="price-badge whitespace-nowrap text-xs">{price.full}</span>
                       )}
                     </div>
                   </Link>

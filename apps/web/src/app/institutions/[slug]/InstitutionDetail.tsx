@@ -17,6 +17,7 @@ import WriteReview from '@/components/institutions/WriteReview'
 import GuestLeadWidget from '@/components/shared/GuestLeadWidget'
 import VerificationBadge from '@/components/shared/VerificationBadge'
 import { formatStudentRange } from '@/lib/studentRange'
+import { formatUzs, priceFrom } from '@/lib/price'
 import { useLang, t } from '@/contexts/LangContext'
 import { authHref } from '@/lib/authHref'
 import {
@@ -24,10 +25,6 @@ import {
 } from '@/lib/analytics'
 import type { Institution } from './page'
 
-function formatNum(n: number) {
-  return n.toString().replace(/\B(?=(\d{3})+(?!\d))/g, '\u00a0')
-}
-function formatUzs(n: number) { return `${formatNum(n)} so'm` }
 
 /** Manzil uchun Google Maps havolasi \u2014 koordinata bo'lsa aniq nuqta, bo'lmasa matn qidiruv */
 function mapsUrl(inst: { address?: string; lat?: number; lng?: number }): string | null {
@@ -133,9 +130,14 @@ function GuestGate({
 
   return (
     <div className="relative rounded-2xl overflow-hidden" data-gate-type={gateType}>
-      {/* Blurred preview content */}
+      {/* Xira ko'rsatilgan namuna — o'qib bo'lmaydi, shuning uchun ekran
+          o'quvchisiga ham berilmaydi (aks holda tushunarsiz shovqin bo'lardi).
+          Nima ekani overlay matnida aniq aytiladi. */}
       {blurPreview && (
-        <div className="pointer-events-none select-none blur-[3px] opacity-60 saturate-50">
+        <div
+          aria-hidden="true"
+          className="pointer-events-none select-none blur-[3px] opacity-60 saturate-50"
+        >
           {blurPreview}
         </div>
       )}
@@ -149,19 +151,20 @@ function GuestGate({
             <Lock className="h-5 w-5" strokeWidth={1.75} />
           </div>
           <h3 className="mb-1.5 text-base font-bold text-gray-900">
-            {lang === 'ru' ? 'Войдите для просмотра' : "Ko'rish uchun kiring"}
+            {t(lang, { uz: 'Sharhlardan namunalar', ru: 'Примеры отзывов' })}
           </h3>
-          <p className="mb-4 text-sm text-gray-500 leading-relaxed">
-            {lang === 'ru'
-              ? 'Отзывы доступны только зарегистрированным пользователям'
-              : "Sharhlar faqat ro'yxatdan o'tgan foydalanuvchilarga ko'rinadi"}
+          <p className="mb-4 text-sm leading-relaxed text-gray-500">
+            {t(lang, {
+              uz: "Barcha sharhlarni ko'rish uchun tizimga kiring.",
+              ru: 'Войдите, чтобы посмотреть все отзывы.',
+            })}
           </p>
           <Link
             href={authHref(next)}
             onClick={() => trackGateCta(gateType ?? 'gate', institutionId)}
             className="btn-primary w-full text-sm py-2.5"
           >
-            {lang === 'ru' ? 'Войти' : 'Kirish'}
+            {t(lang, { uz: 'Kirish', ru: 'Войти' })}
           </Link>
         </div>
       </div>
@@ -173,58 +176,32 @@ function GuestGate({
 // Registration CTA banner — sahifa o'rtasida bitta ulkan taklif
 // ─────────────────────────────────────────────────────────────
 function RegisterBanner({ lang, next }: { lang: 'uz' | 'ru'; next?: string }) {
-  const items: Array<[typeof Phone, string]> = lang === 'ru' ? [
-    [Phone, 'Контакты: телефон, Telegram, Instagram'],
-    [Wallet, 'Актуальные цены и способы оплаты'],
-    [MessageCircle, 'Все отзывы родителей и учеников'],
-    [PencilLine, 'Оставить свой отзыв'],
-    [BadgeCheck, 'Сохранять и сравнивать учреждения'],
-  ] : [
-    [Phone, 'Kontaktlar: telefon, Telegram, Instagram'],
-    [Wallet, "Narxlar va to'lov usullari"],
-    [MessageCircle, "Ota-onalar va o'quvchilarning barcha sharhlari"],
-    [PencilLine, "O'z sharhingizni yozish"],
-    [BadgeCheck, 'Muassasalarni saqlash va solishtirish'],
-  ]
-
   return (
-    <div className="overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-sm">
-      {/* Sarlavha */}
-      <div className="flex items-center gap-3 border-b border-gray-100 px-6 py-4">
-        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-primary-50 text-primary-600">
-          <Lock className="h-5 w-5" strokeWidth={1.75} />
-        </div>
-        <h3 className="font-semibold text-gray-900 leading-tight">
-          {lang === 'ru' ? 'Войдите для полного доступа' : "To'liq kirish uchun tizimga kiring"}
+    <div className="rounded-2xl border border-gray-200 bg-white p-6 shadow-sm">
+      <div className="mb-3 flex items-center gap-3">
+        <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-primary-50 text-primary-600">
+          <Phone className="h-5 w-5" strokeWidth={1.75} aria-hidden="true" />
+        </span>
+        <h3 className="font-semibold leading-tight text-gray-900">
+          {t(lang, { uz: "Kontaktlarni ko'rish", ru: 'Посмотреть контакты' })}
         </h3>
       </div>
 
-      {/* Body */}
-      <div className="px-6 pb-6 pt-5">
-        <p className="mb-4 text-sm text-gray-500 leading-relaxed">
-          {lang === 'ru'
-            ? 'Зарегистрируйтесь бесплатно — контакты, цены и все отзывы'
-            : "Bepul ro'yxatdan o'ting — kontaktlar, narxlar va barcha sharhlar"}
-        </p>
+      {/* BITTA qisqa izoh — ilgari bu yerda 5 punktli ro'yxat bor edi va
+          yana 4 joyda xuddi shu kirish taklifi takrorlanardi */}
+      <p className="mb-4 text-sm leading-relaxed text-gray-500">
+        {t(lang, {
+          uz: "Telefon, Telegram, Instagram va batafsil ma'lumotlarni ko'ring.",
+          ru: 'Посмотрите телефон, Telegram, Instagram и подробную информацию.',
+        })}
+      </p>
 
-        <ul className="mb-5 space-y-2.5">
-          {items.map(([Icon, text]) => (
-            <li key={text} className="flex items-center gap-2.5 text-sm text-gray-700">
-              <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-primary-50 text-primary-600">
-                <Icon className="h-3.5 w-3.5" strokeWidth={2} />
-              </span>
-              {text}
-            </li>
-          ))}
-        </ul>
-
-        <Link href={authHref(next)} className="btn-primary w-full py-3 text-base">
-          {lang === 'ru' ? 'Зарегистрироваться бесплатно →' : "Bepul ro'yxatdan o'tish →"}
-        </Link>
-        <p className="mt-3 text-center text-xs text-gray-400">
-          {lang === 'ru' ? 'Telegram или Google · Бесплатно' : 'Telegram yoki Google · Bepul'}
-        </p>
-      </div>
+      <Link href={authHref(next)} className="btn-primary w-full py-3 text-base">
+        {t(lang, { uz: "Bepul ro'yxatdan o'tish", ru: 'Зарегистрироваться бесплатно' })}
+      </Link>
+      <p className="mt-3 text-center text-xs text-gray-400">
+        {t(lang, { uz: 'Telegram yoki Google · Bepul', ru: 'Telegram или Google · Бесплатно' })}
+      </p>
     </div>
   )
 }
@@ -725,9 +702,12 @@ export default function InstitutionDetail({ inst }: { inst: Institution }) {
                     </p>
                   )}
                   {/* Faqat izoh, tugmasiz — asosiy "kirish" chaqiruvi sidebar'da bitta joyda */}
-                  <p className="mt-3 flex items-center gap-1.5 text-sm text-gray-400">
-                    <Lock className="h-3.5 w-3.5 shrink-0" strokeWidth={2} />
-                    {lang === 'ru' ? 'Полное описание доступно после входа' : "To'liq ta'rif tizimga kirgandan so'ng ko'rinadi"}
+                  <p className="mt-3 flex items-center gap-1.5 text-sm text-gray-500">
+                    <Lock className="h-3.5 w-3.5 shrink-0" strokeWidth={2} aria-hidden="true" />
+                    {t(lang, {
+                      uz: "To'liq ta'rif ro'yxatdan o'tgandan so'ng ko'rinadi",
+                      ru: 'Полное описание доступно после регистрации',
+                    })}
                   </p>
                 </>
               ) : (
@@ -998,18 +978,19 @@ export default function InstitutionDetail({ inst }: { inst: Institution }) {
                     <Wallet className="h-5 w-5" strokeWidth={1.75} />
                   </span>
                   <div>
-                    <p className="text-sm text-emerald-600 font-medium">{t(lang, ui.priceFrom)}</p>
-                    <p className="text-2xl font-bold text-emerald-700">{formatUzs(inst.pricing.monthlyMin)}</p>
+                    <p className="text-sm font-medium text-emerald-600">{t(lang, ui.priceFrom)}</p>
+                    {/* Davri aniq: "Oyiga ... dan" — shunchaki summa chalkash edi */}
+                    <p className="text-2xl font-bold text-emerald-700">
+                      {priceFrom(inst.pricing, lang)?.full ?? formatUzs(inst.pricing.monthlyMin)}
+                    </p>
                   </div>
                 </div>
-                <div className="rounded-xl bg-white/70 px-4 py-3 text-sm text-emerald-700 font-medium flex items-center gap-2">
-                  <Lock className="h-4 w-4 shrink-0" strokeWidth={1.75} />
-                  <span>
-                    {lang === 'ru'
-                      ? 'Все детали после входа'
-                      : "Batafsil ma'lumot kirgandan so'ng"}
-                  </span>
-                </div>
+                <p className="text-sm leading-relaxed text-emerald-700">
+                  {t(lang, {
+                    uz: "To'lov usullari va chegirmalar ro'yxatdan o'tgandan so'ng ko'rinadi.",
+                    ru: 'Способы оплаты и скидки доступны после регистрации.',
+                  })}
+                </p>
               </div>
             )}
 
@@ -1106,16 +1087,6 @@ export default function InstitutionDetail({ inst }: { inst: Institution }) {
               </a>
             )}
 
-            {/* Guest — Sharh yozish CTA */}
-            {isGuest && (
-              <Link
-                href={authHref(instPath)}
-                className="btn-secondary w-full text-base py-3.5"
-              >
-                <PencilLine className="h-[18px] w-[18px]" strokeWidth={1.75} />
-                {lang === 'ru' ? 'Войдите чтобы оставить отзыв' : "Sharh yozish uchun kiring"}
-              </Link>
-            )}
           </div>
         </div>
       </div>

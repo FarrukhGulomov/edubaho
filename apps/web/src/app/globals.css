@@ -13,6 +13,20 @@
     font-size: 16px;
   }
 
+  /* Harakatni kamaytirish so'ralganda (OS sozlamasi) — animatsiyalar
+   * to'xtatiladi. Vestibulyar buzilishi bor foydalanuvchilar uchun
+   * harakatlanuvchi elementlar bosh og'rig'i/ko'ngil aynishiga sabab
+   * bo'ladi. WCAG 2.2 — 2.3.3 Animation from Interactions. */
+  @media (prefers-reduced-motion: reduce) {
+    html { scroll-behavior: auto; }
+    *, *::before, *::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+      scroll-behavior: auto !important;
+    }
+  }
+
   /* iOS Safari: input font-size < 16px bo'lsa sahifa zoom qiladi — oldini olish */
   input, select, textarea {
     font-size: max(16px, 1em);

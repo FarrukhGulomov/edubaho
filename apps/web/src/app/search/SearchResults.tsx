@@ -4,13 +4,14 @@ import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { useState, useEffect, useRef } from 'react'
 import {
-  Search, X, MapPin, Globe2, Users2, UserCheck, Star,
+  Search, X, MapPin, Globe2, Star,
   ArrowLeftRight, Check, PencilLine, School, Palette, Lock, Award, ChevronDown,
 } from 'lucide-react'
 import { RatingHint } from '@/components/shared/StarRating'
 import InstitutionCoverImage from '@/components/shared/InstitutionCoverImage'
 import VerificationBadge from '@/components/shared/VerificationBadge'
-import { formatStudentRange } from '@/lib/studentRange'
+import InstitutionMetrics from '@/components/shared/InstitutionMetrics'
+import { priceFrom } from '@/lib/price'
 import { useCompare, useSaved } from '@/hooks/useCompare'
 import { useLang, t } from '@/contexts/LangContext'
 import { track, trackSearch, trackSearchClick } from '@/lib/analytics'
@@ -26,11 +27,6 @@ interface Props {
 
 interface City   { id: string; nameUz: string; nameRu: string }
 interface Region { id: string; nameUz: string; nameRu: string; institutionCount: number }
-
-function formatNum(n: number) {
-  return n.toString().replace(/\B(?=(\d{3})+(?!\d))/g, '\u00a0')
-}
-function formatUzs(n: number) { return `${formatNum(n)} so'm` }
 
 const TYPE_LABELS: Record<string, { uz: string; ru: string; color: string }> = {
   SCHOOL:          { uz: 'Maktab',        ru: 'Школа',        color: 'bg-green-50 text-green-700' },
@@ -383,6 +379,7 @@ function InstitutionCardComp({
 }) {
   const typeInfo = TYPE_LABELS[i.type]
   const name = lang === 'ru' && i.nameRu ? i.nameRu : i.nameUz
+  const price = priceFrom(i.pricing, lang)
 
   return (
     <div className="group card relative flex flex-col">
@@ -400,6 +397,7 @@ function InstitutionCardComp({
         <InstitutionCoverImage
           media={i.media}
           name={name}
+          fallback="initials"
           className="aspect-[16/10] w-full rounded-t-2xl"
           priority={position <= 3}
         />
@@ -417,31 +415,24 @@ function InstitutionCardComp({
           {name}
         </h2>
 
-        {/* Shahar + statistika — bitta ixcham qator (rangli pill'lar o'rniga) */}
-        <div className="mb-3 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-gray-500">
-          {(i.city?.nameUz ?? i.address) && (
-            <span className="flex items-center gap-1">
-              <MapPin className="h-3.5 w-3.5 shrink-0 text-gray-400" strokeWidth={1.75} />
-              {lang === 'ru' && i.city?.nameRu ? i.city.nameRu : (i.city?.nameUz ?? i.address)}
-            </span>
-          )}
-          {i.details?.studentCount && (
-            <span className="flex items-center gap-1 font-semibold text-primary-600">
-              <Users2 className="h-3.5 w-3.5 shrink-0" strokeWidth={2} /> {formatStudentRange(i.details.studentCount)}
-            </span>
-          )}
-          {i.details?.teacherCount && (
-            <span className="flex items-center gap-1 font-semibold">
-              <UserCheck className="h-3.5 w-3.5 shrink-0" strokeWidth={2} /> {i.details.teacherCount}
-            </span>
-          )}
-        </div>
+        {/* Shahar + statistika — har bir son yonida qisqa yozuv bilan
+            (ikonka yolg'iz ma'no tashimasin) */}
+        <InstitutionMetrics
+          lang={lang}
+          className="mb-3"
+          data={{
+            city: lang === 'ru' && i.city?.nameRu ? i.city.nameRu : (i.city?.nameUz ?? i.address),
+            studentCount: i.details?.studentCount,
+            teacherCount: i.details?.teacherCount,
+            foundedYear: i.details?.foundedYear,
+          }}
+        />
 
         {/* Yo'nalishlar */}
         {(i.details?.programs?.length ?? 0) > 0 && (
           <div className="mb-3 flex flex-wrap gap-1.5">
             {i.details!.programs!.slice(0, 3).map(prog => (
-              <span key={prog} className="rounded-lg bg-gray-100 px-2.5 py-1 text-sm font-medium text-gray-600">
+              <span key={prog} className="max-w-full truncate rounded-lg bg-gray-100 px-2.5 py-1 text-sm font-medium text-gray-600" title={prog}>
                 {prog}
               </span>
             ))}
@@ -454,16 +445,14 @@ function InstitutionCardComp({
         )}
 
         {/* Narx (asosiy) + reyting (tinch, taxminiy ko'rsatkich sifatida) */}
-        <div className="mt-auto flex items-center justify-between gap-2 border-t border-gray-100 pt-4">
+        <div className="mt-auto flex flex-wrap items-center justify-between gap-x-2 gap-y-1.5 border-t border-gray-100 pt-4">
           {i.avgRating ? (
             <RatingHint rating={i.avgRating} count={i.reviewCount} lang={lang} />
           ) : (
             <span className="text-sm text-gray-400">{t(lang, ui.noReview)}</span>
           )}
-          {i.pricing?.monthlyMin && (
-            <span className="price-badge shrink-0 whitespace-nowrap text-sm">
-              {formatUzs(i.pricing.monthlyMin)}
-            </span>
+          {price && (
+            <span className="price-badge whitespace-nowrap text-sm">{price.full}</span>
           )}
         </div>
         </div>
