@@ -13,6 +13,7 @@ import LiveStatsPill from '@/components/shared/LiveStatsPill'
 import VerificationBadge from '@/components/shared/VerificationBadge'
 import InstitutionMetrics from '@/components/shared/InstitutionMetrics'
 import { priceFrom } from '@/lib/price'
+import { institutionsRu } from '@/lib/plural'
 import { useLang, t } from '@/contexts/LangContext'
 import { useCompare, useSaved } from '@/hooks/useCompare'
 import { matchApi, type MatchInsights } from '@/lib/api'
@@ -199,24 +200,34 @@ export default function HomePage() {
           </div>
 
           {/* Real DB'dan hisoblangan live son — soxta statistika emas.
-              Faqat maqsad kiritilgandan KEYIN ko'rsatiladi: bo'sh maydon
-              ostida "0 ta muassasa mos keladi" turishi sayt ishlamayotgandek
-              taassurot qoldirardi. */}
+              Maqsad kiritilgunga qadar umumiy son ko'rsatiladi ("31 ta
+              ta'lim muassasasi mavjud"), kiritilgandan keyin esa tanlovga
+              mos kelgan son. Ruscha shaklda son bilan kelgan ot to'g'ri
+              tuslanadi (pluralRu) — "Подходит 31 учреждений" xato edi. */}
           <p
             className="mb-3 min-h-[1.25rem] text-center text-xs font-semibold text-primary-600"
             aria-live="polite"
           >
-            {heroGoal.trim() && heroInsights
-              ? (heroInsights.matchingCount === 0
+            {!heroInsights
+              ? ''
+              : !heroGoal.trim()
+                // Katalog bo'sh bo'lsa "0 ta muassasa mavjud" deb yozish
+                // sayt ishlamayotgandek taassurot qoldiradi — jim o'tamiz
+                ? (heroInsights.totalInThisType === 0
+                    ? ''
+                    : t(lang, {
+                        uz: `${heroInsights.totalInThisType} ta ta'lim muassasasi mavjud`,
+                        ru: `Доступно ${institutionsRu(heroInsights.totalInThisType)}`,
+                      }))
+                : heroInsights.matchingCount === 0
                   ? t(lang, {
                       uz: "Bu yo'nalish bo'yicha hozircha muassasa yo'q — boshqa fan bilan sinab ko'ring",
                       ru: 'По этому направлению пока нет учреждений — попробуйте другой предмет',
                     })
                   : t(lang, {
-                      uz: `${heroInsights.matchingCount} ta muassasa mos keladi`,
-                      ru: `Подходит ${heroInsights.matchingCount} учреждений`,
-                    }))
-              : ''}
+                      uz: `Tanlovingizga ${heroInsights.matchingCount} ta muassasa mos keldi`,
+                      ru: `Вашему выбору ${heroInsights.matchingCount === 1 ? 'соответствует' : 'соответствуют'} ${institutionsRu(heroInsights.matchingCount)}`,
+                    })}
           </p>
 
           {/* Ommabop maqsadlar — qidiruv maydonidan keyingi ikkinchi qadam.
@@ -227,7 +238,7 @@ export default function HomePage() {
           <div className="mb-5 flex flex-wrap justify-center gap-1.5">
             {(GOAL_SUGGESTIONS.COURSE_CENTER ?? []).map((g) => (
               <button
-                key={g.label}
+                key={g.value}
                 // Pill bosilishi — o'zi to'liq tanlov, darhol /match'ga o'tadi
                 onClick={() => { setHeroGoal(g.value); goToMatch(g.value) }}
                 className={`tap-center rounded-full border px-3.5 py-1.5 text-xs font-semibold transition-colors ${
@@ -236,7 +247,7 @@ export default function HomePage() {
                     : 'border-gray-300 bg-white text-gray-600 hover:border-primary-400'
                 }`}
               >
-                {g.label}
+                {t(lang, g.label)}
               </button>
             ))}
           </div>

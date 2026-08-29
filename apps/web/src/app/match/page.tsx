@@ -17,6 +17,7 @@ import { matchApi, geoApi, authApi, type MatchItem, type MatchInsights } from '@
 import { track } from '@/lib/analytics'
 import { haptic } from '@/lib/telegram'
 import { GOAL_SUGGESTIONS } from '@/lib/matchConstants'
+import { institutionsRu } from '@/lib/plural'
 
 /**
  * EduFit — "Menga mosini top" wizard'i
@@ -344,7 +345,7 @@ export default function MatchPage() {
               <div className="flex flex-wrap gap-2">
                 {(GOAL_SUGGESTIONS[type] ?? []).map((g) => (
                   <button
-                    key={g.label}
+                    key={g.value}
                     // Pill bosilishi — o'zi to'liq va aniq tanlov, qo'shimcha
                     // "Davom etish" tugmasi kerak emas, darhol keyingi qadamga o'tadi
                     onClick={() => { setGoal(g.value); setStep('format') }}
@@ -354,7 +355,7 @@ export default function MatchPage() {
                         : 'border-gray-300 bg-white text-gray-600 hover:border-primary-400'
                     }`}
                   >
-                    {g.label}
+                    {t(lang, g.label)}
                   </button>
                 ))}
               </div>
@@ -710,7 +711,7 @@ function InsightsCard({ insights, loading, uz, hasGoal }: {
           ? (uz ? "Bu yo'nalish bo'yicha hozircha muassasa yo'q" : 'По этому направлению пока нет учреждений')
           : (uz
               ? `${insights.matchingCount} ta muassasa mos keladi`
-              : `Подходит ${insights.matchingCount} учреждений`)}
+              : `${insights.matchingCount === 1 ? 'Подходит' : 'Подходят'} ${institutionsRu(insights.matchingCount)}`)}
       </div>
 
       {zeroMatches ? (

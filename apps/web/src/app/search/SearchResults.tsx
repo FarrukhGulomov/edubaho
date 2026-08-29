@@ -12,6 +12,7 @@ import InstitutionCoverImage from '@/components/shared/InstitutionCoverImage'
 import VerificationBadge from '@/components/shared/VerificationBadge'
 import InstitutionMetrics from '@/components/shared/InstitutionMetrics'
 import { priceFrom } from '@/lib/price'
+import { pluralRu } from '@/lib/plural'
 import { useCompare, useSaved } from '@/hooks/useCompare'
 import { useLang, t } from '@/contexts/LangContext'
 import { track, trackSearch, trackSearchClick } from '@/lib/analytics'
@@ -114,7 +115,6 @@ export default function SearchResults({ institutions, meta, params }: Props) {
     placeholder: { uz: "Muassasa nomi... (masalan: Najot, PDP)", ru: 'Название учреждения... (напр: Najot, PDP)' },
     searchBtn:   { uz: 'Qidirish', ru: 'Найти' },
     allTypes:    { uz: 'Barchasi', ru: 'Все' },
-    results:     { uz: 'ta natija', ru: 'результатов' },
     allInst:     { uz: "Barcha ta'lim muassasalari", ru: 'Все учебные заведения' },
     emptyTitle:  { uz: 'Hech narsa topilmadi', ru: 'Ничего не найдено' },
     emptySub:    { uz: "Filtrlarni o'zgartiring yoki boshqa so'z kiriting", ru: 'Измените фильтры или введите другое слово' },
@@ -253,7 +253,9 @@ export default function SearchResults({ institutions, meta, params }: Props) {
             {params.q ? `"${params.q}"` : t(lang, ui.allInst)}
           </h1>
           <span className="rounded-full bg-gray-100 px-2.5 py-0.5 text-xs font-semibold text-gray-500">
-            {meta.total} {t(lang, ui.results)}
+            {lang === 'ru'
+              ? `${meta.total} ${pluralRu(meta.total, ['результат', 'результата', 'результатов'])}`
+              : `${meta.total} ta natija`}
           </span>
           {/* Active region badge */}
           {activeRegion && (

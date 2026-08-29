@@ -7,6 +7,7 @@ import {
 } from 'lucide-react'
 import { useCompare, MAX_COMPARE } from '@/hooks/useCompare'
 import { useLang, t } from '@/contexts/LangContext'
+import { institutionsRu } from '@/lib/plural'
 
 const TYPE_ICONS: Record<string, typeof School> = {
   IT_SCHOOL: Laptop, UNIVERSITY: GraduationCap, SCHOOL: School, KINDERGARTEN: Palette,
@@ -37,7 +38,7 @@ export default function CompareBar() {
     if (toast.kind === 'max') {
       return t(lang, {
         uz: `Bir vaqtda ko'pi bilan ${MAX_COMPARE} tagacha solishtirish mumkin`,
-        ru: `Можно сравнивать не более ${MAX_COMPARE} учреждений одновременно`,
+        ru: `Можно сравнивать не более ${institutionsRu(MAX_COMPARE)} одновременно`,
       })
     }
     if (toast.kind === 'added') {

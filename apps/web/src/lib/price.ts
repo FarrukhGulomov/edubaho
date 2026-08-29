@@ -59,7 +59,7 @@ export function priceFrom(pricing: PricingLike | null | undefined, lang: Lang): 
     return {
       amount: monthly,
       short: lang === 'ru' ? `${formatNum(monthly)} сум/мес` : `${formatNum(monthly)} so'm/oy`,
-      full:  lang === 'ru' ? `От ${money.replace("so'm", 'сум')} в месяц` : `Oyiga ${money}dan`,
+      full:  lang === 'ru' ? `от ${money.replace("so'm", 'сум')} в месяц` : `Oyiga ${money}dan`,
     }
   }
 
@@ -68,7 +68,7 @@ export function priceFrom(pricing: PricingLike | null | undefined, lang: Lang): 
     return {
       amount: yearly,
       short: lang === 'ru' ? `${formatNum(yearly)} сум/год` : `${formatNum(yearly)} so'm/yil`,
-      full:  lang === 'ru' ? `От ${money.replace("so'm", 'сум')} в год` : `Yiliga ${money}dan`,
+      full:  lang === 'ru' ? `от ${money.replace("so'm", 'сум')} в год` : `Yiliga ${money}dan`,
     }
   }
 
@@ -81,5 +81,5 @@ export function priceFrom(pricing: PricingLike | null | undefined, lang: Lang): 
  */
 export function amountFrom(amount: number, lang: Lang): string {
   const money = formatUzs(amount)
-  return lang === 'ru' ? `От ${money.replace("so'm", 'сум')}` : `${money}dan`
+  return lang === 'ru' ? `от ${money.replace("so'm", 'сум')}` : `${money}dan`
 }

@@ -1,3 +1,4 @@
+import { reviewsRu } from '@/lib/plural'
 import { Star } from 'lucide-react'
 
 interface StarRatingProps {
@@ -18,9 +19,19 @@ export function RatingHint({ rating, count, lang = 'uz' }: { rating: number; cou
   return (
     <span
       className="inline-flex items-center gap-1 text-xs text-gray-400"
-      title={lang === 'ru'
-        ? 'Оценка пользователей — приблизительный показатель'
-        : "Foydalanuvchilar bahosi — taxminiy ko'rsatkich"}
+      title={
+        // Reyting HAQIQIY sharhlardan hisoblanadi (reviewService.ts →
+        // Review.overallRating o'rtachasi), shuning uchun "taxminiy
+        // ko'rsatkich" degan noaniq matn o'rniga nechta sharhga
+        // asoslanganini aniq aytamiz
+        count != null && count > 0
+          ? (lang === 'ru'
+              ? `На основе ${reviewsRu(count)} пользователей`
+              : `${count} ta foydalanuvchi sharhi asosida`)
+          : (lang === 'ru'
+              ? 'Оценка пользователей'
+              : 'Foydalanuvchilar bahosi')
+      }
     >
       <Star className="h-3.5 w-3.5 shrink-0" strokeWidth={2} />
       {rating.toFixed(1)}

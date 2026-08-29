@@ -14,30 +14,41 @@
  * → CATEGORY_GROUPS).
  */
 export interface GoalSuggestion {
-  label: string
+  /**
+   * Tugmada ko'rinadigan matn — ikki tilda. Rasmiy kurs/texnologiya
+   * nomlari (IELTS, SAT, Frontend…) tarjima QILINMAYDI: ular xalqaro
+   * atamalar va rus tilida ham xuddi shunday yoziladi.
+   */
+  label: { uz: string; ru: string }
+  /**
+   * Bosilganda maqsad maydoniga yoziladigan QIDIRUV matni — har doim
+   * o'zbekcha qoladi, chunki backend (subjectSynonyms.ts, educationCategories.ts)
+   * aynan shu qiymatlar bo'yicha moslikni hisoblaydi. Tarjima qilinsa
+   * qidiruv natijalari o'zgarib ketardi.
+   */
   value: string
 }
 
 export const GOAL_SUGGESTIONS: Record<string, GoalSuggestion[]> = {
   COURSE_CENTER: [
-    { label: 'IELTS', value: 'IELTS' },
-    { label: 'SAT', value: 'SAT' },
-    { label: 'Dasturlash', value: 'Dasturlash' },
-    { label: 'Dizayn', value: 'Dizayn' },
-    { label: 'Marketing', value: 'Marketing' },
-    { label: 'Tadbirkorlik', value: 'Tadbirkorlik' },
-    { label: 'Buxgalteriya', value: 'Buxgalteriya' },
-    { label: "O'quv kurslari", value: "O'quv kurslari" },
-    { label: 'Shaxsiy rivojlanish', value: 'Shaxsiy rivojlanish' },
+    { label: { uz: 'IELTS',               ru: 'IELTS' },                  value: 'IELTS' },
+    { label: { uz: 'SAT',                 ru: 'SAT' },                    value: 'SAT' },
+    { label: { uz: 'Dasturlash',          ru: 'Программирование' },       value: 'Dasturlash' },
+    { label: { uz: 'Dizayn',              ru: 'Дизайн' },                 value: 'Dizayn' },
+    { label: { uz: 'Marketing',           ru: 'Маркетинг' },              value: 'Marketing' },
+    { label: { uz: 'Tadbirkorlik',        ru: 'Предпринимательство' },    value: 'Tadbirkorlik' },
+    { label: { uz: 'Buxgalteriya',        ru: 'Бухгалтерский учёт' },     value: 'Buxgalteriya' },
+    { label: { uz: "O'quv kurslari",      ru: 'Образовательные курсы' },  value: "O'quv kurslari" },
+    { label: { uz: 'Shaxsiy rivojlanish', ru: 'Личностное развитие' },    value: 'Shaxsiy rivojlanish' },
   ],
   SCHOOL: [
-    { label: 'Prezident maktabi', value: 'Prezident maktabi' },
-    { label: 'Xususiy maktab', value: 'Xususiy maktab' },
-    { label: 'Ingliz tili', value: 'Ingliz tili' },
+    { label: { uz: 'Prezident maktabi', ru: 'Президентская школа' }, value: 'Prezident maktabi' },
+    { label: { uz: 'Xususiy maktab',    ru: 'Частная школа' },       value: 'Xususiy maktab' },
+    { label: { uz: 'Ingliz tili',       ru: 'Английский язык' },     value: 'Ingliz tili' },
   ],
   KINDERGARTEN: [
-    { label: "Xususiy bog'cha", value: "Xususiy bog'cha" },
-    { label: 'Ingliz tili guruhi', value: 'Ingliz tili guruhi' },
-    { label: 'Rivojlantiruvchi darslar', value: 'Rivojlantiruvchi darslar' },
+    { label: { uz: "Xususiy bog'cha",          ru: 'Частный детский сад' },      value: "Xususiy bog'cha" },
+    { label: { uz: 'Ingliz tili guruhi',       ru: 'Группа английского языка' }, value: 'Ingliz tili guruhi' },
+    { label: { uz: 'Rivojlantiruvchi darslar', ru: 'Развивающие занятия' },      value: 'Rivojlantiruvchi darslar' },
   ],
 }

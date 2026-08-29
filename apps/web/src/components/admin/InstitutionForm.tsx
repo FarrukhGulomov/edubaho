@@ -99,7 +99,10 @@ interface PlaceDetails extends PlaceSearchResult {
 
 const PAYMENT_METHODS = ['Payme', 'Click', 'Uzcard', 'Humo', 'Naqd']
 const LANGUAGES = ['uz', 'ru', 'en', 'de', 'fr', 'ko', 'zh']
-const SHIFTS = ['Ertalabki (08:00-13:00)', 'Tushki (13:00-18:00)', 'Kechki (18:00-22:00)', 'Hafta oxiri', 'Online']
+// DIQQAT: bu qiymatlar bazaga MATN sifatida yoziladi. O'zgartirilsa faqat
+// YANGI yozuvlarga ta'sir qiladi — mavjud muassasalarda eski matn qoladi
+// (ularni admin panel orqali qayta tanlash kerak).
+const SHIFTS = ['Ertalabki (08:00-13:00)', 'Tushki (13:00-18:00)', 'Kechki (18:00-22:00)', 'Dam olish kunlari', 'Onlayn']
 
 export interface InstitutionFormData {
   nameUz: string

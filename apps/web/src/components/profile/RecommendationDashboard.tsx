@@ -10,6 +10,7 @@ import {
 import { RatingHint } from '@/components/shared/StarRating'
 import { useAuth } from '@/hooks/useAuth'
 import { useLang, t } from '@/contexts/LangContext'
+import { institutionsRu } from '@/lib/plural'
 import { matchApi, type MatchItem } from '@/lib/api'
 
 /**
@@ -100,7 +101,7 @@ export default function RecommendationDashboard({ onGoToSettings }: { onGoToSett
     greeting:   { uz: `Xush kelibsiz${user?.name ? `, ${user.name.split(' ')[0]}` : ''} 👋`, ru: `С возвращением${user?.name ? `, ${user.name.split(' ')[0]}` : ''} 👋` },
     subtitle:   { uz: 'Sizga eng mos ta\'lim muassasasini topamiz', ru: 'Найдём для вас самое подходящее учебное заведение' },
     accuracy:   { uz: 'Moslik aniqligi', ru: 'Точность подбора' },
-    foundCount: { uz: `${total} ta muassasa sizga mos keldi`, ru: `${total} учреждений подходят вам` },
+    foundCount: { uz: `${total} ta muassasa sizga mos keldi`, ru: `Вам ${total === 1 ? 'подходит' : 'подходят'} ${institutionsRu(total)}` },
     mainCta:    { uz: prefs ? 'Tavsiyalarni yangilash' : 'Menga mosini top', ru: prefs ? 'Обновить рекомендации' : 'Подобрать для меня' },
     preview:    { uz: 'Sizga tavsiya etamiz', ru: 'Рекомендуем вам' },
     seeAll:     { uz: "Barchasini ko'rish →", ru: 'Смотреть все →' },

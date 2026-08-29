@@ -18,6 +18,7 @@ import GuestLeadWidget from '@/components/shared/GuestLeadWidget'
 import VerificationBadge from '@/components/shared/VerificationBadge'
 import { formatStudentRange } from '@/lib/studentRange'
 import { formatUzs, priceFrom } from '@/lib/price'
+import { reviewsRu } from '@/lib/plural'
 import { useLang, t } from '@/contexts/LangContext'
 import { authHref } from '@/lib/authHref'
 import {
@@ -183,7 +184,10 @@ function RegisterBanner({ lang, next }: { lang: 'uz' | 'ru'; next?: string }) {
           <Phone className="h-5 w-5" strokeWidth={1.75} aria-hidden="true" />
         </span>
         <h3 className="font-semibold leading-tight text-gray-900">
-          {t(lang, { uz: "Kontaktlarni ko'rish", ru: 'Посмотреть контакты' })}
+          {t(lang, {
+            uz: "Kontaktlarni va batafsil ma'lumotlarni ko'ring",
+            ru: 'Посмотрите контакты и подробную информацию',
+          })}
         </h3>
       </div>
 
@@ -191,8 +195,8 @@ function RegisterBanner({ lang, next }: { lang: 'uz' | 'ru'; next?: string }) {
           yana 4 joyda xuddi shu kirish taklifi takrorlanardi */}
       <p className="mb-4 text-sm leading-relaxed text-gray-500">
         {t(lang, {
-          uz: "Telefon, Telegram, Instagram va batafsil ma'lumotlarni ko'ring.",
-          ru: 'Посмотрите телефон, Telegram, Instagram и подробную информацию.',
+          uz: "Telefon, Telegram, Instagram, to'lov usullari va barcha sharhlarni ko'rish uchun bepul ro'yxatdan o'ting.",
+          ru: 'Зарегистрируйтесь бесплатно, чтобы увидеть телефон, Telegram, Instagram, способы оплаты и все отзывы.',
         })}
       </p>
 
@@ -293,7 +297,7 @@ export default function InstitutionDetail({ inst }: { inst: Institution }) {
     website:         { uz: 'Veb-sayt',                 ru: 'Сайт' },
     infoTitle:       { uz: "Ma'lumotlar",              ru: 'Информация' },
     founded:         { uz: 'Tashkil etilgan',          ru: 'Основано' },
-    students:        { uz: "O'quvchilar soni",         ru: 'Учеников' },
+    students:        { uz: 'Markazda tahsil olayotganlar', ru: 'Обучаются в центре' },
     teachers:        { uz: "O'qituvchilar soni",       ru: 'Преподавателей' },
     languages:       { uz: "O'qitish tillari",         ru: 'Языки обучения' },
     payment:         { uz: "To'lov usullari",          ru: 'Способы оплаты' },
@@ -306,7 +310,7 @@ export default function InstitutionDetail({ inst }: { inst: Institution }) {
     programs:        { uz: "O'qitiladigan fanlar",     ru: 'Преподаваемые предметы' },
     specializations: { uz: 'Ixtisosliklar',            ru: 'Специализации' },
     achievements:    { uz: 'Muvaffaqiyatlar',          ru: 'Достижения' },
-    shifts:          { uz: 'Dars vaqtlari',            ru: 'Расpisanie' },
+    shifts:          { uz: 'Dars vaqtlari',            ru: 'Расписание занятий' },
     previewDesc:     { uz: 'To\'liq ma\'lumot uchun tizimga kiring', ru: 'Войдите для полной информации' },
   }
 
@@ -535,7 +539,7 @@ export default function InstitutionDetail({ inst }: { inst: Institution }) {
               <div className="card p-6">
                 <h2 className="mb-4 flex items-center gap-3 text-lg font-semibold text-gray-900">
                   <span className="icon-chip"><UserCheck className="h-[18px] w-[18px]" strokeWidth={1.75} /></span>
-                  {lang === 'ru' ? "Качество преподавания" : "O'qituvchilar sifati"}
+                  {t(lang, { uz: 'Markaz haqida raqamlarda', ru: 'Центр в цифрах' })}
                 </h2>
                 <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
                   {inst.details?.teacherCount && (
@@ -555,8 +559,15 @@ export default function InstitutionDetail({ inst }: { inst: Institution }) {
                         <Info className="h-5 w-5" strokeWidth={1.75} />
                       </span>
                       <div>
-                        <p className="text-xs text-gray-500 font-medium">{t(lang, ui.founded)}</p>
-                        <p className="text-xl font-bold text-gray-900">{inst.details.foundedYear}</p>
+                        {/* "Tashkil etilgan / 2010" ikkiga bo'lingan yorliq
+                            g'aliz o'qilardi — endi butun jumla sifatida */}
+                        <p className="text-xs font-medium text-gray-500">{t(lang, ui.founded)}</p>
+                        <p className="text-base font-bold text-gray-900">
+                          {t(lang, {
+                            uz: `${inst.details.foundedYear}-yilda tashkil etilgan`,
+                            ru: `Основан в ${inst.details.foundedYear} году`,
+                          })}
+                        </p>
                       </div>
                     </div>
                   )}
@@ -647,7 +658,7 @@ export default function InstitutionDetail({ inst }: { inst: Institution }) {
                     )}
                     {(inst.deliveryMode === 'OFFLINE' || inst.deliveryMode === 'HYBRID' || !inst.deliveryMode) && (
                       <span className="flex items-center gap-1.5 rounded-lg border border-gray-200 bg-white px-3 py-1.5 text-sm font-medium text-gray-700">
-                        <BookOpen className="h-3.5 w-3.5 text-gray-400" strokeWidth={2} /> {lang === 'ru' ? 'Офлайн' : 'Offline'}
+                        <BookOpen className="h-3.5 w-3.5 text-gray-400" strokeWidth={2} /> {t(lang, { uz: "Oflayn ta'lim", ru: 'Офлайн-обучение' })}
                       </span>
                     )}
                   </div>
@@ -705,8 +716,8 @@ export default function InstitutionDetail({ inst }: { inst: Institution }) {
                   <p className="mt-3 flex items-center gap-1.5 text-sm text-gray-500">
                     <Lock className="h-3.5 w-3.5 shrink-0" strokeWidth={2} aria-hidden="true" />
                     {t(lang, {
-                      uz: "To'liq ta'rif ro'yxatdan o'tgandan so'ng ko'rinadi",
-                      ru: 'Полное описание доступно после регистрации',
+                      uz: "To'liq ma'lumotni ko'rish uchun tizimga kiring",
+                      ru: 'Войдите, чтобы посмотреть полную информацию',
                     })}
                   </p>
                 </>
@@ -730,11 +741,14 @@ export default function InstitutionDetail({ inst }: { inst: Institution }) {
                   <span className="icon-chip"><BarChart3 className="h-[18px] w-[18px]" strokeWidth={1.75} /></span>
                   {t(lang, ui.ratingTitle)}
                 </h2>
-                {/* Halollik izohi: baholar sub'ektiv, taxminiy ko'rsatkich */}
+                {/* Reyting HAQIQIY sharhlardan hisoblanadi — nechta sharhga
+                    asoslangani aniq aytiladi ("taxminiy ko'rsatkich" degan
+                    noaniq ibora o'rniga) */}
                 <p className="mb-5 ml-12 text-xs text-gray-400">
-                  {lang === 'ru'
-                    ? 'Оценки поставлены пользователями и являются приблизительным показателем'
-                    : "Baholar foydalanuvchilar tomonidan qo'yilgan — taxminiy ko'rsatkich"}
+                  {t(lang, {
+                    uz: `${totalReviews} ta foydalanuvchi sharhi asosida`,
+                    ru: `На основе ${reviewsRu(totalReviews)} пользователей`,
+                  })}
                 </p>
                 <div className="space-y-2.5">
                   {[5, 4, 3, 2, 1].map(star => {

@@ -12,7 +12,7 @@ export default function Footer() {
   return (
     <footer className="border-t border-gray-200 bg-gray-900 px-4 py-8 text-sm text-gray-400">
       <div className="mx-auto flex max-w-6xl flex-col items-center gap-4 text-center sm:flex-row sm:items-center sm:justify-between sm:text-left">
-        <span>© {new Date().getFullYear()} BilimOn — {uz ? "O'zbekiston ta'lim platformasi" : "Платформа образования Узбекистана"}</span>
+        <span>© {new Date().getFullYear()} BilimOn — {uz ? "O'zbekiston ta'lim platformasi" : "Образовательная платформа Узбекистана"}</span>
         <div className="flex flex-wrap items-center justify-center gap-x-4 gap-y-2">
           <Link href="/search"  className="tap-center shrink-0 whitespace-nowrap transition-colors hover:text-white">{uz ? "Qidiruv" : "Поиск"}</Link>
           <Link href="/compare" className="tap-center shrink-0 whitespace-nowrap transition-colors hover:text-white">{uz ? "Solishtirish" : "Сравнение"}</Link>
