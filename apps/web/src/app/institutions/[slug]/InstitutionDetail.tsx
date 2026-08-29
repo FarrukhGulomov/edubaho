@@ -21,6 +21,7 @@ import { formatUzs, priceFrom } from '@/lib/price'
 import { reviewsRu } from '@/lib/plural'
 import { useLang, t } from '@/contexts/LangContext'
 import { authHref } from '@/lib/authHref'
+import { institutionsApi } from '@/lib/api'
 import {
   trackInstitutionView, trackGateShown, trackGateCta, trackContactClick,
 } from '@/lib/analytics'
@@ -213,12 +214,19 @@ function RegisterBanner({ lang, next }: { lang: 'uz' | 'ru'; next?: string }) {
 // ─────────────────────────────────────────────────────────────
 // Asosiy komponent
 // ─────────────────────────────────────────────────────────────
-export default function InstitutionDetail({ inst }: { inst: Institution }) {
+export default function InstitutionDetail({ inst: initialInst }: { inst: Institution }) {
   const { lang } = useLang()
+  // SSR'dagi `inst` prop doim mehmon (guest) ko'rinishida keladi — bu sahifa
+  // ISR bilan keshlanadi, shuning uchun server hech qachon shu fetch orqali
+  // haqiqiy bog'lanish ma'lumotini yubormaydi (aks holda bitta foydalanuvchi
+  // ko'rgan telefon raqami keshdan HAMMAGA ko'rinib qolardi). Ro'yxatdan
+  // o'tgan foydalanuvchi uchun quyida token bilan qayta so'rov yuborilib,
+  // faqat shu holatda haqiqiy telefon/telegram/... state'ga qo'shiladi.
+  const [inst, setInst] = useState(initialInst)
   const [isGuest, setIsGuest] = useState(true)
   const [authChecked, setAuthChecked] = useState(false)
   // Login'dan keyin shu sahifaga qaytish uchun barcha gate havolalariga beriladi
-  const instPath = `/institutions/${inst.slug}`
+  const instPath = `/institutions/${initialInst.slug}`
   const viewTracked = useRef(false)
   const gatesShown = useRef<Set<string>>(new Set())
 
@@ -229,16 +237,25 @@ export default function InstitutionDetail({ inst }: { inst: Institution }) {
     setIsGuest(guest)
     setAuthChecked(true)
 
+    // Ro'yxatdan o'tgan bo'lsa — bog'lanish ma'lumotlarini token bilan qayta yuklaymiz
+    if (token) {
+      institutionsApi.get(initialInst.slug, token)
+        .then(({ data }) => setInst((prev) => ({ ...prev, ...(data as Partial<Institution>) })))
+        .catch(() => {
+          // Xato bo'lsa — mehmon ko'rinishida qoladi (gate ko'rsatiladi), sahifa buzilmaydi
+        })
+    }
+
     // Muassasa ko'rildi
     if (!viewTracked.current) {
       viewTracked.current = true
-      trackInstitutionView(inst.id, {
-        type: inst.type,
+      trackInstitutionView(initialInst.id, {
+        type: initialInst.type,
         isGuest: guest,
-        hasRating: !!inst.avgRating,
+        hasRating: !!initialInst.avgRating,
       })
     }
-  }, [inst.id, inst.type, inst.avgRating])
+  }, [initialInst.id, initialInst.type, initialInst.avgRating, initialInst.slug])
 
   // Gate ko'rinishini kuzatish (intersection observer)
   const gateObserver = useRef<IntersectionObserver | null>(null)

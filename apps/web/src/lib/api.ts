@@ -67,8 +67,10 @@ export const institutionsApi = {
       `/institutions?${new URLSearchParams(params)}`,
     ),
 
-  get: (slug: string) =>
-    apiFetch<{ data: unknown }>(`/institutions/${slug}`),
+  // token berilsa — bog'lanish ma'lumotlari (telefon/telegram/...) to'liq keladi,
+  // aks holda server ularni mehmon uchun `null` qilib qaytaradi
+  get: (slug: string, token?: string) =>
+    apiFetch<{ data: unknown }>(`/institutions/${slug}`, token ? { token } : undefined),
 
   nearby: (lat: number, lng: number, radius?: number) =>
     apiFetch<{ data: unknown[] }>(`/institutions/nearby?lat=${lat}&lng=${lng}&radius=${radius ?? 5000}`),

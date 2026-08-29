@@ -92,12 +92,14 @@ export interface Institution {
   slug: string
   type: string
   status: string
-  phone?: string
-  phone2?: string
-  email?: string
-  website?: string
-  telegram?: string
-  instagram?: string
+  // Mehmon (ro'yxatdan o'tmagan) foydalanuvchi uchun server bu maydonlarni
+  // `null` qilib qaytaradi — ro'yxatdan o'tgach to'liq qiymat keladi.
+  phone?: string | null
+  phone2?: string | null
+  email?: string | null
+  website?: string | null
+  telegram?: string | null
+  instagram?: string | null
   address?: string
   lat?: number
   lng?: number

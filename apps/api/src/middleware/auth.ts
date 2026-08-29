@@ -24,6 +24,7 @@ declare module '@fastify/jwt' {
 declare module 'fastify' {
   interface FastifyInstance {
     authenticate: (req: FastifyRequest, reply: FastifyReply) => Promise<void>
+    optionalAuthenticate: (req: FastifyRequest, reply: FastifyReply) => Promise<void>
   }
 }
 
@@ -45,6 +46,25 @@ export default fp(async (fastify: FastifyInstance) => {
         }
       } catch {
         return reply.status(401).send({ error: 'Tizimga kirishingiz kerak' })
+      }
+    },
+  )
+
+  /**
+   * Ochiq (public) route'lar uchun — token bo'lsa `request.user`ni to'ldiradi,
+   * lekin token yo'q/noto'g'ri bo'lsa ham so'rovni RAD ETMAYDI (mehmon sifatida
+   * davom etadi). Blacklist tekshiruvi bu yerda emas — chaqiruvchi route o'zi
+   * `request.user`dagi `jti`ni `isTokenBlacklisted` bilan tekshirib, kerak
+   * bo'lsa mehmon sifatida ko'radi (faqat "mehmonga qisqartirilgan javob"
+   * kabi holatlar uchun ishlatiladi).
+   */
+  fastify.decorate(
+    'optionalAuthenticate',
+    async (request: FastifyRequest, _reply: FastifyReply) => {
+      try {
+        await request.jwtVerify()
+      } catch {
+        // Token yo'q yoki noto'g'ri — mehmon sifatida davom etadi
       }
     },
   )

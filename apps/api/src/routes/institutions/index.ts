@@ -7,6 +7,7 @@ import { normalizeQuery } from '../../utils/transliterate'
 import { expandSearchTerms } from '../../utils/subjectSynonyms'
 import { notifyUser } from '../../services/notify'
 import { approvedClaimSelect, withVerificationLevel } from '../../utils/verification'
+import { isTokenBlacklisted } from '../../utils/redis'
 
 /**
  * Institutions routes
@@ -335,6 +336,7 @@ export default async function institutionRoutes(fastify: FastifyInstance) {
 
   fastify.get<{ Params: { slug: string } }>(
     '/institutions/:slug',
+    { preHandler: [fastify.optionalAuthenticate] },
     async (request, reply) => {
       const { slug } = request.params
 
@@ -448,6 +450,28 @@ export default async function institutionRoutes(fastify: FastifyInstance) {
           ...r,
           user: r.isAnonymous ? null : r.user,
         })),
+      }
+
+      // Bog'lanish ma'lumotlari faqat ro'yxatdan o'tgan foydalanuvchiga —
+      // mehmon (guest) uchun server darajasida olib tashlanadi (frontenddagi
+      // "!isGuest" ko'rsatilishi bezakdan boshqa narsa emas edi, chunki
+      // ma'lumot allaqachon SSR payload'da to'liq kelayotgan edi).
+      const authUser = request.user as { id?: string; jti?: string } | undefined
+      const isGuest = !authUser?.id || (!!authUser.jti && (await isTokenBlacklisted(authUser.jti)))
+
+      if (isGuest) {
+        return reply.send({
+          data: {
+            ...data,
+            phone: null,
+            phone2: null,
+            email: null,
+            website: null,
+            telegram: null,
+            instagram: null,
+            branches: data.branches.map((b) => ({ ...b, phone: null })),
+          },
+        })
       }
 
       return reply.send({ data })

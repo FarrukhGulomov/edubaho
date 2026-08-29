@@ -116,6 +116,42 @@ async function buildApp() {
     env: env.NODE_ENV,
   }))
 
+  // ─── Global xato va 404 handlerlar ───────────
+  // MUHIM: bular pastdagi routelar RO'YXATDAN O'TISHIDAN OLDIN o'rnatilishi
+  // SHART. Fastify har bir route'ning `context.errorHandler`ini o'sha route
+  // `.route()` chaqirilgan PAYTDAGI qiymat bilan "muzlatib" saqlaydi — keyin
+  // setErrorHandler chaqirilishi allaqachon ro'yxatdan o'tgan routelarga
+  // TA'SIR QILMAYDI. Avval bu handlerlar oxirida, routelardan KEYIN turardi —
+  // natijada BARCHA route'lar (auth/institutions/va h.k. — .parse() orqali
+  // Zod xatosi tashlagan har qanday joy) global handler o'rniga Fastify'ning
+  // standart ingliz tilidagi 500 javobini qaytarardi (aniqlandi va tuzatildi).
+  fastify.setErrorHandler((err: FastifyError, _request, reply) => {
+    fastify.log.error(err)
+
+    if (err.name === 'ZodError') {
+      return reply.status(400).send({
+        error: "Kiritilgan ma'lumotlar noto'g'ri",
+        code: 'VALIDATION_ERROR',
+        details: err.message,
+      })
+    }
+
+    if (
+      err.code === 'FST_JWT_NO_AUTHORIZATION_IN_HEADER' ||
+      err.code === 'FST_JWT_AUTHORIZATION_TOKEN_EXPIRED'
+    ) {
+      return reply.status(401).send({ error: 'Tizimga kirishingiz kerak' })
+    }
+
+    return reply.status(err.statusCode ?? 500).send({
+      error: env.NODE_ENV === 'development' ? err.message : 'Server xatosi yuz berdi',
+    })
+  })
+
+  fastify.setNotFoundHandler((_request, reply) => {
+    reply.status(404).send({ error: 'So\'ralgan manzil topilmadi' })
+  })
+
   // ─── API v1 ───────────────────────────────────
   await fastify.register(
     async (api) => {
@@ -161,49 +197,27 @@ async function buildApp() {
     { prefix: '/api/v1' },
   )
 
-  // ─── Global xato handler ─────────────────────
-  fastify.setErrorHandler((err: FastifyError, _request, reply) => {
-    fastify.log.error(err)
-
-    if (err.name === 'ZodError') {
-      return reply.status(400).send({
-        error: "Kiritilgan ma'lumotlar noto'g'ri",
-        code: 'VALIDATION_ERROR',
-        details: err.message,
-      })
-    }
-
-    if (
-      err.code === 'FST_JWT_NO_AUTHORIZATION_IN_HEADER' ||
-      err.code === 'FST_JWT_AUTHORIZATION_TOKEN_EXPIRED'
-    ) {
-      return reply.status(401).send({ error: 'Tizimga kirishingiz kerak' })
-    }
-
-    return reply.status(err.statusCode ?? 500).send({
-      error: env.NODE_ENV === 'development' ? err.message : 'Server xatosi yuz berdi',
-    })
-  })
-
-  // ─── 404 handler ──────────────────────────────
-  fastify.setNotFoundHandler((_request, reply) => {
-    reply.status(404).send({ error: 'So\'ralgan manzil topilmadi' })
-  })
-
   return fastify
 }
 
 // ─── Start ────────────────────────────────────
-buildApp()
-  .then(async (app) => {
-    await app.listen({ port: env.PORT, host: '0.0.0.0' })
-    console.log(`\n🚀  API: http://localhost:${env.PORT}`)
-    console.log(`📋  Health: http://localhost:${env.PORT}/health`)
-    console.log(`🔑  Auth: http://localhost:${env.PORT}/api/v1/auth/send-otp`)
-  })
-  .catch((err) => {
-    console.error('❌ Server ishga tushmadi:', err)
-    process.exit(1)
-  })
+// `require.main === module` — bu fayl to'g'ridan-to'g'ri ishga tushirilganda
+// (node dist/server.js / tsx src/server.ts) TRUE, lekin boshqa fayl `buildApp`ni
+// import qilganda (masalan testlarda, `.inject()` orqali so'rov yuborish uchun)
+// FALSE — shu tufayli testlar app'ni import qilganda ikkinchi server ochilib,
+// portni band qilib qolmaydi.
+if (require.main === module) {
+  buildApp()
+    .then(async (app) => {
+      await app.listen({ port: env.PORT, host: '0.0.0.0' })
+      console.log(`\n🚀  API: http://localhost:${env.PORT}`)
+      console.log(`📋  Health: http://localhost:${env.PORT}/health`)
+      console.log(`🔑  Auth: http://localhost:${env.PORT}/api/v1/auth/send-otp`)
+    })
+    .catch((err) => {
+      console.error('❌ Server ishga tushmadi:', err)
+      process.exit(1)
+    })
+}
 
 export { buildApp }

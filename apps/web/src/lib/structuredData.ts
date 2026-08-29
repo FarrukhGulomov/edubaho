@@ -10,10 +10,10 @@ interface InstitutionForSchema {
   nameUz: string
   slug: string
   type: string
-  phone?: string
-  website?: string
-  telegram?: string
-  instagram?: string
+  phone?: string | null
+  website?: string | null
+  telegram?: string | null
+  instagram?: string | null
   address?: string
   avgRating?: number
   reviewCount: number

@@ -6,7 +6,7 @@ import { sendOtpSchema, verifyOtpSchema, updateProfileSchema } from '../schemas/
 import { normalizePhone, generateOtp } from '../utils/phone'
 import {
   redis, setOtp, verifyOtp, canSendOtp, markOtpSent,
-  withinHourlyOtpLimit, incrementAttempts, safeCompare,
+  withinHourlyOtpLimit, incrementAttempts, safeCompare, blacklistToken,
 } from '../utils/redis'
 import { sendSmsOtp } from '../services/sms'
 import { verifyTelegramAuth, verifyTelegramWebAppInitData } from '../services/telegram'
@@ -258,10 +258,15 @@ export default async function authRoutes(fastify: FastifyInstance) {
     '/auth/logout',
     { preHandler: [fastify.authenticate] },
     async (request, reply) => {
-      const { id: userId, jti } = request.user as { id: string; jti?: string }
+      const { id: userId, jti, exp } = request.user as { id: string; jti?: string; exp?: number }
 
       if (jti) {
         await revokeRefreshToken(userId, jti)
+        // Access token hali amal qilayotgan bo'lishi mumkin (15 daqiqagacha) —
+        // uni ham darhol bekor qilamiz, aks holda logout'dan keyin ham eski
+        // access token bilan so'rov yuborish mumkin bo'lib qolardi.
+        const ttl = exp ? Math.max(exp - Math.floor(Date.now() / 1000), 1) : 15 * 60
+        await blacklistToken(jti, ttl)
       }
       clearRefreshCookie(reply)
 
