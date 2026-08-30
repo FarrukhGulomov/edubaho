@@ -12,7 +12,9 @@
     "db:migrate": "prisma migrate dev",
     "db:generate": "prisma generate",
     "db:seed": "tsx --env-file=.env src/seed.ts",
-    "db:seed:prod": "node dist/seed.js"
+    "db:seed:prod": "node dist/seed.js",
+    "import:institutions": "tsx --env-file=.env src/importJsonInstitutions.ts",
+    "import:institutions:prod": "node dist/importJsonInstitutions.js"
   },
   "dependencies": {
     "@aws-sdk/client-s3": "^3.600.0",
