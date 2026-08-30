@@ -62,4 +62,10 @@ EXPOSE 3001
 # Railway'da RUN_SEED=true qo'yib redeploy qilinadi, ma'lumot kirgach
 # o'zgaruvchi o'chiriladi. Doimiy yoqiq qoldirish tavsiya etilmaydi —
 # admin o'chirgan yozuvlarni upsert qayta tiklab qo'yishi mumkin.
-CMD ["sh", "-c", "npx prisma migrate deploy && if [ \"$RUN_SEED\" = \"true\" ]; then node dist/seed.js; fi && node dist/server.js"]
+#
+# RUN_IMPORT=true — bir martalik JSON import (importJsonInstitutions.ts)
+# xuddi shu tarzda ishlaydi: Railway'da RUN_IMPORT=true qo'yib redeploy
+# qilinadi, log'da natija ko'rilgach o'zgaruvchi olib tashlanadi/false
+# qilinadi. Skript o'zi takroriy yozuvlarni o'tkazib yuboradi — qayta-qayta
+# yoqib qo'yilib qolsa ham xavfsiz, lekin doimiy yoqiq qoldirish shart emas.
+CMD ["sh", "-c", "npx prisma migrate deploy && if [ \"$RUN_SEED\" = \"true\" ]; then node dist/seed.js; fi && if [ \"$RUN_IMPORT\" = \"true\" ]; then node dist/importJsonInstitutions.js; fi && node dist/server.js"]
