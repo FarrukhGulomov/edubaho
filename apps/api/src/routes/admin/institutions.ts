@@ -530,13 +530,18 @@ export default async function adminInstitutionRoutes(fastify: FastifyInstance) {
       return reply.status(404).send({ error: 'Muassasa topilmadi' })
     }
 
-    // Cascade yo'q bo'lgan bog'liq jadvallarni avval o'chiramiz
+    // Cascade yo'q bo'lgan bog'liq jadvallarni avval o'chiramiz. Tartib muhim:
+    // EnrollmentReward -> EnrollmentClaim orqali bog'langan (claimId FK, cascade
+    // yo'q), shuning uchun claim'lardan OLDIN o'chirilishi shart.
     await prisma.$transaction([
       prisma.analyticsEvent.deleteMany({ where: { institutionId: id } }),
       prisma.savedInstitution.deleteMany({ where: { institutionId: id } }),
       prisma.institutionClaim.deleteMany({ where: { institutionId: id } }),
       prisma.subscription.deleteMany({ where: { institutionId: id } }),
       prisma.review.deleteMany({ where: { institutionId: id } }),
+      prisma.enrollmentReward.deleteMany({ where: { claim: { institutionId: id } } }),
+      prisma.enrollmentClaim.deleteMany({ where: { institutionId: id } }),
+      prisma.trialBooking.deleteMany({ where: { institutionId: id } }),
       prisma.institution.delete({ where: { id } }),
     ])
 

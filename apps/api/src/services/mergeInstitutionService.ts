@@ -76,6 +76,9 @@ export async function mergeInstitutions(
     prisma.analyticsEvent.updateMany({ where: { institutionId: duplicateId }, data: { institutionId: primaryId } }),
     prisma.leadEvent.updateMany({ where: { institutionId: duplicateId }, data: { institutionId: primaryId } }),
     prisma.trialBooking.updateMany({ where: { institutionId: duplicateId }, data: { institutionId: primaryId } }),
+    // EnrollmentClaim'da onDelete yo'q (real foydalanuvchi bonus dalili —
+    // yo'qotib bo'lmaydi), shuning uchun o'chirilmaydi, primary'ga ko'chiriladi
+    prisma.enrollmentClaim.updateMany({ where: { institutionId: duplicateId }, data: { institutionId: primaryId } }),
     // Agar duplicate'ning o'zi allaqachon filiallarga ega bo'lsa (masalan
     // ilgari boshqa yozuv shu duplicate'ga birlashtirilgan bo'lsa) — ular
     // ham primary'ga qayta bog'lanadi, aks holda duplicate o'chirilganda
