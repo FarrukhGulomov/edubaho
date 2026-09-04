@@ -68,4 +68,10 @@ EXPOSE 3001
 # qilinadi, log'da natija ko'rilgach o'zgaruvchi olib tashlanadi/false
 # qilinadi. Skript o'zi takroriy yozuvlarni o'tkazib yuboradi — qayta-qayta
 # yoqib qo'yilib qolsa ham xavfsiz, lekin doimiy yoqiq qoldirish shart emas.
-CMD ["sh", "-c", "npx prisma migrate deploy && if [ \"$RUN_SEED\" = \"true\" ]; then node dist/seed.js; fi && if [ \"$RUN_IMPORT\" = \"true\" ]; then node dist/importJsonInstitutions.js; fi && node dist/server.js"]
+#
+# RUN_ACTIVATE_PENDING=true — bir martalik skript
+# (activatePendingInstitutions.ts): DB'dagi status=PENDING barcha
+# muassasalarni ACTIVE qiladi va Meilisearch'ga indekslaydi. Xuddi shu
+# tarzda ishlaydi: Railway'da qo'yib redeploy qilinadi, natija log'da
+# ko'rilgach o'zgaruvchi olib tashlanadi/false qilinadi.
+CMD ["sh", "-c", "npx prisma migrate deploy && if [ \"$RUN_SEED\" = \"true\" ]; then node dist/seed.js; fi && if [ \"$RUN_IMPORT\" = \"true\" ]; then node dist/importJsonInstitutions.js; fi && if [ \"$RUN_ACTIVATE_PENDING\" = \"true\" ]; then node dist/activatePendingInstitutions.js; fi && node dist/server.js"]

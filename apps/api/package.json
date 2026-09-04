@@ -14,7 +14,9 @@
     "db:seed": "tsx --env-file=.env src/seed.ts",
     "db:seed:prod": "node dist/seed.js",
     "import:institutions": "tsx --env-file=.env src/importJsonInstitutions.ts",
-    "import:institutions:prod": "node dist/importJsonInstitutions.js"
+    "import:institutions:prod": "node dist/importJsonInstitutions.js",
+    "activate:pending": "tsx --env-file=.env src/activatePendingInstitutions.ts",
+    "activate:pending:prod": "node dist/activatePendingInstitutions.js"
   },
   "dependencies": {
     "@aws-sdk/client-s3": "^3.600.0",
