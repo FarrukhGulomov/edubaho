@@ -17,6 +17,11 @@ import { indexInstitution } from './services/searchService'
 const prisma = new PrismaClient()
 
 async function main() {
+  const byStatus = await prisma.institution.groupBy({ by: ['status'], _count: { _all: true } })
+  console.log('📊 Joriy holat (skript ishga tushishidan OLDIN):')
+  byStatus.forEach((s) => console.log(`   ${s.status}: ${s._count._all}`))
+  console.log(`   JAMI: ${byStatus.reduce((sum, s) => sum + s._count._all, 0)}`)
+
   const pending = await prisma.institution.findMany({
     where: { status: InstitutionStatus.PENDING },
     include: {
