@@ -419,7 +419,14 @@ export default function InstitutionDetail({ inst: initialInst }: { inst: Institu
         <div className="grid gap-5 lg:grid-cols-3">
 
           {/* ── Left column ─── */}
-          <div className="lg:col-span-2 space-y-4">
+          {/* min-w-0: CSS Grid item'ning standart `min-width: auto`si — ichidagi
+              biror element (masalan filial manzili `truncate` bilan) o'z
+              min-content'ini talab qilsa, bu ustun grid TREKidan (343px)
+              KENGROQ bo'lib chiqib, BUTUN SAHIFANI mobilda kenglikda
+              siljitib qo'yardi. min-w-0 ustunni haqiqiy trek kengligiga
+              cheklaydi — shundan keyin ichidagi truncate/wrap elementlar
+              to'g'ri ishlaydi. */}
+          <div className="min-w-0 lg:col-span-2 space-y-4">
 
             {/* ════════════════════════════════════════
                 0. RASMLAR — Photo gallery
@@ -947,7 +954,7 @@ export default function InstitutionDetail({ inst: initialInst }: { inst: Institu
           </div>
 
           {/* ── Right column (sidebar) ─── */}
-          <div className="space-y-4">
+          <div className="min-w-0 space-y-4">
 
             {/* Save / Compare — hammaga, lekin action auth kerak */}
             <InstActions
