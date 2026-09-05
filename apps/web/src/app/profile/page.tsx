@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import {
   Pencil, Phone, CheckCircle2, AlertCircle, Star, ArrowLeftRight, PencilLine,
-  ShieldCheck, ClipboardList, School, Plus, Search, Laptop, GraduationCap,
+  ShieldCheck, ClipboardList, School, Plus, Search, Laptop, GraduationCap, Target,
   Send, LogOut, MessageCircle, Calendar, Globe2, Palette, Dumbbell, Trophy,
   Bookmark, Trash2, Sparkles, UserCog, Gift,
 } from 'lucide-react'
@@ -704,10 +704,10 @@ export default function ProfilePage() {
           </h2>
           <div className="grid grid-cols-2 gap-3">
             {[
-              { href: '/search',                 Icon: Search,        uz: 'Qidiruv',        ru: 'Поиск' },
-              { href: '/search?type=IT_SCHOOL',  Icon: Laptop,        uz: 'IT maktablar',   ru: 'IT школы' },
-              { href: '/search?type=UNIVERSITY', Icon: GraduationCap, uz: 'Universitetlar', ru: 'Университеты' },
-              { href: 'https://t.me/TrustboxInc', Icon: Send,         uz: 'Telegram kanal', ru: 'Telegram канал' },
+              { href: '/search',                     Icon: Search,     uz: 'Qidiruv',         ru: 'Поиск' },
+              { href: '/search?type=COURSE_CENTER',  Icon: PencilLine, uz: "O'quv markazlar", ru: 'Учебные центры' },
+              { href: '/match',                      Icon: Target,     uz: 'Mos tanlash',     ru: 'Подбор' },
+              { href: 'https://t.me/TrustboxInc',     Icon: Send,       uz: 'Telegram kanal',  ru: 'Telegram канал' },
             ].map(a => (
               <Link
                 key={a.href}
