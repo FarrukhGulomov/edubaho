@@ -6,7 +6,7 @@ import {
   GraduationCap, ClipboardList, Search, RefreshCw, School, BadgeCheck,
   Circle, Link2, MapPin, Phone, Star, Eye, Pencil, Trash2, X, Ban,
   Laptop, Palette, Globe2, PencilLine, Dumbbell, Trophy, Landmark, UserCheck,
-  MoreVertical, ChevronDown, Pin, PinOff,
+  MoreVertical, ChevronDown, Pin, PinOff, Crown,
 } from 'lucide-react'
 import { useAuth } from '@/hooks/useAuth'
 import { useRouter } from 'next/navigation'
@@ -324,8 +324,8 @@ export default function AdminInstitutionsPage() {
                           {inst.status}
                         </span>
                         {inst.isPinned && (
-                          <span className="flex items-center gap-1 whitespace-nowrap rounded-full bg-amber-50 px-2.5 py-0.5 text-xs font-semibold text-amber-700">
-                            <Pin className="h-3 w-3 shrink-0" strokeWidth={2} /> Eng tepada
+                          <span title="Eng tepaga chiqarilgan" className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-amber-100">
+                            <Crown className="h-3 w-3 shrink-0 text-amber-500" strokeWidth={2} fill="currentColor" />
                           </span>
                         )}
                       </div>
