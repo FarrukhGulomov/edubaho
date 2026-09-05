@@ -11,6 +11,15 @@
     scroll-behavior: smooth;
     -webkit-tap-highlight-color: transparent;
     font-size: 16px;
+    /* Xavfsizlik to'sig'i: admin tomonidan kiritiladigan erkin matn
+       (yo'nalishlar, tavsif va h.k.) ba'zan bo'sh joysiz uzun bitta
+       so'z/qator bo'lib chiqishi mumkin — bunday holatda ba'zi elementlar
+       o'zining konteynerini kengaytirib, BUTUN SAHIFANI mobilda gorizontal
+       skroll qilinadigan qilib qo'yishi mumkin edi (moslashuvchan
+       teglar qatoridagi bitta uzun so'z tufayli). Bu qoida shunday
+       holatlarda ham sahifa DOIM vertikal ekanligini kafolatlaydi —
+       muammoli element o'z chegarasida kesiladi, butun sahifa emas. */
+    overflow-x: hidden;
   }
 
   /* Harakatni kamaytirish so'ralganda (OS sozlamasi) — animatsiyalar

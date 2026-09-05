@@ -488,7 +488,7 @@ export default function InstitutionDetail({ inst: initialInst }: { inst: Institu
                     )}
                     <div className="flex flex-wrap gap-2">
                       {(inst.details!.programs ?? []).map(prog => (
-                        <span key={prog} className="rounded-lg border border-primary-100 bg-primary-50 px-3 py-1.5 text-sm font-medium text-primary-700">
+                        <span key={prog} className="min-w-0 max-w-full [overflow-wrap:anywhere] rounded-lg border border-primary-100 bg-primary-50 px-3 py-1.5 text-sm font-medium text-primary-700">
                           {prog}
                         </span>
                       ))}
@@ -503,7 +503,7 @@ export default function InstitutionDetail({ inst: initialInst }: { inst: Institu
                     </p>
                     <div className="flex flex-wrap gap-2">
                       {(inst.details!.specializations ?? []).map(spec => (
-                        <span key={spec} className="rounded-lg border border-orange-100 bg-orange-50 px-3 py-1.5 text-sm font-medium text-orange-700">
+                        <span key={spec} className="min-w-0 max-w-full [overflow-wrap:anywhere] rounded-lg border border-orange-100 bg-orange-50 px-3 py-1.5 text-sm font-medium text-orange-700">
                           {spec}
                         </span>
                       ))}
@@ -518,7 +518,7 @@ export default function InstitutionDetail({ inst: initialInst }: { inst: Institu
                       {t(lang, ui.languages)}:
                     </span>
                     {(inst.details!.languages ?? []).map(l => (
-                      <span key={l} className="rounded-md bg-teal-50 px-2 py-0.5 text-xs font-bold text-teal-700">
+                      <span key={l} className="min-w-0 max-w-full [overflow-wrap:anywhere] rounded-md bg-teal-50 px-2 py-0.5 text-xs font-bold text-teal-700">
                         {/* Xom kod (UZ/RU/EN) o'rniga tushunarli nom */}
                         {LANGUAGE_NAMES[l.toUpperCase()]?.[lang] ?? l.toUpperCase()}
                       </span>
