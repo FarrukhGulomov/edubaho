@@ -64,11 +64,14 @@ export default async function searchRoutes(fastify: FastifyInstance) {
     }
 
     // V2'da Meilisearch autocomplete ishlatiladi
-    // Hozircha Prisma'dan sodda qidiruv
+    // Hozircha Prisma'dan sodda qidiruv (nomi bo'yicha, ikkala tilda ham)
     const suggestions = await fastify.prisma.institution.findMany({
       where: {
         status: { in: ['ACTIVE', 'PREMIUM'] },
-        nameUz: { contains: q, mode: 'insensitive' },
+        OR: [
+          { nameUz: { contains: q, mode: 'insensitive' } },
+          { nameRu: { contains: q, mode: 'insensitive' } },
+        ],
       },
       select: { id: true, nameUz: true, nameRu: true, type: true, slug: true },
       take: 5,

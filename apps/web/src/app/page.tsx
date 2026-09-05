@@ -16,8 +16,16 @@ import { priceFrom } from '@/lib/price'
 import { institutionsRu } from '@/lib/plural'
 import { useLang, t } from '@/contexts/LangContext'
 import { useCompare, useSaved } from '@/hooks/useCompare'
-import { matchApi, type MatchInsights } from '@/lib/api'
+import { matchApi, searchApi, type MatchInsights } from '@/lib/api'
 import { GOAL_SUGGESTIONS } from '@/lib/matchConstants'
+
+interface NameSuggestion {
+  id: string
+  nameUz: string
+  nameRu?: string
+  type: string
+  slug: string
+}
 
 interface InstCard {
   id: string
@@ -68,6 +76,13 @@ export default function HomePage() {
   const [heroGoal, setHeroGoal] = useState('')
   const [heroInsights, setHeroInsights] = useState<MatchInsights | null>(null)
 
+  // Bilgan muassasa nomini yozganda ham topsin — bir xil input ikki vazifani
+  // bajaradi: erkin maqsad (Fan/IELTS kabi) VA muassasa nomi bo'yicha
+  // to'g'ridan-to'g'ri qidiruv. Mavjud /search/suggest (Prisma, Meilisearch
+  // shart emas) ishlatiladi — ilgari frontendda hech qayerda chaqirilmagan edi.
+  const [nameSuggestions, setNameSuggestions] = useState<NameSuggestion[]>([])
+  const [showSuggestions, setShowSuggestions] = useState(false)
+
   const { toggle: toggleCompare, isSelected: isCompared } = useCompare()
   const { toggleSave, isSaved } = useSaved()
 
@@ -113,6 +128,20 @@ export default function HomePage() {
         .then((r) => { if (!cancelled) setHeroInsights(r.data) })
         .catch(() => { if (!cancelled) setHeroInsights(null) })
     }, 400)
+    return () => { cancelled = true; clearTimeout(timer) }
+  }, [heroGoal])
+
+  // Xuddi shu matn muassasa nomiga o'xshasa — nom bo'yicha takliflar (parallel,
+  // yuqoridagi "goal" hisob-kitobiga ta'sir qilmaydi)
+  useEffect(() => {
+    const q = heroGoal.trim()
+    if (q.length < 2) { setNameSuggestions([]); return }
+    let cancelled = false
+    const timer = setTimeout(() => {
+      searchApi.suggest(q)
+        .then((r) => { if (!cancelled) setNameSuggestions((r.data ?? []) as NameSuggestion[]) })
+        .catch(() => { if (!cancelled) setNameSuggestions([]) })
+    }, 300)
     return () => { cancelled = true; clearTimeout(timer) }
   }, [heroGoal])
 
@@ -170,32 +199,62 @@ export default function HomePage() {
               Enter haqida bilmasligi mumkin, shuning uchun ko'rinadigan
               tugma ham kerak (mos muassasa topilmasa — heroZeroMatch —
               ikkalasi ham bloklanadi) */}
-          <div className="mb-3 flex items-center gap-2 rounded-xl border border-gray-200 bg-white p-2 shadow-sm focus-within:border-primary-400">
-            <div className="flex min-w-0 flex-1 items-center gap-2 px-2">
-              <Sparkles className="h-5 w-5 shrink-0 text-primary-500" strokeWidth={1.75} />
-              <input
-                type="text"
-                value={heroGoal}
-                onChange={(e) => setHeroGoal(e.target.value)}
-                onKeyDown={(e) => { if (e.key === 'Enter' && !heroZeroMatch) { e.preventDefault(); goToMatch() } }}
-                placeholder={t(lang, {
-                  uz: 'Masalan: IELTS, Frontend yoki matematika',
-                  ru: 'Например: IELTS, Frontend или математика',
-                })}
-                maxLength={100}
-                aria-label={t(lang, { uz: "O'quv maqsadingiz", ru: 'Ваша учебная цель' })}
-                className="min-w-0 flex-1 bg-transparent py-2 text-base text-gray-900 outline-none placeholder:text-gray-400"
-              />
+          <div className="relative mb-3">
+            <div className="flex items-center gap-2 rounded-xl border border-gray-200 bg-white p-2 shadow-sm focus-within:border-primary-400">
+              <div className="flex min-w-0 flex-1 items-center gap-2 px-2">
+                <Sparkles className="h-5 w-5 shrink-0 text-primary-500" strokeWidth={1.75} />
+                <input
+                  type="text"
+                  value={heroGoal}
+                  onChange={(e) => setHeroGoal(e.target.value)}
+                  onFocus={() => setShowSuggestions(true)}
+                  onBlur={() => setTimeout(() => setShowSuggestions(false), 150)}
+                  onKeyDown={(e) => { if (e.key === 'Enter' && !heroZeroMatch) { e.preventDefault(); goToMatch() } }}
+                  placeholder={t(lang, {
+                    uz: 'Masalan: IELTS, Frontend yoki muassasa nomi',
+                    ru: 'Например: IELTS, Frontend или название учреждения',
+                  })}
+                  maxLength={100}
+                  aria-label={t(lang, { uz: "O'quv maqsadingiz yoki muassasa nomi", ru: 'Ваша учебная цель или название учреждения' })}
+                  className="min-w-0 flex-1 bg-transparent py-2 text-base text-gray-900 outline-none placeholder:text-gray-400"
+                />
+              </div>
+              {heroGoal.trim() && (
+                <button
+                  onClick={() => goToMatch()}
+                  disabled={heroZeroMatch}
+                  aria-label={uz ? 'Davom etish' : 'Продолжить'}
+                  className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-primary-600 text-white transition-colors hover:bg-primary-700 disabled:cursor-not-allowed disabled:bg-gray-200 disabled:text-gray-400"
+                >
+                  <ArrowRight className="h-4 w-4 shrink-0" strokeWidth={2.25} />
+                </button>
+              )}
             </div>
-            {heroGoal.trim() && (
-              <button
-                onClick={() => goToMatch()}
-                disabled={heroZeroMatch}
-                aria-label={uz ? 'Davom etish' : 'Продолжить'}
-                className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-primary-600 text-white transition-colors hover:bg-primary-700 disabled:cursor-not-allowed disabled:bg-gray-200 disabled:text-gray-400"
-              >
-                <ArrowRight className="h-4 w-4 shrink-0" strokeWidth={2.25} />
-              </button>
+
+            {/* Muassasa nomi bo'yicha takliflar — bosilganda to'g'ridan-to'g'ri
+                shu muassasa profiliga o'tadi (goal-flow'dan mustaqil) */}
+            {showSuggestions && nameSuggestions.length > 0 && (
+              <div className="absolute inset-x-0 top-full z-20 mt-1 overflow-hidden rounded-xl border border-gray-200 bg-white py-1 shadow-lg">
+                <p className="px-3 pb-1 pt-1.5 text-[11px] font-semibold uppercase tracking-wide text-gray-400">
+                  {t(lang, { uz: 'Shu nomdagi muassasalar', ru: 'Учреждения с этим названием' })}
+                </p>
+                {nameSuggestions.map((s) => {
+                  const info = TYPE_LABELS[s.type]
+                  const name = uz || !s.nameRu ? s.nameUz : s.nameRu
+                  return (
+                    <button
+                      key={s.id}
+                      type="button"
+                      onMouseDown={(e) => e.preventDefault()}
+                      onClick={() => router.push(`/institutions/${s.slug}`)}
+                      className="flex w-full items-center gap-2 px-3 py-2 text-left text-sm hover:bg-gray-50"
+                    >
+                      <span className="min-w-0 flex-1 truncate font-medium text-gray-900">{name}</span>
+                      <span className="shrink-0 text-xs text-gray-400">{info ? (uz ? info.uz : info.ru) : s.type}</span>
+                    </button>
+                  )
+                })}
+              </div>
             )}
           </div>
 
