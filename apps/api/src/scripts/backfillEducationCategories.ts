@@ -22,7 +22,7 @@ async function main() {
   const details = await prisma.institutionDetail.findMany({
     select: {
       id: true, programs: true, specializations: true, descriptionUz: true, categories: true,
-      institution: { select: { type: true, nameUz: true } },
+      institution: { select: { type: true, additionalTypes: true, nameUz: true } },
     },
   })
 
@@ -30,6 +30,7 @@ async function main() {
   for (const d of details) {
     const inferred = inferCategories({
       type: d.institution.type,
+      additionalTypes: d.institution.additionalTypes,
       programs: d.programs,
       specializations: d.specializations,
       descriptionUz: d.descriptionUz,

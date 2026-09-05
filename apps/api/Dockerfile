@@ -74,4 +74,11 @@ EXPOSE 3001
 # muassasalarni ACTIVE qiladi va Meilisearch'ga indekslaydi. Xuddi shu
 # tarzda ishlaydi: Railway'da qo'yib redeploy qilinadi, natija log'da
 # ko'rilgach o'zgaruvchi olib tashlanadi/false qilinadi.
-CMD ["sh", "-c", "npx prisma migrate deploy && if [ \"$RUN_SEED\" = \"true\" ]; then node dist/seed.js; fi && if [ \"$RUN_IMPORT\" = \"true\" ]; then node dist/importJsonInstitutions.js; fi && if [ \"$RUN_ACTIVATE_PENDING\" = \"true\" ]; then node dist/activatePendingInstitutions.js; fi && node dist/server.js"]
+#
+# RUN_MERGE_SUBTYPES=true — bir martalik skript
+# (mergeSubtypesIntoCourseCenter.ts): type=TUTORING/LANGUAGE_CENTER barcha
+# muassasalarni type=COURSE_CENTER'ga o'tkazadi (asl turi additionalTypes'da
+# saqlanadi). Xuddi shu tarzda ishlaydi: Railway'da qo'yib redeploy
+# qilinadi, natija log'da ko'rilgach o'zgaruvchi olib tashlanadi/false
+# qilinadi.
+CMD ["sh", "-c", "npx prisma migrate deploy && if [ \"$RUN_SEED\" = \"true\" ]; then node dist/seed.js; fi && if [ \"$RUN_IMPORT\" = \"true\" ]; then node dist/importJsonInstitutions.js; fi && if [ \"$RUN_ACTIVATE_PENDING\" = \"true\" ]; then node dist/activatePendingInstitutions.js; fi && if [ \"$RUN_MERGE_SUBTYPES\" = \"true\" ]; then node dist/mergeSubtypesIntoCourseCenter.js; fi && node dist/server.js"]

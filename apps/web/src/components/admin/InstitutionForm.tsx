@@ -12,18 +12,28 @@ import {
 
 const API = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:3001/api/v1'
 
-const INSTITUTION_TYPES = [
+// Til markazi va Repetitor endi ASOSIY tur sifatida tanlanmaydi — ular
+// aslida O'quv markaz guruhiga kiradi, shuning uchun faqat "Qo'shimcha
+// turlar" (additionalTypes) sifatida belgilanadi (pastdagi INSTITUTION_TYPES
+// to'liq ro'yxatida qoladi). Mavjud LANGUAGE_CENTER/TUTORING yozuvlari
+// mergeSubtypesIntoCourseCenter.ts skripti orqali COURSE_CENTER'ga
+// ko'chiriladi (asl turi additionalTypes'da saqlanadi).
+const PRIMARY_TYPES = [
   { value: 'IT_SCHOOL',       label: 'IT maktab' },
   { value: 'UNIVERSITY',      label: 'Universitet' },
   { value: 'SCHOOL',          label: 'Maktab' },
   { value: 'KINDERGARTEN',    label: "Bog'cha" },
-  { value: 'LANGUAGE_CENTER', label: 'Til markazi' },
   { value: 'COURSE_CENTER',   label: "O'quv markaz" },
   { value: 'SPORTS_SCHOOL',   label: 'Sport maktabi' },
   { value: 'LYCEUM',          label: 'Litsey' },
   { value: 'COLLEGE',         label: 'Kollej' },
-  { value: 'TUTORING',        label: 'Repetitor' },
   { value: 'ARTS_SCHOOL',     label: "San'at maktabi" },
+]
+
+const INSTITUTION_TYPES = [
+  ...PRIMARY_TYPES,
+  { value: 'LANGUAGE_CENTER', label: 'Til markazi' },
+  { value: 'TUTORING',        label: 'Repetitor' },
 ]
 
 const STATUSES = [
@@ -670,7 +680,7 @@ export default function InstitutionForm({ initialData, institutionId, mode, init
               <label className="mb-1 block text-sm font-semibold text-gray-700">
                 Tur <span className="text-red-500">*</span>
               </label>
-              <SelectField value={form.type} onChange={setType} options={INSTITUTION_TYPES} />
+              <SelectField value={form.type} onChange={setType} options={PRIMARY_TYPES} />
             </div>
             <div>
               <label className="mb-1 block text-sm font-semibold text-gray-700">Status</label>

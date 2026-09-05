@@ -248,6 +248,7 @@ export function classifyGoalCategory(goal: string): string | null {
  */
 export function inferCategories(input: {
   type: string
+  additionalTypes?: string[]
   programs?: string[]
   specializations?: string[]
   descriptionUz?: string | null
@@ -266,9 +267,11 @@ export function inferCategories(input: {
   // Dasturlash aniqlansa — IT kurslari toifasi ham mantiqan to'g'ri keladi
   if (found.has('PROGRAMMING')) found.add('IT_COURSES')
 
-  // Muassasa turi — qo'shimcha ishonchli signal
+  // Muassasa turi — qo'shimcha ishonchli signal. Til markazi/Repetitor
+  // endi asosiy tur sifatida tanlanmaydi (O'quv markaz guruhiga birlashtirilgan),
+  // shuning uchun qo'shimcha tur (additionalTypes) sifatida ham tekshiriladi.
   if (input.type === 'KINDERGARTEN') found.add('KIDS_EDUCATION')
-  if (input.type === 'LANGUAGE_CENTER') found.add('LANGUAGES')
+  if (input.type === 'LANGUAGE_CENTER' || input.additionalTypes?.includes('LANGUAGE_CENTER')) found.add('LANGUAGES')
   if (input.type === 'IT_SCHOOL') found.add('IT_COURSES')
   if (input.type === 'SCHOOL' || input.type === 'LYCEUM') found.add('SCHOOL_SUBJECTS')
 

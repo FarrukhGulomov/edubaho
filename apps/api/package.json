@@ -16,7 +16,9 @@
     "import:institutions": "tsx --env-file=.env src/importJsonInstitutions.ts",
     "import:institutions:prod": "node dist/importJsonInstitutions.js",
     "activate:pending": "tsx --env-file=.env src/activatePendingInstitutions.ts",
-    "activate:pending:prod": "node dist/activatePendingInstitutions.js"
+    "activate:pending:prod": "node dist/activatePendingInstitutions.js",
+    "merge:subtypes": "tsx --env-file=.env src/mergeSubtypesIntoCourseCenter.ts",
+    "merge:subtypes:prod": "node dist/mergeSubtypesIntoCourseCenter.js"
   },
   "dependencies": {
     "@aws-sdk/client-s3": "^3.600.0",
