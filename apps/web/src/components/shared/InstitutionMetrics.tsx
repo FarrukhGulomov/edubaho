@@ -89,10 +89,10 @@ export default function InstitutionMetrics({
     )
   }
 
-  if (items.length === 0) return null
-
+  // Ma'lumoti kam muassasa uchun ham joy bo'sh qolib ketmasligi (karta
+  // balandligi teng bo'lishi) uchun min-height bilan bo'sh bo'lsa ham render qilinadi
   return (
-    <div className={`flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-gray-500 ${className}`}>
+    <div className={`flex min-h-[1.25rem] flex-wrap items-center gap-x-3 gap-y-1 text-xs text-gray-500 ${className}`}>
       {items}
     </div>
   )

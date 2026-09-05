@@ -293,7 +293,7 @@ export default function SearchResults({ institutions, meta, params }: Props) {
             </Link>
           </div>
         ) : (
-          <div className="grid items-start gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
             {institutions.map((inst, idx) => (
               <InstitutionCardComp
                 key={inst.id}
@@ -406,14 +406,14 @@ function InstitutionCardComp({
           </span>
           <VerificationBadge level={i.verificationLevel} lang={lang} size="xs" />
           {i.isPinned && (
-            <span title={t(lang, { uz: 'Eng tepaga chiqarilgan', ru: 'Поднято наверх' })} className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-amber-100">
-              <Crown className="h-3 w-3 shrink-0 text-amber-500" strokeWidth={2} fill="currentColor" />
+            <span title={t(lang, { uz: 'Tavsiya etiladi', ru: 'Рекомендуется' })} className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-amber-300 to-amber-500 shadow-sm ring-1 ring-amber-200">
+              <Crown className="h-4 w-4 shrink-0 text-white" strokeWidth={2} fill="currentColor" />
             </span>
           )}
         </div>
 
         {/* Nom */}
-        <h2 className="mb-1.5 text-base font-black text-gray-900 group-hover:text-primary-700 transition-colors line-clamp-2 leading-snug">
+        <h2 className="mb-1.5 min-h-[2.75rem] text-base font-black text-gray-900 group-hover:text-primary-700 transition-colors line-clamp-2 leading-snug">
           {name}
         </h2>
 
@@ -430,21 +430,20 @@ function InstitutionCardComp({
           }}
         />
 
-        {/* Yo'nalishlar */}
-        {(i.details?.programs?.length ?? 0) > 0 && (
-          <div className="mb-3 flex flex-wrap gap-1.5">
-            {i.details!.programs!.slice(0, 3).map(prog => (
-              <span key={prog} className="max-w-full truncate rounded-lg bg-gray-100 px-2.5 py-1 text-sm font-medium text-gray-600" title={prog}>
-                {prog}
-              </span>
-            ))}
-            {i.details!.programs!.length > 3 && (
-              <span className="rounded-lg bg-gray-100 px-2.5 py-1 text-sm font-medium text-gray-400">
-                +{i.details!.programs!.length - 3} ta
-              </span>
-            )}
-          </div>
-        )}
+        {/* Yo'nalishlar — teglar soni har xil bo'lsa ham kartalar bir xil
+            balandlikda qolishi uchun doim shu joy ajratiladi (h-8, 1 qator) */}
+        <div className="mb-3 flex h-8 flex-wrap gap-1.5 overflow-hidden">
+          {i.details?.programs?.slice(0, 3).map(prog => (
+            <span key={prog} className="max-w-full truncate rounded-lg bg-gray-100 px-2.5 py-1 text-sm font-medium text-gray-600" title={prog}>
+              {prog}
+            </span>
+          ))}
+          {(i.details?.programs?.length ?? 0) > 3 && (
+            <span className="rounded-lg bg-gray-100 px-2.5 py-1 text-sm font-medium text-gray-400">
+              +{i.details!.programs!.length - 3} ta
+            </span>
+          )}
+        </div>
 
         {/* Narx (asosiy) + reyting (tinch, taxminiy ko'rsatkich sifatida) */}
         <div className="mt-auto flex flex-wrap items-center justify-between gap-x-2 gap-y-1.5 border-t border-gray-100 pt-4">

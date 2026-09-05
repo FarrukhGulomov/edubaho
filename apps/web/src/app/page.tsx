@@ -372,7 +372,7 @@ export default function HomePage() {
             ))}
           </div>
         ) : topInstitutions.length > 0 && (
-          <div className="grid items-start gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
             {topInstitutions.map(inst => {
               const info     = TYPE_LABELS[inst.type]
               const name     = uz || !inst.nameRu ? inst.nameUz : inst.nameRu
@@ -399,32 +399,32 @@ export default function HomePage() {
                         </span>
                       )}
                       {inst.isPinned && (
-                        <span title={t(lang, { uz: 'Eng tepaga chiqarilgan', ru: 'Поднято наверх' })} className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-amber-100">
-                          <Crown className="h-3 w-3 shrink-0 text-amber-500" strokeWidth={2} fill="currentColor" />
+                        <span title={t(lang, { uz: 'Tavsiya etiladi', ru: 'Рекомендуется' })} className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-amber-300 to-amber-500 shadow-sm ring-1 ring-amber-200">
+                          <Crown className="h-4 w-4 shrink-0 text-white" strokeWidth={2} fill="currentColor" />
                         </span>
                       )}
                     </div>
 
                     {/* Nom */}
-                    <h3 className="mb-1.5 text-base font-black text-gray-900 group-hover:text-primary-700 transition-colors line-clamp-2 leading-snug">
+                    <h3 className="mb-1.5 min-h-[2.75rem] text-base font-black text-gray-900 group-hover:text-primary-700 transition-colors line-clamp-2 leading-snug">
                       {name}
                     </h3>
 
-                    {/* Yo'nalishlar preview */}
-                    {(inst.details?.programs?.length ?? 0) > 0 && (
-                      <div className="mb-2 flex flex-wrap gap-1">
-                        {inst.details!.programs!.slice(0, 2).map(p => (
-                          <span key={p} className="max-w-full truncate rounded-lg bg-blue-50 px-2 py-0.5 text-xs font-medium text-blue-700" title={p}>
-                            {p}
-                          </span>
-                        ))}
-                        {(inst.details!.programs!.length ?? 0) > 2 && (
-                          <span className="rounded-lg bg-gray-100 px-2 py-0.5 text-xs font-medium text-gray-500">
-                            +{inst.details!.programs!.length - 2}
-                          </span>
-                        )}
-                      </div>
-                    )}
+                    {/* Yo'nalishlar preview — teglar soni har xil bo'lsa ham
+                        kartalar bir xil balandlikda qolishi uchun doim shu
+                        joy ajratiladi */}
+                    <div className="mb-2 flex h-6 flex-wrap gap-1 overflow-hidden">
+                      {inst.details?.programs?.slice(0, 2).map(p => (
+                        <span key={p} className="max-w-full truncate rounded-lg bg-blue-50 px-2 py-0.5 text-xs font-medium text-blue-700" title={p}>
+                          {p}
+                        </span>
+                      ))}
+                      {(inst.details?.programs?.length ?? 0) > 2 && (
+                        <span className="rounded-lg bg-gray-100 px-2 py-0.5 text-xs font-medium text-gray-500">
+                          +{inst.details!.programs!.length - 2}
+                        </span>
+                      )}
+                    </div>
 
                     {/* Shahar + statistika — har bir son yonida yozuv bor
                         (ilgari faqat ikonka edi: "500–1 000" nimani
