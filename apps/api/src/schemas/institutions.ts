@@ -20,7 +20,11 @@ export const listInstitutionsQuerySchema = z.object({
   lang:       z.enum(['uz', 'ru', 'en']).optional().default('uz'),
   sortBy:     z.enum(['rating', 'price_asc', 'price_desc', 'newest', 'popular', 'value']).optional().default('rating'),
   page:       z.coerce.number().int().min(1).optional().default(1),
-  limit:      z.coerce.number().int().min(1).max(50).optional().default(20),
+  // 18 — natijalar gridi 2 ustunli (sm) va 3 ustunli (lg) bo'lishi mumkin;
+  // 18 ikkalasiga ham to'liq bo'linadi (9x2, 6x3), shuning uchun oxirgi
+  // qatorda bo'sh joy qolmaydi — faqat ENG OXIRGI sahifada (agar qolgan
+  // muassasalar soni yetarli bo'lmasa) to'liqsiz qator bo'lishi mumkin.
+  limit:      z.coerce.number().int().min(1).max(50).optional().default(18),
 })
 
 export const nearbyQuerySchema = z.object({
