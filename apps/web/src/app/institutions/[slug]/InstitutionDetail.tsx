@@ -382,7 +382,7 @@ export default function InstitutionDetail({ inst: initialInst }: { inst: Institu
                   )}
                 </div>
 
-                <h1 className="text-2xl font-bold leading-tight text-gray-900 sm:text-3xl">{displayName}</h1>
+                <h1 className="text-2xl font-bold leading-tight text-gray-900 [overflow-wrap:anywhere] sm:text-3xl">{displayName}</h1>
                 {/* Ruscha nom faqat farq qilsa ko'rsatiladi — bir xil nomni ikki marta chiqarmaymiz */}
                 {lang === 'uz' && inst.nameRu && inst.nameRu !== inst.nameUz && (
                   <p className="mt-0.5 text-sm text-gray-400">{inst.nameRu}</p>
@@ -543,7 +543,7 @@ export default function InstitutionDetail({ inst: initialInst }: { inst: Institu
                 <p className="mb-3 ml-12 text-sm text-gray-400">
                   {lang === 'ru' ? 'Результаты и достижения учеников' : "O'quvchilar natijalari va yutuqlari"}
                 </p>
-                <p className="whitespace-pre-line text-base leading-relaxed text-gray-700">
+                <p className="whitespace-pre-line text-base leading-relaxed text-gray-700 [overflow-wrap:anywhere]">
                   {inst.details.achievements}
                 </p>
               </div>
@@ -597,9 +597,9 @@ export default function InstitutionDetail({ inst: initialInst }: { inst: Institu
                     </p>
                     <div className="flex flex-wrap gap-2">
                       {(inst.details!.shifts ?? []).map(shift => (
-                        <span key={shift} className="flex items-center gap-1.5 rounded-lg border border-gray-200 bg-white px-3 py-1.5 text-sm font-medium text-gray-700">
-                          <Clock className="h-3.5 w-3.5 text-gray-400" strokeWidth={2} />
-                          {shift}
+                        <span key={shift} className="flex min-w-0 max-w-full items-center gap-1.5 rounded-lg border border-gray-200 bg-white px-3 py-1.5 text-sm font-medium text-gray-700">
+                          <Clock className="h-3.5 w-3.5 shrink-0 text-gray-400" strokeWidth={2} />
+                          <span className="min-w-0 [overflow-wrap:anywhere]">{shift}</span>
                         </span>
                       ))}
                     </div>
@@ -724,7 +724,7 @@ export default function InstitutionDetail({ inst: initialInst }: { inst: Institu
               {isGuest ? (
                 <>
                   {description && (
-                    <p className="text-base leading-relaxed text-gray-700">
+                    <p className="text-base leading-relaxed text-gray-700 [overflow-wrap:anywhere]">
                       {description.slice(0, 160)}
                       <span className="text-gray-400">…</span>
                     </p>
@@ -740,7 +740,7 @@ export default function InstitutionDetail({ inst: initialInst }: { inst: Institu
                 </>
               ) : (
                 description ? (
-                  <p className="whitespace-pre-line text-base leading-relaxed text-gray-700">{description}</p>
+                  <p className="whitespace-pre-line text-base leading-relaxed text-gray-700 [overflow-wrap:anywhere]">{description}</p>
                 ) : (
                   <p className="italic text-base text-gray-400">{t(lang, ui.noDescription)}</p>
                 )
@@ -847,7 +847,7 @@ export default function InstitutionDetail({ inst: initialInst }: { inst: Institu
                               </div>
                               <StarRating rating={review.overallRating} size="sm" />
                             </div>
-                            <p className="text-base text-gray-600 leading-relaxed line-clamp-2">{review.body}</p>
+                            <p className="text-base text-gray-600 leading-relaxed line-clamp-2 [overflow-wrap:anywhere]">{review.body}</p>
                           </div>
                         ))}
                       </div>

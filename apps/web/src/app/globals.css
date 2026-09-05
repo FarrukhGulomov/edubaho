@@ -45,6 +45,12 @@
     @apply bg-slate-50 text-gray-900 antialiased;
     font-family: var(--font-inter);
     line-height: 1.6;
+    /* `html`dagi overflow-x:hidden yolg'iz yetarli emas — ba'zi mobil
+       brauzerlarda (touch-scroll) sahifa `body`ning o'zi orqali ham
+       gorizontal siljishi mumkin, agar uning ichidagi biror element
+       viewportdan kengroq bo'lsa. Ikkalasida ham qo'yish shu holatning
+       oldini oladi. */
+    overflow-x: hidden;
   }
 
   /* Mobil pastki tab-bar (Header'dagi fixed nav) kontentni yashirmasligi uchun
