@@ -134,7 +134,7 @@ export default async function adminInstitutionRoutes(fastify: FastifyInstance) {
         where,
         select: {
           id: true, nameUz: true, nameRu: true, slug: true,
-          type: true, status: true, isVerified: true,
+          type: true, status: true, isVerified: true, isPinned: true,
           claims: approvedClaimSelect,
           avgRating: true, reviewCount: true, viewCount: true,
           phone: true, telegram: true, createdAt: true,
@@ -633,6 +633,37 @@ export default async function adminInstitutionRoutes(fastify: FastifyInstance) {
 
     const { verificationLevel } = withVerificationLevel({ isVerified, claims: institution.claims })
     return reply.send({ isVerified, verificationLevel, message: isVerified ? 'Muassasa tasdiqlandi' : 'Tasdiq bekor qilindi' })
+  })
+
+  // ─────────────────────────────────────────────
+  // PATCH /admin/institutions/:id/pin — ro'yxatlarda (qidiruv, bosh sahifa)
+  // tanlangan saralashdan qat'i nazar eng tepaga chiqarish/bekor qilish
+  // ─────────────────────────────────────────────
+
+  fastify.patch<{ Params: { id: string } }>('/admin/institutions/:id/pin', async (request, reply) => {
+    const { id } = request.params
+
+    const institution = await prisma.institution.findUnique({
+      where: { id },
+      select: { isPinned: true, nameUz: true },
+    })
+    if (!institution) {
+      return reply.status(404).send({ error: 'Muassasa topilmadi' })
+    }
+
+    const isPinned = !institution.isPinned
+    await prisma.institution.update({ where: { id }, data: { isPinned } })
+
+    logAdminAction(prisma, request, {
+      action: 'institution.pin_toggle',
+      entityType: 'Institution',
+      entityId: id,
+      entityLabel: institution.nameUz,
+      before: { isPinned: institution.isPinned },
+      after: { isPinned },
+    })
+
+    return reply.send({ isPinned, message: isPinned ? "Eng tepaga chiqarildi" : "Eng tepadan olib tashlandi" })
   })
 
   // ─────────────────────────────────────────────

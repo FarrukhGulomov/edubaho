@@ -35,6 +35,7 @@ export default async function institutionRoutes(fastify: FastifyInstance) {
     reviewCount: true,
     viewCount: true,
     isVerified: true,
+    isPinned: true,
     claims: approvedClaimSelect,
     address: true,
     lat: true,
@@ -168,7 +169,12 @@ export default async function institutionRoutes(fastify: FastifyInstance) {
         return { ...c, valueScore }
       })
 
-      withScore.sort((a, b) => b.valueScore - a.valueScore)
+      // Admin "eng tepaga" belgilagan muassasalar tanlangan saralashdan
+      // qat'i nazar doim birinchi — o'zaro esa xuddi shu valueScore bo'yicha
+      withScore.sort((a, b) => {
+        if (a.isPinned !== b.isPinned) return a.isPinned ? -1 : 1
+        return b.valueScore - a.valueScore
+      })
 
       const total = withScore.length
       const paged = withScore.slice(skip, skip + limit)
@@ -179,7 +185,10 @@ export default async function institutionRoutes(fastify: FastifyInstance) {
       })
     }
 
-    const orderBy = buildOrderBy(sortBy)
+    // Admin "eng tepaga" belgilagan muassasalar tanlangan saralashdan
+    // qat'i nazar doim birinchi guruh bo'lib chiqadi (o'zaro esa tanlangan
+    // saralash bo'yicha), qolganlari xuddi shu saralash bo'yicha davom etadi
+    const orderBy = [{ isPinned: 'desc' as const }, buildOrderBy(sortBy)]
 
     const [institutions, total] = await Promise.all([
       prisma.institution.findMany({ where, select: cardSelect, orderBy, skip, take: limit }),

@@ -6,7 +6,7 @@ import {
   GraduationCap, ClipboardList, Search, RefreshCw, School, BadgeCheck,
   Circle, Link2, MapPin, Phone, Star, Eye, Pencil, Trash2, X, Ban,
   Laptop, Palette, Globe2, PencilLine, Dumbbell, Trophy, Landmark, UserCheck,
-  MoreVertical, ChevronDown,
+  MoreVertical, ChevronDown, Pin, PinOff,
 } from 'lucide-react'
 import { useAuth } from '@/hooks/useAuth'
 import { useRouter } from 'next/navigation'
@@ -24,6 +24,7 @@ interface Institution {
   type: string
   status: string
   isVerified: boolean
+  isPinned: boolean
   verificationLevel: 'UNVERIFIED' | 'CLAIMED' | 'VERIFIED'
   avgRating?: number
   reviewCount: number
@@ -129,6 +130,25 @@ export default function AdminInstitutionsPage() {
         const data = await res.json()
         setInstitutions((prev) => prev.map((i) => i.id === id ? { ...i, isVerified: data.isVerified, verificationLevel: data.verificationLevel } : i))
         showToast(data.isVerified ? 'Tasdiqlandi' : 'Tasdiq bekor qilindi')
+      }
+    } finally {
+      setActionId(null)
+    }
+  }
+
+  async function handlePin(id: string) {
+    const token = localStorage.getItem('accessToken')
+    if (!token) return
+    setActionId(id)
+    try {
+      const res = await fetch(`${API}/admin/institutions/${id}/pin`, {
+        method: 'PATCH',
+        headers: { Authorization: `Bearer ${token}`, 'ngrok-skip-browser-warning': '1' },
+      })
+      if (res.ok) {
+        const data = await res.json()
+        setInstitutions((prev) => prev.map((i) => i.id === id ? { ...i, isPinned: data.isPinned } : i))
+        showToast(data.message)
       }
     } finally {
       setActionId(null)
@@ -303,6 +323,11 @@ export default function AdminInstitutionsPage() {
                         <span className={`whitespace-nowrap rounded-full px-2.5 py-0.5 text-xs font-semibold ${STATUS_COLORS[inst.status] ?? 'bg-gray-100'}`}>
                           {inst.status}
                         </span>
+                        {inst.isPinned && (
+                          <span className="flex items-center gap-1 whitespace-nowrap rounded-full bg-amber-50 px-2.5 py-0.5 text-xs font-semibold text-amber-700">
+                            <Pin className="h-3 w-3 shrink-0" strokeWidth={2} /> Eng tepada
+                          </span>
+                        )}
                       </div>
                       {inst.nameRu && <p className="text-xs text-gray-400">{inst.nameRu}</p>}
                       <div className="mt-1 flex flex-wrap gap-3 text-xs text-gray-500">
@@ -358,6 +383,15 @@ export default function AdminInstitutionsPage() {
                             {inst.isVerified
                               ? <><BadgeCheck className="h-4 w-4 shrink-0 text-emerald-500" strokeWidth={2} /> Tasdiqni bekor qilish</>
                               : <><Circle className="h-4 w-4 shrink-0 text-gray-400" strokeWidth={1.75} /> Tasdiqlash</>}
+                          </button>
+
+                          <button
+                            onClick={() => { handlePin(inst.id); setOpenMenuId(null) }}
+                            className="flex w-full items-center gap-2 px-4 py-2.5 text-left text-sm font-medium text-gray-700 hover:bg-gray-50"
+                          >
+                            {inst.isPinned
+                              ? <><PinOff className="h-4 w-4 shrink-0 text-amber-500" strokeWidth={2} /> Eng tepadan olib tashlash</>
+                              : <><Pin className="h-4 w-4 shrink-0 text-gray-400" strokeWidth={1.75} /> Eng tepaga chiqarish</>}
                           </button>
 
                           <div className="my-1.5 border-t border-gray-100" />
