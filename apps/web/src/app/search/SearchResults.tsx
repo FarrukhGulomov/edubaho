@@ -8,7 +8,6 @@ import {
   ArrowLeftRight, Check, PencilLine, School, Palette, Lock, Award, ChevronDown,
 } from 'lucide-react'
 import { RatingHint } from '@/components/shared/StarRating'
-import InstitutionCoverImage from '@/components/shared/InstitutionCoverImage'
 import VerificationBadge from '@/components/shared/VerificationBadge'
 import InstitutionMetrics from '@/components/shared/InstitutionMetrics'
 import { priceFrom } from '@/lib/price'
@@ -294,7 +293,7 @@ export default function SearchResults({ institutions, meta, params }: Props) {
             </Link>
           </div>
         ) : (
-          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          <div className="grid items-start gap-4 sm:grid-cols-2 lg:grid-cols-3">
             {institutions.map((inst, idx) => (
               <InstitutionCardComp
                 key={inst.id}
@@ -396,13 +395,9 @@ function InstitutionCardComp({
         className="flex flex-1 flex-col"
         onClick={() => trackSearchClick(i.id, position, query)}
       >
-        <InstitutionCoverImage
-          media={i.media}
-          name={name}
-          fallback="initials"
-          className="aspect-[16/10] w-full rounded-t-2xl"
-          priority={position <= 3}
-        />
+        {/* Rasm boxi hozircha yashirilgan — muassasalarning aksariyatida
+            hali rasm yuklanmagan, faqat bosh harflar ko'rsatilishi
+            "bo'sh" taassurot qoldirardi. Rasmlar ko'proq to'lgach qaytariladi. */}
         <div className="flex flex-1 flex-col p-6">
         {/* Tur + tasdiqlangan — bosh sahifa kartasi bilan bir xil ixcham badge'lar */}
         <div className="mb-2 flex flex-wrap items-center gap-1.5">
