@@ -431,8 +431,13 @@ function InstitutionCardComp({
         />
 
         {/* Yo'nalishlar — teglar soni har xil bo'lsa ham kartalar bir xil
-            balandlikda qolishi uchun doim shu joy ajratiladi (h-8, 1 qator) */}
-        <div className="mb-3 flex h-8 flex-wrap gap-1.5 overflow-hidden">
+            balandlikda qolishi uchun sm+ ekranlarda (bir qatorda bir nechta
+            karta yonma-yon turadigan joyda) balandlik qattiq belgilanadi.
+            Mobil (1 ustunli, hech kim bilan qatorlashmaydi) — bo'sh joy
+            ajratishning ma'nosi yo'q, TO'LIQ ko'rsatiladi (ma'lumot
+            "+N ta" belgisi bilan birga ikkinchi qatorga tushib yashirinib
+            qolmasligi kerak) */}
+        <div className="mb-3 flex flex-wrap gap-1.5 sm:h-8 sm:overflow-hidden">
           {i.details?.programs?.slice(0, 3).map(prog => (
             <span key={prog} className="max-w-full truncate rounded-lg bg-gray-100 px-2.5 py-1 text-sm font-medium text-gray-600" title={prog}>
               {prog}

@@ -411,9 +411,12 @@ export default function HomePage() {
                     </h3>
 
                     {/* Yo'nalishlar preview — teglar soni har xil bo'lsa ham
-                        kartalar bir xil balandlikda qolishi uchun doim shu
-                        joy ajratiladi */}
-                    <div className="mb-2 flex h-6 flex-wrap gap-1 overflow-hidden">
+                        kartalar bir xil balandlikda qolishi uchun sm+
+                        ekranlarda (yonma-yon qatorlashganda) balandlik
+                        qattiq belgilanadi. Mobilda (1 ustunli) esa "+N"
+                        belgisi ikkinchi qatorga tushib yashirinib qolmasligi
+                        uchun to'liq ko'rsatiladi */}
+                    <div className="mb-2 flex flex-wrap gap-1 sm:h-6 sm:overflow-hidden">
                       {inst.details?.programs?.slice(0, 2).map(p => (
                         <span key={p} className="max-w-full truncate rounded-lg bg-blue-50 px-2 py-0.5 text-xs font-medium text-blue-700" title={p}>
                           {p}
