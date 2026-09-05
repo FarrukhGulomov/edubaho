@@ -51,6 +51,7 @@ export interface InstitutionCard {
   avgRating?: number
   reviewCount: number
   isVerified: boolean
+  isPinned: boolean
   verificationLevel: 'UNVERIFIED' | 'CLAIMED' | 'VERIFIED'
   address?: string
   telegram?: string

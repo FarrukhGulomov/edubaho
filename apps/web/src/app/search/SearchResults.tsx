@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation'
 import { useState, useEffect, useRef } from 'react'
 import {
   Search, X, MapPin, Globe2, Star,
-  ArrowLeftRight, Check, PencilLine, School, Palette, Lock, Award, ChevronDown,
+  ArrowLeftRight, Check, PencilLine, School, Palette, Lock, Award, ChevronDown, Crown,
 } from 'lucide-react'
 import { RatingHint } from '@/components/shared/StarRating'
 import VerificationBadge from '@/components/shared/VerificationBadge'
@@ -405,6 +405,11 @@ function InstitutionCardComp({
             {typeInfo ? t(lang, typeInfo) : i.type}
           </span>
           <VerificationBadge level={i.verificationLevel} lang={lang} size="xs" />
+          {i.isPinned && (
+            <span title={t(lang, { uz: 'Eng tepaga chiqarilgan', ru: 'Поднято наверх' })} className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-amber-100">
+              <Crown className="h-3 w-3 shrink-0 text-amber-500" strokeWidth={2} fill="currentColor" />
+            </span>
+          )}
         </div>
 
         {/* Nom */}

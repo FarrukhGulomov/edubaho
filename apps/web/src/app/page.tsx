@@ -3,12 +3,11 @@
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { useState, useEffect } from 'react'
-import { Sparkles, ChevronDown, Star, ArrowLeftRight, ArrowRight } from 'lucide-react'
+import { Sparkles, ChevronDown, Star, ArrowLeftRight, ArrowRight, Crown } from 'lucide-react'
 import Header from '@/components/shared/Header'
 import Footer from '@/components/shared/Footer'
 import BrandMark from '@/components/shared/BrandMark'
 import { RatingHint } from '@/components/shared/StarRating'
-import InstitutionCoverImage from '@/components/shared/InstitutionCoverImage'
 import LiveStatsPill from '@/components/shared/LiveStatsPill'
 import VerificationBadge from '@/components/shared/VerificationBadge'
 import InstitutionMetrics from '@/components/shared/InstitutionMetrics'
@@ -36,6 +35,7 @@ interface InstCard {
   avgRating?: number
   reviewCount: number
   isVerified: boolean
+  isPinned: boolean
   verificationLevel: 'UNVERIFIED' | 'CLAIMED' | 'VERIFIED'
   city?: { nameUz: string; nameRu?: string }
   media?: { url: string; thumbnailUrl?: string | null }[]
@@ -372,7 +372,7 @@ export default function HomePage() {
             ))}
           </div>
         ) : topInstitutions.length > 0 && (
-          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          <div className="grid items-start gap-4 sm:grid-cols-2 lg:grid-cols-3">
             {topInstitutions.map(inst => {
               const info     = TYPE_LABELS[inst.type]
               const name     = uz || !inst.nameRu ? inst.nameUz : inst.nameRu
@@ -383,13 +383,9 @@ export default function HomePage() {
 
               return (
                 <div key={inst.id} className="group card flex flex-col p-0">
-                  <InstitutionCoverImage
-                    media={inst.media}
-                    name={name}
-                    fallback="initials"
-                    className="aspect-[16/10] w-full rounded-t-2xl"
-                  />
-                  {/* Karta tanasi */}
+                  {/* Karta tanasi — rasm boxi hozircha yashirilgan (ko'p
+                      muassasada hali rasm yo'q, bosh harflar "bo'sh"
+                      taassurot qoldirardi) */}
                   <Link href={`/institutions/${inst.slug}`} className="flex flex-1 flex-col p-4 pb-0">
                     {/* Tur + status teglar */}
                     <div className="mb-2 flex flex-wrap items-center gap-1.5">
@@ -400,6 +396,11 @@ export default function HomePage() {
                       {inst.subscription?.plan === 'PREMIUM' && (
                         <span className="flex items-center gap-1 rounded-full bg-amber-50 px-2 py-0.5 text-[11px] font-semibold text-amber-700">
                           <Sparkles className="h-3 w-3" strokeWidth={2} /> Premium
+                        </span>
+                      )}
+                      {inst.isPinned && (
+                        <span title={t(lang, { uz: 'Eng tepaga chiqarilgan', ru: 'Поднято наверх' })} className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-amber-100">
+                          <Crown className="h-3 w-3 shrink-0 text-amber-500" strokeWidth={2} fill="currentColor" />
                         </span>
                       )}
                     </div>
