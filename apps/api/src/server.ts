@@ -21,6 +21,7 @@ import matchRoutes from './routes/match'
 import geoRoutes from './routes/geo'
 import referralRoutes from './routes/referrals'
 import enrollmentClaimRoutes from './routes/enrollmentClaims'
+import notificationRoutes from './routes/notifications'
 import adminReviewRoutes from './routes/admin/reviews'
 import adminInstitutionRoutes from './routes/admin/institutions'
 import adminPlacesImportRoutes from './routes/admin/placesImport'
@@ -165,6 +166,7 @@ async function buildApp() {
       await api.register(compareRoutes)
       await api.register(referralRoutes)
       await api.register(enrollmentClaimRoutes)
+      await api.register(notificationRoutes)
 
       // Admin routes
       await api.register(adminReviewRoutes)

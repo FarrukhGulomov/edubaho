@@ -4,6 +4,7 @@ import { Inter } from 'next/font/google'
 import './globals.css'
 import CompareBar from '@/components/compare/CompareBar'
 import TelegramProvider from '@/components/shared/TelegramProvider'
+import BonusIntroToast from '@/components/shared/BonusIntroToast'
 import { LangProvider } from '@/contexts/LangContext'
 import { CompareProvider } from '@/hooks/useCompare'
 
@@ -94,6 +95,7 @@ export default function RootLayout({
             <CompareProvider>
               {children}
               <div className="no-print"><CompareBar /></div>
+              <div className="no-print"><BonusIntroToast /></div>
             </CompareProvider>
           </TelegramProvider>
         </LangProvider>

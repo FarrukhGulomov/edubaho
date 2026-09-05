@@ -11,6 +11,7 @@ import { useAuth } from '@/hooks/useAuth'
 import { authHref } from '@/lib/authHref'
 import { useLang, t } from '@/contexts/LangContext'
 import Logo from './Logo'
+import NotificationBell from './NotificationBell'
 
 /**
  * Asosiy navigatsiya sarlavhasi.
@@ -95,6 +96,9 @@ export default function Header() {
             >
               <span className="text-lg leading-none" aria-hidden>{lang === 'uz' ? '🇺🇿' : '🇷🇺'}</span>
             </button>
+
+            {/* Bildirishnomalar — faqat kirgan foydalanuvchiga (desktop+mobil) */}
+            <NotificationBell />
 
             {/* Auth — desktop */}
             {loading ? (

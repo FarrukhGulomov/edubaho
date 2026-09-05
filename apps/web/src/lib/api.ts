@@ -392,3 +392,25 @@ export const enrollmentClaimsApi = {
       method: 'POST', token, body: JSON.stringify(data),
     }),
 }
+
+// ─── Bildirishnomalar ────────────────────────────────────────────
+
+export interface NotificationItem {
+  id: string
+  type: string
+  title: string
+  body: string
+  isRead: boolean
+  createdAt: string
+}
+
+export const notificationsApi = {
+  list: (token: string) =>
+    apiFetch<{ data: NotificationItem[]; meta: { unreadCount: number } }>('/notifications', { token }),
+
+  markRead: (token: string, id: string) =>
+    apiFetch<{ success: boolean }>(`/notifications/${id}/read`, { method: 'POST', token }),
+
+  markAllRead: (token: string) =>
+    apiFetch<{ success: boolean }>('/notifications/read-all', { method: 'POST', token }),
+}

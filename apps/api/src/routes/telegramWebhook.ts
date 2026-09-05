@@ -88,6 +88,7 @@ const WELCOME_TEXT =
   "👋 <b>BilimOn</b>ga xush kelibsiz!\n\n" +
   "O'zbekistondagi maktablar, universitetlar, kurs markazlari va bog'chalarni " +
   "qidiring, solishtiring va sizga eng mos kelganini toping.\n\n" +
+  "💰 <b>Bonus:</b> do'stlaringizni taklif qiling yoki kurs sotib olganingizni tasdiqlang — BilimCoin (BCN) yig'ib, pulga yechib oling.\n\n" +
   "Quyidagi tugmalardan birini tanlang 👇"
 
 export default async function telegramWebhookRoutes(fastify: FastifyInstance) {
@@ -248,7 +249,8 @@ export default async function telegramWebhookRoutes(fastify: FastifyInstance) {
 
         await sendTelegramMessageNoKeyboard(
           botToken, chatId,
-          "✅ Raqamingiz muvaffaqiyatli tasdiqlandi! Saytga qaytishingiz mumkin.",
+          "✅ Raqamingiz muvaffaqiyatli tasdiqlandi! Saytga qaytishingiz mumkin.\n\n" +
+          "💰 Endi do'stlaringizni taklif qilib yoki kurs sotib olganingizni tasdiqlab BilimCoin (BCN) bonus yig'a olasiz — bu bot orqali xabar berib boramiz.",
         )
 
         tryQualifyReferral(prisma, userId).catch((err) => fastify.log.warn(err, 'Referral qualification xatosi'))
