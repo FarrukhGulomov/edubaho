@@ -162,6 +162,7 @@ export default function HomePage() {
     <div className="flex min-h-screen flex-col bg-gray-50">
       <Header />
 
+      <main className="flex flex-1 flex-col">
       {/* ── BilimOn hero — user saytga kirganda BIRINCHI ko'radigan narsa.
              Banner emas: EduFit wizard'ining "maqsad" qadami to'g'ridan-to'g'ri
              shu yerda (asosiy oynada). MVP'da faqat O'quv markaz bilan
@@ -495,6 +496,7 @@ export default function HomePage() {
           </Link>
         </div>
       </div>
+      </main>
 
       <Footer />
     </div>

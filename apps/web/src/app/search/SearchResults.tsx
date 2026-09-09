@@ -93,6 +93,37 @@ export default function SearchResults({ institutions, meta, params, apiError }: 
   // Oxirgi track qilingan so'rov — ikki marta yubormaslik uchun
   const lastTrackedQuery = useRef<string | undefined>(undefined)
 
+  // Muassasa sahifasiga kirib "Orqaga" bosilganda scroll pozitsiyasi
+  // saqlanmasdi (filtr/sort URL orqali saqlansa ham) — foydalanuvchi har
+  // safar ro'yxatni qayta scroll qilardi (UX audit topilmasi). Har bir
+  // aniq qidiruv holati (filtr+sahifa) uchun scrollY sessionStorage'da
+  // saqlanadi va shu holatga qaytilganda tiklanadi.
+  const searchKey = JSON.stringify(params)
+  useEffect(() => {
+    const key = `edu_search_scroll:${searchKey}`
+    try {
+      const saved = sessionStorage.getItem(key)
+      if (saved != null) {
+        const y = parseInt(saved, 10)
+        if (!Number.isNaN(y)) requestAnimationFrame(() => window.scrollTo(0, y))
+      }
+    } catch { /* sessionStorage yo'q bo'lsa jim o'tkaziladi */ }
+
+    let raf = 0
+    function onScroll() {
+      if (raf) return
+      raf = requestAnimationFrame(() => {
+        try { sessionStorage.setItem(key, String(window.scrollY)) } catch { /* ignore */ }
+        raf = 0
+      })
+    }
+    window.addEventListener('scroll', onScroll, { passive: true })
+    return () => {
+      window.removeEventListener('scroll', onScroll)
+      if (raf) cancelAnimationFrame(raf)
+    }
+  }, [searchKey])
+
   useEffect(() => {
     const h = { 'ngrok-skip-browser-warning': '1' }
     fetch(`${API}/geo/cities`, { headers: h })

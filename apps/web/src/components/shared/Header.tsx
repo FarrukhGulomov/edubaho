@@ -249,11 +249,11 @@ export default function Header() {
           <Link
             href="/"
             className={`flex flex-1 flex-col items-center gap-0.5 px-1 py-2.5 transition-colors active:opacity-70 ${
-              pathname === '/' ? 'text-primary-600' : 'text-gray-400'
+              pathname === '/' ? 'text-primary-600' : 'text-gray-500'
             }`}
           >
             <Home className="h-[22px] w-[22px]" strokeWidth={1.9} />
-            <span className={`text-[12px] font-semibold leading-tight ${pathname === '/' ? 'text-primary-600' : 'text-gray-400'}`}>
+            <span className={`text-[12px] font-semibold leading-tight ${pathname === '/' ? 'text-primary-600' : 'text-gray-500'}`}>
               {t(lang, { uz: 'Asosiy', ru: 'Главная' })}
             </span>
           </Link>
@@ -262,11 +262,11 @@ export default function Header() {
           <Link
             href="/search"
             className={`flex flex-1 flex-col items-center gap-0.5 px-1 py-2.5 transition-colors active:opacity-70 ${
-              pathname === '/search' ? 'text-primary-600' : 'text-gray-400'
+              pathname === '/search' ? 'text-primary-600' : 'text-gray-500'
             }`}
           >
             <Search className="h-[22px] w-[22px]" strokeWidth={1.9} />
-            <span className={`text-[12px] font-semibold leading-tight ${pathname === '/search' ? 'text-primary-600' : 'text-gray-400'}`}>
+            <span className={`text-[12px] font-semibold leading-tight ${pathname === '/search' ? 'text-primary-600' : 'text-gray-500'}`}>
               {t(lang, { uz: 'Qidirish', ru: 'Поиск' })}
             </span>
           </Link>
@@ -275,11 +275,11 @@ export default function Header() {
           <Link
             href={compareHref}
             className={`flex flex-1 flex-col items-center gap-0.5 px-1 py-2.5 transition-colors active:opacity-70 ${
-              pathname === '/compare' ? 'text-primary-600' : 'text-gray-400'
+              pathname === '/compare' ? 'text-primary-600' : 'text-gray-500'
             }`}
           >
             <ArrowLeftRight className="h-[22px] w-[22px]" strokeWidth={1.9} />
-            <span className={`text-[12px] font-semibold leading-tight ${pathname === '/compare' ? 'text-primary-600' : 'text-gray-400'}`}>
+            <span className={`text-[12px] font-semibold leading-tight ${pathname === '/compare' ? 'text-primary-600' : 'text-gray-500'}`}>
               {t(lang, { uz: 'Solishtir', ru: 'Сравнить' })}
             </span>
           </Link>
@@ -289,7 +289,7 @@ export default function Header() {
             <Link
               href="/profile"
               className={`flex flex-1 flex-col items-center gap-0.5 px-1 py-2.5 transition-colors active:opacity-70 ${
-                pathname === '/profile' ? 'text-primary-600' : 'text-gray-400'
+                pathname === '/profile' ? 'text-primary-600' : 'text-gray-500'
               }`}
             >
               <span className={`flex h-[26px] w-[26px] items-center justify-center rounded-full text-xs font-black text-white shadow-sm ${
@@ -297,7 +297,7 @@ export default function Header() {
               }`}>
                 {(user.name ?? user.phone ?? '?').slice(0, 1).toUpperCase()}
               </span>
-              <span className={`text-[12px] font-semibold leading-tight ${pathname === '/profile' ? 'text-primary-600' : 'text-gray-400'}`}>
+              <span className={`text-[12px] font-semibold leading-tight ${pathname === '/profile' ? 'text-primary-600' : 'text-gray-500'}`}>
                 {t(lang, { uz: 'Profil', ru: 'Профиль' })}
               </span>
             </Link>

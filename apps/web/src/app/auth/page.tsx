@@ -77,6 +77,14 @@ export default function AuthPage() {
   // Telegram widget haqiqatan render bo'ldimi — bo'lmasa bo'sh joy va
   // "yoki" ajratgichni ko'rsatmaymiz (sahifa buzilgandek ko'rinmasligi uchun)
   const [tgReady, setTgReady] = useState(false)
+  // Google tugmasi haqiqatan render bo'ldimi (Telegram'dagi bilan bir xil maqsad)
+  const [googleReady, setGoogleReady] = useState(false)
+  // Ikkalasi ham (skript bloklangan/tarmoq xatosi) muvaffaqiyatsiz bo'lsa —
+  // avval foydalanuvchi bo'sh quti ko'rardi, hech qanday muqobil yo'l
+  // ko'rsatilmasdi (SMS forma o'chirilgan). Endi 6 soniyadan keyin
+  // hech biri tayyor bo'lmasa aniq xabar + Telegram support havolasi
+  // ko'rsatiladi (UX audit topilmasi).
+  const [authDeadEnd, setAuthDeadEnd] = useState(false)
   const otpRef  = useRef<HTMLInputElement>(null)
   const tgRef   = useRef<HTMLDivElement>(null)
   const googleRef = useRef<HTMLDivElement>(null)
@@ -231,8 +239,10 @@ export default function AuthPage() {
       window.google.accounts.id.renderButton(googleRef.current, {
         theme: 'outline', size: 'large', shape: 'pill', width: 296,
       })
+      setGoogleReady(true)
     }
 
+    setGoogleReady(false)
     // Skript allaqachon yuklangan bo'lsa qayta qo'shmaymiz
     if (window.google) {
       renderGoogleButton()
@@ -247,6 +257,17 @@ export default function AuthPage() {
     return () => { if (container) container.innerHTML = '' }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [step])
+
+  // 6 soniya ichida na Telegram, na Google tayyor bo'lmasa — ikkalasi ham
+  // (skript bloklangan, tarmoq xatosi yoki BotFather domen muammosi)
+  // ishlamayapti, SMS esa o'chirilgan (PHONE_AUTH_ENABLED=false) — bu holda
+  // foydalanuvchi hech qanday kirish usulisiz qolib ketardi
+  useEffect(() => {
+    if (step !== 'phone') { setAuthDeadEnd(false); return }
+    if (tgReady || googleReady) { setAuthDeadEnd(false); return }
+    const timer = setTimeout(() => setAuthDeadEnd(true), 6000)
+    return () => clearTimeout(timer)
+  }, [step, tgReady, googleReady])
 
   const ui = {
     title:      { uz: "Ta'lim muassasangizni toping", ru: 'Найдите своё учебное заведение' },
@@ -499,6 +520,27 @@ export default function AuthPage() {
                       {GOOGLE_CLIENT_ID && (
                         <div className="flex min-h-[52px] items-center justify-center rounded-2xl border border-gray-200 bg-white p-1.5 shadow-sm transition-all hover:border-primary-200 hover:shadow-md">
                           <div ref={googleRef} className="flex items-center justify-center" />
+                        </div>
+                      )}
+                      {authDeadEnd && (
+                        <div className="rounded-2xl border border-amber-200 bg-amber-50 p-4 text-center">
+                          <p className="text-sm font-semibold text-amber-800">
+                            {t(lang, { uz: 'Kirish usuli yuklanmadi', ru: 'Способ входа не загрузился' })}
+                          </p>
+                          <p className="mt-1 text-xs text-amber-700">
+                            {t(lang, {
+                              uz: "Sahifani yangilab ko'ring yoki Telegram orqali murojaat qiling",
+                              ru: 'Обновите страницу или свяжитесь с нами через Telegram',
+                            })}
+                          </p>
+                          <a
+                            href="https://t.me/TrustboxInc"
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="mt-3 inline-flex items-center gap-2 rounded-xl bg-sky-500 px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-sky-600"
+                          >
+                            <Send className="h-4 w-4 shrink-0" strokeWidth={1.75} /> @TrustboxInc
+                          </a>
                         </div>
                       )}
                     </>

@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
+import { usePathname } from 'next/navigation'
 import { Coins, X } from 'lucide-react'
 import { useAuth } from '@/hooks/useAuth'
 import { useLang, t } from '@/contexts/LangContext'
@@ -17,10 +18,17 @@ const SEEN_KEY = 'bcn_bonus_intro_seen'
 export default function BonusIntroToast() {
   const { user, loading } = useAuth()
   const { lang } = useLang()
+  const pathname = usePathname()
   const [visible, setVisible] = useState(false)
 
+  // Admin sahifalarida (bonus tizimi bilan aloqasi yo'q auditoriya) va
+  // muassasa sahifasida (aynan shu yerda probnoy-bron/sharh formalari
+  // joylashgan — toast ular ustiga chiqib qolardi) ko'rsatilmaydi
+  // (UX audit topilmasi).
+  const suppressed = pathname?.startsWith('/admin') || pathname?.startsWith('/institutions/')
+
   useEffect(() => {
-    if (loading || !user) return
+    if (loading || !user || suppressed) return
     try {
       if (localStorage.getItem(SEEN_KEY)) return
     } catch {
@@ -30,7 +38,13 @@ export default function BonusIntroToast() {
     // login redirect animatsiyasi bilan bir vaqtga to'g'ri kelib qolmasin
     const timer = setTimeout(() => setVisible(true), 800)
     return () => clearTimeout(timer)
-  }, [user, loading])
+  }, [user, loading, suppressed])
+
+  // Toast ko'rinib turgan paytda /admin yoki muassasa sahifasiga o'tilsa
+  // (masalan ichki havola orqali) darhol yashiriladi
+  useEffect(() => {
+    if (suppressed) setVisible(false)
+  }, [suppressed])
 
   function dismiss() {
     setVisible(false)

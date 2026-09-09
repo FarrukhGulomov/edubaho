@@ -14,6 +14,7 @@ import { useAuth } from '@/hooks/useAuth'
 import { track, trackContactClick } from '@/lib/analytics'
 import { compareApi } from '@/lib/api'
 import { localizeList } from '@/lib/i18nList'
+import { formatPhone } from '@/lib/phone'
 import {
   computeHighlights, computeRecommendation, BADGE_LABELS,
   type HighlightBadge, type CompareRecInput,
@@ -322,7 +323,7 @@ export default function CompareContent({ institutions }: { institutions: Compare
       key: 'contact', Icon: Phone, label: { uz: 'Aloqa va manzil', ru: 'Контакты и адрес' }, show: () => true,
       rows: [
         {
-          key: 'phone', label: { uz: 'Telefon', ru: 'Телефон' }, value: (i) => i.phone ?? null,
+          key: 'phone', label: { uz: 'Telefon', ru: 'Телефон' }, value: (i) => i.phone ? formatPhone(i.phone) : null,
           href: (i) => i.phone ? `tel:${i.phone}` : null, trackType: 'phone',
         },
         {

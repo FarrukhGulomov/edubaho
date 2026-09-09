@@ -106,7 +106,7 @@ export default function RecommendationDashboard({ onGoToSettings }: { onGoToSett
     preview:    { uz: 'Sizga tavsiya etamiz', ru: 'Рекомендуем вам' },
     seeAll:     { uz: "Barchasini ko'rish →", ru: 'Смотреть все →' },
     empty:      { uz: "Hali shaxsiy tavsiyangiz yo'q", ru: 'У вас пока нет персональных рекомендаций' },
-    emptyHint:  { uz: "5 ta savolga javob bering — sizga mos muassasalarni topamiz", ru: 'Ответьте на 5 вопросов — подберём подходящие учреждения' },
+    emptyHint:  { uz: "4 ta savolga javob bering — sizga mos muassasalarni topamiz", ru: 'Ответьте на 4 вопроса — подберём подходящие учреждения' },
     completeTitle: { uz: 'Profilingizni to\'ldiring', ru: 'Заполните профиль' },
     completeHint:  { uz: 'Tavsiyalar sifatini oshirish uchun ismingizni kiriting', ru: 'Укажите имя, чтобы улучшить качество рекомендаций' },
     completeBtn:   { uz: 'Profilni to\'ldirish', ru: 'Заполнить профиль' },

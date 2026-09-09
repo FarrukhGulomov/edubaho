@@ -19,6 +19,7 @@ import VerificationBadge from '@/components/shared/VerificationBadge'
 import { formatStudentRange } from '@/lib/studentRange'
 import { formatUzs, priceFrom } from '@/lib/price'
 import { localizeList } from '@/lib/i18nList'
+import { formatPhone } from '@/lib/phone'
 import { reviewsRu } from '@/lib/plural'
 import { useLang, t } from '@/contexts/LangContext'
 import { authHref } from '@/lib/authHref'
@@ -720,7 +721,7 @@ export default function InstitutionDetail({ inst: initialInst }: { inst: Institu
                                 {(lang === 'ru' ? b.city.nameRu : b.city.nameUz) ?? b.city.nameUz}
                                 {b.address ? ` — ${b.address}` : ''}
                               </p>
-                              {b.phone && <p className="text-sm text-gray-500">{b.phone}</p>}
+                              {b.phone && <p className="text-sm text-gray-500">{formatPhone(b.phone)}</p>}
                             </div>
                           </div>
                         ))}
@@ -1061,7 +1062,7 @@ export default function InstitutionDetail({ inst: initialInst }: { inst: Institu
                       <Phone className="h-5 w-5 shrink-0" strokeWidth={1.75} />
                       <div className="min-w-0">
                         <div className="text-sm font-semibold">{t(lang, ui.call)}</div>
-                        <div className="text-sm font-normal opacity-90 truncate">{inst.phone}</div>
+                        <div className="text-sm font-normal opacity-90 truncate">{formatPhone(inst.phone)}</div>
                       </div>
                     </a>
                   )}
