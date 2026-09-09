@@ -8,6 +8,7 @@ import { expandSearchTerms } from '../../utils/subjectSynonyms'
 import { notifyUser } from '../../services/notify'
 import { approvedClaimSelect, withVerificationLevel } from '../../utils/verification'
 import { isTokenBlacklisted } from '../../utils/redis'
+import { normalizePhone } from '../../utils/phone'
 
 /**
  * Institutions routes
@@ -687,8 +688,16 @@ export default async function institutionRoutes(fastify: FastifyInstance) {
   // ─────────────────────────────────────────────
 
   const trialBookingSchema = z.object({
-    name:          z.string().min(2, 'Ism kamida 2 ta belgi').max(100),
-    phone:         z.string().min(9, "Noto'g'ri telefon raqam").max(20),
+    name: z.string().min(2, 'Ism kamida 2 ta belgi').max(100),
+    // Avval `min(9)` satr UZUNLIGINI tekshirardi, raqamlar sonini emas —
+    // "+998 9012" (atigi 4 ta raqam) kabi to'liqsiz raqamlar ham o'tib
+    // ketardi (UX audit topilmasi). Endi `normalizePhone` orqali to'liq
+    // O'zbekiston raqamiga (+998XXXXXXXXX) aylantiriladi va aylantirib
+    // bo'lmasa (to'liqsiz/noto'g'ri) rad etiladi.
+    phone: z.string().max(20).transform((v) => normalizePhone(v)).refine(
+      (v): v is string => v !== null,
+      { message: "Noto'g'ri telefon raqami formati" },
+    ),
     preferredTime: z.string().max(200).optional(),
     note:          z.string().max(500).optional(),
   })

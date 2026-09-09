@@ -14,6 +14,13 @@ export interface AuthUser {
   // Telefon Telegram bot orqali (request_contact) tasdiqlangan vaqt —
   // null bo'lsa referral bonusi hali faollashmaydi (referralService.ts)
   phoneVerifiedAt?: string | null
+  // Eng so'nggi muassasa egaligi so'rovi (istalgan status) — /dashboard
+  // sahifasida PENDING/REJECTED/yo'q holatlarni ajratish uchun
+  institutionClaims?: Array<{
+    institutionId: string
+    status: 'PENDING' | 'APPROVED' | 'REJECTED'
+    institution: { nameUz: string; slug: string }
+  }>
 }
 
 export function useAuth() {

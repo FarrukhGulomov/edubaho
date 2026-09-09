@@ -414,3 +414,48 @@ export const notificationsApi = {
   markAllRead: (token: string) =>
     apiFetch<{ success: boolean }>('/notifications/read-all', { method: 'POST', token }),
 }
+
+// ─── Muassasa egasi paneli (Dashboard) ────────────────────────────
+
+export interface DashboardOverview {
+  institution: {
+    id: string
+    nameUz: string
+    slug: string
+    status: string
+    avgRating: number | null
+    reviewCount: number
+  }
+  kpi: {
+    viewsThisMonth: number
+    viewsGrowth: number
+    savesThisMonth: number
+    reviewCount: number
+    avgRating: number | null
+  }
+  recentReviews: Array<{
+    id: string
+    overallRating: number
+    title: string | null
+    body: string
+    status: string
+    isAnonymous: boolean
+    createdAt: string
+    user: { id: string; name?: string; avatarUrl?: string } | null
+  }>
+}
+
+export interface DashboardProfileCompleteness {
+  percentage: number
+  earnedPoints: number
+  totalPoints: number
+  recommendations: Array<{ key: string; label: string; points: number }>
+}
+
+export const dashboardApi = {
+  overview: (token: string) =>
+    apiFetch<{ data: DashboardOverview }>('/dashboard/overview', { token }),
+
+  profileCompleteness: (token: string) =>
+    apiFetch<{ data: DashboardProfileCompleteness }>('/dashboard/profile-completeness', { token }),
+}

@@ -29,7 +29,11 @@ export default function TrialBookingWidget({ institutionId, institutionName }: P
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
     if (name.trim().length < 2) { setError(uz ? "Ismingizni to'liq kiriting" : 'Введите полное имя'); return }
-    if (phone.replace(/\D/g, '').length < 9) { setError(uz ? "Telefon raqamni to'liq kiriting" : 'Введите полный номер телефона'); return }
+    // "+998" prefiksidagi 3 ta raqam ham shu yerda hisoblangani uchun avval
+    // 9 ta raqam (masalan "+998 9012" — atigi 4 ta shaxsiy raqam) yetarli
+    // deb qabul qilinardi. To'g'ri O'zbekiston raqami 12 ta raqamdan iborat:
+    // 998 + 9 xonali mahalliy raqam.
+    if (phone.replace(/\D/g, '').length < 12) { setError(uz ? "Telefon raqamni to'liq kiriting" : 'Введите полный номер телефона'); return }
 
     setLoading(true)
     setError('')

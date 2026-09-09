@@ -2,12 +2,19 @@
 
 import Link from 'next/link'
 import { useLang } from '@/contexts/LangContext'
+import { useCompare } from '@/hooks/useCompare'
 
 // Saytning barcha sahifalarida bo'lishi shart bo'lgan umumiy footer
 // (loyiha qoidasi: har bir sahifada Telegram havolasi ko'rinishi kerak).
 export default function Footer() {
   const { lang } = useLang()
   const uz = lang === 'uz'
+  const { items: compareItems } = useCompare()
+  // Header.tsx'dagi bilan bir xil sabab: /compare joriy tanlovni URL'dan
+  // o'qiydi, shuning uchun havola shu tanlovni o'zi bilan olib borishi kerak.
+  const compareHref = compareItems.length >= 2
+    ? `/compare?ids=${compareItems.map(i => i.id).join(',')}`
+    : '/compare'
 
   return (
     <footer className="border-t border-gray-200 bg-gray-900 px-4 py-8 text-sm text-gray-400">
@@ -15,7 +22,7 @@ export default function Footer() {
         <span>© {new Date().getFullYear()} BilimOn — {uz ? "O'zbekiston ta'lim platformasi" : "Образовательная платформа Узбекистана"}</span>
         <div className="flex flex-wrap items-center justify-center gap-x-4 gap-y-2">
           <Link href="/search"  className="tap-center shrink-0 whitespace-nowrap transition-colors hover:text-white">{uz ? "Qidiruv" : "Поиск"}</Link>
-          <Link href="/compare" className="tap-center shrink-0 whitespace-nowrap transition-colors hover:text-white">{uz ? "Solishtirish" : "Сравнение"}</Link>
+          <Link href={compareHref} className="tap-center shrink-0 whitespace-nowrap transition-colors hover:text-white">{uz ? "Solishtirish" : "Сравнение"}</Link>
           <Link href="/auth"    className="tap-center shrink-0 whitespace-nowrap transition-colors hover:text-white">{uz ? "Kirish" : "Войти"}</Link>
           <Link href="/terms"   className="tap-center shrink-0 whitespace-nowrap transition-colors hover:text-white">{uz ? "Shartlar" : "Условия"}</Link>
           <Link href="/privacy" className="tap-center shrink-0 whitespace-nowrap transition-colors hover:text-white">{uz ? "Maxfiylik" : "Конфиденциальность"}</Link>

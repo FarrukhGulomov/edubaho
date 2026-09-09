@@ -298,12 +298,17 @@ export default async function authRoutes(fastify: FastifyInstance) {
           createdAt: true,
           matchOnboardingCompletedAt: true,
           city: { select: { id: true, nameUz: true, nameRu: true } },
+          // Status bilan cheklanmaydi — frontend /dashboard PENDING/REJECTED
+          // holatlarini ham alohida ko'rsatishi uchun (UX audit topilmasi:
+          // avval faqat APPROVED qaytardi, shuning uchun kutilayotgan yoki
+          // rad etilgan so'rovni frontend hech qachon bila olmasdi)
           institutionClaims: {
-            where: { status: 'APPROVED' },
             select: {
               institutionId: true,
+              status: true,
               institution: { select: { nameUz: true, slug: true } },
             },
+            orderBy: { createdAt: 'desc' },
             take: 1,
           },
         },

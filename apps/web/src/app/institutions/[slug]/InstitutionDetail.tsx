@@ -31,7 +31,12 @@ import type { Institution } from './page'
 /** Manzil uchun Google Maps havolasi \u2014 koordinata bo'lsa aniq nuqta, bo'lmasa matn qidiruv */
 function mapsUrl(inst: { address?: string; lat?: number; lng?: number }): string | null {
   if (!inst.address) return null
-  if (inst.lat != null && inst.lng != null) {
+  // (0,0) — Gvineya ko'rfazidagi nuqta, O'zbekistonda joylashgan hech qanday
+  // muassasaga tegishli bo'lishi mumkin emas — bu import/formadagi
+  // to'ldirilmagan koordinata (placeholder), haqiqiy joylashuv emas.
+  // Bunday holatda matnli manzil orqali qidiruvga tushamiz.
+  const hasValidCoords = inst.lat != null && inst.lng != null && !(inst.lat === 0 && inst.lng === 0)
+  if (hasValidCoords) {
     return `https://www.google.com/maps/search/?api=1&query=${inst.lat},${inst.lng}`
   }
   return `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(inst.address)}`

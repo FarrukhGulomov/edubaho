@@ -2,12 +2,13 @@
 
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import {
   Search, PencilLine, BookOpen, Target, ShieldCheck, Menu, X, Home,
   ArrowLeftRight, LogOut, User, Lock,
 } from 'lucide-react'
 import { useAuth } from '@/hooks/useAuth'
+import { useCompare } from '@/hooks/useCompare'
 import { authHref } from '@/lib/authHref'
 import { useLang, t } from '@/contexts/LangContext'
 import Logo from './Logo'
@@ -26,6 +27,26 @@ export default function Header() {
   const [menuOpen, setMenuOpen] = useState(false)
   const { user, loading, logout } = useAuth()
   const { lang, setLang } = useLang()
+  const { items: compareItems } = useCompare()
+  // /compare o'zi URL'dagi `ids`ga qarab ma'lumot yuklaydi (server komponent) —
+  // shuning uchun navigatsiya havolasi joriy tanlovni o'zi bilan olib
+  // borishi kerak, aks holda foydalanuvchi 2+ muassasa tanlagan bo'lsa ham
+  // bu havola orqali kirganda bo'sh "hali hech narsa tanlanmagan" ekrani
+  // chiqib qolardi (UX audit topilmasi).
+  const compareHref = compareItems.length >= 2
+    ? `/compare?ids=${compareItems.map(i => i.id).join(',')}`
+    : '/compare'
+
+  // Login'dan keyin foydalanuvchini AYNAN qaysi filtr/qidiruv holatiga
+  // qaytarish uchun query-string ham kerak — `usePathname()` buni bermaydi.
+  // `useSearchParams()` esa Suspense chegarasi talab qiladi (Header hamma
+  // sahifada, jumladan statik SEO sahifalarida ishlatiladi) — shuning uchun
+  // `window.location.search`ni faqat hydration'dan KEYIN (useEffect'da)
+  // o'qiymiz: server va boshlang'ich client render bir xil ('') bo'ladi,
+  // keyin havola jimgina to'g'ri qiymatga yangilanadi.
+  const [search, setSearch] = useState('')
+  useEffect(() => { setSearch(window.location.search) }, [pathname])
+  const currentPath = `${pathname}${search}`
 
   return (
     <>
@@ -124,7 +145,7 @@ export default function Header() {
               </div>
             ) : (
               <Link
-                href={authHref(pathname)}
+                href={authHref(currentPath)}
                 className="hidden rounded-xl bg-primary-600 px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-primary-700 lg:flex items-center gap-2"
               >
                 <User className="h-4 w-4" strokeWidth={1.75} /> {t(lang, { uz: 'Kirish', ru: 'Войти' })}
@@ -207,7 +228,7 @@ export default function Header() {
                 </button>
               ) : (
                 <Link
-                  href={authHref(pathname)}
+                  href={authHref(currentPath)}
                   onClick={() => setMenuOpen(false)}
                   className="flex flex-1 items-center justify-center gap-1.5 rounded-xl bg-primary-600 py-3 text-sm font-semibold text-white hover:bg-primary-700"
                 >
@@ -252,7 +273,7 @@ export default function Header() {
 
           {/* Compare */}
           <Link
-            href="/compare"
+            href={compareHref}
             className={`flex flex-1 flex-col items-center gap-0.5 px-1 py-2.5 transition-colors active:opacity-70 ${
               pathname === '/compare' ? 'text-primary-600' : 'text-gray-400'
             }`}
@@ -282,7 +303,7 @@ export default function Header() {
             </Link>
           ) : (
             <Link
-              href={authHref(pathname)}
+              href={authHref(currentPath)}
               className="flex flex-1 flex-col items-center gap-0.5 px-1 py-2.5 text-primary-600 active:opacity-70"
             >
               <span className="flex h-[26px] w-[26px] items-center justify-center rounded-full bg-primary-600 text-sm font-black text-white">

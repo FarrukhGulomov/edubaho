@@ -6,6 +6,7 @@ import { useState, useEffect, useRef } from 'react'
 import {
   Search, X, MapPin, Globe2, Star,
   ArrowLeftRight, Check, PencilLine, School, Palette, Lock, Award, ChevronDown, Crown,
+  ChevronLeft, ChevronRight,
 } from 'lucide-react'
 import { RatingHint } from '@/components/shared/StarRating'
 import VerificationBadge from '@/components/shared/VerificationBadge'
@@ -18,6 +19,25 @@ import { track, trackSearch, trackSearchClick } from '@/lib/analytics'
 import type { InstitutionCard } from './page'
 
 const API = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:3001/api/v1'
+
+/**
+ * Joriy sahifa atrofidagi ko'rsatiladigan sahifa raqamlari — 1-, oxirgi
+ * sahifa va joriy sahifa ±1 doim ko'rinadi, orasidagi bo'shliq "..." bilan
+ * belgilanadi. Ilgari sahifalash faqat birinchi 7 tani ko'rsatib, undan
+ * keyingi natijalarga UI orqali umuman o'tib bo'lmas edi.
+ */
+function getPageWindow(current: number, total: number): (number | 'gap')[] {
+  const pages = new Set<number>([1, total, current, current - 1, current + 1])
+  const sorted = [...pages].filter(p => p >= 1 && p <= total).sort((a, b) => a - b)
+  const result: (number | 'gap')[] = []
+  let prev = 0
+  for (const p of sorted) {
+    if (prev && p - prev > 1) result.push('gap')
+    result.push(p)
+    prev = p
+  }
+  return result
+}
 
 interface Props {
   institutions: InstitutionCard[]
@@ -128,7 +148,13 @@ export default function SearchResults({ institutions, meta, params }: Props) {
     allRegions:  { uz: 'Barcha viloyatlar', ru: 'Все регионы' },
     students:    { uz: "o'quvchi", ru: 'учеников' },
     teachers:    { uz: "o'qituvchi", ru: 'преподавателей' },
+    prevPage:    { uz: 'Oldingi', ru: 'Назад' },
+    nextPage:    { uz: 'Keyingi', ru: 'Далее' },
+    regionFilterLabel: { uz: 'Viloyat bo\'yicha filtrlash', ru: 'Фильтр по региону' },
+    cityFilterLabel:   { uz: 'Shahar bo\'yicha filtrlash', ru: 'Фильтр по городу' },
+    sortFilterLabel:   { uz: 'Saralash tartibi', ru: 'Порядок сортировки' },
   }
+  const pageOf = (p: number, total: number) => t(lang, { uz: `${total} sahifadan ${p}-sahifa`, ru: `Страница ${p} из ${total}` })
 
   // Active labels
   const activeCity   = params.cityId   ? cities.find(c => c.id === params.cityId)    : null
@@ -210,7 +236,7 @@ export default function SearchResults({ institutions, meta, params }: Props) {
 
           {/* Region filter */}
           {regions.length > 0 && (
-            <FilterSelect value={params.regionId ?? ''} onChange={v => setParam('regionId', v)}>
+            <FilterSelect value={params.regionId ?? ''} onChange={v => setParam('regionId', v)} ariaLabel={t(lang, ui.regionFilterLabel)}>
               <option value="">{t(lang, ui.allRegions)}</option>
               {regions.map(r => (
                 <option key={r.id} value={r.id}>
@@ -225,7 +251,7 @@ export default function SearchResults({ institutions, meta, params }: Props) {
 
           {/* City filter */}
           {cities.length > 0 && (
-            <FilterSelect value={params.cityId ?? ''} onChange={v => setParam('cityId', v)}>
+            <FilterSelect value={params.cityId ?? ''} onChange={v => setParam('cityId', v)} ariaLabel={t(lang, ui.cityFilterLabel)}>
               <option value="">{t(lang, ui.allCities)}</option>
               {cities.map(c => (
                 <option key={c.id} value={c.id}>
@@ -236,7 +262,7 @@ export default function SearchResults({ institutions, meta, params }: Props) {
           )}
 
           {/* Sort */}
-          <FilterSelect value={params.sortBy ?? 'rating'} onChange={v => setParam('sortBy', v)}>
+          <FilterSelect value={params.sortBy ?? 'rating'} onChange={v => setParam('sortBy', v)} ariaLabel={t(lang, ui.sortFilterLabel)}>
             {SORT_OPTIONS.map(opt => (
               <option key={opt.value} value={opt.value}>
                 {lang === 'uz' ? opt.uz : opt.ru}
@@ -314,21 +340,57 @@ export default function SearchResults({ institutions, meta, params }: Props) {
 
         {/* ── Pagination ─── */}
         {meta.totalPages > 1 && (
-          <div className="mt-8 flex justify-center gap-1.5">
-            {Array.from({ length: Math.min(meta.totalPages, 7) }, (_, i) => i + 1).map(p => (
+          <nav aria-label={pageOf(meta.page, meta.totalPages)} className="mt-8 flex flex-col items-center gap-2">
+            <div className="flex flex-wrap items-center justify-center gap-1.5">
               <Link
-                key={p}
-                href={`/search?${new URLSearchParams({ ...params, page: String(p) }).toString()}`}
+                href={`/search?${new URLSearchParams({ ...params, page: String(Math.max(1, meta.page - 1)) }).toString()}`}
+                aria-label={t(lang, ui.prevPage)}
+                aria-disabled={meta.page <= 1}
+                tabIndex={meta.page <= 1 ? -1 : undefined}
                 className={`flex h-9 w-9 items-center justify-center rounded-xl border text-sm font-semibold transition-colors ${
-                  String(meta.page) === String(p)
-                    ? 'border-primary-600 bg-primary-600 text-white'
+                  meta.page <= 1
+                    ? 'pointer-events-none border-gray-100 bg-gray-50 text-gray-300'
                     : 'border-gray-200 bg-white text-gray-700 hover:border-primary-300 hover:text-primary-600'
                 }`}
               >
-                {p}
+                <ChevronLeft className="h-4 w-4" strokeWidth={2} />
               </Link>
-            ))}
-          </div>
+
+              {getPageWindow(meta.page, meta.totalPages).map((p, i) =>
+                p === 'gap' ? (
+                  <span key={`gap-${i}`} className="flex h-9 w-6 items-center justify-center text-sm text-gray-400">…</span>
+                ) : (
+                  <Link
+                    key={p}
+                    href={`/search?${new URLSearchParams({ ...params, page: String(p) }).toString()}`}
+                    aria-current={meta.page === p ? 'page' : undefined}
+                    className={`flex h-9 w-9 items-center justify-center rounded-xl border text-sm font-semibold transition-colors ${
+                      meta.page === p
+                        ? 'border-primary-600 bg-primary-600 text-white'
+                        : 'border-gray-200 bg-white text-gray-700 hover:border-primary-300 hover:text-primary-600'
+                    }`}
+                  >
+                    {p}
+                  </Link>
+                ),
+              )}
+
+              <Link
+                href={`/search?${new URLSearchParams({ ...params, page: String(Math.min(meta.totalPages, meta.page + 1)) }).toString()}`}
+                aria-label={t(lang, ui.nextPage)}
+                aria-disabled={meta.page >= meta.totalPages}
+                tabIndex={meta.page >= meta.totalPages ? -1 : undefined}
+                className={`flex h-9 w-9 items-center justify-center rounded-xl border text-sm font-semibold transition-colors ${
+                  meta.page >= meta.totalPages
+                    ? 'pointer-events-none border-gray-100 bg-gray-50 text-gray-300'
+                    : 'border-gray-200 bg-white text-gray-700 hover:border-primary-300 hover:text-primary-600'
+                }`}
+              >
+                <ChevronRight className="h-4 w-4" strokeWidth={2} />
+              </Link>
+            </div>
+            <p className="text-xs text-gray-400">{pageOf(meta.page, meta.totalPages)}</p>
+          </nav>
         )}
       </div>
     </main>
@@ -336,16 +398,18 @@ export default function SearchResults({ institutions, meta, params }: Props) {
 }
 
 // Brauzer standart strelkasi o'rniga izchil lucide chevron bilan select
-function FilterSelect({ value, onChange, children }: {
+function FilterSelect({ value, onChange, children, ariaLabel }: {
   value: string
   onChange: (v: string) => void
   children: React.ReactNode
+  ariaLabel: string
 }) {
   return (
     <div className="relative">
       <select
         value={value}
         onChange={e => onChange(e.target.value)}
+        aria-label={ariaLabel}
         className="cursor-pointer appearance-none rounded-xl border border-gray-200 bg-white py-2 pl-3 pr-8 text-xs font-medium text-gray-700 shadow-sm outline-none focus:border-primary-400"
       >
         {children}

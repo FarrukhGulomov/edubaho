@@ -5,6 +5,16 @@
 @layer base {
   :root {
     --font-inter: 'Inter', system-ui, sans-serif;
+    /* Mobil pastki tab-bar balandligi — CompareBar/GuestLeadWidget kabi
+       fixed-bottom panellar shu qiymat ustiga qo'yiladi, aks holda
+       navigatsiyani butunlay yopib qo'yishardi (UX audit topilmasi). */
+    --nav-h: 0px;
+  }
+
+  @media (max-width: 1023px) {
+    :root {
+      --nav-h: calc(72px + env(safe-area-inset-bottom, 0px));
+    }
   }
 
   html {

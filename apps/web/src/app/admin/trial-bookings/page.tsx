@@ -4,7 +4,7 @@ import { useState, useEffect, useCallback } from 'react'
 import Link from 'next/link'
 import {
   Lock, Ban, RefreshCw, Clock, CheckCircle2, X,
-  Phone, School, CalendarCheck,
+  Phone, School, CalendarCheck, ChevronLeft, ChevronRight,
 } from 'lucide-react'
 import { useAuth } from '@/hooks/useAuth'
 import AdminBreadcrumb from '@/components/admin/AdminBreadcrumb'
@@ -33,16 +33,21 @@ export default function AdminTrialBookingsPage() {
   const [bookings, setBookings] = useState<TrialBooking[]>([])
   const [meta, setMeta] = useState({ total: 0, page: 1, totalPages: 1 })
   const [status, setStatus] = useState<'PENDING' | 'CONFIRMED' | 'CANCELLED'>('PENDING')
+  const [page, setPage] = useState(1)
   const [fetching, setFetching] = useState(false)
   const [actionId, setActionId] = useState<string | null>(null)
   const [toast, setToast] = useState('')
 
-  const fetchBookings = useCallback(async () => {
+  // Avval limit=20 bilan sahifalash mutlaqo bog'lanmagan edi — status'i PENDING
+  // bo'lgan 20 tadan ko'p bron bo'lsa, adminlar qolganini hech qachon ko'ra
+  // olmasdi (UX audit topilmasi). Endi backend'ning mavjud `page` parametri
+  // ishlatiladi.
+  const fetchBookings = useCallback(async (targetPage: number) => {
     const token = localStorage.getItem('accessToken')
     if (!token) return
     setFetching(true)
     try {
-      const res = await fetch(`${API}/admin/trial-bookings?status=${status}&limit=20`, {
+      const res = await fetch(`${API}/admin/trial-bookings?status=${status}&limit=20&page=${targetPage}`, {
         headers: { Authorization: `Bearer ${token}`, 'ngrok-skip-browser-warning': '1' },
       })
       if (!res.ok) return
@@ -54,9 +59,15 @@ export default function AdminTrialBookingsPage() {
     }
   }, [status])
 
+  // Status filtri o'zgarsa sahifani 1 ga qaytaramiz (masalan CONFIRMED'ning
+  // 3-sahifasida turib CANCELLED'ga o'tsa, bo'sh natija ko'rinib qolmasligi uchun)
   useEffect(() => {
-    if (user) fetchBookings()
-  }, [user, fetchBookings])
+    setPage(1)
+  }, [status])
+
+  useEffect(() => {
+    if (user) fetchBookings(page)
+  }, [user, page, fetchBookings])
 
   async function handleAction(id: string, next: 'CONFIRMED' | 'CANCELLED') {
     const token = localStorage.getItem('accessToken')
@@ -153,7 +164,7 @@ export default function AdminTrialBookingsPage() {
             <p className="text-gray-500 mt-1">Jami: <strong>{meta.total} ta</strong></p>
           </div>
           <button
-            onClick={fetchBookings}
+            onClick={() => fetchBookings(page)}
             disabled={fetching}
             className="flex items-center gap-1.5 tap-center whitespace-nowrap rounded-xl border border-gray-200 bg-white px-4 py-2.5 text-sm font-semibold text-gray-600 transition-colors hover:border-gray-300 hover:bg-gray-50 disabled:opacity-50"
           >
@@ -252,6 +263,28 @@ export default function AdminTrialBookingsPage() {
                 )}
               </div>
             ))}
+          </div>
+        )}
+
+        {meta.totalPages > 1 && (
+          <div className="mt-6 flex items-center justify-center gap-3">
+            <button
+              onClick={() => setPage((p) => Math.max(1, p - 1))}
+              disabled={fetching || meta.page <= 1}
+              className="flex items-center gap-1 rounded-xl border border-gray-200 bg-white px-4 py-2.5 text-sm font-semibold text-gray-600 transition-colors hover:border-gray-300 hover:bg-gray-50 disabled:opacity-40"
+            >
+              <ChevronLeft className="h-4 w-4 shrink-0" strokeWidth={1.75} /> Oldingi
+            </button>
+            <span className="whitespace-nowrap text-sm text-gray-500">
+              {meta.page} / {meta.totalPages}
+            </span>
+            <button
+              onClick={() => setPage((p) => Math.min(meta.totalPages, p + 1))}
+              disabled={fetching || meta.page >= meta.totalPages}
+              className="flex items-center gap-1 rounded-xl border border-gray-200 bg-white px-4 py-2.5 text-sm font-semibold text-gray-600 transition-colors hover:border-gray-300 hover:bg-gray-50 disabled:opacity-40"
+            >
+              Keyingi <ChevronRight className="h-4 w-4 shrink-0" strokeWidth={1.75} />
+            </button>
           </div>
         )}
       </main>

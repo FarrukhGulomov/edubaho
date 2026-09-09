@@ -12,9 +12,10 @@
  */
 
 import { useState, useEffect } from 'react'
-import { MessageCircle, X, Smartphone, Mail, CheckCircle2 } from 'lucide-react'
-import { track } from '@/lib/analytics'
+import { MessageCircle, X, Smartphone, Mail, CheckCircle2, AlertCircle } from 'lucide-react'
+import { track, submitLeadCapture } from '@/lib/analytics'
 import { useLang, t } from '@/contexts/LangContext'
+import { useCompare } from '@/hooks/useCompare'
 
 const VISIT_KEY = 'edu_inst_visits'
 const SHOWN_KEY = 'edu_lead_widget_shown'
@@ -42,6 +43,7 @@ interface Props {
 
 export default function GuestLeadWidget({ triggerOnMount = true }: Props) {
   const { lang } = useLang()
+  const { items: compareItems } = useCompare()
   const [visible, setVisible]     = useState(false)
   const [expanded, setExpanded]   = useState(false)
   const [mode, setMode]           = useState<'phone' | 'email'>('phone')
@@ -49,6 +51,7 @@ export default function GuestLeadWidget({ triggerOnMount = true }: Props) {
   const [email, setEmail]         = useState('')
   const [sent, setSent]           = useState(false)
   const [loading, setLoading]     = useState(false)
+  const [error, setError]         = useState(false)
 
   useEffect(() => {
     const token = (() => { try { return localStorage.getItem('accessToken') } catch { return null } })()
@@ -73,23 +76,36 @@ export default function GuestLeadWidget({ triggerOnMount = true }: Props) {
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
+    setError(false)
+
+    let ok: boolean
     if (mode === 'phone') {
       const cleaned = phone.replace(/\s/g, '')
       if (cleaned.replace(/\D/g, '').length < 12) return
-      track('contact_click', {
+      setLoading(true)
+      ok = await submitLeadCapture({
         category: 'engagement',
         properties: { contactType: 'lead_capture', phone: cleaned },
       })
     } else {
       if (!email.includes('@')) return
-      track('contact_click', {
+      setLoading(true)
+      ok = await submitLeadCapture({
         category: 'engagement',
         properties: { contactType: 'lead_capture_email', email },
       })
     }
-    setLoading(true)
-    await new Promise(r => setTimeout(r, 400))
     setLoading(false)
+
+    // Faqat server so'rovni haqiqatan saqlaganda "muvaffaqiyat" ko'rsatamiz —
+    // aks holda foydalanuvchi hech kim bog'lanmasligini bilmay qolardi
+    // (avval bu yerda shunchaki 400ms kutib, natijadan qat'i nazar
+    // "Rahmat!" chiqarilardi). Xatoda kiritilgan qiymatlar saqlanadi va
+    // qayta urinish mumkin.
+    if (!ok) {
+      setError(true)
+      return
+    }
     setSent(true)
     markShown()
     setTimeout(() => setVisible(false), 3000)
@@ -109,13 +125,23 @@ export default function GuestLeadWidget({ triggerOnMount = true }: Props) {
     emailLabel: { uz: 'Email pochta', ru: 'Электронная почта' },
     btn:        { uz: 'Maslahat olish', ru: 'Получить консультацию' },
     sending:    { uz: 'Yuborilmoqda...', ru: 'Отправляется...' },
-    done:       { uz: "Rahmat! Tez orada bog'lanamiz.", ru: 'Спасибо! Скоро свяжемся с вами.' },
+    done:       { uz: "So'rovingiz qabul qilindi. Tez orada bog'lanamiz.", ru: 'Заявка принята. Скоро свяжемся с вами.' },
     orEmail:    { uz: 'yoki email bilan', ru: 'или через email' },
     orPhone:    { uz: 'yoki telefon bilan', ru: 'или по телефону' },
+    errorMsg:   { uz: "So'rov yuborilmadi. Ma'lumotlaringiz saqlandi — qayta urinib ko'ring.", ru: 'Не удалось отправить заявку. Данные сохранены — попробуйте ещё раз.' },
+    closeForm:  { uz: 'Formani yopish', ru: 'Закрыть форму' },
   }
 
   return (
-    <div className="fixed bottom-0 left-0 right-0 z-50 animate-slide-up">
+    // `bottom`: mobil pastki tab-bar (var(--nav-h)) ustiga, va agar
+    // CompareBar ham ko'rinib turgan bo'lsa (solishtirishga muassasa
+    // qo'shilgan), yana uning balandligi (~76px) ustiga qo'yiladi —
+    // aks holda bu ikki panel bir-birining ustiga chiqib, kontakt
+    // tugmasi butunlay bosilmay qolardi (UX audit topilmasi).
+    <div
+      className="fixed left-0 right-0 z-40 animate-slide-up"
+      style={{ bottom: `calc(var(--nav-h, 0px) + ${compareItems.length > 0 ? '76px' : '0px'})` }}
+    >
       {!expanded ? (
         /* ── Compact bar ── */
         <div className="flex items-center justify-between gap-3 border-t border-amber-200 bg-amber-50 px-4 py-3 shadow-lg">
@@ -151,10 +177,17 @@ export default function GuestLeadWidget({ triggerOnMount = true }: Props) {
                     <h3 className="font-bold text-gray-900">{t(lang, ui.title)}</h3>
                     <p className="mt-0.5 text-xs text-gray-500">{t(lang, ui.subtitle)}</p>
                   </div>
-                  <button onClick={handleClose} className="tap-center shrink-0 p-1 text-gray-400 hover:text-gray-600">
+                  <button onClick={handleClose} aria-label={t(lang, ui.closeForm)} className="tap-center shrink-0 p-1 text-gray-400 hover:text-gray-600">
                     <X className="h-5 w-5" strokeWidth={1.75} />
                   </button>
                 </div>
+
+                {error && (
+                  <p className="mb-3 flex items-start gap-1.5 rounded-lg bg-red-50 px-3 py-2 text-xs font-medium text-red-600">
+                    <AlertCircle className="mt-0.5 h-3.5 w-3.5 shrink-0" strokeWidth={2} />
+                    {t(lang, ui.errorMsg)}
+                  </p>
+                )}
 
                 {/* Telefon / Email toggle */}
                 <div className="mb-3 flex rounded-xl border border-gray-200 bg-gray-50 p-1">

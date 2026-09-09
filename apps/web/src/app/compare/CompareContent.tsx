@@ -96,10 +96,17 @@ interface SectionRow {
   trackType?: 'phone' | 'telegram' | 'website'
 }
 
-/** Manzil uchun Google Maps havolasi — koordinata bo'lsa aniq nuqta, bo'lmasa matn qidiruv */
+/**
+ * Manzil uchun Google Maps havolasi — koordinata bo'lsa aniq nuqta, bo'lmasa
+ * matn qidiruv. (0,0) — to'ldirilmagan placeholder koordinata (Gvineya
+ * ko'rfazi, O'zbekistonga aloqasi yo'q), shuning uchun bunday holatda ham
+ * matnli manzilga tushamiz (institutions/[slug]/InstitutionDetail.tsx dagi
+ * mapsUrl() bilan bir xil qoida).
+ */
 function mapsUrl(inst: CompareInstitution): string | null {
   if (!inst.address) return null
-  if (inst.lat != null && inst.lng != null) {
+  const hasValidCoords = inst.lat != null && inst.lng != null && !(inst.lat === 0 && inst.lng === 0)
+  if (hasValidCoords) {
     return `https://www.google.com/maps/search/?api=1&query=${inst.lat},${inst.lng}`
   }
   return `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(inst.address)}`
@@ -128,6 +135,17 @@ export default function CompareContent({ institutions }: { institutions: Compare
   const [expanded, setExpanded] = useState<Set<string>>(new Set(['price', 'general']))
   const [copyState, setCopyState] = useState<'idle' | 'copied'>('idle')
   const [saveState, setSaveState] = useState<'idle' | 'saving' | 'saved' | 'error'>('idle')
+
+  // MUHIM: bu sahifa server komponentidan `institutions` propini oladi —
+  // manba URL'dagi `ids` query parametri. `remove()` faqat useCompare
+  // context/localStorage'ni yangilaydi, shuning uchun URL ham yangilanmasa
+  // jadval eskirgan (allaqachon olib tashlangan) muassasani ko'rsatishda
+  // davom etardi. Shu yerda ikkalasini ham yangilaymiz.
+  function handleRemove(id: string) {
+    remove(id)
+    const remainingIds = institutions.map((i) => i.id).filter((i) => i !== id)
+    router.push(remainingIds.length > 0 ? `/compare?ids=${remainingIds.join(',')}` : '/compare')
+  }
 
   // Foydalanuvchi afzalliklarini (yashirilgan bo'limlar) yuklaymiz
   useEffect(() => {
@@ -452,7 +470,7 @@ export default function CompareContent({ institutions }: { institutions: Compare
                   <Star className="h-2.5 w-2.5 sm:h-3 sm:w-3" fill={fav ? 'currentColor' : 'none'} strokeWidth={2} />
                 </button>
                 <button
-                  onClick={() => remove(inst.id)}
+                  onClick={() => handleRemove(inst.id)}
                   className="no-print absolute right-0.5 top-0.5 flex h-4 w-4 shrink-0 items-center justify-center rounded-full text-gray-300 transition-colors hover:bg-red-50 hover:text-red-500 sm:right-1 sm:top-1 sm:h-5 sm:w-5"
                   aria-label={t(lang, { uz: `${name}ni solishtirishdan olib tashlash`, ru: `Убрать ${name} из сравнения` })}
                 >

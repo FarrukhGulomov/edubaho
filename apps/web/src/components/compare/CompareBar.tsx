@@ -24,6 +24,11 @@ export default function CompareBar() {
   // allaqachon solishtiruv ekranida, qayta "Solishtir"ga undash ortiqcha
   const onComparePage = pathname?.startsWith('/compare')
 
+  // `bottom: var(--nav-h)` — mobilda pastki tab-bar ustiga qo'yiladi
+  // (globals.css), aks holda bu panel navigatsiyani butunlay yopib
+  // qo'yardi va foydalanuvchi "Bosh sahifa"/"Kirish" tugmalariga
+  // umuman yeta olmasdi (UX audit topilmasi).
+
   const ui = {
     title:   { uz: 'Solishtirish',       ru: 'Сравнение' },
     picked:  { uz: 'tanlandi',           ru: 'выбрано' },
@@ -68,7 +73,7 @@ export default function CompareBar() {
           role="status"
           aria-live="polite"
           className="fixed inset-x-4 z-[60] mx-auto max-w-sm animate-slide-up"
-          style={{ bottom: items.length > 0 ? 'calc(env(safe-area-inset-bottom, 0px) + 92px)' : 'calc(env(safe-area-inset-bottom, 0px) + 16px)' }}
+          style={{ bottom: items.length > 0 ? 'calc(var(--nav-h, 0px) + 92px)' : 'calc(var(--nav-h, 0px) + 16px)' }}
         >
           <div
             className={`flex items-center gap-2.5 rounded-2xl px-4 py-3 text-sm font-semibold text-white shadow-lg ${
@@ -94,8 +99,8 @@ export default function CompareBar() {
 
       {items.length > 0 && (
         <div
-          className="fixed bottom-0 left-0 right-0 z-50 animate-slide-up border-t border-primary-200 bg-white shadow-lg"
-          style={{ paddingBottom: 'env(safe-area-inset-bottom, 0px)' }}
+          className="fixed left-0 right-0 z-50 animate-slide-up border-t border-primary-200 bg-white shadow-lg"
+          style={{ bottom: 'var(--nav-h, 0px)', paddingBottom: 'env(safe-area-inset-bottom, 0px)' }}
         >
           <div className="mx-auto max-w-4xl px-4 py-3">
             <div className="flex items-center gap-3">

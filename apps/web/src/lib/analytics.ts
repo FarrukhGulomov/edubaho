@@ -157,6 +157,48 @@ export function trackGateCta(gateType: string, institutionId?: string) {
   })
 }
 
+/**
+ * Foydalanuvchi kontakt ma'lumotini (telefon/email) qoldirganda ishlatiladi —
+ * oddiy `track()`dan farqli o'laroq, bu funksiya NATIJANI KUTADI va serverga
+ * haqiqatan saqlanganini tasdiqlaydi (`track()` esa navbatga qo'yib, xatoni
+ * jimgina yutadi — chaqiruvchi tomon hech qachon bilmaydi). Bu — mehmon
+ * "Rahmat!" xabarini FAQAT server tasdiqlaganda ko'rishi uchun ishlatiladi
+ * (GuestLeadWidget), aks holda tarmoq xatosida ham "muvaffaqiyat" ko'rsatib,
+ * foydalanuvchi keyingi bosqichda hech kim bog'lanmasligini bilmay qolardi.
+ */
+export async function submitLeadCapture(payload: TrackPayload): Promise<boolean> {
+  if (typeof window === 'undefined') return false
+  const sessionId = getOrCreateSession()
+  const token = (() => {
+    try { return localStorage.getItem('accessToken') ?? undefined } catch { return undefined }
+  })()
+
+  const body = {
+    sessionId,
+    event: 'contact_click' as const,
+    category: payload.category,
+    properties: payload.properties ?? {},
+    institutionId: payload.institutionId,
+    page: window.location.pathname + window.location.search,
+    referrer: document.referrer || undefined,
+  }
+
+  try {
+    const res = await fetch(`${API}/track`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'ngrok-skip-browser-warning': '1',
+        ...(token ? { Authorization: `Bearer ${token}` } : {}),
+      },
+      body: JSON.stringify(body),
+    })
+    return res.ok
+  } catch {
+    return false
+  }
+}
+
 /** Kontakt tugmasiga bosdi */
 export function trackContactClick(contactType: string, institutionId: string) {
   track('contact_click', {
