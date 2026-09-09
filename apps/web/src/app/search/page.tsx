@@ -17,6 +17,11 @@ export default async function SearchPage({
 
   let institutions: InstitutionCard[] = []
   let meta = { total: 0, page: 1, limit: 20, totalPages: 0 }
+  // API ishlamay qolsa avval natija shunchaki bo'sh massiv sifatida
+  // qaytardi — foydalanuvchiga bu "hech narsa topilmadi" (filtrni
+  // o'zgartiring) bilan farqlanmasdi, holbuki sabab butunlay boshqacha
+  // va "qayta urinish" bilan tuzatiladi (UX audit topilmasi).
+  let apiError = false
 
   try {
     const res = await fetch(
@@ -27,15 +32,17 @@ export default async function SearchPage({
       const data = await res.json()
       institutions = data.data
       meta = data.meta
+    } else {
+      apiError = true
     }
   } catch {
-    // API ishlamasa bo'sh
+    apiError = true
   }
 
   return (
     <div className="flex min-h-screen flex-col">
       <Header />
-      <SearchResults institutions={institutions} meta={meta} params={params} />
+      <SearchResults institutions={institutions} meta={meta} params={params} apiError={apiError} />
       <Footer />
     </div>
   )
@@ -64,5 +71,8 @@ export interface InstitutionCard {
     teacherCount?:   number | null
     foundedYear?:    number | null
     programs?:       string[]
+    // programs[i]ning ruscha tarjimasi (indeks bo'yicha mos) — bo'lmasa
+    // yoki qisqaroq bo'lsa localizeList() o'zbekcha qiymatga qaytadi
+    programsRu?:     string[]
   }
 }

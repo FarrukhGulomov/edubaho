@@ -95,10 +95,12 @@ export const institutionsApi = {
       '/institutions/claims/me', { token },
     ),
 
-  // Bepul probnoy darsga bron (UTP#2) — token ixtiyoriy, mehmon ham yubora oladi
+  // Bepul probnoy darsga bron (UTP#2) — token ixtiyoriy, mehmon ham yubora oladi.
+  // clientRequestId: forma ochilganda bir marta yaratiladi va xato bo'lib qayta
+  // urinilganda ham o'zgarmaydi — backend shu orqali takroriy bronni oldini oladi.
   trialBooking: (
     id: string,
-    data: { name: string; phone: string; preferredTime?: string; note?: string },
+    data: { name: string; phone: string; preferredTime?: string; note?: string; clientRequestId?: string },
     token?: string | null,
   ) =>
     apiFetch<{ data: unknown; message: string }>(`/institutions/${id}/trial-bookings`, {

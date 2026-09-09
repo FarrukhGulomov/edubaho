@@ -3,6 +3,7 @@ import Header from '@/components/shared/Header'
 import Footer from '@/components/shared/Footer'
 import CompareContent from './CompareContent'
 import CompareEmpty from './CompareEmpty'
+import CompareError from './CompareError'
 import { MAX_COMPARE } from '@/lib/compareConstants'
 
 const API = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:3001/api/v1'
@@ -30,6 +31,7 @@ interface CompareInstitution {
     teacherCount?: number
     languages?: string[]
     shifts?: string[]
+    shiftsRu?: string[]
   }
   pricing?: {
     monthlyMin?: number
@@ -40,18 +42,27 @@ interface CompareInstitution {
   _count?: { branches: number }
 }
 
-async function getCompareData(ids: string[]): Promise<CompareInstitution[]> {
-  if (ids.length < 2) return []
+// Avval fetch xatosi ham, haqiqatan ham topilmagan/kam id ham bir xil `[]`
+// bilan qaytardi — page komponenti ikkalasini ham notFound() (404) deb
+// ko'rsatardi, ya'ni "server ishlamayapti" bilan "bunday solishtirish
+// mavjud emas"ni ajratib bo'lmasdi (UX audit topilmasi). Endi ikkalasi
+// alohida natija sifatida qaytariladi.
+type CompareDataResult =
+  | { ok: true; data: CompareInstitution[] }
+  | { ok: false }
+
+async function getCompareData(ids: string[]): Promise<CompareDataResult> {
+  if (ids.length < 2) return { ok: true, data: [] }
   try {
     const res = await fetch(`${API}/institutions/compare?ids=${ids.join(',')}`, {
       next: { revalidate: 60 },
       headers: { 'ngrok-skip-browser-warning': '1' },
     })
-    if (!res.ok) return []
+    if (!res.ok) return { ok: false }
     const { data } = await res.json()
-    return data as CompareInstitution[]
+    return { ok: true, data: data as CompareInstitution[] }
   } catch {
-    return []
+    return { ok: false }
   }
 }
 
@@ -71,13 +82,22 @@ export default async function ComparePage({ searchParams }: Props) {
     )
   }
 
-  const institutions = await getCompareData(ids)
-  if (institutions.length < 2) notFound()
+  const result = await getCompareData(ids)
+  if (!result.ok) {
+    return (
+      <>
+        <div className="no-print"><Header /></div>
+        <CompareError />
+        <div className="no-print"><Footer /></div>
+      </>
+    )
+  }
+  if (result.data.length < 2) notFound()
 
   return (
     <>
       <div className="no-print"><Header /></div>
-      <CompareContent institutions={institutions} />
+      <CompareContent institutions={result.data} />
       <div className="no-print"><Footer /></div>
     </>
   )

@@ -6,13 +6,14 @@ import { useState, useEffect, useRef } from 'react'
 import {
   Search, X, MapPin, Globe2, Star,
   ArrowLeftRight, Check, PencilLine, School, Palette, Lock, Award, ChevronDown, Crown,
-  ChevronLeft, ChevronRight,
+  ChevronLeft, ChevronRight, WifiOff,
 } from 'lucide-react'
 import { RatingHint } from '@/components/shared/StarRating'
 import VerificationBadge from '@/components/shared/VerificationBadge'
 import InstitutionMetrics from '@/components/shared/InstitutionMetrics'
 import { priceFrom } from '@/lib/price'
 import { pluralRu } from '@/lib/plural'
+import { localizeList } from '@/lib/i18nList'
 import { useCompare, useSaved } from '@/hooks/useCompare'
 import { useLang, t } from '@/contexts/LangContext'
 import { track, trackSearch, trackSearchClick } from '@/lib/analytics'
@@ -43,6 +44,9 @@ interface Props {
   institutions: InstitutionCard[]
   meta: { total: number; page: number; limit: number; totalPages: number }
   params: Record<string, string>
+  // true — server so'rovi (fetch) muvaffaqiyatsiz tugadi, ya'ni bo'sh natija
+  // haqiqiy "hech narsa topilmadi" emas, balki xatolik natijasi
+  apiError?: boolean
 }
 
 interface City   { id: string; nameUz: string; nameRu: string }
@@ -78,7 +82,7 @@ const SORT_OPTIONS = [
   { value: 'price_desc', uz: 'Qimmat',          ru: 'Дороже' },
 ]
 
-export default function SearchResults({ institutions, meta, params }: Props) {
+export default function SearchResults({ institutions, meta, params, apiError }: Props) {
   const router = useRouter()
   const { lang } = useLang()
   const [q, setQ] = useState(params.q ?? '')
@@ -137,6 +141,9 @@ export default function SearchResults({ institutions, meta, params }: Props) {
     allInst:     { uz: "Barcha ta'lim muassasalari", ru: 'Все учебные заведения' },
     emptyTitle:  { uz: 'Hech narsa topilmadi', ru: 'Ничего не найдено' },
     emptySub:    { uz: "Filtrlarni o'zgartiring yoki boshqa so'z kiriting", ru: 'Измените фильтры или введите другое слово' },
+    errorTitle:  { uz: "Natijalarni yuklab bo'lmadi", ru: 'Не удалось загрузить результаты' },
+    errorSub:    { uz: "Server bilan bog'lanishda xatolik yuz berdi. Birozdan keyin qayta urinib ko'ring.", ru: 'Ошибка соединения с сервером. Повторите попытку через некоторое время.' },
+    retry:       { uz: 'Qayta urinish', ru: 'Повторить' },
     noReview:    { uz: "Sharh yo'q", ru: 'Нет отзывов' },
     verified:    { uz: 'Tasdiqlangan', ru: 'Подтверждено' },
     save:        { uz: 'Saqlash', ru: 'Сохранить' },
@@ -307,7 +314,21 @@ export default function SearchResults({ institutions, meta, params }: Props) {
         </div>
 
         {/* ── Results ─── */}
-        {institutions.length === 0 ? (
+        {apiError ? (
+          // Avval bu holat oddiy "hech narsa topilmadi" bilan bir xil ko'rinardi —
+          // foydalanuvchi buni "filtrlaringiz bo'yicha natija yo'q" deb tushunardi,
+          // holbuki sabab server bilan bog'lanib bo'lmagani edi (UX audit topilmasi)
+          <div className="flex flex-col items-center py-24 text-center">
+            <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-2xl bg-red-50">
+              <WifiOff className="h-7 w-7 text-red-300" strokeWidth={1.5} />
+            </div>
+            <p className="mb-2 text-xl font-bold text-gray-800">{t(lang, ui.errorTitle)}</p>
+            <p className="mb-6 text-sm text-gray-500">{t(lang, ui.errorSub)}</p>
+            <button onClick={() => router.refresh()} className="btn-secondary text-sm">
+              {t(lang, ui.retry)}
+            </button>
+          </div>
+        ) : institutions.length === 0 ? (
           <div className="flex flex-col items-center py-24 text-center">
             <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-2xl bg-gray-100">
               <Search className="h-7 w-7 text-gray-300" strokeWidth={1.5} />
@@ -445,6 +466,7 @@ function InstitutionCardComp({
   const typeInfo = TYPE_LABELS[i.type]
   const name = lang === 'ru' && i.nameRu ? i.nameRu : i.nameUz
   const price = priceFrom(i.pricing, lang)
+  const programs = localizeList(i.details?.programs, i.details?.programsRu, lang)
 
   return (
     <div className="group card relative flex flex-col">
@@ -502,14 +524,14 @@ function InstitutionCardComp({
             "+N ta" belgisi bilan birga ikkinchi qatorga tushib yashirinib
             qolmasligi kerak) */}
         <div className="mb-3 flex flex-wrap gap-1.5 sm:h-8 sm:overflow-hidden">
-          {i.details?.programs?.slice(0, 3).map(prog => (
+          {programs.slice(0, 3).map(prog => (
             <span key={prog} className="max-w-full truncate rounded-lg bg-gray-100 px-2.5 py-1 text-sm font-medium text-gray-600" title={prog}>
               {prog}
             </span>
           ))}
-          {(i.details?.programs?.length ?? 0) > 3 && (
+          {programs.length > 3 && (
             <span className="rounded-lg bg-gray-100 px-2.5 py-1 text-sm font-medium text-gray-400">
-              +{i.details!.programs!.length - 3} ta
+              +{programs.length - 3} ta
             </span>
           )}
         </div>

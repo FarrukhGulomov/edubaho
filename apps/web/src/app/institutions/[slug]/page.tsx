@@ -136,6 +136,12 @@ export interface Institution {
     specializations?: string[]
     achievements?: string
     shifts?: string[]
+    // programs/specializations/shifts'ning ruscha tarjimasi (indeks
+    // bo'yicha mos) — bo'lmasa yoki qisqaroq bo'lsa localizeList()
+    // o'zbekcha qiymatga qaytadi
+    programsRu?: string[]
+    specializationsRu?: string[]
+    shiftsRu?: string[]
   }
   pricing?: {
     monthlyMin?: number

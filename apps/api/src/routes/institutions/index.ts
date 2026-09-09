@@ -7,7 +7,7 @@ import { normalizeQuery } from '../../utils/transliterate'
 import { expandSearchTerms } from '../../utils/subjectSynonyms'
 import { notifyUser } from '../../services/notify'
 import { approvedClaimSelect, withVerificationLevel } from '../../utils/verification'
-import { isTokenBlacklisted } from '../../utils/redis'
+import { isTokenBlacklisted, redis } from '../../utils/redis'
 import { normalizePhone } from '../../utils/phone'
 
 /**
@@ -51,6 +51,7 @@ export default async function institutionRoutes(fastify: FastifyInstance) {
         teacherCount: true,
         foundedYear:  true,
         programs:     true,
+        programsRu:   true,
       },
     },
     media: {
@@ -147,8 +148,15 @@ export default async function institutionRoutes(fastify: FastifyInstance) {
     // formula (reyting/narx) uchun kandidatlarni JS'da hisoblab, saralab,
     // qo'lda sahifalaymiz. Real hajm (~40-50 muassasa) uchun bu yetarli.
     if (sortBy === 'value') {
+      // Avval faqat narxi ko'rsatilgan muassasalar olinardi (`pricing.monthlyMin: not null`
+      // filtri) — natijada narxini kiritmagan muassasalar butunlay natijadan VA
+      // umumiy sondan (meta.total) tushib qolardi, foydalanuvchiga sababi
+      // tushuntirilmasdan (UX audit topilmasi). Endi ularning barchasi olinadi;
+      // narxi bo'lganlar narx-sifat bo'yicha yuqorida, narxi yo'qlar esa
+      // (baholash imkoni bo'lmagani uchun) alohida guruh sifatida pastda,
+      // o'z ichida reyting bo'yicha saralanadi.
       const candidates = await prisma.institution.findMany({
-        where: { ...where, pricing: { monthlyMin: { not: null } } },
+        where,
         select: cardSelect,
         take: 500,
       })
@@ -165,23 +173,28 @@ export default async function institutionRoutes(fastify: FastifyInstance) {
         // Bayesian silliqlangan reyting — kam sharhli 5.0 ko'p sharhli 4.6'dan
         // yuqori chiqmasin (xuddi EduFit Fit Score'dagi "Sifat" komponenti kabi)
         const adjustedRating = r != null ? (BAYES_PRIOR * globalAvg + r * n) / (BAYES_PRIOR + n) : globalAvg
+        const hasPrice = c.pricing?.monthlyMin != null
         const priceIn100k = (c.pricing?.monthlyMin ?? 1) / 100_000
-        const valueScore = adjustedRating / Math.max(priceIn100k, 0.1)
-        return { ...c, valueScore }
+        const valueScore = hasPrice ? adjustedRating / Math.max(priceIn100k, 0.1) : null
+        return { ...c, valueScore, adjustedRating, hasPrice }
       })
 
       // Admin "eng tepaga" belgilagan muassasalar tanlangan saralashdan
-      // qat'i nazar doim birinchi — o'zaro esa xuddi shu valueScore bo'yicha
+      // qat'i nazar doim birinchi. Keyin narxi borlar valueScore bo'yicha,
+      // narxi yo'qlar esa (hisoblab bo'lmagani uchun) alohida guruh sifatida
+      // pastda, o'z ichida reyting bo'yicha saralanadi.
       withScore.sort((a, b) => {
         if (a.isPinned !== b.isPinned) return a.isPinned ? -1 : 1
-        return b.valueScore - a.valueScore
+        if (a.hasPrice !== b.hasPrice) return a.hasPrice ? -1 : 1
+        if (a.hasPrice) return (b.valueScore ?? 0) - (a.valueScore ?? 0)
+        return b.adjustedRating - a.adjustedRating
       })
 
       const total = withScore.length
       const paged = withScore.slice(skip, skip + limit)
 
       return reply.send({
-        data: paged.map(withVerificationLevel),
+        data: paged.map(({ valueScore: _valueScore, adjustedRating: _adjustedRating, hasPrice: _hasPrice, ...c }) => withVerificationLevel(c)),
         meta: { total, page, limit, totalPages: Math.ceil(total / limit) },
       })
     }
@@ -315,6 +328,7 @@ export default async function institutionRoutes(fastify: FastifyInstance) {
             languages: true,
             programs: true,
             shifts: true,
+            shiftsRu: true,
           },
         },
         pricing: {
@@ -396,6 +410,12 @@ export default async function institutionRoutes(fastify: FastifyInstance) {
               programs: true,
               shifts: true,
               specializations: true,
+              // programs/shifts/specializations o'zbekcha (birlamchi) —
+              // ruscha tarjimalari indeks bo'yicha mos keladi (ilgari bu
+              // maydonlar umuman tarjima qilinmagan edi, UX audit topilmasi)
+              programsRu: true,
+              shiftsRu: true,
+              specializationsRu: true,
               achievements: true,
             },
           },
@@ -700,14 +720,30 @@ export default async function institutionRoutes(fastify: FastifyInstance) {
     ),
     preferredTime: z.string().max(200).optional(),
     note:          z.string().max(500).optional(),
+    // Frontend forma ochilganda bir marta generatsiya qiladi (crypto.randomUUID)
+    // va xato bo'lib qayta urinilganda ham AYNAN o'sha qiymatni yuboradi.
+    // Sekin tarmoqda foydalanuvchi "Yuborish"ni ikkinchi marta bossa yoki
+    // brauzer so'rovni avtomatik qayta yuborsa, ikkita bir xil bron
+    // yaratilib qolishining oldini oladi (UX audit topilmasi).
+    clientRequestId: z.string().uuid().optional(),
   })
+
+  const TRIAL_BOOKING_IDEM_TTL = 60 * 60 // 1 soat — shu oraliqda takroriy so'rov asl natijani qaytaradi
 
   fastify.post<{ Params: { id: string } }>(
     '/institutions/:id/trial-bookings',
     { config: { rateLimit: { max: 5, timeWindow: '1 hour' } } },
     async (request, reply) => {
       const { id: institutionId } = request.params
-      const body = trialBookingSchema.parse(request.body)
+      const { clientRequestId, ...body } = trialBookingSchema.parse(request.body)
+
+      const idemKey = clientRequestId ? `trial_booking_idem:${clientRequestId}` : null
+      if (idemKey) {
+        const cached = await redis.get(idemKey)
+        if (cached) {
+          return reply.status(201).send(JSON.parse(cached))
+        }
+      }
 
       const institution = await prisma.institution.findUnique({
         where: { id: institutionId },
@@ -749,10 +785,16 @@ export default async function institutionRoutes(fastify: FastifyInstance) {
         })
       }
 
-      return reply.status(201).send({
+      const responseBody = {
         data: booking,
         message: "So'rovingiz qabul qilindi! Muassasa siz bilan tez orada bog'lanadi.",
-      })
+      }
+
+      if (idemKey) {
+        await redis.set(idemKey, JSON.stringify(responseBody), 'EX', TRIAL_BOOKING_IDEM_TTL)
+      }
+
+      return reply.status(201).send(responseBody)
     },
   )
 }

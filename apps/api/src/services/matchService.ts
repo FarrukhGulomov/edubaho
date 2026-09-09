@@ -80,9 +80,36 @@ export interface MatchCandidate {
   pricing: {
     monthlyMin: number | null
     monthlyMax: number | null
+    yearlyMin?: number | null
+    yearlyMax?: number | null
     hasDiscount?: boolean
   } | null
   mediaCount?: number
+}
+
+/**
+ * Foydalanuvchi byudjeti doim OYLIK deb so'raladi (frontend: "Oylik
+ * byudjetingiz?"), lekin ko'p muassasalar (ayniqsa universitet/kollejlar)
+ * narxini FAQAT yillik (`yearlyMin`) kiritadi — `monthlyMin` bo'sh qoladi.
+ * Avval bunday holatda "narx ma'lumoti yo'q" deb hisoblanardi, garchi
+ * narx aslida mavjud bo'lsa ham (UX audit topilmasi: "kurs darajasidagi
+ * narx/davr semantikasi"). `yearlyMin / 12` — taxmin emas, aniq
+ * belgilangan yillik narxning oylik ekvivalenti, shuning uchun
+ * `priceFrom()` (frontend, ko'rsatish uchun davrni hech qachon taxmin
+ * qilmaydi) bilan ziddiyatli emas — bu yerda faqat SONLI solishtirish
+ * uchun ishlatiladi, ko'rsatiladigan matn uchun emas.
+ */
+export function effectiveMonthlyPrice(pricing: MatchCandidate['pricing']): number | null {
+  if (pricing?.monthlyMin != null) return pricing.monthlyMin
+  if (pricing?.yearlyMin != null) return pricing.yearlyMin / 12
+  return null
+}
+
+/** Narx oralig'ining yuqori chegarasi uchun xuddi shu oylik ekvivalenti. */
+export function effectiveMonthlyMaxPrice(pricing: MatchCandidate['pricing']): number | null {
+  if (pricing?.monthlyMax != null) return pricing.monthlyMax
+  if (pricing?.yearlyMax != null) return pricing.yearlyMax / 12
+  return effectiveMonthlyPrice(pricing)
 }
 
 // ─── Natija ───────────────────────────────────────────────────
@@ -383,7 +410,7 @@ function scoreBudget(inst: MatchCandidate, prefs: MatchPreferences): ScoreCompon
   if (!prefs.budget) {
     return { ...base, score: 60, hasData: false, reasonUz: 'Byudjet kiritilmagan', reasonRu: 'Бюджет не указан' }
   }
-  const min = inst.pricing?.monthlyMin
+  const min = effectiveMonthlyPrice(inst.pricing)
   if (!min) {
     return { ...base, score: 55, hasData: false, reasonUz: "Narx ma'lumoti yo'q", reasonRu: 'Нет данных о цене' }
   }
@@ -578,7 +605,7 @@ function scoreTrust(inst: MatchCandidate, prefs: MatchPreferences): ScoreCompone
   if (inst.isVerified) score += 40
   if (inst.phone) score += 10
   if (inst.details?.descriptionUz) score += 10
-  if (inst.pricing?.monthlyMin) score += 10
+  if (effectiveMonthlyPrice(inst.pricing) != null) score += 10
   if ((inst.mediaCount ?? 0) > 0) score += 10
 
   // Foydalanuvchi Premium markazlarni afzal ko'rsa — qo'shimcha bonus

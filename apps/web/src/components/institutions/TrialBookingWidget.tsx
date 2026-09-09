@@ -25,6 +25,10 @@ export default function TrialBookingWidget({ institutionId, institutionName }: P
   const [loading, setLoading] = useState(false)
   const [done, setDone] = useState(false)
   const [error, setError] = useState('')
+  // Bir marta yaratiladi va xato bo'lib qayta yuborilganda ham o'zgarmaydi —
+  // backend shu ID orqali tarmoq xatosi/qayta bosishdan kelib chiqqan
+  // takroriy bronni bitta so'rov sifatida qayta ishlaydi (UX audit topilmasi).
+  const [requestId, setRequestId] = useState(() => crypto.randomUUID())
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
@@ -43,6 +47,7 @@ export default function TrialBookingWidget({ institutionId, institutionName }: P
         name: name.trim(),
         phone: phone.replace(/\s/g, ''),
         preferredTime: preferredTime.trim() || undefined,
+        clientRequestId: requestId,
       }, token)
       setDone(true)
     } catch (err: unknown) {
@@ -59,6 +64,9 @@ export default function TrialBookingWidget({ institutionId, institutionName }: P
     setPreferredTime('')
     setError('')
     setDone(false)
+    // Yangi bron sessiyasi — yangi ID, aks holda keyingi (butunlay boshqa)
+    // bron ham eskisi bilan bir xil deb hisoblanib qoldirilardi
+    setRequestId(crypto.randomUUID())
   }
 
   if (done) {

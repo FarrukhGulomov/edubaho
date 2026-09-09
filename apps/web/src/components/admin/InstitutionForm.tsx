@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import Image from 'next/image'
 import { authApi } from '@/lib/api'
+import { SHIFT_RU_MAP } from '@/lib/i18nList'
 import {
   ClipboardList, Phone, Info, Wallet, AlertCircle, BookOpen, Target,
   Clock, Trophy, ChevronLeft, ChevronRight, CheckCircle2, CalendarCheck, ChevronDown,
@@ -143,6 +144,12 @@ export interface InstitutionFormData {
   programs: string        // vergul bilan ajratilgan
   specializations: string // vergul bilan ajratilgan
   shifts: string[]
+  // programs/specializations'ning ruscha tarjimasi — vergul bilan ajratilgan,
+  // elementlar SONI va TARTIBI o'zbekcha versiyasi bilan bir xil bo'lishi kerak
+  // (indeks bo'yicha moslashadi). shifts'niki avtomatik hisoblanadi
+  // (SHIFT_RU_MAP — yopiq to'plam bo'lgani uchun xavfsiz)
+  programsRu: string
+  specializationsRu: string
   achievements: string
   categories: string[]
   monthlyMin: string
@@ -158,6 +165,7 @@ const EMPTY: InstitutionFormData = {
   descriptionUz: '', descriptionRu: '',
   foundedYear: '', studentCount: '', teacherCount: '',
   languages: [], programs: '', specializations: '', shifts: [], achievements: '',
+  programsRu: '', specializationsRu: '',
   categories: [],
   monthlyMin: '', monthlyMax: '', paymentMethods: [],
   branches: [],
@@ -412,6 +420,15 @@ export default function InstitutionForm({ initialData, institutionId, mode, init
         specializations: form.specializations
           ? form.specializations.split(',').map((s) => s.trim()).filter(Boolean)
           : [],
+        programsRu: form.programsRu
+          ? form.programsRu.split(',').map((s) => s.trim()).filter(Boolean)
+          : [],
+        specializationsRu: form.specializationsRu
+          ? form.specializationsRu.split(',').map((s) => s.trim()).filter(Boolean)
+          : [],
+        // Dars vaqtlari — yopiq to'plam (SHIFTS), shuning uchun tarjimasi
+        // xavfsiz avtomatik hisoblanadi (SHIFT_RU_MAP)
+        shiftsRu: form.shifts.map((s) => SHIFT_RU_MAP[s] ?? s),
         // Shahar tanlanmagan (bo'sh) qatorlar chala hisoblanadi va tashlab yuboriladi
         branches: form.branches.filter((b) => b.cityId),
       })
@@ -937,6 +954,16 @@ export default function InstitutionForm({ initialData, institutionId, mode, init
                     ))}
                   </div>
                 )}
+                <label className="mb-1 mt-2 block text-xs font-medium text-gray-500">
+                  Ruscha tarjimasi <span className="font-normal text-gray-400">(ixtiyoriy — tartib va soni yuqoridagi bilan bir xil bo'lishi kerak)</span>
+                </label>
+                <input
+                  type="text"
+                  value={form.programsRu}
+                  onChange={(e) => set('programsRu', e.target.value)}
+                  placeholder="Математика, Физика, Английский язык, Программирование..."
+                  className={INPUT_CLS}
+                />
               </div>
 
               <div>
@@ -949,6 +976,16 @@ export default function InstitutionForm({ initialData, institutionId, mode, init
                   value={form.specializations}
                   onChange={(e) => set('specializations', e.target.value)}
                   placeholder="Frontend, Backend, Dizayn, IELTS..."
+                  className={INPUT_CLS}
+                />
+                <label className="mb-1 mt-2 block text-xs font-medium text-gray-500">
+                  Ruscha tarjimasi <span className="font-normal text-gray-400">(ixtiyoriy — tartib va soni yuqoridagi bilan bir xil bo'lishi kerak)</span>
+                </label>
+                <input
+                  type="text"
+                  value={form.specializationsRu}
+                  onChange={(e) => set('specializationsRu', e.target.value)}
+                  placeholder="Frontend, Backend, Дизайн, IELTS..."
                   className={INPUT_CLS}
                 />
               </div>

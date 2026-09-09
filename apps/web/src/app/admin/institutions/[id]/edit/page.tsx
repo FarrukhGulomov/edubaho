@@ -222,6 +222,8 @@ export default function EditInstitutionPage() {
           languages:       inst.details?.languages        ?? [],
           programs:        inst.details?.programs?.join(', ')        ?? '',
           specializations: inst.details?.specializations?.join(', ') ?? '',
+          programsRu:        inst.details?.programsRu?.join(', ')        ?? '',
+          specializationsRu: inst.details?.specializationsRu?.join(', ') ?? '',
           shifts:          inst.details?.shifts            ?? [],
           achievements:    inst.details?.achievements      ?? '',
           categories:      inst.details?.categories        ?? [],

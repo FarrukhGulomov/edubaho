@@ -18,6 +18,7 @@ import GuestLeadWidget from '@/components/shared/GuestLeadWidget'
 import VerificationBadge from '@/components/shared/VerificationBadge'
 import { formatStudentRange } from '@/lib/studentRange'
 import { formatUzs, priceFrom } from '@/lib/price'
+import { localizeList } from '@/lib/i18nList'
 import { reviewsRu } from '@/lib/plural'
 import { useLang, t } from '@/contexts/LangContext'
 import { authHref } from '@/lib/authHref'
@@ -228,6 +229,13 @@ export default function InstitutionDetail({ inst: initialInst }: { inst: Institu
   // o'tgan foydalanuvchi uchun quyida token bilan qayta so'rov yuborilib,
   // faqat shu holatda haqiqiy telefon/telegram/... state'ga qo'shiladi.
   const [inst, setInst] = useState(initialInst)
+  // programs/specializations/shifts ilgari faqat o'zbekcha ko'rsatilardi
+  // (CLAUDE.md qoidasi buzilgan — UX audit topilmasi). localizeList() —
+  // ru tarjimasi hali kiritilmagan elementlar uchun o'zbekcha qiymatga
+  // qaytadi, hech narsa yashirilmaydi
+  const programs = localizeList(inst.details?.programs, inst.details?.programsRu, lang)
+  const specializations = localizeList(inst.details?.specializations, inst.details?.specializationsRu, lang)
+  const shifts = localizeList(inst.details?.shifts, inst.details?.shiftsRu, lang)
   const [isGuest, setIsGuest] = useState(true)
   const [authChecked, setAuthChecked] = useState(false)
   // Login'dan keyin shu sahifaga qaytish uchun barcha gate havolalariga beriladi
@@ -483,23 +491,22 @@ export default function InstitutionDetail({ inst: initialInst }: { inst: Institu
             {/* ════════════════════════════════════════
                 1. YO'NALISHLAR — Programs & Specializations
                 ════════════════════════════════════════ */}
-            {((inst.details?.programs?.length ?? 0) > 0 ||
-              (inst.details?.specializations?.length ?? 0) > 0) && (
+            {(programs.length > 0 || specializations.length > 0) && (
               <div className="card p-6">
                 <h2 className="mb-4 flex items-center gap-3 text-lg font-semibold text-gray-900">
                   <span className="icon-chip"><BookOpen className="h-[18px] w-[18px]" strokeWidth={1.75} /></span>
                   {lang === 'ru' ? 'Направления и курсы' : "Yo'nalishlar va kurslar"}
                 </h2>
 
-                {(inst.details?.programs?.length ?? 0) > 0 && (
+                {programs.length > 0 && (
                   <>
-                    {(inst.details?.specializations?.length ?? 0) > 0 && (
+                    {specializations.length > 0 && (
                       <p className="mb-2 text-xs font-bold uppercase tracking-wider text-gray-400">
                         {t(lang, ui.programs)}
                       </p>
                     )}
                     <div className="flex flex-wrap gap-2">
-                      {(inst.details!.programs ?? []).map(prog => (
+                      {programs.map(prog => (
                         <span key={prog} className="min-w-0 max-w-full [overflow-wrap:anywhere] rounded-lg border border-primary-100 bg-primary-50 px-3 py-1.5 text-sm font-medium text-primary-700">
                           {prog}
                         </span>
@@ -508,13 +515,13 @@ export default function InstitutionDetail({ inst: initialInst }: { inst: Institu
                   </>
                 )}
 
-                {(inst.details?.specializations?.length ?? 0) > 0 && (
+                {specializations.length > 0 && (
                   <>
                     <p className="mb-2 mt-4 text-xs font-semibold uppercase tracking-wider text-gray-400">
                       {t(lang, ui.specializations)}
                     </p>
                     <div className="flex flex-wrap gap-2">
-                      {(inst.details!.specializations ?? []).map(spec => (
+                      {specializations.map(spec => (
                         <span key={spec} className="min-w-0 max-w-full [overflow-wrap:anywhere] rounded-lg border border-orange-100 bg-orange-50 px-3 py-1.5 text-sm font-medium text-orange-700">
                           {spec}
                         </span>
@@ -564,7 +571,7 @@ export default function InstitutionDetail({ inst: initialInst }: { inst: Institu
             {/* ════════════════════════════════════════
                 3. O'QITUVCHILAR SIFATI
                 ════════════════════════════════════════ */}
-            {(inst.details?.teacherCount || (inst.details?.shifts?.length ?? 0) > 0) && (
+            {(inst.details?.teacherCount || shifts.length > 0) && (
               <div className="card p-6">
                 <h2 className="mb-4 flex items-center gap-3 text-lg font-semibold text-gray-900">
                   <span className="icon-chip"><UserCheck className="h-[18px] w-[18px]" strokeWidth={1.75} /></span>
@@ -602,13 +609,13 @@ export default function InstitutionDetail({ inst: initialInst }: { inst: Institu
                   )}
                 </div>
                 {/* Dars vaqtlari */}
-                {(inst.details?.shifts?.length ?? 0) > 0 && (
+                {shifts.length > 0 && (
                   <div className="mt-4">
                     <p className="mb-2 text-xs font-semibold uppercase tracking-wider text-gray-400">
                       {t(lang, ui.shifts)}
                     </p>
                     <div className="flex flex-wrap gap-2">
-                      {(inst.details!.shifts ?? []).map(shift => (
+                      {shifts.map(shift => (
                         <span key={shift} className="flex min-w-0 max-w-full items-center gap-1.5 rounded-lg border border-gray-200 bg-white px-3 py-1.5 text-sm font-medium text-gray-700">
                           <Clock className="h-3.5 w-3.5 shrink-0 text-gray-400" strokeWidth={2} />
                           <span className="min-w-0 [overflow-wrap:anywhere]">{shift}</span>

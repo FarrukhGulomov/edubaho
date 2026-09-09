@@ -1,6 +1,6 @@
 import type { FastifyInstance } from 'fastify'
 import { z } from 'zod'
-import { computeMatchScore, evaluateGoal, DEFAULT_MIN_MATCH_SCORE, type MatchCandidate } from '../services/matchService'
+import { computeMatchScore, evaluateGoal, effectiveMonthlyPrice, effectiveMonthlyMaxPrice, DEFAULT_MIN_MATCH_SCORE, type MatchCandidate } from '../services/matchService'
 import { getCategoryDef } from '../utils/educationCategories'
 import { resolveGoalCategory } from '../services/goalClassifier'
 
@@ -91,7 +91,10 @@ const candidateSelect = {
       categories: true,
     },
   },
-  pricing: { select: { monthlyMin: true, monthlyMax: true, hasDiscount: true } },
+  // yearlyMin/Max ham olinadi — ko'p universitet/kollejlar narxini FAQAT
+  // yillik kiritadi, monthlyMin bo'sh qoladi (quyida effectiveMonthlyPrice
+  // orqali oylik ekvivalentga aylantiriladi)
+  pricing: { select: { monthlyMin: true, monthlyMax: true, yearlyMin: true, yearlyMax: true, hasDiscount: true } },
   _count: { select: { media: true } },
 } as const
 
@@ -162,10 +165,13 @@ export default async function matchRoutes(fastify: FastifyInstance) {
       if (inFormat.length > 0) formatPool = inFormat
     }
 
-    const priced = formatPool.filter((c) => c.pricing?.monthlyMin != null)
+    // Avval faqat monthlyMin bo'lganlar hisobga olinardi — faqat yillik
+    // narx kiritgan muassasalar (universitet/kollejlar) "narxsiz" deb
+    // ko'rsatilardi, garchi narxi mavjud bo'lsa ham (UX audit topilmasi)
+    const priced = formatPool.filter((c) => effectiveMonthlyPrice(c.pricing) != null)
     const priceRange = priced.length > 0 ? {
-      min: Math.min(...priced.map((c) => c.pricing!.monthlyMin!)),
-      max: Math.max(...priced.map((c) => c.pricing!.monthlyMax ?? c.pricing!.monthlyMin!)),
+      min: Math.min(...priced.map((c) => effectiveMonthlyPrice(c.pricing)!)),
+      max: Math.max(...priced.map((c) => effectiveMonthlyMaxPrice(c.pricing) ?? effectiveMonthlyPrice(c.pricing)!)),
     } : { min: null, max: null }
 
     const rated = formatPool.filter((c) => c.avgRating != null)
@@ -174,7 +180,10 @@ export default async function matchRoutes(fastify: FastifyInstance) {
       : null
 
     const withinBudgetCount = q.budget != null
-      ? formatPool.filter((c) => c.pricing?.monthlyMin != null && c.pricing.monthlyMin <= q.budget!).length
+      ? formatPool.filter((c) => {
+          const price = effectiveMonthlyPrice(c.pricing)
+          return price != null && price <= q.budget!
+        }).length
       : null
 
     const sampleInstitutions = [...formatPool]

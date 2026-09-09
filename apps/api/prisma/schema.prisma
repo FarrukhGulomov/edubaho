@@ -385,6 +385,16 @@ model InstitutionDetail {
   programs        String[]
   shifts          String[]
   specializations String[]
+  // programs/shifts/specializations o'zbekcha (birlamchi) tilda kiritiladi.
+  // Ruscha tarjimalari — HAR BIR ELEMENT indeks bo'yicha mos keladi (masalan
+  // programsRu[2] — programs[2]ning tarjimasi). Ilgari bu maydonlar umuman
+  // tarjima qilinmagan edi (CLAUDE.md qoidasi buzilgan — UX audit topilmasi).
+  // Bo'sh yoki qisqaroq bo'lishi mumkin: hali tarjima qilinmagan elementlar
+  // uchun UI o'zbekcha qiymatga qaytadi (localizeList() — apps/web/src/lib/i18nList.ts
+  // va apps/api/src/utils/i18nList.ts).
+  programsRu        String[] @default([])
+  shiftsRu          String[] @default([])
+  specializationsRu String[] @default([])
   achievements    String?
   // EduFit: Ta'lim profili — muassasa aynan qaysi yo'nalishlarni
   // o'qitishini qattiq belgilaydi (masalan "OTMga kirish", "IELTS").

@@ -194,6 +194,13 @@ export default async function adminInstitutionRoutes(fastify: FastifyInstance) {
     programs:        z.array(z.string()).optional().default([]),
     specializations: z.array(z.string()).optional().default([]),
     shifts:          z.array(z.string()).optional().default([]),
+    // programs/specializations/shifts uz (birlamchi) tilda; ularning
+    // ruscha tarjimasi indeks bo'yicha mos keladi (masalan programsRu[0] —
+    // programs[0]ning tarjimasi). Ilgari bu maydonlar umuman
+    // tarjima qilinmagan edi (UX audit topilmasi).
+    programsRu:        z.array(z.string()).optional().default([]),
+    specializationsRu: z.array(z.string()).optional().default([]),
+    shiftsRu:          z.array(z.string()).optional().default([]),
     achievements:    z.string().optional(),
     // EduFit Ta'lim profili: muassasa qattiq belgilagan yo'nalishlar
     // (moslik algoritmida qattiq filtr sifatida ishlatiladi)
@@ -230,7 +237,9 @@ export default async function adminInstitutionRoutes(fastify: FastifyInstance) {
 
     const {
       descriptionUz, descriptionRu, foundedYear, studentCount, teacherCount,
-      languages, programs, specializations, shifts, achievements, categories,
+      languages, programs, specializations, shifts,
+      programsRu, specializationsRu, shiftsRu,
+      achievements, categories,
       monthlyMin, monthlyMax, paymentMethods, branches,
       cityId, email, website, lat, lng, ...main
     } = body
@@ -256,6 +265,9 @@ export default async function adminInstitutionRoutes(fastify: FastifyInstance) {
             programs:        programs        ?? [],
             specializations: specializations ?? [],
             shifts:          shifts          ?? [],
+            programsRu:        programsRu        ?? [],
+            specializationsRu: specializationsRu ?? [],
+            shiftsRu:          shiftsRu          ?? [],
             achievements:    achievements    || undefined,
             categories:      categories      ?? [],
           },
@@ -368,7 +380,9 @@ export default async function adminInstitutionRoutes(fastify: FastifyInstance) {
 
     const {
       descriptionUz, descriptionRu, foundedYear, studentCount, teacherCount,
-      languages, programs, specializations, shifts, achievements, categories,
+      languages, programs, specializations, shifts,
+      programsRu, specializationsRu, shiftsRu,
+      achievements, categories,
       monthlyMin, monthlyMax, paymentMethods, branches,
       cityId, email, website, lat, lng, ...main
     } = body
@@ -413,7 +427,9 @@ export default async function adminInstitutionRoutes(fastify: FastifyInstance) {
         foundedYear   !== undefined || studentCount  !== undefined ||
         teacherCount  !== undefined || languages     !== undefined ||
         programs      !== undefined || specializations !== undefined ||
-        shifts        !== undefined || achievements  !== undefined ||
+        shifts        !== undefined ||
+        programsRu    !== undefined || specializationsRu !== undefined ||
+        shiftsRu      !== undefined || achievements  !== undefined ||
         categories    !== undefined) {
       await prisma.institutionDetail.upsert({
         where:  { institutionId: id },
@@ -428,6 +444,9 @@ export default async function adminInstitutionRoutes(fastify: FastifyInstance) {
           programs:        programs        ?? [],
           specializations: specializations ?? [],
           shifts:          shifts          ?? [],
+          programsRu:        programsRu        ?? [],
+          specializationsRu: specializationsRu ?? [],
+          shiftsRu:          shiftsRu          ?? [],
           achievements:    achievements    || undefined,
           categories:      categories      ?? [],
         },
@@ -441,6 +460,9 @@ export default async function adminInstitutionRoutes(fastify: FastifyInstance) {
           programs:        programs        ?? undefined,
           specializations: specializations ?? undefined,
           shifts:          shifts          ?? undefined,
+          programsRu:        programsRu        ?? undefined,
+          specializationsRu: specializationsRu ?? undefined,
+          shiftsRu:          shiftsRu          ?? undefined,
           achievements:    achievements    !== undefined ? (achievements    || null) : undefined,
           categories:      categories      ?? undefined,
         },

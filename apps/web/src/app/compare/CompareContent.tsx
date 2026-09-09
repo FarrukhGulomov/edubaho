@@ -13,6 +13,7 @@ import { useCompare, useSaved, MAX_COMPARE } from '@/hooks/useCompare'
 import { useAuth } from '@/hooks/useAuth'
 import { track, trackContactClick } from '@/lib/analytics'
 import { compareApi } from '@/lib/api'
+import { localizeList } from '@/lib/i18nList'
 import {
   computeHighlights, computeRecommendation, BADGE_LABELS,
   type HighlightBadge, type CompareRecInput,
@@ -41,6 +42,8 @@ interface CompareInstitution {
     teacherCount?: number
     languages?: string[]
     shifts?: string[]
+    // shifts'ning ruscha tarjimasi (indeks bo'yicha mos)
+    shiftsRu?: string[]
   }
   pricing?: {
     monthlyMin?: number
@@ -294,7 +297,10 @@ export default function CompareContent({ institutions }: { institutions: Compare
       show: (insts) => insts.some((i) => i.details?.languages?.length || i.details?.shifts?.length),
       rows: [
         { key: 'languages', label: { uz: "O'qitish tillari", ru: 'Языки обучения' }, value: (i) => i.details?.languages?.length ? i.details.languages.join(', ').toUpperCase() : null },
-        { key: 'shifts', label: { uz: 'Dars vaqtlari', ru: 'Расписание занятий' }, value: (i) => i.details?.shifts?.length ? i.details.shifts.join(', ') : null },
+        { key: 'shifts', label: { uz: 'Dars vaqtlari', ru: 'Расписание занятий' }, value: (i) => {
+          const shifts = localizeList(i.details?.shifts, i.details?.shiftsRu, lang)
+          return shifts.length > 0 ? shifts.join(', ') : null
+        } },
       ],
     },
     {
@@ -366,14 +372,23 @@ export default function CompareContent({ institutions }: { institutions: Compare
           <button
             onClick={handleSaveComparison}
             disabled={saveState === 'saving'}
-            className="flex h-10 items-center gap-1.5 whitespace-nowrap rounded-xl bg-primary-50 px-3.5 text-sm font-semibold text-primary-700 transition-colors hover:bg-primary-100 disabled:opacity-50"
+            className={`flex h-10 items-center gap-1.5 whitespace-nowrap rounded-xl px-3.5 text-sm font-semibold transition-colors disabled:opacity-50 ${
+              saveState === 'error'
+                ? 'bg-red-50 text-red-700 hover:bg-red-100'
+                : 'bg-primary-50 text-primary-700 hover:bg-primary-100'
+            }`}
           >
             {saveState === 'saved' ? <BookmarkCheck className="h-4 w-4 shrink-0" strokeWidth={1.75} /> : <Bookmark className="h-4 w-4 shrink-0" strokeWidth={1.75} />}
             {saveState === 'saved'
               ? t(lang, { uz: 'Saqlandi', ru: 'Сохранено' })
               : saveState === 'saving'
                 ? t(lang, { uz: 'Saqlanmoqda...', ru: 'Сохранение...' })
-                : t(lang, { uz: 'Saqlash', ru: 'Сохранить' })}
+                // Avval xatolikda ham indamay "Saqlash" matniga qaytardi —
+                // foydalanuvchi so'rov muvaffaqiyatsiz bo'lganini bilmasdi
+                // (UX audit topilmasi)
+                : saveState === 'error'
+                  ? t(lang, { uz: "Xatolik, qayta urinish", ru: 'Ошибка, повторить' })
+                  : t(lang, { uz: 'Saqlash', ru: 'Сохранить' })}
           </button>
         </div>
       </div>
