@@ -3,7 +3,7 @@
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { useState, useEffect } from 'react'
-import { Sparkles, ChevronDown, Star, ArrowLeftRight, ArrowRight, Crown } from 'lucide-react'
+import { Sparkles, ChevronDown, Bookmark, ArrowLeftRight, ArrowRight, Crown } from 'lucide-react'
 import Header from '@/components/shared/Header'
 import Footer from '@/components/shared/Footer'
 import BrandMark from '@/components/shared/BrandMark'
@@ -17,6 +17,7 @@ import { useLang, t } from '@/contexts/LangContext'
 import { useCompare, useSaved } from '@/hooks/useCompare'
 import { matchApi, searchApi, type MatchInsights } from '@/lib/api'
 import { GOAL_SUGGESTIONS } from '@/lib/matchConstants'
+import { haptic } from '@/lib/telegram'
 
 interface NameSuggestion {
   id: string
@@ -85,6 +86,20 @@ export default function HomePage() {
 
   const { toggle: toggleCompare, isSelected: isCompared } = useCompare()
   const { toggleSave, isSaved } = useSaved()
+
+  // "Saqlash" ikonka-only tugma bo'lgani uchun holat o'zgarishi ko'zga
+  // kam tashlanadi — bosilgan muassasa ID'si shu yerda saqlanib, ikonka
+  // ostida qisqa muddat "Saqlandi" belgisi ko'rsatiladi (aniq vizual tasdiq)
+  const [justSavedId, setJustSavedId] = useState<string | null>(null)
+  function handleToggleSave(inst: { id: string; slug: string; nameUz: string; type: string; avgRating?: number; pricing?: { monthlyMin?: number } }) {
+    const wasSaved = isSaved(inst.id)
+    toggleSave(inst)
+    haptic('light')
+    if (!wasSaved) {
+      setJustSavedId(inst.id)
+      setTimeout(() => setJustSavedId((cur) => (cur === inst.id ? null : cur)), 1500)
+    }
+  }
 
   // Pastga aylantirish ishorasi — foydalanuvchi scroll boshlagach yo'qoladi
   // (hero'dan uzoqlashganda ekranni band qilib turmasligi uchun)
@@ -383,13 +398,44 @@ export default function HomePage() {
               const price    = priceFrom(inst.pricing, lang)
 
               return (
-                <div key={inst.id} className="group card flex flex-col p-0">
+                <div key={inst.id} className="card relative flex flex-col p-0">
+                  {/* Saqlash — ikonka-only, kartaning o'ng yuqori burchagida
+                      suzib turadi (avval pastdagi matnli tugma edi). Bosilganda
+                      ikonkaning o'zi "sakraydi" (savePop) va ostida qisqa
+                      muddat "Saqlandi" belgisi kattalashib chiqadi (saveHint)
+                      — ikonka-only tugmada holat o'zgarishi ko'zga kam
+                      tashlanishi mumkinligi uchun aniq vizual tasdiq beriladi
+                      (UX audit topilmasi) */}
+                  <button
+                    onClick={(e) => { e.preventDefault(); handleToggleSave(inst) }}
+                    aria-pressed={saved}
+                    aria-label={uz ? (saved ? "Saqlangan — olib tashlash" : 'Saqlash') : (saved ? 'Сохранено — убрать' : 'Сохранить')}
+                    className={`absolute right-2.5 top-2.5 z-10 flex h-9 w-9 items-center justify-center rounded-full border shadow-sm backdrop-blur transition-all duration-200 hover:scale-110 active:scale-95 ${
+                      saved
+                        ? 'border-amber-200 bg-amber-50/95 text-amber-600'
+                        : 'border-gray-200/80 bg-white/85 text-gray-500 hover:border-amber-200 hover:text-amber-600'
+                    }`}
+                  >
+                    <Bookmark
+                      className={justSavedId === inst.id ? 'h-[18px] w-[18px] animate-save-pop' : 'h-[18px] w-[18px]'}
+                      fill={saved ? 'currentColor' : 'none'}
+                      strokeWidth={2}
+                    />
+                    {justSavedId === inst.id && (
+                      <span className="pointer-events-none absolute left-1/2 top-full mt-1.5 whitespace-nowrap rounded-full bg-gray-900 px-2 py-0.5 text-[11px] font-semibold text-white animate-save-hint">
+                        {uz ? 'Saqlandi ✓' : 'Сохранено ✓'}
+                      </span>
+                    )}
+                  </button>
+
                   {/* Karta tanasi — rasm boxi hozircha yashirilgan (ko'p
                       muassasada hali rasm yo'q, bosh harflar "bo'sh"
                       taassurot qoldirardi) */}
-                  <Link href={`/institutions/${inst.slug}`} className="flex flex-1 flex-col p-4 pb-0">
-                    {/* Tur + status teglar */}
-                    <div className="mb-2 flex flex-wrap items-center gap-1.5">
+                  <Link href={`/institutions/${inst.slug}`} className="group flex flex-1 flex-col p-4 pb-0">
+                    {/* Tur + status teglar — o'ng tarafda suzib turgan
+                        Saqlash tugmasi bilan ustma-ust tushmasligi uchun
+                        o'ng chetdan bo'shliq qoldiriladi */}
+                    <div className="mb-2 flex flex-wrap items-center gap-1.5 pr-10">
                       <span className="badge-sm bg-primary-50 text-primary-700">
                         {info ? (uz ? info.uz : info.ru) : inst.type}
                       </span>
@@ -445,38 +491,30 @@ export default function HomePage() {
                     />
 
                     {/* Narx + reyting. Narx davri ANIQ ko'rsatiladi
-                        ("Oyiga ...dan") — shunchaki "600 000 so'm" chalkash edi */}
-                    <div className="mt-auto flex flex-wrap items-center justify-between gap-x-2 gap-y-1.5 border-t border-gray-100 pt-3">
-                      {inst.avgRating ? (
+                        ("Oyiga ...dan") — shunchaki "600 000 so'm" chalkash
+                        edi. Sharh mavjud bo'lmasa — bo'sh joy shunchaki
+                        bo'sh qoladi (avval "Sharh yo'q" degan matn bor edi,
+                        bu ko'p kartada takrorlanib ortiqcha shovqin qilardi) */}
+                    <div className="mt-auto flex flex-wrap items-center gap-x-2 gap-y-1.5 border-t border-gray-100 pt-3">
+                      {inst.avgRating && (
                         <RatingHint rating={inst.avgRating} count={inst.reviewCount} lang={lang} />
-                      ) : (
-                        <span className="text-xs text-gray-400">{t(lang, { uz: "Sharh yo'q", ru: 'Нет отзывов' })}</span>
                       )}
                       {price && (
-                        <span className="price-badge whitespace-nowrap text-xs">{price.full}</span>
+                        <span className={`price-badge whitespace-nowrap text-xs ${!inst.avgRating ? 'ml-auto' : ''}`}>{price.full}</span>
                       )}
                     </div>
                   </Link>
 
-                  {/* Saqlash / Solishtirish tugmalari */}
-                  <div className="flex gap-1.5 border-t border-gray-50 p-4 pt-2">
-                    <button
-                      onClick={() => toggleSave(inst)}
-                      className={`flex flex-1 items-center justify-center gap-1 rounded-lg py-1.5 text-xs font-semibold transition-colors ${
-                        saved
-                          ? 'bg-amber-50 text-amber-700'
-                          : 'bg-gray-50 text-gray-500 hover:bg-gray-100'
-                      }`}
-                    >
-                      <Star className="h-3.5 w-3.5" fill={saved ? 'currentColor' : 'none'} strokeWidth={2} />
-                      {uz ? (saved ? "Saqlandi" : "Saqlash") : (saved ? "Сохранено" : "Сохранить")}
-                    </button>
+                  {/* Solishtirish — Saqlash yuqorida ikonka sifatida
+                      ko'chirilgani uchun bu tugma to'liq kenglikni egallaydi */}
+                  <div className="border-t border-gray-50 p-4 pt-2">
                     <button
                       onClick={() => toggleCompare(inst)}
-                      className={`flex flex-1 items-center justify-center gap-1 rounded-lg py-1.5 text-xs font-semibold transition-colors ${
+                      aria-pressed={compared}
+                      className={`flex w-full items-center justify-center gap-1.5 rounded-lg py-2 text-xs font-semibold transition-all duration-200 ${
                         compared
-                          ? 'bg-primary-50 text-primary-700'
-                          : 'bg-gray-50 text-gray-500 hover:bg-gray-100'
+                          ? 'bg-primary-50 text-primary-700 hover:bg-primary-100'
+                          : 'bg-gray-50 text-gray-600 hover:bg-primary-50 hover:text-primary-700'
                       }`}
                     >
                       <ArrowLeftRight className="h-3.5 w-3.5" strokeWidth={2} />
