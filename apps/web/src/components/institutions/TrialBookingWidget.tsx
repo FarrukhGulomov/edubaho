@@ -25,6 +25,11 @@ export default function TrialBookingWidget({ institutionId, institutionName }: P
   const [loading, setLoading] = useState(false)
   const [done, setDone] = useState(false)
   const [error, setError] = useState('')
+  // Ma'lumotlar (ism, telefon, vaqt) muassasaga yuborilishiga aniq rozilik —
+  // avval bu sahifada umumiy "ma'lumotlaringiz almashilishi mumkin" degan
+  // shart bo'lmagan banner bo'lardi; endi haqiqiy yuborish nuqtasida,
+  // muassasa nomini aniq ko'rsatgan holda talab qilinadi (UX audit topilmasi).
+  const [consent, setConsent] = useState(false)
   // Bir marta yaratiladi va xato bo'lib qayta yuborilganda ham o'zgarmaydi —
   // backend shu ID orqali tarmoq xatosi/qayta bosishdan kelib chiqqan
   // takroriy bronni bitta so'rov sifatida qayta ishlaydi (UX audit topilmasi).
@@ -38,6 +43,7 @@ export default function TrialBookingWidget({ institutionId, institutionName }: P
     // deb qabul qilinardi. To'g'ri O'zbekiston raqami 12 ta raqamdan iborat:
     // 998 + 9 xonali mahalliy raqam.
     if (phone.replace(/\D/g, '').length < 12) { setError(uz ? "Telefon raqamni to'liq kiriting" : 'Введите полный номер телефона'); return }
+    if (!consent) { setError(uz ? "Ma'lumotlaringizni yuborishga rozilik bering" : 'Дайте согласие на отправку ваших данных'); return }
 
     setLoading(true)
     setError('')
@@ -64,6 +70,7 @@ export default function TrialBookingWidget({ institutionId, institutionName }: P
     setPreferredTime('')
     setError('')
     setDone(false)
+    setConsent(false)
     // Yangi bron sessiyasi — yangi ID, aks holda keyingi (butunlay boshqa)
     // bron ham eskisi bilan bir xil deb hisoblanib qoldirilardi
     setRequestId(crypto.randomUUID())
@@ -154,6 +161,22 @@ export default function TrialBookingWidget({ institutionId, institutionName }: P
           />
         </div>
 
+        <label className="flex items-start gap-2 text-sm text-gray-600">
+          <input
+            type="checkbox"
+            checked={consent}
+            onChange={(e) => setConsent(e.target.checked)}
+            required
+            className="mt-0.5 h-4 w-4 shrink-0 rounded border-gray-300 text-primary-600 focus:ring-primary-400"
+          />
+          <span>
+            {uz
+              ? `${institutionName}ga ism, telefon va tanlagan vaqtimni yuborishga roziman`
+              : `Согласен(на) отправить ${institutionName} своё имя, телефон и выбранное время`}
+            <span className="text-red-500"> *</span>
+          </span>
+        </label>
+
         {error && (
           <div className="flex items-start gap-2 rounded-xl bg-red-50 px-4 py-3 text-sm text-red-600">
             <AlertCircle className="mt-0.5 h-4 w-4 shrink-0" strokeWidth={2} />
@@ -163,7 +186,7 @@ export default function TrialBookingWidget({ institutionId, institutionName }: P
 
         <button
           type="submit"
-          disabled={loading}
+          disabled={loading || !consent}
           className="w-full rounded-xl bg-primary-600 py-3 font-semibold text-white transition-colors hover:bg-primary-700 disabled:opacity-50"
         >
           {loading ? (uz ? 'Yuborilmoqda...' : 'Отправляется...') : (uz ? "So'rov yuborish →" : 'Отправить заявку →')}

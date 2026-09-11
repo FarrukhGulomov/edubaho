@@ -154,6 +154,16 @@ export interface MatchInstitution {
   city?: { nameUz: string; nameRu?: string | null } | null
   pricing?: { monthlyMin?: number | null; monthlyMax?: number | null } | null
   deliveryMode?: string
+  // Moslik institution'ning ASOSIY shahri emas, biror FILIALI orqali
+  // topilgan bo'lsa to'ldiriladi — shu holatda card institution.city
+  // o'rniga shuni ko'rsatishi kerak (UX audit topilmasi)
+  matchedBranch?: {
+    id: string
+    nameUz: string | null
+    nameRu: string | null
+    address: string | null
+    city: { nameUz: string; nameRu: string | null }
+  } | null
 }
 
 export interface MatchComponent {

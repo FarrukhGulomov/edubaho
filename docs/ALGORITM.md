@@ -54,35 +54,52 @@ qilib qurdik.
 
 ## 2. EduFit — 3 bosqichli strategiya
 
-### Bosqich 1 — Moslik balli (HOZIR ISHLAYDI, shu PR'da) ✅
+### Bosqich 1 — Moslik balli (HOZIR ISHLAYDI) ✅
 
-Deterministik, shaffof, ML'siz. Foydalanuvchi 5 savolga javob beradi
-(tur → maqsad → shahar → byudjet → vaqt/yosh), har bir muassasa uchun 0–100
-moslik hisoblanadi:
+Deterministik, shaffof, ML'siz. Foydalanuvchi 4 savolga javob beradi
+(maqsad → format → shahar → byudjet — tur MVP doirasida qattiq
+COURSE_CENTER), har bir muassasa uchun 0–100 moslik hisoblanadi.
+
+**v3 og'irliklari** (haqiqiy manba — o'zgartirilsa shu yerdagi jadval ham
+yangilanishi kerak: `apps/api/src/services/matchService.ts` → `WEIGHTS`):
 
 ```
-Moslik = 0.25·Maqsad + 0.25·Sifat + 0.15·Byudjet + 0.15·Joylashuv
-       + 0.10·Jadval + 0.05·Yosh + 0.05·Ishonch
+Moslik = 0.38·Maqsad + 0.14·Sifat + 0.10·Byudjet + 0.09·Joylashuv
+       + 0.08·Jadval + 0.07·Format + 0.06·Til + 0.04·Yosh + 0.04·Ishonch
 ```
 
-| Komponent | Manba | Himoya |
+Maqsad og'irligi v1'dagi 0.25'dan 0.38'ga ko'tarildi (v3, real xato
+tufayli): "OTMga kirish" + "Buxoro" so'ralganda faqat IT kurs
+o'qitadigan markaz joylashuv/sifat hisobiga yuqori chiqib ketgan edi.
+
+| Komponent | Manba | Himoya / qattiqlik darajasi |
 |---|---|---|
-| **Maqsad** | programs/specializations/tavsif bo'yicha token-moslik, sinonim bazasi bilan («химия»→«kimyo»→«chemistry») | Faqat matn mosligi, va'da emas |
-| **Sifat** | Bayesian silliqlangan reyting: `(C·m + R·n)/(C+n)`, C=10 | 2 ta sharhli 5.0 ★ 200 ta sharhli 4.6 ★ dan yuqori chiqmaydi |
-| **Byudjet** | monthlyMin vs byudjet; oshsa har +10% uchun −20 ball | Narx yashirilgan bo'lsa neytral + confidence pasayadi |
-| **Joylashuv** | Shahar=100, viloyat=70, boshqa=25 | Qattiq filtr emas — kichik shaharlar bo'sh qolmaydi |
-| **Jadval** | shifts matni bilan kalit so'z mosligi | Ma'lumot yo'q → neytral |
-| **Yosh** | minAge/maxAge oralig'i, ±2 yosh bufer | — |
-| **Ishonch** | verified + profil to'liqligi | Markazlarni profilni to'ldirishga rag'batlantiradi (B2B flywheel!) |
+| **Maqsad** (QATTIQ filtr) | programs/specializations bo'yicha aniq moslik, topilmasa Ta'lim profili (categories) toifasi; sinonim bazasi bilan («химия»→«kimyo»→«chemistry») | Mos kelmasa natija ro'yxatiga UMUMAN kirmaydi (ballash bosqichigacha filtrlanadi) — «yaqin» yoki soxta moslik yo'q |
+| **Sifat** | Bayesian silliqlangan reyting: `(C·m + R·n)/(C+n)`, C=10 | 2 ta sharhli 5.0 ★ 200 ta sharhli 4.6 ★ dan yuqori chiqmaydi; ma'lumot yo'q → neytral (jarima yo'q) |
+| **Byudjet** (QATTIQ mezon) | Muassasaning oylik narxi (yoki yillik/12) vs foydalanuvchi byudjeti; oshsa har +10% uchun −20 ball | Foydalanuvchi byudjet SO'RAGAN-U narx ma'lumoti yo'q bo'lsa — past ball (15), NEYTRAL emas: qattiq mezonda noma'lum qiymat hech qachon o'rtacha/yuqori ball bermaydi (P0-3, UX audit) |
+| **Joylashuv** (QATTIQ mezon) | Shahar=100 (asosiy manzil YOKI biror FILIAL orqali), viloyat=70, boshqa=25; onlayn markaz=95 (shahardan mustaqil) | `resolveMatchedLocation()` — moslik AYNAN qaysi filial orqali topilganini ham qaytaradi, natija kartasi shu filialni ko'rsatadi (institution'ning asosiy shahri emas) |
+| **Jadval** | shifts matnidagi kalit so'z mosligi (foydalanuvchi tanlagan bo'lsa) | Ma'lumot yo'q → neytral (bu mezon "qattiq" emas — DB'da ko'pincha bo'sh) |
+| **Format** | offline/online/hybrid moslik | Gibrid markaz/afzallik har doim yuqori ball |
+| **Til** | o'qitish tili moslik | Ma'lumot yo'q → neytral |
+| **Yosh** | minAge/maxAge oralig'i, ±2 yosh bufer | Ma'lumot yo'q → neytral |
+| **Ishonch** | verified + profil to'liqligi + Premium | Markazlarni profilni to'ldirishga rag'batlantiradi (B2B flywheel!) |
 
 **Asosiy tamoyillar:**
 - **Shaffoflik**: har bir ball sabab bilan qaytadi — foydalanuvchi «Nega bu tavsiya?»
-  tugmasini bosib to'liq breakdown ko'radi. Bu ishonch quradi va bizni
-  «qora quti» tavsiyalardan ajratadi.
+  tugmasini bosib to'liq breakdown (Mos keladi/Qisman mos/Noma'lum/Mos kelmaydi
+  yorlig'i bilan) ko'radi. Bu ishonch quradi va bizni «qora quti» tavsiyalardan ajratadi.
+- **Ikki xil "ma'lumot yo'q" siyosati**: maqsad/joylashuv/byudjet — QATTIQ mezonlar,
+  ularda noma'lum qiymat past ball beradi (yoki umuman filtrlaydi). Qolgan olti
+  komponent (sifat/jadval/format/til/yosh/ishonch) — YUMSHOQ mezonlar, ularda
+  ma'lumot yo'qligi hali NEYTRAL, chunki bu maydonlar bugungi DB'da ko'pincha
+  bo'sh va qattiq jazolash natijalarni asossiz kamaytirar edi.
 - **Halol ishonchlilik**: ma'lumotga ega komponentlarning og'irlik ulushi =
-  confidence %. Ma'lumot kam muassasa jarima olmaydi, lekin foydalanuvchi
-  "bu baho taxminiy" ekanini ko'radi.
+  confidence %. Bu ikkala siyosatda ham o'zgarmaydi.
 - **Muvaffaqiyat "ehtimoli" va'da qilinmaydi** — chunki hali natija ma'lumoti yo'q.
+- **Narx hech qachon aniq kurs narxi sifatida ko'rsatilmaydi** — `InstitutionPricing`
+  muassasa darajasida (kursga bog'lanmagan), shuning uchun UI har doim "dan
+  boshlab"/"narx ko'rsatilmagan" deb ko'rsatadi, hech qachon "IELTS kursi — X so'm"
+  kabi soxta aniqlik bermaydi.
 
 ### Bosqich 2 — Natija ma'lumotlari flywheel'i (3–9 oy)
 
