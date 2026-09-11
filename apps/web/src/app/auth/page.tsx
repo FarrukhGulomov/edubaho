@@ -459,9 +459,16 @@ export default function AuthPage() {
             {step === 'phone' && (
               <div className="space-y-4">
 
-                {/* Rozilik checkbox — ma'lumotlarning tanlangan ta'lim
-                    muassasalariga uzatilishi haqida aniq va oldindan rozilik
-                    (implicit "davom etish orqali roziman" emas) */}
+                {/* Rozilik checkbox — bu bosqichda foydalanuvchi hali hech
+                    qanday muassasa tanlamagan va hech qanday ma'lumot hech
+                    kimga yuborilmaydi (shunchaki tizimga kirish/ro'yxatdan
+                    o'tish), shuning uchun matn faqat Maxfiylik siyosati va
+                    foydalanish shartlariga rozilikni so'raydi — muassasaga
+                    ma'lumot uzatish haqidagi HAQIQIY rozilik esa aynan shu
+                    uzatish sodir bo'ladigan joyda (probnoy darsga yozilish
+                    formasi, TrialBookingWidget) so'raladi (UX audit
+                    topilmasi: bu yerdagi da'vo hali sodir bo'lmagan
+                    voqeani oldindan tasdiqlatib qo'yardi) */}
                 <div className="flex items-start gap-2.5 rounded-2xl border border-gray-200 bg-gray-50/70 px-4 py-3.5 text-xs leading-relaxed text-gray-600">
                   <input
                     id="consent-checkbox"
@@ -481,8 +488,7 @@ export default function AuthPage() {
                         <Link href="/terms" target="_blank" className="font-semibold text-primary-600 hover:underline">
                           foydalanish shartlari
                         </Link>
-                        ga tanishdim, shaxsiy ma&apos;lumotlarim (ism, telefon) tanlagan ta&apos;lim
-                        muassasalariga uzatilishiga roziman.
+                        {' '}bilan tanishdim va roziman.
                       </>
                     ) : (
                       <>
@@ -494,7 +500,7 @@ export default function AuthPage() {
                         <Link href="/terms" target="_blank" className="font-semibold text-primary-600 hover:underline">
                           условиями использования
                         </Link>
-                        , и даю согласие на передачу моих данных (имя, телефон) выбранным учебным заведениям.
+                        {' '}и согласен(на) с ними.
                       </>
                     )}
                   </label>
