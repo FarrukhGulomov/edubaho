@@ -186,8 +186,20 @@ const BAYES_PRIOR_COUNT = 10
  * "to'ldiruvchi" natijalar ro'yxatni to'ldirish uchun chiqarilmaydi.
  * Kelajakda muassasa turi/segment bo'yicha sozlanishi mumkin (shu sabab
  * alohida konstanta sifatida eksport qilingan).
+ *
+ * Ilgari 75 edi — lekin bu qiymat amalda DEYARLI HECH QACHON
+ * yetib bo'lmaydigan chegara bo'lib chiqdi: foydalanuvchi format/
+ * shahar/byudjetni "Farqi yo'q" qoldirsa (juda keng tarqalgan holat),
+ * bu komponentlar neytral (55-70) ball oladi — hatto ANIQ toifaga mos
+ * (masalan "SAT") va to'liq tasdiqlangan muassasa uchun ham yakuniy
+ * ball ~73 dan oshmaydi (WEIGHTS asosida hisoblab tekshirilgan).
+ * Natijada real, sifatli 16 ta muassasa bo'lgan qidiruv "0 ta natija"
+ * qaytarardi. 60 — "yaxshi yo'nalish mosligi + noma'lum qolgan
+ * mezonlar" holatini o'tkazadi, lekin haqiqiy ko'p qirrali zaif
+ * mosliklarni (masalan byudjet HAM, joylashuv HAM mos kelmasa) hamon
+ * filtrlaydi (UX audit topilmasi: /match "SAT" bo'yicha 0 natija).
  */
-export const DEFAULT_MIN_MATCH_SCORE = 75
+export const DEFAULT_MIN_MATCH_SCORE = 60
 
 /**
  * Bitta muassasa uchun moslik ballini hisoblash.
