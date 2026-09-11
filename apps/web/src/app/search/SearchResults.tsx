@@ -4,10 +4,11 @@ import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { useState, useEffect, useRef } from 'react'
 import {
-  Search, X, MapPin, Globe2, Star,
+  Search, X, MapPin, Globe2, Bookmark,
   ArrowLeftRight, Check, PencilLine, School, Palette, Lock, Award, ChevronDown, Crown,
   ChevronLeft, ChevronRight, WifiOff,
 } from 'lucide-react'
+import { haptic } from '@/lib/telegram'
 import { RatingHint } from '@/components/shared/StarRating'
 import VerificationBadge from '@/components/shared/VerificationBadge'
 import InstitutionMetrics from '@/components/shared/InstitutionMetrics'
@@ -175,10 +176,7 @@ export default function SearchResults({ institutions, meta, params, apiError }: 
     errorTitle:  { uz: "Natijalarni yuklab bo'lmadi", ru: 'Не удалось загрузить результаты' },
     errorSub:    { uz: "Server bilan bog'lanishda xatolik yuz berdi. Birozdan keyin qayta urinib ko'ring.", ru: 'Ошибка соединения с сервером. Повторите попытку через некоторое время.' },
     retry:       { uz: 'Qayta urinish', ru: 'Повторить' },
-    noReview:    { uz: "Sharh yo'q", ru: 'Нет отзывов' },
     verified:    { uz: 'Tasdiqlangan', ru: 'Подтверждено' },
-    save:        { uz: 'Saqlash', ru: 'Сохранить' },
-    saved:       { uz: 'Saqlandi', ru: 'Сохранено' },
     compare:     { uz: 'Solishtir', ru: 'Сравнить' },
     compared:    { uz: 'Tanlandi', ru: 'Выбрано' },
     sortLabel:   { uz: 'Saralash', ru: 'Сортировка' },
@@ -498,26 +496,69 @@ function InstitutionCardComp({
   const name = lang === 'ru' && i.nameRu ? i.nameRu : i.nameUz
   const price = priceFrom(i.pricing, lang)
   const programs = localizeList(i.details?.programs, i.details?.programsRu, lang)
+  const uz = lang === 'uz'
+
+  // "Saqlash" ikonka-only tugma bo'lgani uchun holat o'zgarishi ko'zga
+  // kam tashlanadi — bosilganda ikonka ostida qisqa muddat "Saqlandi"
+  // belgisi ko'rsatiladi (bosh sahifadagi karta bilan bir xil naqsh)
+  const [justSaved, setJustSaved] = useState(false)
+  function handleSave(e: React.MouseEvent) {
+    e.preventDefault()
+    onSave()
+    haptic('light')
+    if (!isSaved) {
+      setJustSaved(true)
+      setTimeout(() => setJustSaved(false), 1500)
+    }
+  }
 
   return (
-    <div className="group card relative flex flex-col">
+    <div className="card relative flex flex-col">
       {showValueBadge && (
         <span className="absolute -top-2 left-4 z-10 flex items-center gap-1 rounded-full bg-amber-500 px-2.5 py-1 text-[11px] font-bold text-white shadow-sm">
           <Award className="h-3 w-3 shrink-0" strokeWidth={2.5} />
           {lang === 'ru' ? 'ТОП цена-качество' : 'TOP narx-sifat'}
         </span>
       )}
+
+      {/* Saqlash — ikonka-only, kartaning o'ng yuqori burchagida suzib
+          turadi (bosh sahifadagi karta bilan bir xil dizayn, UX audit
+          topilmasi: bu o'zgarish avval faqat bosh sahifada bo'lgan) */}
+      <button
+        onClick={handleSave}
+        aria-pressed={isSaved}
+        aria-label={uz ? (isSaved ? "Saqlangan — olib tashlash" : 'Saqlash') : (isSaved ? 'Сохранено — убрать' : 'Сохранить')}
+        className={`absolute right-2.5 top-2.5 z-10 flex h-9 w-9 items-center justify-center rounded-full border shadow-sm backdrop-blur transition-all duration-200 hover:scale-110 active:scale-95 ${
+          isSaved
+            ? 'border-amber-200 bg-amber-50/95 text-amber-600'
+            : 'border-gray-200/80 bg-white/85 text-gray-500 hover:border-amber-200 hover:text-amber-600'
+        }`}
+      >
+        <Bookmark
+          className={justSaved ? 'h-[18px] w-[18px] animate-save-pop' : 'h-[18px] w-[18px]'}
+          fill={isSaved ? 'currentColor' : 'none'}
+          strokeWidth={2}
+        />
+        {justSaved && (
+          <span className="pointer-events-none absolute left-1/2 top-full mt-1.5 whitespace-nowrap rounded-full bg-gray-900 px-2 py-0.5 text-[11px] font-semibold text-white animate-save-hint">
+            {uz ? 'Saqlandi ✓' : 'Сохранено ✓'}
+          </span>
+        )}
+      </button>
+
       <Link
         href={`/institutions/${i.slug}`}
-        className="flex flex-1 flex-col"
+        className="group flex flex-1 flex-col"
         onClick={() => trackSearchClick(i.id, position, query)}
       >
         {/* Rasm boxi hozircha yashirilgan — muassasalarning aksariyatida
             hali rasm yuklanmagan, faqat bosh harflar ko'rsatilishi
             "bo'sh" taassurot qoldirardi. Rasmlar ko'proq to'lgach qaytariladi. */}
         <div className="flex flex-1 flex-col p-6">
-        {/* Tur + tasdiqlangan — bosh sahifa kartasi bilan bir xil ixcham badge'lar */}
-        <div className="mb-2 flex flex-wrap items-center gap-1.5">
+        {/* Tur + tasdiqlangan — o'ng tarafda suzib turgan Saqlash tugmasi
+            bilan ustma-ust tushmasligi uchun o'ng chetdan bo'shliq
+            qoldiriladi */}
+        <div className="mb-2 flex flex-wrap items-center gap-1.5 pr-10">
           <span className="badge-sm bg-primary-50 text-primary-700">
             {typeInfo ? t(lang, typeInfo) : i.type}
           </span>
@@ -567,39 +608,31 @@ function InstitutionCardComp({
           )}
         </div>
 
-        {/* Narx (asosiy) + reyting (tinch, taxminiy ko'rsatkich sifatida) */}
-        <div className="mt-auto flex flex-wrap items-center justify-between gap-x-2 gap-y-1.5 border-t border-gray-100 pt-4">
-          {i.avgRating ? (
+        {/* Narx (asosiy) + reyting (tinch, taxminiy ko'rsatkich sifatida).
+            Sharh mavjud bo'lmasa — bo'sh joy shunchaki bo'sh qoladi (avval
+            "Sharh yo'q" matni bor edi, ko'p kartada takrorlanib ortiqcha
+            shovqin qilardi) */}
+        <div className="mt-auto flex flex-wrap items-center gap-x-2 gap-y-1.5 border-t border-gray-100 pt-4">
+          {i.avgRating && (
             <RatingHint rating={i.avgRating} count={i.reviewCount} lang={lang} />
-          ) : (
-            <span className="text-sm text-gray-400">{t(lang, ui.noReview)}</span>
           )}
           {price && (
-            <span className="price-badge whitespace-nowrap text-sm">{price.full}</span>
+            <span className={`price-badge whitespace-nowrap text-sm ${!i.avgRating ? 'ml-auto' : ''}`}>{price.full}</span>
           )}
         </div>
         </div>
       </Link>
 
-      {/* Amallar */}
-      <div className="flex divide-x divide-gray-100 border-t border-gray-100">
-        <button
-          onClick={onSave}
-          className={`flex flex-1 items-center justify-center gap-1.5 whitespace-nowrap rounded-bl-2xl py-3 text-sm font-semibold transition-colors ${
-            isSaved
-              ? 'bg-amber-50 text-amber-600 hover:bg-amber-100'
-              : 'text-gray-500 hover:bg-gray-50 hover:text-gray-800'
-          }`}
-        >
-          <Star className="h-4 w-4 shrink-0" fill={isSaved ? 'currentColor' : 'none'} strokeWidth={2} />
-          {isSaved ? t(lang, ui.saved) : t(lang, ui.save)}
-        </button>
+      {/* Solishtirish — Saqlash yuqorida ikonka sifatida ko'chirilgani
+          uchun bu tugma to'liq kenglikni egallaydi */}
+      <div className="border-t border-gray-100 p-2">
         <button
           onClick={onCompare}
-          className={`flex flex-1 items-center justify-center gap-1.5 whitespace-nowrap rounded-br-2xl py-3 text-sm font-semibold transition-colors ${
+          aria-pressed={isCompared}
+          className={`flex w-full items-center justify-center gap-1.5 rounded-xl py-2.5 text-sm font-semibold transition-all duration-200 ${
             isCompared
               ? 'bg-primary-50 text-primary-700 hover:bg-primary-100'
-              : 'text-gray-500 hover:bg-gray-50 hover:text-gray-800'
+              : 'bg-gray-50 text-gray-600 hover:bg-primary-50 hover:text-primary-700'
           }`}
         >
           {isCompared ? <Check className="h-4 w-4 shrink-0" strokeWidth={2.5} /> : <ArrowLeftRight className="h-4 w-4 shrink-0" strokeWidth={2} />}
