@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'vitest'
 import {
   computeMatchScore, evaluateGoal, resolveMatchedLocation,
-  effectiveMonthlyPrice, type MatchCandidate, type MatchPreferences,
+  effectiveMonthlyPrice, DEFAULT_MIN_MATCH_SCORE, type MatchCandidate, type MatchPreferences,
 } from './matchService'
 
 /** Minimal, to'liq MatchCandidate — testda faqat kerakli maydonlar override qilinadi */
@@ -185,5 +185,27 @@ describe('scoreLocation — onlayn markaz neytralligi', () => {
     const location = components.find((c) => c.key === 'location')
     expect(location?.score).toBe(95)
     expect(location?.hasData).toBe(true)
+  })
+})
+
+describe('DEFAULT_MIN_MATCH_SCORE — toifa mosligi + boshqa mezonlar "Farqi yo\'q" holatida ham natija chiqishi kerak', () => {
+  it('faqat toifa (category) orqali mos kelgan, to\'liq tasdiqlangan muassasa ham chegaradan o\'tadi (UX audit topilmasi: "SAT" bo\'yicha 0 natija)', () => {
+    // Foydalanuvchi shahar/format/byudjetni "Farqi yo'q" qoldirgan —
+    // real hayotda juda keng tarqalgan holat. Avval bu holatda chegara
+    // (75) DEYARLI hech qachon yetib bo'lmas edi: toifa mosligi (90)
+    // + qolgan barcha komponentlar neytral bo'lsa ham yakuniy ball
+    // ~73 dan oshmasdi, hatto ENG yaxshi (tasdiqlangan, to'liq profilli)
+    // muassasa uchun ham — natijada haqiqiy, sifatli mosliklar "0 ta
+    // natija" sifatida ko'rsatilardi.
+    const inst = makeCandidate({
+      isVerified: true, phone: '+998901234567', mediaCount: 2,
+      pricing: { monthlyMin: 500_000, monthlyMax: null },
+      details: {
+        descriptionUz: 'SAT tayyorlov kursi', minAge: null, maxAge: null,
+        languages: [], programs: [], shifts: [], specializations: [], categories: ['SAT'],
+      },
+    })
+    const { score } = computeMatchScore(inst, { ...basePrefs, goal: 'SAT' }, 4.2)
+    expect(score).toBeGreaterThanOrEqual(DEFAULT_MIN_MATCH_SCORE)
   })
 })
