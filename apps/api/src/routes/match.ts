@@ -1,6 +1,9 @@
 import type { FastifyInstance } from 'fastify'
 import { z } from 'zod'
-import { computeMatchScore, evaluateGoal, effectiveMonthlyPrice, effectiveMonthlyMaxPrice, DEFAULT_MIN_MATCH_SCORE, type MatchCandidate } from '../services/matchService'
+import {
+  computeMatchScore, evaluateGoal, effectiveMonthlyPrice, effectiveMonthlyMaxPrice,
+  resolveMatchedLocation, DEFAULT_MIN_MATCH_SCORE, type MatchCandidate,
+} from '../services/matchService'
 import { getCategoryDef } from '../utils/educationCategories'
 import { resolveGoalCategory } from '../services/goalClassifier'
 
@@ -79,8 +82,15 @@ const candidateSelect = {
   cityId: true,
   regionId: true,
   // Asosiy manzil mos kelmasa ham FILIALLARDAN biri mos kelsa yetarli
-  // (masalan "PDP academy" Toshkentda ro'yxatdan o'tgan, Buxoroda filiali bor)
-  branches: { select: { cityId: true, regionId: true } },
+  // (masalan "PDP academy" Toshkentda ro'yxatdan o'tgan, Buxoroda filiali bor).
+  // To'liq maydonlar (nom/manzil/shahar) — moslik AYNAN qaysi filial
+  // orqali topilganini javobda ko'rsatish uchun (resolveMatchedLocation)
+  branches: {
+    select: {
+      id: true, nameUz: true, nameRu: true, address: true, cityId: true, regionId: true,
+      city: { select: { nameUz: true, nameRu: true } },
+    },
+  },
   phone: true,
   address: true,
   city:   { select: { nameUz: true, nameRu: true } },
@@ -330,6 +340,10 @@ export default async function matchRoutes(fastify: FastifyInstance) {
           mediaCount: c._count.media,
         }
         const match = computeMatchScore(candidate, { ...prefs, resolvedGoalCategory: resolvedCategory }, globalAvg)
+        // Moslik institution'ning ASOSIY shahri emas, biror FILIALI orqali
+        // topilgan bo'lsa — shu filial ma'lumotini alohida qaytaramiz,
+        // frontend uni institution.city o'rniga ko'rsatadi (UX audit topilmasi)
+        const matchedLoc = resolveMatchedLocation(candidate, prefs)
         return {
           institution: {
             id: c.id,
@@ -344,6 +358,7 @@ export default async function matchRoutes(fastify: FastifyInstance) {
             city: c.city,
             pricing: c.pricing,
             deliveryMode: c.deliveryMode,
+            matchedBranch: matchedLoc.kind === 'branch' ? matchedLoc.branch ?? null : null,
           },
           match,
         }

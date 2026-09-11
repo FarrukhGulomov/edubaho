@@ -62,8 +62,23 @@ export interface MatchCandidate {
   reviewCount: number
   cityId: string | null
   regionId: string | null
-  /** Filiallar — asosiy manzil mos kelmasa ham, ULARDAN BIRI mos kelsa yetarli */
-  branches?: { cityId: string; regionId: string }[]
+  /**
+   * Filiallar — asosiy manzil mos kelmasa ham, ULARDAN BIRI mos kelsa
+   * yetarli. To'liq ma'lumot (nom/manzil/shahar) shu yerda saqlanadi —
+   * moslik AYNAN qaysi filial orqali topilganini foydalanuvchiga
+   * ko'rsatish uchun (UX audit topilmasi: muassasa Toshkentda ro'yxatdan
+   * o'tgan, lekin moslik Buxoro filiali orqali topilgan bo'lsa, natija
+   * kartasi baribir "Toshkent" + "Shahringizda joylashgan" deb ko'rsatardi).
+   */
+  branches?: {
+    id: string
+    nameUz: string | null
+    nameRu: string | null
+    address: string | null
+    cityId: string
+    regionId: string
+    city: { nameUz: string; nameRu: string | null }
+  }[]
   phone: string | null
   deliveryMode: string
   details: {
@@ -412,7 +427,12 @@ function scoreBudget(inst: MatchCandidate, prefs: MatchPreferences): ScoreCompon
   }
   const min = effectiveMonthlyPrice(inst.pricing)
   if (!min) {
-    return { ...base, score: 55, hasData: false, reasonUz: "Narx ma'lumoti yo'q", reasonRu: 'Нет данных о цене' }
+    // Foydalanuvchi BYUDJETNI ANIQ so'ragan — bu "qattiq" mezon (goal/
+    // location kabi), shuning uchun narx ma'lumoti yo'qligi avvalgidek
+    // neytral (55) emas, past ball olishi kerak: noma'lum qiymat hech
+    // qachon o'rtacha/yuqori ball bermasin (UX audit topilmasi, P0-3).
+    // hasData: false bo'lib qoladi — confidence hisobiga ta'sir qilmaydi.
+    return { ...base, score: 15, hasData: false, reasonUz: "Narx ma'lumoti yo'q", reasonRu: 'Нет данных о цене' }
   }
 
   if (min <= prefs.budget) {
@@ -445,13 +465,70 @@ function scoreBudget(inst: MatchCandidate, prefs: MatchPreferences): ScoreCompon
 
 // ─── 4. Joylashuv ─────────────────────────────────────────────
 
+export type MatchedLocationKind = 'online' | 'institution' | 'branch' | 'none'
+
+export interface MatchedLocation {
+  kind: MatchedLocationKind
+  via: 'city' | 'region' | null
+  /** kind === 'branch' bo'lsa — aynan qaysi filial orqali mos kelgani */
+  branch?: {
+    id: string
+    nameUz: string | null
+    nameRu: string | null
+    address: string | null
+    city: { nameUz: string; nameRu: string | null }
+  }
+}
+
+/**
+ * Muassasaning joylashuvi foydalanuvchi so'ragan shahar/viloyat bilan
+ * AYNAN qaysi yo'l orqali mos kelganini aniqlaydi — asosiy manzili
+ * orqalimi, biror FILIALI orqalimi, yoki onlayn bo'lgani uchunmi.
+ *
+ * Bitta manba: scoreLocation() (ballash) va API javobi (foydalanuvchiga
+ * ko'rsatish) ikkalasi ham shu funksiyaga tayanadi — avval faqat
+ * ballash filiallarni tekshirar, lekin javobda muassasaning ASOSIY
+ * shahri qaytardi, shuning uchun Toshkentda ro'yxatdan o'tgan markaz
+ * Buxoro filiali orqali mos kelsa ham natija kartasi "Toshkent" +
+ * "Shahringizda joylashgan" deb ko'rsatardi (UX audit topilmasi).
+ */
+export function resolveMatchedLocation(inst: MatchCandidate, prefs: MatchPreferences): MatchedLocation {
+  if (inst.deliveryMode === 'ONLINE') return { kind: 'online', via: null }
+
+  const branches = inst.branches ?? []
+
+  if (prefs.cityId) {
+    if (inst.cityId === prefs.cityId) return { kind: 'institution', via: 'city' }
+    const branch = branches.find((b) => b.cityId === prefs.cityId)
+    if (branch) {
+      return {
+        kind: 'branch', via: 'city',
+        branch: { id: branch.id, nameUz: branch.nameUz, nameRu: branch.nameRu, address: branch.address, city: branch.city },
+      }
+    }
+  }
+  if (prefs.regionId) {
+    if (inst.regionId === prefs.regionId) return { kind: 'institution', via: 'region' }
+    const branch = branches.find((b) => b.regionId === prefs.regionId)
+    if (branch) {
+      return {
+        kind: 'branch', via: 'region',
+        branch: { id: branch.id, nameUz: branch.nameUz, nameRu: branch.nameRu, address: branch.address, city: branch.city },
+      }
+    }
+  }
+  return { kind: 'none', via: null }
+}
+
 function scoreLocation(inst: MatchCandidate, prefs: MatchPreferences): ScoreComponent {
   const base = { key: 'location', labelUz: 'Joylashuv', labelRu: 'Расположение', weight: WEIGHTS.location }
+
+  const loc = resolveMatchedLocation(inst, prefs)
 
   // Onlayn markaz — istalgan shahardan qatnashish mumkin, shuning uchun
   // shahar mos kelmasligi uni PASAYTIRMASLIGI kerak (boshqa hududdagi
   // sifatli onlayn markaz jazolanmasligi shart)
-  if (inst.deliveryMode === 'ONLINE') {
+  if (loc.kind === 'online') {
     return {
       ...base, score: 95, hasData: true,
       reasonUz: "Onlayn — istalgan shahardan qatnashish mumkin",
@@ -462,14 +539,18 @@ function scoreLocation(inst: MatchCandidate, prefs: MatchPreferences): ScoreComp
   if (!prefs.cityId && !prefs.regionId) {
     return { ...base, score: 60, hasData: false, reasonUz: 'Shahar tanlanmagan', reasonRu: 'Город не выбран' }
   }
-  // Asosiy manzil mos kelmasa ham — FILIALLARDAN biri mos kelsa yetarli
-  // (masalan markaz Toshkentda ro'yxatdan o'tgan, lekin Buxoro filiali bor)
-  const branches = inst.branches ?? []
-  if (prefs.cityId && (inst.cityId === prefs.cityId || branches.some((b) => b.cityId === prefs.cityId))) {
+
+  if (loc.kind === 'institution' && loc.via === 'city') {
     return { ...base, score: 100, hasData: true, reasonUz: 'Shahringizda joylashgan', reasonRu: 'Находится в вашем городе' }
   }
-  if (prefs.regionId && (inst.regionId === prefs.regionId || branches.some((b) => b.regionId === prefs.regionId))) {
+  if (loc.kind === 'branch' && loc.via === 'city') {
+    return { ...base, score: 100, hasData: true, reasonUz: 'Filiali shahringizda joylashgan', reasonRu: 'Филиал находится в вашем городе' }
+  }
+  if (loc.kind === 'institution' && loc.via === 'region') {
     return { ...base, score: 70, hasData: true, reasonUz: 'Viloyatingizda joylashgan', reasonRu: 'Находится в вашей области' }
+  }
+  if (loc.kind === 'branch' && loc.via === 'region') {
+    return { ...base, score: 70, hasData: true, reasonUz: 'Filiali viloyatingizda joylashgan', reasonRu: 'Филиал находится в вашей области' }
   }
   return { ...base, score: 25, hasData: true, reasonUz: 'Boshqa hududda', reasonRu: 'В другом регионе' }
 }
