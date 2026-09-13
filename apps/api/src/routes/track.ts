@@ -14,7 +14,7 @@ import { ACTIVE_USER_QUALIFYING_EVENTS } from '../config/referral'
  *  institution_view, institution_save, institution_compare,
  *  gate_shown, gate_cta_click,
  *  auth_started, auth_phone_entered, auth_otp_sent,
- *  auth_otp_error, auth_completed, auth_abandoned,
+ *  auth_otp_error, auth_completed, auth_abandoned, auth_error,
  *  contact_click, review_started, review_submitted,
  *  filter_applied, price_viewed, compare_opened
  */
@@ -30,7 +30,7 @@ const ALLOWED_EVENTS = new Set([
   'gate_shown', 'gate_cta_click',
   // Auth funnel
   'auth_started', 'auth_phone_entered', 'auth_otp_sent',
-  'auth_otp_error', 'auth_completed', 'auth_abandoned',
+  'auth_otp_error', 'auth_completed', 'auth_abandoned', 'auth_error',
   // Engagement (auth bo'lgan userlar)
   'contact_click', 'review_started', 'review_submitted',
   'filter_applied', 'price_viewed', 'compare_opened',

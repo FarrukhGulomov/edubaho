@@ -127,4 +127,33 @@ describe('POST /auth/verify-otp', () => {
     })
     expect(res.statusCode).toBe(400)
   })
+
+  // isNewUser avval `!user.name` heuristikasiga tayanardi — ismi hali
+  // kiritilmagan QAYTA kirgan user ham "yangi" hisoblanardi (UX audit
+  // topilmasi). Endi createdAt===updatedAt orqali — FAQAT birinchi
+  // (hisob shu so'rovda yaratilgan) kirishda true bo'lishi kerak.
+  it('isNewUser birinchi kirishda true, ikkinchi (qayta) kirishda false qaytaradi', async () => {
+    const app = await getTestApp()
+    const ip1 = uniqueIp()
+    const otp1 = await sendOtp(app, ip1)
+
+    const first = await app.inject({
+      method: 'POST', url: '/api/v1/auth/verify-otp', payload: { phone: PHONE, otp: otp1 }, remoteAddress: ip1,
+    })
+    expect(first.statusCode).toBe(200)
+    expect(first.json().isNewUser).toBe(true)
+
+    // Ism hali kiritilmagan holda qayta kirish — avvalgi heuristika
+    // (!user.name) bu holatda ham noto'g'ri `true` qaytarardi.
+    // OTP cooldown telefon bo'yicha (IP bo'yicha emas) ishlaydi — birinchi
+    // kirishda o'rnatilgan cooldown'ni qo'lda tozalaymiz
+    await testRedis.del(`otp_sent:${PHONE}`)
+    const ip2 = uniqueIp()
+    const otp2 = await sendOtp(app, ip2)
+    const second = await app.inject({
+      method: 'POST', url: '/api/v1/auth/verify-otp', payload: { phone: PHONE, otp: otp2 }, remoteAddress: ip2,
+    })
+    expect(second.statusCode).toBe(200)
+    expect(second.json().isNewUser).toBe(false)
+  })
 })

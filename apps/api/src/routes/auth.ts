@@ -157,14 +157,14 @@ export default async function authRoutes(fastify: FastifyInstance) {
       },
     })
 
-    const isNewUser = !user.name
-    // Referral atributsiyasi FAQAT hisob AYNAN shu so'rovda yaratilgan bo'lsa
-    // ishlaydi (createdAt===updatedAt — upsert "create" tarmog'ini bosgan
-    // paytda ikkalasi bir xil vaqtga o'rnatiladi). "isNewUser" flagiga
-    // ishonib bo'lmaydi — u ismi hali kiritilmagan QAYTA kirgan userda ham
-    // true bo'lishi mumkin, bu esa mavjud userni referralga aylantirib
-    // qo'yardi (texnik topshiriq item #38'ni buzardi)
-    if (referralCode && user.createdAt.getTime() === user.updatedAt.getTime()) {
+    // Hisob AYNAN shu so'rovda yaratilganmi — createdAt===updatedAt upsert
+    // "create" tarmog'ini bosgan paytda ikkalasi bir xil vaqtga o'rnatiladi.
+    // Avval `isNewUser = !user.name` edi — ismi hali kiritilmagan QAYTA
+    // kirgan user ham "yangi" hisoblanardi, bu admin analytics'dagi "yangi
+    // ro'yxatdan o'tganlar" sonini buzardi (UX audit topilmasi). Referral
+    // atributsiyasi ham shu bir xil, ishonchli tekshiruvga tayanadi.
+    const isNewUser = user.createdAt.getTime() === user.updatedAt.getTime()
+    if (referralCode && isNewUser) {
       await attributeReferral(prisma, { referralCode, referredUserId: user.id, ip: request.ip })
     }
     const institutionId = user.institutionClaims[0]?.institutionId
@@ -521,8 +521,14 @@ export default async function authRoutes(fastify: FastifyInstance) {
       },
     })
 
-    const isNewUser = !user.phone && !user.name
-    if (tgData.referralCode && user.createdAt.getTime() === user.updatedAt.getTime()) {
+    // isNewUser — createdAt===updatedAt (shu so'rovda yaratilgan). Avval
+    // `!user.phone && !user.name` edi — Telegramda `name` yaratishning
+    // o'zida `first_name`dan to'ldiriladi, shuning uchun bu deyarli HAR
+    // DOIM `false` chiqardi (haqiqiy birinchi kirishda ham) — admin
+    // analytics'dagi "yangi ro'yxatdan o'tganlar" sonini buzardi (UX
+    // audit topilmasi)
+    const isNewUser = user.createdAt.getTime() === user.updatedAt.getTime()
+    if (tgData.referralCode && isNewUser) {
       await attributeReferral(prisma, { referralCode: tgData.referralCode, referredUserId: user.id, ip: request.ip })
     }
     const institutionId = user.institutionClaims[0]?.institutionId
@@ -589,8 +595,12 @@ export default async function authRoutes(fastify: FastifyInstance) {
       },
     })
 
-    const isNewUser = !user.phone && !user.name
-    if (referralCode && user.createdAt.getTime() === user.updatedAt.getTime()) {
+    // isNewUser — createdAt===updatedAt (shu so'rovda yaratilgan), avvalgi
+    // `!user.phone && !user.name` kabi emas (Telegram Mini App'da ham
+    // `name` yaratishda to'ldiriladi — UX audit topilmasi, telegramLogin
+    // bilan bir xil sabab)
+    const isNewUser = user.createdAt.getTime() === user.updatedAt.getTime()
+    if (referralCode && isNewUser) {
       await attributeReferral(prisma, { referralCode, referredUserId: user.id, ip: request.ip })
     }
     const institutionId = user.institutionClaims[0]?.institutionId
@@ -710,7 +720,13 @@ export default async function authRoutes(fastify: FastifyInstance) {
       await attributeReferral(prisma, { referralCode, referredUserId: user.id, ip: request.ip })
     }
 
-    const isNewUser = !user.phone
+    // `justCreated` yuqorida allaqachon hisoblangan (aynan shu so'rovda
+    // yaratildimi) — avval bu yerda alohida `!user.phone` ishlatilardi,
+    // bu Google userlarida HAR DOIM `true` chiqardi (Google `phone`ni
+    // hech qachon o'rnatmaydi), garchi bir necha marta kirgan bo'lsa
+    // ham — admin analytics'dagi "yangi ro'yxatdan o'tganlar" sonini
+    // buzardi (UX audit topilmasi)
+    const isNewUser = justCreated
     const institutionId = user.institutionClaims[0]?.institutionId
     const { accessToken, refreshToken } = await generateTokens(
       user.id,

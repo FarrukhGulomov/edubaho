@@ -17,8 +17,9 @@
  *  auth_phone_entered — telefon raqam kiritdi
  *  auth_otp_sent      — OTP yuborildi
  *  auth_otp_error     — OTP xato
- *  auth_completed     — muvaffaqiyatli kird / ro'yxatdan o'tdi
+ *  auth_completed     — muvaffaqiyatli kird / ro'yxatdan o'tdi (properties.method: 'otp'|'telegram'|'google')
  *  auth_abandoned     — auth jarayonini tark etdi
+ *  auth_error         — Google/Telegram tugmasi ishlamadi yoki hech biri yuklanmadi (properties: {method, reason})
  *  contact_click      — telefon/telegram/instagram/sayt bosildi
  *  review_started     — sharh yozishni boshladi
  *  review_submitted   — sharh yubordi
@@ -41,7 +42,7 @@ export type TrackEvent =
   | 'institution_view' | 'institution_save' | 'institution_compare'
   | 'gate_shown' | 'gate_cta_click'
   | 'auth_started' | 'auth_phone_entered' | 'auth_otp_sent'
-  | 'auth_otp_error' | 'auth_completed' | 'auth_abandoned'
+  | 'auth_otp_error' | 'auth_completed' | 'auth_abandoned' | 'auth_error'
   | 'contact_click' | 'review_started' | 'review_submitted'
   | 'filter_applied' | 'price_viewed' | 'compare_opened'
   | 'compare_share' | 'compare_save'
@@ -231,8 +232,15 @@ export const authTrack = {
   phoneEntered: () => track('auth_phone_entered', { category: 'auth' }),
   otpSent:      () => track('auth_otp_sent',      { category: 'auth' }),
   otpError:     (attempts: number) => track('auth_otp_error', { category: 'auth', properties: { attempts } }),
-  completed:    (isNewUser: boolean) => track('auth_completed', { category: 'auth', properties: { isNewUser } }),
+  completed:    (isNewUser: boolean, method: 'otp' | 'telegram' | 'google') =>
+    track('auth_completed', { category: 'auth', properties: { isNewUser, method } }),
   abandoned:    (step: string) => track('auth_abandoned', { category: 'auth', properties: { step } }),
+  // Google/Telegram tugmasi ochilmadi, xato qaytardi yoki 6 soniyada
+  // hech biri tayyor bo'lmadi — avval bunday holatlar UMUMAN
+  // kuzatilmasdi, faqat ekranda xato matni ko'rsatilardi (UX audit
+  // topilmasi: "auth boshladi-yu, nega yakunlamadi" savoliga javob yo'q edi)
+  error:        (method: 'google' | 'telegram' | 'none', reason: string) =>
+    track('auth_error', { category: 'auth', properties: { method, reason } }),
 }
 
 // ─── Live presence (haqiqiy "onlayn" hisoblagich) ──────────────
