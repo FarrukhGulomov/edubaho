@@ -126,7 +126,7 @@ export default function AuthPage() {
       .then((result) => {
         const r = result as { accessToken: string; isNewUser: boolean }
         localStorage.setItem('accessToken', r.accessToken)
-        authTrack.completed(r.isNewUser ?? false)
+        authTrack.completed(r.isNewUser ?? false, 'telegram')
         setIsNewUser(r.isNewUser ?? false)
         window.history.replaceState({}, '', '/auth')
         // Telegram Login Widget haqiqiy (tasdiqlangan) telefon bermaydi —
@@ -135,6 +135,7 @@ export default function AuthPage() {
         setStep('done')
       })
       .catch((err: unknown) => {
+        authTrack.error('telegram', err instanceof Error ? err.message : 'unknown')
         setError(err instanceof Error ? err.message : 'Telegram orqali kirish muvaffaqiyatsiz')
         setLoading(false)
       })
@@ -226,11 +227,12 @@ export default function AuthPage() {
             .then((result) => {
               const r = result as { accessToken: string; isNewUser: boolean }
               localStorage.setItem('accessToken', r.accessToken)
-              authTrack.completed(r.isNewUser ?? false)
+              authTrack.completed(r.isNewUser ?? false, 'google')
               setIsNewUser(r.isNewUser ?? false)
               setStep('done')
             })
             .catch((err: unknown) => {
+              authTrack.error('google', err instanceof Error ? err.message : 'unknown')
               setError(err instanceof Error ? err.message : 'Google orqali kirish muvaffaqiyatsiz')
               setLoading(false)
             })
@@ -265,7 +267,13 @@ export default function AuthPage() {
   useEffect(() => {
     if (step !== 'phone') { setAuthDeadEnd(false); return }
     if (tgReady || googleReady) { setAuthDeadEnd(false); return }
-    const timer = setTimeout(() => setAuthDeadEnd(true), 6000)
+    const timer = setTimeout(() => {
+      setAuthDeadEnd(true)
+      // Avval bu holat UMUMAN kuzatilmasdi — real "foydalanuvchi hech
+      // qanday kirish usulisiz qoldi" voqeasi analytics'da butunlay
+      // ko'rinmas edi (UX audit topilmasi)
+      authTrack.error('none', 'no_method_loaded')
+    }, 6000)
     return () => clearTimeout(timer)
   }, [step, tgReady, googleReady])
 
@@ -353,7 +361,7 @@ export default function AuthPage() {
         accessToken: string; isNewUser: boolean
       }
       localStorage.setItem('accessToken', result.accessToken)
-      authTrack.completed(result.isNewUser ?? false)
+      authTrack.completed(result.isNewUser ?? false, 'otp')
       setIsNewUser(result.isNewUser ?? false)
       setStep('done')
     } catch (err: unknown) {

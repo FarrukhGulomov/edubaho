@@ -859,6 +859,11 @@ model TrialBooking {
   preferredTime  String?
   note           String?
   status         TrialBookingStatus @default(PENDING)
+  // Anonim tashrifchi sessiyasi (edu_sid, LeadEvent.sessionId bilan bir xil) —
+  // shu orqali admin bronni kelib chiqargan qidiruv/ko'rish/solishtirish
+  // tarixini ko'ra oladi (avval bu bog'lanish umuman yo'q edi — UX audit
+  // topilmasi: "guest's pre-booking journey is not queryable")
+  sessionId      String?
   createdAt      DateTime @default(now())
 
   institution Institution @relation(fields: [institutionId], references: [id])

@@ -100,7 +100,7 @@ export const institutionsApi = {
   // urinilganda ham o'zgarmaydi — backend shu orqali takroriy bronni oldini oladi.
   trialBooking: (
     id: string,
-    data: { name: string; phone: string; preferredTime?: string; note?: string; clientRequestId?: string },
+    data: { name: string; phone: string; preferredTime?: string; note?: string; clientRequestId?: string; sessionId?: string },
     token?: string | null,
   ) =>
     apiFetch<{ data: unknown; message: string }>(`/institutions/${id}/trial-bookings`, {

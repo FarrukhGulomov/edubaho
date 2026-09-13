@@ -4,6 +4,7 @@ import { useState } from 'react'
 import { CalendarCheck, X, CheckCircle2, AlertCircle } from 'lucide-react'
 import { institutionsApi } from '@/lib/api'
 import { useLang, t } from '@/contexts/LangContext'
+import { getSessionId } from '@/lib/analytics'
 
 interface Props {
   institutionId: string
@@ -54,6 +55,10 @@ export default function TrialBookingWidget({ institutionId, institutionName }: P
         phone: phone.replace(/\s/g, ''),
         preferredTime: preferredTime.trim() || undefined,
         clientRequestId: requestId,
+        // Bronni kelib chiqargan qidiruv/ko'rish tarixi bilan bog'lash
+        // uchun (UX audit topilmasi — apps/web/src/lib/analytics.ts'dagi
+        // edu_sid bilan bir xil sessiya)
+        sessionId: getSessionId(),
       }, token)
       setDone(true)
     } catch (err: unknown) {

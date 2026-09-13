@@ -6,7 +6,7 @@ import {
   MousePointerClick, LogIn, Smartphone, Send, XCircle, CheckCircle2,
   LogOut, Phone, PencilLine, MessageSquare, Search, SlidersHorizontal,
   Wallet, ArrowLeftRight, Clock, Trophy, UserPlus, Users2, User, Flame,
-  Snowflake, Mail, School, X,
+  Snowflake, Mail, School, X, CalendarCheck, ChevronLeft, ChevronRight,
 } from 'lucide-react'
 import { useAuth } from '@/hooks/useAuth'
 import { useRouter } from 'next/navigation'
@@ -23,6 +23,9 @@ interface Summary {
     uniqueSessions: number
     uniqueUsers: number
     newRegistrations: number
+    totalLogins: number
+    institutionContacts: number
+    trialBookings: number
   }
   funnel: {
     gateShown: number
@@ -31,6 +34,8 @@ interface Summary {
     gateToAuth: number
     ctaToReg: number
   }
+  // Usul (google/telegram/otp) bo'yicha muvaffaqiyat/xato soni
+  authByMethod: Record<string, { completed: number; error: number }>
   topEvents: { event: string; count: number }[]
   hourlyActivity: { hour: number; count: number }[]
 }
@@ -92,8 +97,9 @@ const EVENT_LABELS: Record<string, string> = {
   auth_phone_entered:  'Tel. kiritdi',
   auth_otp_sent:       'OTP yuborildi',
   auth_otp_error:      'OTP xato',
-  auth_completed:      'Ro\'yxatdan o\'tdi',
+  auth_completed:      'Kirdi',
   auth_abandoned:      'Tark etdi',
+  auth_error:          'Auth xatosi',
   contact_click:       'Kontakt bosildi',
   review_started:      'Sharh boshladi',
   review_submitted:    'Sharh yubordi',
@@ -110,6 +116,7 @@ const EVENT_ICONS: Record<string, typeof Zap> = {
   institution_view: School, gate_shown: Lock, gate_cta_click: MousePointerClick,
   auth_started: LogIn, auth_phone_entered: Smartphone, auth_otp_sent: Send,
   auth_otp_error: XCircle, auth_completed: CheckCircle2, auth_abandoned: LogOut,
+  auth_error: XCircle,
   contact_click: Phone, review_started: PencilLine, review_submitted: MessageSquare,
   search_query: Search, search_filter: SlidersHorizontal, search_result_click: MousePointerClick,
   page_view: Filter, filter_applied: SlidersHorizontal, price_viewed: Wallet,
@@ -121,9 +128,12 @@ const FUNNEL_LABELS: Record<string, string> = {
   gate_shown:          'Gate ko\'rindi',
   gate_cta_click:      'CTA bosildi',
   auth_started:        'Auth sahifasi ochildi',
-  auth_phone_entered:  'Telefon kiritildi',
-  auth_otp_sent:       'OTP yuborildi',
-  auth_completed:      'Ro\'yxatdan o\'tdi',
+  auth_completed:      'Muvaffaqiyatli kirdi',
+}
+
+// Auth usuli (google/telegram/otp) bo'yicha ko'rsatiladigan nom
+const AUTH_METHOD_LABELS: Record<string, string> = {
+  google: 'Google', telegram: 'Telegram', otp: 'SMS', unknown: 'Noma\'lum',
 }
 
 // ─── Komponentlar ─────────────────────────────────────────────
@@ -171,7 +181,21 @@ function HourlyChart({ data }: { data: { hour: number; count: number }[] }) {
 
 // ─── Asosiy sahifa ────────────────────────────────────────────
 
-type Tab = 'summary' | 'funnel' | 'leads' | 'stream'
+type Tab = 'summary' | 'funnel' | 'leads' | 'visitors' | 'stream'
+
+interface Visitor {
+  sessionId: string
+  firstSeen?: string
+  lastSeen?: string
+  eventsCount: number
+  authStatus: 'not_started' | 'started' | 'completed' | 'error'
+  user: { name: string | null; phone: string | null } | null
+}
+
+interface VisitorsData {
+  data: Visitor[]
+  meta: { total: number; page: number; pageSize: number; totalPages: number }
+}
 
 export default function AnalyticsPage() {
   const { user, loading } = useAuth()
@@ -182,6 +206,7 @@ export default function AnalyticsPage() {
   const [summary, setSummary]   = useState<Summary | null>(null)
   const [funnel, setFunnel]     = useState<FunnelStep[]>([])
   const [leads, setLeads]       = useState<LeadsData | null>(null)
+  const [visitors, setVisitors] = useState<VisitorsData | null>(null)
   const [stream, setStream]     = useState<unknown[]>([])
   const [fetching, setFetching] = useState(false)
   const [toast, setToast]       = useState('')
@@ -203,7 +228,7 @@ export default function AnalyticsPage() {
     }
   }
 
-  const loadData = useCallback(async (currentTab: Tab, d: number) => {
+  const loadData = useCallback(async (currentTab: Tab, d: number, page = 1) => {
     setFetching(true)
     try {
       const h = getHeaders()
@@ -219,6 +244,10 @@ export default function AnalyticsPage() {
         const r = await fetch(`${API}/super-admin/analytics/leads?days=${d}`, { headers: h })
         const j = await r.json()
         setLeads(j)
+      } else if (currentTab === 'visitors') {
+        const r = await fetch(`${API}/super-admin/analytics/visitors?days=${d}&page=${page}`, { headers: h })
+        const j = await r.json()
+        setVisitors(j)
       } else if (currentTab === 'stream') {
         const r = await fetch(`${API}/super-admin/analytics/events?limit=100`, { headers: h })
         const j = await r.json()
@@ -263,6 +292,7 @@ export default function AnalyticsPage() {
     { id: 'summary', label: 'Umumiy',     Icon: BarChart3 },
     { id: 'funnel',  label: 'Funnel',     Icon: Filter },
     { id: 'leads',   label: 'Lidlar',     Icon: Target },
+    { id: 'visitors',label: 'Mehmonlar',  Icon: Users2 },
     { id: 'stream',  label: 'Oqim',       Icon: Zap },
   ]
 
@@ -348,6 +378,48 @@ export default function AnalyticsPage() {
               <StatCard Icon={Users2}   label="Auth foydalanuvchilar" value={summary.totals.uniqueUsers} color="green"  />
               <StatCard Icon={UserPlus} label="Yangi ro'yxatlar" value={summary.totals.newRegistrations}  color="orange" />
             </div>
+
+            {/* Asosiy natijalar — ro'yxatdan o'tish YAGONA muvaffaqiyat emas:
+                mehmon akkauntsiz ham muassasaga murojaat qilishi yoki
+                sinov darsiga yozilishi mumkin, bular ham asosiy natija
+                sifatida kuzatiladi (UX audit topilmasi). "Jami kirishlar"
+                esa "Yangi ro'yxatlar"dan farqli — qayta kirganlarni ham
+                o'z ichiga oladi (avval bu ikkisi bir xil son edi) */}
+            <div>
+              <h2 className="mb-3 text-sm font-bold uppercase tracking-wide text-gray-400">Asosiy natijalar</h2>
+              <div className="grid gap-4 sm:grid-cols-3">
+                <StatCard Icon={LogIn}          label="Jami kirishlar (yangi + qayta)" value={summary.totals.totalLogins} color="orange" />
+                <StatCard Icon={Phone}          label="Muassasaga murojaatlar"         value={summary.totals.institutionContacts} color="blue" />
+                <StatCard Icon={CalendarCheck}  label="Sinov darsiga yozilishlar"      value={summary.totals.trialBookings} color="green" />
+              </div>
+            </div>
+
+            {/* Auth usuli bo'yicha — Google/Telegram bosqichlarini alohida
+                o'lchash so'raldi (UX audit topilmasi). "Telefon
+                kiritildi"/"OTP yuborildi" kabi o'lik bosqichlar o'rniga
+                haqiqiy yakunlarni (muvaffaqiyat/xato) usul bo'yicha ko'rsatadi */}
+            {Object.keys(summary.authByMethod).length > 0 && (
+              <div className="rounded-2xl border border-gray-200 bg-white p-6 shadow-sm">
+                <h2 className="mb-4 flex items-center gap-2 text-base font-bold text-gray-900">
+                  <LogIn className="h-4 w-4 shrink-0 text-primary-600" strokeWidth={1.75} /> Auth usuli bo&apos;yicha
+                </h2>
+                <div className="grid gap-3 sm:grid-cols-3">
+                  {Object.entries(summary.authByMethod).map(([method, stats]) => (
+                    <div key={method} className="rounded-xl border border-gray-100 bg-gray-50 p-4">
+                      <p className="mb-2 text-sm font-bold text-gray-700">{AUTH_METHOD_LABELS[method] ?? method}</p>
+                      <div className="flex items-center justify-between text-sm">
+                        <span className="flex items-center gap-1 text-emerald-600">
+                          <CheckCircle2 className="h-3.5 w-3.5 shrink-0" strokeWidth={1.75} /> {stats.completed}
+                        </span>
+                        <span className="flex items-center gap-1 text-red-500">
+                          <XCircle className="h-3.5 w-3.5 shrink-0" strokeWidth={1.75} /> {stats.error}
+                        </span>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
 
             {/* Konversiya funnel (mini) */}
             <div className="rounded-2xl border border-gray-200 bg-white p-6 shadow-sm">
@@ -624,6 +696,110 @@ export default function AnalyticsPage() {
                 </table>
               </div>
             </div>
+          </div>
+        )}
+
+        {/* ── MEHMONLAR tab ── */}
+        {/* "Lidlar"dan farqi: bu yerda gate_shown ko'rmagan, oddiy qidirib
+            chiqib ketgan mehmonlar ham ko'rinadi — Lidlar faqat login
+            taklifini ko'rganlarni ko'rsatadi (UX audit topilmasi: "Lidlar
+            barcha mehmonlarni ko'rsatmaydi") */}
+        {!fetching && tab === 'visitors' && visitors && (
+          <div className="space-y-4">
+            <p className="text-sm text-gray-500">
+              Jami {visitors.meta.total} ta tashrifchi — gate ko&apos;rmagan mehmonlar ham shu yerda
+            </p>
+            <div className="overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-sm">
+              <div className="overflow-x-auto">
+                <table className="w-full text-sm">
+                  <thead>
+                    <tr className="border-b border-gray-100 bg-gray-50">
+                      <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-gray-500">Mehmon</th>
+                      <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-gray-500">Auth holati</th>
+                      <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-gray-500">Voqealar</th>
+                      <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-gray-500">Birinchi tashrif</th>
+                      <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-gray-500">Oxirgi faollik</th>
+                      <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-gray-500"></th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-gray-100">
+                    {visitors.data.map(v => (
+                      <tr key={v.sessionId} className="hover:bg-gray-50 transition-colors">
+                        <td className="px-4 py-3 min-w-[160px]">
+                          {v.user ? (
+                            <div>
+                              <p className="flex items-center gap-1.5 text-sm font-bold text-gray-900">
+                                <Smartphone className="h-3.5 w-3.5 shrink-0 text-gray-400" strokeWidth={1.75} /> {v.user.phone ?? v.user.name}
+                              </p>
+                              {v.user.name && v.user.phone && (
+                                <p className="text-xs text-gray-500">{v.user.name}</p>
+                              )}
+                            </div>
+                          ) : (
+                            <div>
+                              <p className="font-mono text-xs font-semibold text-gray-600">
+                                Mehmon #{v.sessionId.slice(-4).toUpperCase()}
+                              </p>
+                              <span className="mt-0.5 inline-block rounded-full bg-gray-100 px-1.5 py-0.5 text-[10px] font-semibold text-gray-400">
+                                Anonim
+                              </span>
+                            </div>
+                          )}
+                        </td>
+                        <td className="px-4 py-3">
+                          <span className={`inline-flex items-center gap-1 whitespace-nowrap rounded-full px-2.5 py-1 text-xs font-bold ${
+                            v.authStatus === 'completed' ? 'bg-emerald-50 text-emerald-700' :
+                            v.authStatus === 'error'     ? 'bg-red-50 text-red-600' :
+                            v.authStatus === 'started'   ? 'bg-orange-50 text-orange-700' :
+                            'bg-gray-100 text-gray-400'
+                          }`}>
+                            {v.authStatus === 'completed' ? <><CheckCircle2 className="h-3 w-3 shrink-0" strokeWidth={1.75} /> Kirdi</>
+                              : v.authStatus === 'error'   ? <><XCircle className="h-3 w-3 shrink-0" strokeWidth={1.75} /> Xato</>
+                              : v.authStatus === 'started' ? <><LogIn className="h-3 w-3 shrink-0" strokeWidth={1.75} /> Boshladi</>
+                              : <>Boshlamagan</>}
+                          </span>
+                        </td>
+                        <td className="px-4 py-3 text-xs text-gray-600">{v.eventsCount}</td>
+                        <td className="px-4 py-3 text-xs text-gray-400">{fmt(v.firstSeen)}</td>
+                        <td className="px-4 py-3 text-xs text-gray-400">{timeSince(v.lastSeen)}</td>
+                        <td className="px-4 py-3">
+                          <button
+                            onClick={() => loadSession(v.sessionId)}
+                            className="rounded-lg border border-gray-200 px-2.5 py-1 text-xs font-semibold text-gray-600 hover:bg-gray-50 transition-colors"
+                          >
+                            Tarix →
+                          </button>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+
+            {/* Sahifalash — "Lidlar"dan farqli, bu tab HAMMA sessiyani
+                ko'rsatishi kerak, 100-200 ta bilan cheklanmaydi */}
+            {visitors.meta.totalPages > 1 && (
+              <div className="flex items-center justify-center gap-2">
+                <button
+                  onClick={() => loadData('visitors', days, Math.max(1, visitors.meta.page - 1))}
+                  disabled={visitors.meta.page <= 1}
+                  className="flex h-9 w-9 items-center justify-center rounded-lg border border-gray-200 text-gray-600 hover:bg-gray-50 disabled:pointer-events-none disabled:opacity-40"
+                >
+                  <ChevronLeft className="h-4 w-4" strokeWidth={2} />
+                </button>
+                <span className="text-sm text-gray-500">
+                  {visitors.meta.page} / {visitors.meta.totalPages}
+                </span>
+                <button
+                  onClick={() => loadData('visitors', days, Math.min(visitors.meta.totalPages, visitors.meta.page + 1))}
+                  disabled={visitors.meta.page >= visitors.meta.totalPages}
+                  className="flex h-9 w-9 items-center justify-center rounded-lg border border-gray-200 text-gray-600 hover:bg-gray-50 disabled:pointer-events-none disabled:opacity-40"
+                >
+                  <ChevronRight className="h-4 w-4" strokeWidth={2} />
+                </button>
+              </div>
+            )}
           </div>
         )}
 

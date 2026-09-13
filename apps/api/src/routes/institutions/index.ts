@@ -726,6 +726,10 @@ export default async function institutionRoutes(fastify: FastifyInstance) {
     // brauzer so'rovni avtomatik qayta yuborsa, ikkita bir xil bron
     // yaratilib qolishining oldini oladi (UX audit topilmasi).
     clientRequestId: z.string().uuid().optional(),
+    // Anonim tashrifchi sessiyasi (edu_sid) — admin shu orqali bronni
+    // kelib chiqargan qidiruv/ko'rish tarixini ko'ra oladi (UX audit
+    // topilmasi: avval TrialBooking sessiyaga umuman bog'lanmagan edi)
+    sessionId: z.string().min(8).max(64).optional(),
   })
 
   const TRIAL_BOOKING_IDEM_TTL = 60 * 60 // 1 soat — shu oraliqda takroriy so'rov asl natijani qaytaradi
